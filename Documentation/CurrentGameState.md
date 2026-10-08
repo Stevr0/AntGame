@@ -4,7 +4,7 @@
 
 **Milestone 1 — Player Ant Movement Prototype**
 
-**Status:** In progress. The user has confirmed floor movement and vertical wall climbing in Unity Play Mode. Live testing then found a corner-transition deadlock. Its state-machine causes are fixed in code and covered by an automated Editor regression harness, but the fix and the wider ceiling/corner route still require Play Mode acceptance.
+**Status:** In progress. The user has confirmed floor movement, vertical wall climbing, and resolution of the previously reported corner-transition deadlock in Unity Play Mode. Ceiling/corner route acceptance is still incomplete. Bounded Auto Step-Over is now implemented for one-tile openings and awaits its first Play Mode acceptance pass.
 
 ## Repository and architecture
 
@@ -64,9 +64,23 @@ The user has confirmed the previous movement prototype works in Unity Play Mode:
 - A rejected transition pair is not retried with unchanged held input. Releasing or changing input clears the suppression.
 - Source and destination colliders are ignored only by the redundant movement sweep because they are intentional support contacts; inset pose-overlap validation remains active to prevent penetration.
 
+The user subsequently confirmed that the original deadlock no longer reproduces in Play Mode. Broader ceiling and corner-route acceptance is still separate pending work.
+
+### Auto Step-Over
+
+- Continued tangent input near a support edge starts an explicit controlled crossing only when a same-type, same-normal landing surface is detected across an opening no wider than the ant's configured capability.
+- The player prefab defines one prototype tile as one world unit and limits this ant to one tile. Openings wider than that limit and openings without a destination are rejected.
+- Floor, ceiling, and vertical-wall openings use the same surface-relative detector; there is no floor-only jump path.
+- A strong perpendicular input wins over automatic crossing, allowing later explicit opening entry or junction behavior without competing state changes.
+- The ant has no ordinary `SurfaceType` while crossing. Gravity and ordinary attachment movement are replaced by a prevalidated straight `Rigidbody2D.MovePosition` path between real supports; collision is never disabled and no Transform teleport is used.
+- The whole inset capsule is checked at 24 poses before entry. A collider cast and pose overlap are repeated for every movement step so a blocking obstacle cannot be bypassed.
+- Releasing input pauses progress. Opposite tangent input reverses toward the source. A new block at the first step cancels to the source; a later block preserves the already validated reverse route, with safe surface recovery or explicit detachment if changed geometry blocks both directions.
+- Rejected geometry is not queried again every physics tick while the same direction remains held. Input release/change or `NotifyTraversalGeometryChanged()` permits a fresh query.
+- Read-only diagnostics expose active state, progress, measured gap start/end and distance, configured maximum distance, and a specific rejection reason. Optional gizmos show the measured opening and controlled path.
+
 ### Attachment and debugging
 
-- Attachment states now include `None`, `Floor`, `LeftWall`, `RightWall`, and `Ceiling`, plus an explicit active corner-transition state.
+- Attachment states now include `None`, `Floor`, `LeftWall`, `RightWall`, and `Ceiling`, plus explicit active corner-transition and Auto Step-Over states.
 - Gravity is disabled only while a real surface or prevalidated connected-corner path is active. Losing support restores the Rigidbody2D's authored gravity without teleportation.
 - Fixed-size hit, candidate, and overlap arrays avoid routine movement allocations.
 - Optional gizmos show all four direct probes, input intent, candidate points/normals, the selected attachment, movement direction, active corner path, and the latest rejected transition point.
@@ -80,9 +94,12 @@ The user has confirmed the previous movement prototype works in Unity Play Mode:
 - left and right climbable walls;
 - a full-width climbable ceiling, forming a continuous enclosed rectangular loop;
 - a floor-connected central block whose upper edges expose outside corners; and
-- the player ant starting left of the central block with room to approach and reverse.
+- the player ant starting left of the central block with room to approach and reverse;
+- separate one-tile floor, ceiling, and vertical-wall opening fixtures;
+- a two-tile floor opening that must be rejected; and
+- a one-tile opening with a non-climbable obstacle at its landing path.
 
-`Milestone1PrototypeSetup` updates or regenerates these named objects without duplicating them. The Editor menu provides `Apply Surface Transition Course` and `Validate Surface Transition Course` commands; the older wall-climbing commands remain compatible wrappers.
+`Milestone1PrototypeSetup` updates or regenerates these named objects without duplicating them. The Editor menu now also provides `Apply Auto Step-Over Course` and `Validate Auto Step-Over Course`; the older surface-transition and wall-climbing commands remain compatible.
 
 ## Automated validation performed
 
@@ -94,6 +111,13 @@ The user has confirmed the previous movement prototype works in Unity Play Mode:
 - The focused Edit Mode test passed 1/1. `AntSurfaceMotorRegressionValidation` exercised the actual motor transition method and covered release/pause, both intuitive reversal directions, blocked-first-step cancellation, later-step forward blocking, blocked-reverse safe cancellation, failure-reason recording, retry suppression, and suppression reset after input release.
 
 These checks validate compilation and authored structure. The new ceiling and transition behavior has not been visually verified in Play Mode.
+
+For the Auto Step-Over slice:
+
+- Unity loaded the updated runtime and Editor assemblies without C# compilation errors during two command-line launches.
+- Static authored-scene checks confirmed all 11 new fixture roots exist exactly once, all 74 YAML document identifiers are unique, the prefab serializes a one-world-unit tile and one-tile crossing limit, and `git diff --check` passes.
+- A second Unity Test Framework case and `ValidateAutoStepOverRegression` were added. They exercise real floor/ceiling/wall detection, release pause, reversal to source, over-wide rejection, blocked-path rejection, failure reasons, and retry-suppression release.
+- The current machine's Unity Licensing Client repeatedly lost its IPC connection before the migration method or test runner could execute. Consequently, the new 2/2 Edit Mode result, Editor structural validator, and automated scene import remain **not run**, not passed.
 
 ## Manual Play Mode checklist
 
@@ -112,17 +136,25 @@ These checks validate compilation and authored structure. The new ceiling and tr
 13. Enable `Show Debug Gizmos` and inspect candidate normals, selected contact, orange transition path, and any red rejected point.
 14. Confirm the Console contains no errors or warnings throughout repeated clockwise and counter-clockwise loops.
 15. Reproduce the original deadlock path, then try release, the opposite source direction, and the opposite destination direction; confirm transition state always pauses, reverses, completes, or cancels instead of permanently consuming input.
+16. On `One Tile Floor Approach`, hold the tangent direction and confirm the ant crosses continuously to `One Tile Floor Landing` without jumping, falling, or changing speed unexpectedly.
+17. Repeat across `One Tile Ceiling Approach`/`Landing` and `One Tile Wall Lower`/`Upper` in both directions.
+18. At a valid opening, press a strong perpendicular or diagonal input; confirm explicit directional intent takes priority and Auto Step-Over does not seize control.
+19. Release input partway across a valid opening, then reverse; confirm the ant pauses and returns safely to its source support.
+20. Approach the two-tile floor opening and the blocked landing; confirm both stop safely, do not oscillate or retry every frame, and become eligible for a new attempt after input release/change.
+21. Enable `Show Debug Gizmos`; confirm the measured gap endpoints/path match the authored opening and rejection reasons are useful without per-frame Console spam.
 
 ## Known limitations and remaining P1 work
 
-- The corner-deadlock fix has passed automated Editor regression checks but has not yet been re-tested in live Play Mode. It must not be considered resolved until the original reproduction no longer locks movement.
+- The original corner-deadlock reproduction is user-confirmed resolved; the wider ceiling/corner route still needs full Play Mode acceptance.
 - The newly implemented ceiling and wider corner behavior is not yet Play Mode accepted and may require tuning of probe distance, look-ahead distance, collider inset, or rotation speed.
 - Corners are intentionally limited to nearby, approximately perpendicular surfaces. Irregular or curved terrain is not supported by this slice.
 - Outside corners require deliberate diagonal intent because both approaching the edge and selecting the outgoing surface must be unambiguous.
 - The transition path is validated against current static collision geometry; runtime excavation and dynamic traversal invalidation do not exist yet.
-- Auto Step-Over, the physically valid one-tile opening test, and the follow camera remain unimplemented.
+- Auto Step-Over and its authored fixtures are implemented but have not completed automated Unity execution or manual Play Mode acceptance on this machine.
+- The current Step-Over path is intentionally straight between parallel supports. Irregular, curved, offset, or routed openings remain unsupported.
+- The follow camera remains unimplemented.
 - Autonomous navigation, multi-ant occupancy, and colony simulation remain later milestones.
 
 ## Recommended next P1 slice
 
-Run and tune the complete transition course in Play Mode first. Once floor, wall, ceiling, inside-corner, and outside-corner acceptance passes, implement Auto Step-Over as a separate bounded feature with swept whole-footprint clearance and an explicitly configured maximum crossing distance.
+Restore a healthy Unity Licensing Client connection, run the 2/2 focused Edit Mode suite and both structural validators, then perform the complete transition and Auto Step-Over Play Mode checklist. Once that acceptance passes, the remaining implementation slice is the simple upright follow camera before final Milestone 1 validation.

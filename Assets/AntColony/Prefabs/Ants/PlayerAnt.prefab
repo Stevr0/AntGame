@@ -220,7 +220,13 @@ MonoBehaviour:
   maximumConnectedCornerDistance: 1.25
   cornerConnectionTolerance: 0.05
   transitionClearanceInset: 0.04
+  tileWorldSize: 1
+  maximumStepOverTiles: 1
+  stepOverProbeIncrement: 0.05
+  stepOverTriggerDistance: 0.15
+  stepOverSelectionBias: 0.1
   showDebugGizmos: 0
+  logTransitionEvents: 0
 --- !u!114 &8962556877872987603
 MonoBehaviour:
   m_ObjectHideFlags: 0

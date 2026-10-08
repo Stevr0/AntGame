@@ -33,5 +33,32 @@ namespace AntColony.Tests.EditMode
                 throw exception.InnerException ?? exception;
             }
         }
+
+        [Test]
+        public void AutoStepOver_OnlyCrossesValidatedOneTileOpenings()
+        {
+            InvokeValidator("ValidateAutoStepOverRegression");
+        }
+
+        private static void InvokeValidator(string methodName)
+        {
+            Type validatorType = Type.GetType(
+                "AntColony.EditorTools.AntSurfaceMotorRegressionValidation, Assembly-CSharp-Editor");
+            Assert.That(validatorType, Is.Not.Null, "Regression validator type was not found.");
+
+            MethodInfo validationMethod = validatorType.GetMethod(
+                methodName,
+                BindingFlags.Public | BindingFlags.Static);
+            Assert.That(validationMethod, Is.Not.Null, $"Regression method '{methodName}' was not found.");
+
+            try
+            {
+                validationMethod.Invoke(null, null);
+            }
+            catch (TargetInvocationException exception)
+            {
+                throw exception.InnerException ?? exception;
+            }
+        }
     }
 }

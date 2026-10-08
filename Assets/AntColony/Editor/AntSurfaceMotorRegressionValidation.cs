@@ -155,6 +155,238 @@ namespace AntColony.EditorTools
             }
         }
 
+        /// <summary>
+        /// Exercises the real opening detector and Step-Over state with floor,
+        /// ceiling, wall, over-wide, and obstructed fixtures. These are focused
+        /// physics checks; Play Mode remains necessary for movement feel.
+        /// </summary>
+        [MenuItem("Ant Colony/Milestone 1/Validate Auto Step-Over Regression")]
+        public static void ValidateAutoStepOverRegression()
+        {
+            ValidateValidFloorOpeningAndStateControls();
+            ValidateOpeningDetection(
+                "Ceiling",
+                AntSurfaceType.Ceiling,
+                new Vector2(-0.65f, -0.32f),
+                new Vector2(-1f, 0.25f),
+                new Vector2(2f, 0.25f),
+                new Vector2(2f, 0.5f),
+                Vector2.down,
+                Vector2.right,
+                true,
+                AntTransitionFailureReason.None);
+            ValidateOpeningDetection(
+                "Wall",
+                AntSurfaceType.LeftWall,
+                new Vector2(0.32f, -0.65f),
+                new Vector2(-0.25f, -1f),
+                new Vector2(-0.25f, 2f),
+                new Vector2(0.5f, 2f),
+                Vector2.right,
+                Vector2.up,
+                true,
+                AntTransitionFailureReason.None);
+            ValidateOpeningDetection(
+                "Over-wide floor",
+                AntSurfaceType.Floor,
+                new Vector2(-0.65f, 0.32f),
+                new Vector2(-1f, -0.25f),
+                new Vector2(3f, -0.25f),
+                new Vector2(2f, 0.5f),
+                Vector2.up,
+                Vector2.right,
+                false,
+                AntTransitionFailureReason.StepOverGapTooWide);
+            ValidateBlockedFloorOpening();
+
+            Debug.Log(
+                "Auto Step-Over regression validation passed: floor, ceiling, and wall " +
+                "one-tile openings start controlled crossings; release pauses and reverse " +
+                "returns to support; two-tile and obstructed openings are rejected.");
+        }
+
+        private static void ValidateValidFloorOpeningAndStateControls()
+        {
+            GameObject antObject = null;
+            GameObject sourceObject = null;
+            GameObject destinationObject = null;
+
+            try
+            {
+                AntSurfaceMotor motor = CreateStepOverAnt(
+                    new Vector2(-0.65f, 0.32f), out antObject, out Rigidbody2D body);
+                sourceObject = CreateStaticCollider(
+                    "Valid Floor Source", new Vector2(-1f, -0.25f), new Vector2(2f, 0.5f));
+                destinationObject = CreateStaticCollider(
+                    "Valid Floor Destination", new Vector2(2f, -0.25f), new Vector2(2f, 0.5f));
+                Physics2D.SyncTransforms();
+
+                object source = CreateSurfaceCandidate(
+                    AntSurfaceType.Floor,
+                    new Vector2(body.position.x, 0f),
+                    Vector2.up,
+                    sourceObject.GetComponent<Collider2D>());
+                motor.SetMovementIntent(Vector2.right);
+                bool started = (bool)InvokePrivateWithResult(motor, "TryBeginStepOver", source);
+
+                Require(started && motor.IsStepOverActive, "A one-tile floor opening did not start Step-Over.");
+                Require(motor.SurfaceType == AntSurfaceType.None, "An active opening retained a normal surface type.");
+                Require(body.gravityScale == 0f, "Controlled opening traversal did not suppress freefall.");
+                Require(
+                    motor.DetectedGapDistance <= motor.MaximumStepOverDistance + 0.026f,
+                    "The accepted floor opening exceeded the configured one-tile capability.");
+
+                motor.SetMovementIntent(Vector2.zero);
+                float pausedProgress = motor.StepOverProgress;
+                InvokePrivate(motor, "UpdateStepOver");
+                Require(
+                    Mathf.Approximately(motor.StepOverProgress, pausedProgress),
+                    "Releasing input did not pause Step-Over.");
+
+                motor.SetMovementIntent(Vector2.right);
+                InvokePrivate(motor, "UpdateStepOver");
+                Require(motor.StepOverProgress > 0f, "Forward input did not advance Step-Over.");
+
+                motor.SetMovementIntent(Vector2.left);
+                InvokePrivate(motor, "UpdateStepOver");
+                Require(!motor.IsStepOverActive, "Reverse input did not return to the source support.");
+                Require(motor.SurfaceType == AntSurfaceType.Floor, "Reverse did not restore floor attachment.");
+            }
+            finally
+            {
+                DestroyImmediately(destinationObject);
+                DestroyImmediately(sourceObject);
+                DestroyImmediately(antObject);
+            }
+        }
+
+        private static void ValidateOpeningDetection(
+            string label,
+            AntSurfaceType surfaceType,
+            Vector2 antPosition,
+            Vector2 sourcePosition,
+            Vector2 destinationPosition,
+            Vector2 colliderSize,
+            Vector2 normal,
+            Vector2 intent,
+            bool expectedToStart,
+            AntTransitionFailureReason expectedFailure)
+        {
+            GameObject antObject = null;
+            GameObject sourceObject = null;
+            GameObject destinationObject = null;
+
+            try
+            {
+                AntSurfaceMotor motor = CreateStepOverAnt(antPosition, out antObject, out Rigidbody2D body);
+                if (surfaceType == AntSurfaceType.Ceiling)
+                {
+                    body.rotation = 180f;
+                }
+                else if (surfaceType == AntSurfaceType.LeftWall)
+                {
+                    body.rotation = -90f;
+                }
+
+                sourceObject = CreateStaticCollider(label + " Source", sourcePosition, colliderSize);
+                destinationObject = CreateStaticCollider(label + " Destination", destinationPosition, colliderSize);
+                Physics2D.SyncTransforms();
+
+                object source = CreateSurfaceCandidate(
+                    surfaceType,
+                    body.position - normal * 0.32f,
+                    normal,
+                    sourceObject.GetComponent<Collider2D>());
+                motor.SetMovementIntent(intent);
+                bool started = (bool)InvokePrivateWithResult(motor, "TryBeginStepOver", source);
+
+                Require(started == expectedToStart, $"{label} opening returned an unexpected start result.");
+                Require(motor.IsStepOverActive == expectedToStart, $"{label} opening left an unexpected state.");
+                Require(
+                    motor.LastTransitionFailureReason == expectedFailure,
+                    $"{label} opening reported {motor.LastTransitionFailureReason} instead of {expectedFailure}.");
+
+                if (!expectedToStart)
+                {
+                    Require(
+                        GetPrivateField<bool>(motor, "suppressRejectedStepOverRetry"),
+                        $"{label} rejection did not suppress an unchanged retry.");
+                    motor.SetMovementIntent(Vector2.zero);
+                    InvokePrivate(motor, "UpdateRejectedStepOverSuppression");
+                    Require(
+                        !GetPrivateField<bool>(motor, "suppressRejectedStepOverRetry"),
+                        $"{label} retry suppression did not clear after release.");
+                }
+            }
+            finally
+            {
+                DestroyImmediately(destinationObject);
+                DestroyImmediately(sourceObject);
+                DestroyImmediately(antObject);
+            }
+        }
+
+        private static void ValidateBlockedFloorOpening()
+        {
+            GameObject antObject = null;
+            GameObject sourceObject = null;
+            GameObject destinationObject = null;
+            GameObject blockerObject = null;
+
+            try
+            {
+                AntSurfaceMotor motor = CreateStepOverAnt(
+                    new Vector2(-0.65f, 0.32f), out antObject, out Rigidbody2D body);
+                sourceObject = CreateStaticCollider(
+                    "Blocked Floor Source", new Vector2(-1f, -0.25f), new Vector2(2f, 0.5f));
+                destinationObject = CreateStaticCollider(
+                    "Blocked Floor Destination", new Vector2(2f, -0.25f), new Vector2(2f, 0.5f));
+                blockerObject = CreateStaticCollider(
+                    "Blocked Floor Obstacle", new Vector2(0.55f, 0.32f), new Vector2(0.2f, 0.5f));
+                Physics2D.SyncTransforms();
+
+                object source = CreateSurfaceCandidate(
+                    AntSurfaceType.Floor,
+                    new Vector2(body.position.x, 0f),
+                    Vector2.up,
+                    sourceObject.GetComponent<Collider2D>());
+                motor.SetMovementIntent(Vector2.right);
+                bool started = (bool)InvokePrivateWithResult(motor, "TryBeginStepOver", source);
+
+                Require(!started && !motor.IsStepOverActive, "An obstructed opening started Step-Over.");
+                Require(
+                    motor.LastTransitionFailureReason == AntTransitionFailureReason.StepOverPathBlocked,
+                    "An obstructed opening did not report StepOverPathBlocked.");
+            }
+            finally
+            {
+                DestroyImmediately(blockerObject);
+                DestroyImmediately(destinationObject);
+                DestroyImmediately(sourceObject);
+                DestroyImmediately(antObject);
+            }
+        }
+
+        private static AntSurfaceMotor CreateStepOverAnt(
+            Vector2 position,
+            out GameObject antObject,
+            out Rigidbody2D body)
+        {
+            antObject = new GameObject("Step-Over Regression Ant");
+            body = antObject.AddComponent<Rigidbody2D>();
+            body.gravityScale = 4f;
+            CapsuleCollider2D antCollider = antObject.AddComponent<CapsuleCollider2D>();
+            antCollider.direction = CapsuleDirection2D.Horizontal;
+            antCollider.size = new Vector2(1.2f, 0.6f);
+            AntSurfaceMotor motor = antObject.AddComponent<AntSurfaceMotor>();
+            InvokePrivate(motor, "Awake");
+            SetPrivateField(motor, "climbableSurfaces", (LayerMask)(1 << 0));
+            body.position = position;
+            body.rotation = 0f;
+            Physics2D.SyncTransforms();
+            return motor;
+        }
+
         private static void ConfigureFloorToWallTransition(
             AntSurfaceMotor motor,
             Rigidbody2D body,
@@ -237,6 +469,20 @@ namespace AntColony.EditorTools
             }
 
             method.Invoke(target, null);
+        }
+
+        private static object InvokePrivateWithResult(
+            object target,
+            string methodName,
+            params object[] arguments)
+        {
+            MethodInfo method = target.GetType().GetMethod(methodName, InstancePrivate);
+            if (method == null)
+            {
+                throw new InvalidOperationException($"Could not find private method '{methodName}'.");
+            }
+
+            return method.Invoke(target, arguments);
         }
 
         private static void SetPrivateField(object target, string fieldName, object value)

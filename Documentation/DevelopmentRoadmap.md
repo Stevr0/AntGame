@@ -2,13 +2,13 @@
 
 ## Roadmap status
 
-This roadmap reflects the repository as inspected on 8 October 2026. Milestone 1 is in progress. The user has confirmed floor and isolated wall movement in Play Mode. Ceiling traversal and connected inside/outside corner transitions are implemented and now await Play Mode acceptance.
+This roadmap reflects the repository as inspected on 9 October 2026. Milestone 1 is in progress. The user has confirmed floor and isolated wall movement plus resolution of the reported corner deadlock in Play Mode. Ceiling/corner route acceptance and the newly implemented Auto Step-Over slice still await complete Play Mode acceptance.
 
 `GameDesignDocument.md` version 0.2 is the primary design reference. Its P1 individual-traversal gate requires one ordinary player ant to use directional input across floors, walls, ceilings, corners and a physically valid one-tile opening. This roadmap breaks that gate into small implementation steps; it does not replace the GDD.
 
 ## Milestone 1 — Player Ant Movement Prototype
 
-**Status:** In progress. Directional input, floor movement, and isolated wall movement are Play Mode confirmed. Ceiling movement, intentional junction selection, and clearance-checked corner transitions are implemented but not yet Play Mode confirmed. Auto Step-Over and camera follow remain unimplemented.
+**Status:** In progress. Directional input, floor movement, isolated wall movement, and the corner-deadlock fix are Play Mode confirmed. Ceiling movement, intentional junction selection, the complete corner route, and bounded Auto Step-Over are implemented but not yet fully Play Mode accepted. Camera follow remains unimplemented.
 
 **Goal:** Prove that one directly controlled ordinary ant can move through a small, authored 2D underground tunnel and that a simple camera can follow it. Becoming a queen is later progression and is outside this milestone.
 
@@ -85,6 +85,8 @@ Each step should be tested in the Unity Editor before the next step begins.
    - Cross only when the opposite surface is reachable and the ant's entire swept footprint is clear.
    - Verify that a valid one-tile opening can be crossed continuously and that wider openings or crossings blocked by a test obstacle are rejected.
    - Do not add jumping, flying, teleportation or unrestricted falling.
+
+   **Implementation status:** Implemented in the motor, player prefab, authored scene, setup validator, and focused regression harness. The motor measures openings relative to floor/wall/ceiling tangents, accepts only a configured one-tile parallel landing, prevalidates and continuously checks the whole collider path, prioritises explicit perpendicular input, pauses on release, reverses, recovers safely, and suppresses unchanged rejected retries. Automated Unity execution is pending because the local Licensing Client lost IPC during both command-line attempts; manual Play Mode acceptance is also pending.
 
 8. **Add the camera follow**
    - Add one small camera-follow script with configurable smoothing and optional position offset.

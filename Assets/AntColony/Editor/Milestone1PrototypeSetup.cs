@@ -318,6 +318,54 @@ namespace AntColony.EditorTools
         }
 
         /// <summary>
+        /// Adds the bounded opening-traversal fixtures without rebuilding the
+        /// existing room. Keeping these as clearly named authored objects makes
+        /// each acceptance case easy to find and keeps this migration idempotent.
+        /// </summary>
+        [MenuItem("Ant Colony/Milestone 1/Apply Auto Step-Over Course")]
+        public static void ApplyAutoStepOverPrototype()
+        {
+            ApplySurfaceTransitionPrototype();
+
+            int climbableLayer = EnsureLayerExists(ClimbableSurfaceLayer);
+            Sprite soilSprite = AssetDatabase.LoadAllAssetsAtPath(SoilSpritePath)
+                .OfType<Sprite>()
+                .FirstOrDefault();
+            if (soilSprite == null)
+            {
+                throw new System.InvalidOperationException(
+                    $"The prototype soil sprite was not found at '{SoilSpritePath}'.");
+            }
+
+            ConfigureStepOverPrefab(climbableLayer);
+
+            Scene scene = SceneManager.GetSceneByPath(ScenePath);
+            bool openedForMigration = !scene.IsValid() || !scene.isLoaded;
+            if (openedForMigration)
+            {
+                scene = EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Additive);
+            }
+
+            try
+            {
+                ConfigureAutoStepOverCourse(scene, soilSprite, climbableLayer);
+                EditorSceneManager.SaveScene(scene, ScenePath);
+            }
+            finally
+            {
+                if (openedForMigration && scene.IsValid() && scene.isLoaded)
+                {
+                    EditorSceneManager.CloseScene(scene, true);
+                }
+            }
+
+            AssetDatabase.SaveAssets();
+            Debug.Log(
+                "Applied the P1 Auto Step-Over fixtures for valid, over-wide, " +
+                "ceiling, wall, and obstructed-opening acceptance cases.");
+        }
+
+        /// <summary>
         /// Checks the authored references needed by this slice. This validation is
         /// intentionally structural; hands-on Play Mode testing is still required
         /// to judge movement feel, collision response, and visible alignment.
@@ -390,6 +438,69 @@ namespace AntColony.EditorTools
                 "rotatable Rigidbody2D, player instance, enclosed course, and outside-corner block are present.");
         }
 
+        /// <summary>
+        /// Structurally validates the configured one-tile capability and every
+        /// authored opening fixture. Physical traversal still needs Play Mode.
+        /// </summary>
+        [MenuItem("Ant Colony/Milestone 1/Validate Auto Step-Over Course")]
+        public static void ValidateAutoStepOverPrototype()
+        {
+            ValidateSurfaceTransitionPrototype();
+
+            int climbableLayer = LayerMask.NameToLayer(ClimbableSurfaceLayer);
+            GameObject antPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(AntPrefabPath);
+            AntSurfaceMotor motor = antPrefab.GetComponent<AntSurfaceMotor>();
+            SerializedObject serializedMotor = new SerializedObject(motor);
+            Require(
+                Mathf.Approximately(serializedMotor.FindProperty("tileWorldSize").floatValue, 1f),
+                "PlayerAnt.prefab must define one world unit per prototype tile.");
+            Require(
+                Mathf.Approximately(serializedMotor.FindProperty("maximumStepOverTiles").floatValue, 1f),
+                "PlayerAnt.prefab must limit Auto Step-Over to one tile.");
+
+            Scene scene = SceneManager.GetSceneByPath(ScenePath);
+            bool openedForValidation = !scene.IsValid() || !scene.isLoaded;
+            if (openedForValidation)
+            {
+                scene = EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Additive);
+            }
+
+            try
+            {
+                string[] climbableFixtures =
+                {
+                    "One Tile Floor Approach",
+                    "One Tile Floor Landing",
+                    "Two Tile Floor Approach",
+                    "Two Tile Floor Landing",
+                    "One Tile Ceiling Approach",
+                    "One Tile Ceiling Landing",
+                    "One Tile Wall Lower",
+                    "One Tile Wall Upper",
+                    "Blocked Landing Approach",
+                    "Blocked Landing Surface"
+                };
+
+                foreach (string fixtureName in climbableFixtures)
+                {
+                    ValidateSurface(scene, fixtureName, climbableLayer);
+                }
+
+                ValidateObstacle(scene, "Blocked Step-Over Obstacle", climbableLayer);
+            }
+            finally
+            {
+                if (openedForValidation && scene.IsValid() && scene.isLoaded)
+                {
+                    EditorSceneManager.CloseScene(scene, true);
+                }
+            }
+
+            Debug.Log(
+                "Auto Step-Over prototype validation passed: one-tile capability and all " +
+                "floor, ceiling, wall, over-wide, and blocked fixtures are present.");
+        }
+
         private static void ValidateSurface(Scene scene, string objectName, int expectedLayer)
         {
             GameObject[] matchingSurfaces = scene.GetRootGameObjects()
@@ -407,6 +518,16 @@ namespace AntColony.EditorTools
             Require(
                 surface.GetComponent<BoxCollider2D>() != null,
                 $"'{objectName}' has no BoxCollider2D.");
+        }
+
+        private static void ValidateObstacle(Scene scene, string objectName, int climbableLayer)
+        {
+            GameObject[] matches = scene.GetRootGameObjects()
+                .Where(root => root.name == objectName)
+                .ToArray();
+            Require(matches.Length == 1, $"Expected exactly one '{objectName}'.");
+            Require(matches[0].layer != climbableLayer, $"'{objectName}' must not be climbable.");
+            Require(matches[0].GetComponent<BoxCollider2D>() != null, $"'{objectName}' has no collider.");
         }
 
         private static void Require(bool condition, string message)
@@ -491,6 +612,67 @@ namespace AntColony.EditorTools
                 new Vector3(3f, 2.5f, 1f),
                 soilSprite,
                 climbableLayer);
+        }
+
+        private static void ConfigureStepOverPrefab(int climbableLayer)
+        {
+            GameObject prefabRoot = PrefabUtility.LoadPrefabContents(AntPrefabPath);
+            try
+            {
+                AntSurfaceMotor motor = prefabRoot.GetComponent<AntSurfaceMotor>();
+                if (motor == null)
+                {
+                    throw new System.InvalidOperationException(
+                        "PlayerAnt.prefab is missing its AntSurfaceMotor component.");
+                }
+
+                SerializedObject serializedMotor = new SerializedObject(motor);
+                serializedMotor.FindProperty("climbableSurfaces").intValue = 1 << climbableLayer;
+                serializedMotor.FindProperty("tileWorldSize").floatValue = 1f;
+                serializedMotor.FindProperty("maximumStepOverTiles").floatValue = 1f;
+                serializedMotor.ApplyModifiedPropertiesWithoutUndo();
+                PrefabUtility.SaveAsPrefabAsset(prefabRoot, AntPrefabPath);
+            }
+            finally
+            {
+                PrefabUtility.UnloadPrefabContents(prefabRoot);
+            }
+        }
+
+        private static void ConfigureAutoStepOverCourse(
+            Scene scene,
+            Sprite soilSprite,
+            int climbableLayer)
+        {
+            // Each pair leaves a measured opening between collider edges. The
+            // fixtures are separate from the original room so existing corner
+            // acceptance paths remain unchanged.
+            CreateOrUpdateSurface(scene, "One Tile Floor Approach",
+                new Vector3(-5.5f, 1f, 0f), new Vector3(2f, 0.3f, 1f), soilSprite, climbableLayer);
+            CreateOrUpdateSurface(scene, "One Tile Floor Landing",
+                new Vector3(-2.5f, 1f, 0f), new Vector3(2f, 0.3f, 1f), soilSprite, climbableLayer);
+
+            CreateOrUpdateSurface(scene, "Two Tile Floor Approach",
+                new Vector3(1f, 1.4f, 0f), new Vector3(2f, 0.3f, 1f), soilSprite, climbableLayer);
+            CreateOrUpdateSurface(scene, "Two Tile Floor Landing",
+                new Vector3(5f, 1.4f, 0f), new Vector3(2f, 0.3f, 1f), soilSprite, climbableLayer);
+
+            CreateOrUpdateSurface(scene, "One Tile Ceiling Approach",
+                new Vector3(-3.5f, 2.8f, 0f), new Vector3(2f, 0.3f, 1f), soilSprite, climbableLayer);
+            CreateOrUpdateSurface(scene, "One Tile Ceiling Landing",
+                new Vector3(-0.5f, 2.8f, 0f), new Vector3(2f, 0.3f, 1f), soilSprite, climbableLayer);
+
+            CreateOrUpdateSurface(scene, "One Tile Wall Lower",
+                new Vector3(6f, -1f, 0f), new Vector3(0.3f, 2f, 1f), soilSprite, climbableLayer);
+            CreateOrUpdateSurface(scene, "One Tile Wall Upper",
+                new Vector3(6f, 2f, 0f), new Vector3(0.3f, 2f, 1f), soilSprite, climbableLayer);
+
+            CreateOrUpdateSurface(scene, "Blocked Landing Approach",
+                new Vector3(1.25f, 2.4f, 0f), new Vector3(1.5f, 0.3f, 1f), soilSprite, climbableLayer);
+            CreateOrUpdateSurface(scene, "Blocked Landing Surface",
+                new Vector3(3.75f, 2.4f, 0f), new Vector3(1.5f, 0.3f, 1f), soilSprite, climbableLayer);
+            CreateOrUpdateSurface(scene, "Blocked Step-Over Obstacle",
+                new Vector3(2.65f, 2.85f, 0f), new Vector3(0.25f, 0.9f, 1f), soilSprite, 0);
         }
 
         private static void CreateOrUpdateSurface(

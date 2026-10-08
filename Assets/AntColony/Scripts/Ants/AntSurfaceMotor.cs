@@ -28,7 +28,12 @@ namespace AntColony.Ants
         ForwardSweepBlocked,
         ForwardPoseBlocked,
         ReverseSweepBlocked,
-        ReversePoseBlocked
+        ReversePoseBlocked,
+        StepOverNoDestination,
+        StepOverGapTooWide,
+        StepOverPathBlocked,
+        StepOverForwardBlocked,
+        StepOverReverseBlocked
     }
 
     /// <summary>
@@ -73,6 +78,13 @@ namespace AntColony.Ants
         [SerializeField, Min(0f)] private float cornerConnectionTolerance = 0.05f;
         [SerializeField, Min(0f)] private float transitionClearanceInset = 0.04f;
 
+        [Header("Auto Step-Over")]
+        [SerializeField, Min(0.01f)] private float tileWorldSize = 1f;
+        [SerializeField, Min(0f)] private float maximumStepOverTiles = 1f;
+        [SerializeField, Min(0.01f)] private float stepOverProbeIncrement = 0.05f;
+        [SerializeField, Min(0.01f)] private float stepOverTriggerDistance = 0.15f;
+        [SerializeField, Range(0f, 1f)] private float stepOverSelectionBias = 0.1f;
+
         [Header("Debugging")]
         [SerializeField] private bool showDebugGizmos;
         [SerializeField] private bool logTransitionEvents;
@@ -114,8 +126,27 @@ namespace AntColony.Ants
         private AntSurfaceType suppressedTransitionTarget;
         private Vector2 suppressedTransitionIntent;
 
+        private bool isSteppingOver;
+        private bool stepOverForwardBlocked;
+        private bool stepOverWasRejectedThisFrame;
+        private SurfaceCandidate stepOverSource;
+        private SurfaceCandidate stepOverDestination;
+        private Vector2 stepOverStartPosition;
+        private Vector2 stepOverTargetPosition;
+        private Vector2 stepOverDirection;
+        private Vector2 detectedGapStart;
+        private Vector2 detectedGapEnd;
+        private float detectedGapDistance;
+        private float stepOverPathLength;
+        private float stepOverProgress;
+        private bool suppressRejectedStepOverRetry;
+        private Collider2D suppressedStepOverSource;
+        private Vector2 suppressedStepOverDirection;
+        private Vector2 suppressedStepOverIntent;
+
         /// <summary>Gets whether a surface or a validated corner path is attached.</summary>
-        public bool IsAttached => SurfaceType != AntSurfaceType.None || isTransitioning;
+        public bool IsAttached =>
+            SurfaceType != AntSurfaceType.None || isTransitioning || isSteppingOver;
 
         /// <summary>Gets whether the current attached surface is a floor.</summary>
         public bool IsGrounded => !isTransitioning && SurfaceType == AntSurfaceType.Floor;
@@ -131,6 +162,27 @@ namespace AntColony.Ants
 
         /// <summary>Gets whether the motor is moving around a validated corner.</summary>
         public bool IsTransitioning => isTransitioning;
+
+        /// <summary>
+        /// Gets whether the ant is on a prevalidated path between two real
+        /// supporting surfaces. SurfaceType is None during this controlled gap.
+        /// </summary>
+        public bool IsStepOverActive => isSteppingOver;
+
+        /// <summary>Gets current progress across the validated opening.</summary>
+        public float StepOverProgress => stepOverProgress;
+
+        /// <summary>Gets the unsupported distance measured for the latest opening.</summary>
+        public float DetectedGapDistance => detectedGapDistance;
+
+        /// <summary>Gets the configured world-space crossing limit for this ant.</summary>
+        public float MaximumStepOverDistance => tileWorldSize * maximumStepOverTiles;
+
+        /// <summary>Gets the measured beginning of the latest opening.</summary>
+        public Vector2 DetectedGapStart => detectedGapStart;
+
+        /// <summary>Gets the measured end of the latest opening.</summary>
+        public Vector2 DetectedGapEnd => detectedGapEnd;
 
         /// <summary>Gets progress from zero at the source to one at the destination.</summary>
         public float TransitionProgress => transitionProgress;
@@ -173,13 +225,32 @@ namespace AntColony.Ants
             movementIntent = Vector2.ClampMagnitude(intent, 1f);
         }
 
+        /// <summary>
+        /// Clears rejected-route suppression after authored or future runtime
+        /// terrain changes. This does not build navigation; it only permits the
+        /// motor to reassess geometry that may no longer match its last query.
+        /// </summary>
+        public void NotifyTraversalGeometryChanged()
+        {
+            suppressRejectedTransitionRetry = false;
+            suppressRejectedStepOverRetry = false;
+        }
+
         private void FixedUpdate()
         {
             UpdateRejectedTransitionSuppression();
+            UpdateRejectedStepOverSuppression();
+            stepOverWasRejectedThisFrame = false;
 
             if (isTransitioning)
             {
                 UpdateCornerTransition();
+                return;
+            }
+
+            if (isSteppingOver)
+            {
+                UpdateStepOver();
                 return;
             }
 
@@ -207,6 +278,26 @@ namespace AntColony.Ants
                 // A geometrically tempting corner is ignored when the whole
                 // collider cannot follow the path without overlapping terrain.
                 selectedSurface = currentSurface;
+            }
+
+            if (selectedSurface.IsValid &&
+                currentSurface.IsValid &&
+                selectedSurface.Type == currentSurface.Type)
+            {
+                if (TryBeginStepOver(currentSurface))
+                {
+                    UpdateStepOver();
+                    return;
+                }
+
+                if (stepOverWasRejectedThisFrame ||
+                    IsStepOverRetrySuppressed(currentSurface))
+                {
+                    ApplyAttachment(currentSurface);
+                    antBody.linearVelocity = Vector2.zero;
+                    appliedMovementDirection = Vector2.zero;
+                    return;
+                }
             }
 
             ApplyAttachment(selectedSurface);
@@ -481,6 +572,480 @@ namespace AntColony.Ants
             }
 
             return SurfaceCandidate.Invalid;
+        }
+
+        private bool TryBeginStepOver(SurfaceCandidate source)
+        {
+            Vector2 tangentIntent = ProjectIntentOntoSurface(movementIntent, source.Normal);
+            float alongSurfaceIntent = tangentIntent.magnitude;
+            float perpendicularIntent = Mathf.Abs(Vector2.Dot(movementIntent, source.Normal));
+
+            // A strong perpendicular command is an intentional request to enter
+            // an opening or choose a junction. Auto Step-Over only owns clear
+            // continued travel along the current surface.
+            if (alongSurfaceIntent < transitionInputThreshold ||
+                alongSurfaceIntent <= perpendicularIntent + stepOverSelectionBias)
+            {
+                return false;
+            }
+
+            Vector2 travelDirection = tangentIntent.normalized;
+            if (IsStepOverRetrySuppressed(source, travelDirection))
+            {
+                return false;
+            }
+
+            stepOverSource = source;
+            bool foundOpening = TryFindStepOverDestination(
+                source,
+                travelDirection,
+                out SurfaceCandidate destination,
+                out Vector2 targetPosition,
+                out AntTransitionFailureReason failureReason);
+
+            if (!foundOpening)
+            {
+                if (failureReason != AntTransitionFailureReason.None)
+                {
+                    RejectStepOver(source, travelDirection, failureReason);
+                }
+
+                return false;
+            }
+
+            stepOverDestination = destination;
+            stepOverStartPosition = antBody.position;
+            stepOverTargetPosition = targetPosition;
+            stepOverDirection = travelDirection;
+            stepOverPathLength = Mathf.Max(
+                Vector2.Distance(stepOverStartPosition, stepOverTargetPosition),
+                0.01f);
+            stepOverProgress = 0f;
+            stepOverForwardBlocked = false;
+            suppressRejectedStepOverRetry = false;
+            stepOverWasRejectedThisFrame = false;
+            transitionWasRejected = false;
+            LastTransitionFailureReason = AntTransitionFailureReason.None;
+            isSteppingOver = true;
+
+            // There is deliberately no ordinary surface type while the ant is
+            // between the two measured supports. The explicit Step-Over state is
+            // responsible for position, gravity, reversal, and landing.
+            SurfaceType = AntSurfaceType.None;
+            antBody.gravityScale = 0f;
+            antBody.linearVelocity = Vector2.zero;
+            antBody.angularVelocity = 0f;
+
+            LogTransitionEvent(
+                $"Started Step-Over across {detectedGapDistance:0.00} world units.",
+                false);
+            return true;
+        }
+
+        private bool TryFindStepOverDestination(
+            SurfaceCandidate source,
+            Vector2 travelDirection,
+            out SurfaceCandidate destination,
+            out Vector2 targetPosition,
+            out AntTransitionFailureReason failureReason)
+        {
+            destination = SurfaceCandidate.Invalid;
+            targetPosition = default;
+            failureReason = AntTransitionFailureReason.None;
+
+            GetCapsuleClearance(out float halfThickness, out float halfLength);
+            Vector2 leadingProbePosition = antBody.position + travelDirection * halfLength;
+            float maximumGap = MaximumStepOverDistance;
+            float searchDistance = stepOverTriggerDistance +
+                maximumGap +
+                tileWorldSize * 1.5f;
+            bool gapFound = false;
+            float gapStartOffset = 0f;
+            float gapEndOffset = 0f;
+
+            // First inspect only the short trigger region. This keeps ordinary
+            // movement over a continuous surface cheap: the longer destination
+            // search runs only after support is actually lost near the ant.
+            for (float offset = 0f;
+                 offset <= stepOverTriggerDistance + stepOverProbeIncrement * 0.5f;
+                 offset += stepOverProbeIncrement)
+            {
+                Vector2 samplePosition = leadingProbePosition + travelDirection * offset;
+                SurfaceCandidate sample = ProbeParallelSurfaceAt(
+                    samplePosition,
+                    source.Normal,
+                    source.Type,
+                    halfThickness + surfaceProbeDistance + surfaceSeparation);
+
+                if (!sample.IsValid)
+                {
+                    gapFound = true;
+                    gapStartOffset = offset;
+                    break;
+                }
+            }
+
+            if (!gapFound)
+            {
+                return false;
+            }
+
+            for (float offset = gapStartOffset + stepOverProbeIncrement;
+                 offset <= searchDistance + stepOverProbeIncrement * 0.5f;
+                 offset += stepOverProbeIncrement)
+            {
+                Vector2 samplePosition = leadingProbePosition + travelDirection * offset;
+                SurfaceCandidate sample = ProbeParallelSurfaceAt(
+                    samplePosition,
+                    source.Normal,
+                    source.Type,
+                    halfThickness + surfaceProbeDistance + surfaceSeparation);
+                if (!sample.IsValid)
+                {
+                    continue;
+                }
+
+                destination = sample;
+                gapEndOffset = offset;
+                break;
+            }
+
+            detectedGapStart = leadingProbePosition +
+                travelDirection * gapStartOffset -
+                source.Normal * halfThickness;
+
+            if (!destination.IsValid)
+            {
+                detectedGapDistance = searchDistance - gapStartOffset;
+                detectedGapEnd = leadingProbePosition +
+                    travelDirection * searchDistance -
+                    source.Normal * halfThickness;
+                failureReason = AntTransitionFailureReason.StepOverNoDestination;
+                return false;
+            }
+
+            detectedGapDistance = Mathf.Max(0f, gapEndOffset - gapStartOffset);
+            detectedGapEnd = leadingProbePosition +
+                travelDirection * gapEndOffset -
+                source.Normal * halfThickness;
+
+            // Half an increment accounts for the sampling boundary without
+            // making a genuinely wider opening pass as a one-tile opening.
+            if (detectedGapDistance > maximumGap + stepOverProbeIncrement * 0.5f)
+            {
+                stepOverDestination = destination;
+                failureReason = AntTransitionFailureReason.StepOverGapTooWide;
+                return false;
+            }
+
+            targetPosition = destination.Point +
+                source.Normal * (halfThickness + surfaceSeparation) +
+                travelDirection * halfLength;
+
+            if (!CanStepOverSweepTo(targetPosition, source.Collider, destination.Collider))
+            {
+                stepOverDestination = destination;
+                failureReason = AntTransitionFailureReason.StepOverPathBlocked;
+                return false;
+            }
+
+            for (int sampleIndex = 1;
+                 sampleIndex <= TransitionClearanceSamples;
+                 sampleIndex++)
+            {
+                float progress = sampleIndex / (float)TransitionClearanceSamples;
+                Vector2 samplePosition = Vector2.Lerp(
+                    antBody.position,
+                    targetPosition,
+                    progress);
+
+                if (!IsPoseClear(samplePosition, antBody.rotation))
+                {
+                    stepOverDestination = destination;
+                    rejectedTransitionPoint = samplePosition;
+                    failureReason = AntTransitionFailureReason.StepOverPathBlocked;
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        private SurfaceCandidate ProbeParallelSurfaceAt(
+            Vector2 probeOrigin,
+            Vector2 expectedNormal,
+            AntSurfaceType expectedType,
+            float probeDistance)
+        {
+            int hitCount = Physics2D.Raycast(
+                probeOrigin,
+                -expectedNormal,
+                probeFilter,
+                probeHits,
+                probeDistance);
+            RaycastHit2D nearestHit = FindNearestExternalHit(hitCount);
+
+            if (nearestHit.collider == null ||
+                !IsClimbableLayer(nearestHit.collider.gameObject.layer) ||
+                Vector2.Dot(nearestHit.normal, expectedNormal) < surfaceNormalTolerance)
+            {
+                return SurfaceCandidate.Invalid;
+            }
+
+            Vector2 normal = nearestHit.normal.normalized;
+            if (ClassifySurface(normal) != expectedType)
+            {
+                return SurfaceCandidate.Invalid;
+            }
+
+            return new SurfaceCandidate(
+                expectedType,
+                nearestHit.point,
+                normal,
+                nearestHit.distance,
+                false,
+                nearestHit.collider);
+        }
+
+        private void UpdateStepOver()
+        {
+            float forwardIntent = Vector2.Dot(movementIntent, stepOverDirection);
+            float reverseIntent = Vector2.Dot(movementIntent, -stepOverDirection);
+            float progressDirection = 0f;
+
+            if (forwardIntent >= transitionInputThreshold && !stepOverForwardBlocked)
+            {
+                progressDirection = 1f;
+            }
+            else if (reverseIntent >= transitionInputThreshold)
+            {
+                progressDirection = -1f;
+            }
+
+            antBody.gravityScale = 0f;
+            antBody.linearVelocity = Vector2.zero;
+            antBody.angularVelocity = 0f;
+
+            if (progressDirection == 0f)
+            {
+                appliedMovementDirection = Vector2.zero;
+                return;
+            }
+
+            float progressStep = movementSpeed * Time.fixedDeltaTime / stepOverPathLength;
+            float proposedProgress = Mathf.Clamp01(
+                stepOverProgress + progressDirection * progressStep);
+
+            if (progressDirection < 0f && proposedProgress <= 0.0001f)
+            {
+                stepOverProgress = 0f;
+                FinishStepOver(stepOverSource, false);
+                return;
+            }
+
+            Vector2 proposedPosition = Vector2.Lerp(
+                stepOverStartPosition,
+                stepOverTargetPosition,
+                proposedProgress);
+            bool sweepIsClear = CanStepOverSweepTo(
+                proposedPosition,
+                stepOverSource.Collider,
+                stepOverDestination.Collider);
+            bool poseIsClear = sweepIsClear && IsPoseClear(proposedPosition, antBody.rotation);
+
+            if (!sweepIsClear || !poseIsClear)
+            {
+                AntTransitionFailureReason reason = progressDirection > 0f
+                    ? AntTransitionFailureReason.StepOverForwardBlocked
+                    : AntTransitionFailureReason.StepOverReverseBlocked;
+                RejectStepOver(stepOverSource, stepOverDirection, reason, proposedPosition);
+
+                if (progressDirection > 0f)
+                {
+                    stepOverForwardBlocked = true;
+                    if (stepOverProgress <= 0.0001f)
+                    {
+                        FinishStepOver(stepOverSource, false);
+                    }
+                }
+                else
+                {
+                    CancelStepOverAtCurrentPosition();
+                }
+
+                return;
+            }
+
+            stepOverProgress = proposedProgress;
+            surfacePoint = Vector2.Lerp(detectedGapStart, detectedGapEnd, stepOverProgress);
+            surfaceNormal = stepOverSource.Normal;
+            appliedMovementDirection = progressDirection > 0f
+                ? stepOverDirection
+                : -stepOverDirection;
+            antBody.MovePosition(proposedPosition);
+
+            if (Mathf.Approximately(stepOverProgress, 1f))
+            {
+                FinishStepOver(stepOverDestination, true);
+            }
+        }
+
+        private void FinishStepOver(SurfaceCandidate completedSurface, bool clearFailure)
+        {
+            isSteppingOver = false;
+            stepOverForwardBlocked = false;
+            SurfaceType = completedSurface.Type;
+            surfacePoint = completedSurface.Point;
+            surfaceNormal = completedSurface.Normal;
+            antBody.gravityScale = 0f;
+
+            if (clearFailure)
+            {
+                transitionWasRejected = false;
+                LastTransitionFailureReason = AntTransitionFailureReason.None;
+            }
+
+            LogTransitionEvent(
+                $"Finished Step-Over on {completedSurface.Type} at {stepOverProgress:0.00}.",
+                false);
+        }
+
+        private bool CanStepOverSweepTo(
+            Vector2 proposedPosition,
+            Collider2D sourceCollider,
+            Collider2D destinationCollider)
+        {
+            Vector2 displacement = proposedPosition - antBody.position;
+            float distance = displacement.magnitude;
+            if (distance < 0.0001f)
+            {
+                return true;
+            }
+
+            int hitCount = antCollider.Cast(
+                displacement / distance,
+                probeFilter,
+                probeHits,
+                distance);
+
+            for (int index = 0; index < hitCount; index++)
+            {
+                RaycastHit2D hit = probeHits[index];
+                if (hit.collider == null ||
+                    hit.collider.attachedRigidbody == antBody ||
+                    hit.collider == sourceCollider ||
+                    hit.collider == destinationCollider)
+                {
+                    continue;
+                }
+
+                if (hit.distance > transitionClearanceInset && hit.distance < distance)
+                {
+                    rejectedTransitionPoint = hit.point;
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        private void CancelStepOverAtCurrentPosition()
+        {
+            isSteppingOver = false;
+            stepOverForwardBlocked = false;
+            appliedMovementDirection = Vector2.zero;
+            antBody.linearVelocity = Vector2.zero;
+            antBody.angularVelocity = 0f;
+
+            CollectDirectSurfaceCandidates();
+            SurfaceCandidate recoveredSurface = FindCandidateOnCollider(
+                stepOverSource.Type,
+                stepOverSource.Collider);
+            if (!recoveredSurface.IsValid)
+            {
+                recoveredSurface = FindCandidateOnCollider(
+                    stepOverDestination.Type,
+                    stepOverDestination.Collider);
+            }
+
+            if (recoveredSurface.IsValid)
+            {
+                ApplyAttachment(recoveredSurface);
+                return;
+            }
+
+            SurfaceType = AntSurfaceType.None;
+            surfacePoint = antBody.position;
+            surfaceNormal = Vector2.up;
+            antBody.gravityScale = detachedGravityScale;
+        }
+
+        private SurfaceCandidate FindCandidateOnCollider(
+            AntSurfaceType type,
+            Collider2D expectedCollider)
+        {
+            for (int index = 0; index < candidateCount; index++)
+            {
+                SurfaceCandidate candidate = candidates[index];
+                if (candidate.Type == type && candidate.Collider == expectedCollider)
+                {
+                    return candidate;
+                }
+            }
+
+            return SurfaceCandidate.Invalid;
+        }
+
+        private void RejectStepOver(
+            SurfaceCandidate source,
+            Vector2 travelDirection,
+            AntTransitionFailureReason reason,
+            Vector2? rejectedPoint = null)
+        {
+            stepOverWasRejectedThisFrame = true;
+            transitionWasRejected = true;
+            rejectedTransitionPoint = rejectedPoint ?? detectedGapEnd;
+            LastTransitionFailureReason = reason;
+            suppressRejectedStepOverRetry = true;
+            suppressedStepOverSource = source.Collider;
+            suppressedStepOverDirection = travelDirection;
+            suppressedStepOverIntent = movementIntent;
+            LogTransitionEvent($"Step-Over rejected: {reason}.", true);
+        }
+
+        private bool IsStepOverRetrySuppressed(SurfaceCandidate source)
+        {
+            Vector2 travel = ProjectIntentOntoSurface(movementIntent, source.Normal);
+            return travel.sqrMagnitude > 0.0001f &&
+                IsStepOverRetrySuppressed(source, travel.normalized);
+        }
+
+        private bool IsStepOverRetrySuppressed(
+            SurfaceCandidate source,
+            Vector2 travelDirection)
+        {
+            return suppressRejectedStepOverRetry &&
+                source.Collider == suppressedStepOverSource &&
+                Vector2.Dot(travelDirection, suppressedStepOverDirection) > 0.95f;
+        }
+
+        private void UpdateRejectedStepOverSuppression()
+        {
+            if (!suppressRejectedStepOverRetry)
+            {
+                return;
+            }
+
+            bool inputReleased = movementIntent.sqrMagnitude < 0.0001f;
+            bool inputChanged = !inputReleased &&
+                Vector2.Dot(
+                    movementIntent.normalized,
+                    suppressedStepOverIntent.normalized) < 0.95f;
+
+            if (inputReleased || inputChanged)
+            {
+                suppressRejectedStepOverRetry = false;
+            }
         }
 
         private bool TryBeginCornerTransition(
@@ -1109,6 +1674,9 @@ namespace AntColony.Ants
             isTransitioning = false;
             transitionForwardBlocked = false;
             suppressRejectedTransitionRetry = false;
+            isSteppingOver = false;
+            stepOverForwardBlocked = false;
+            suppressRejectedStepOverRetry = false;
 
             if (antBody != null)
             {
@@ -1131,6 +1699,10 @@ namespace AntColony.Ants
             maximumConnectedCornerDistance = Mathf.Max(0.05f, maximumConnectedCornerDistance);
             cornerConnectionTolerance = Mathf.Max(0f, cornerConnectionTolerance);
             transitionClearanceInset = Mathf.Max(0f, transitionClearanceInset);
+            tileWorldSize = Mathf.Max(0.01f, tileWorldSize);
+            maximumStepOverTiles = Mathf.Max(0f, maximumStepOverTiles);
+            stepOverProbeIncrement = Mathf.Max(0.01f, stepOverProbeIncrement);
+            stepOverTriggerDistance = Mathf.Max(0.01f, stepOverTriggerDistance);
         }
 
 #if UNITY_EDITOR
@@ -1190,6 +1762,15 @@ namespace AntColony.Ants
                     Gizmos.DrawLine(previous, next);
                     previous = next;
                 }
+            }
+
+            if (isSteppingOver)
+            {
+                Gizmos.color = Color.green;
+                Gizmos.DrawWireSphere(detectedGapStart, 0.08f);
+                Gizmos.DrawWireSphere(detectedGapEnd, 0.08f);
+                Gizmos.DrawLine(detectedGapStart, detectedGapEnd);
+                Gizmos.DrawLine(stepOverStartPosition, stepOverTargetPosition);
             }
 
             if (transitionWasRejected)
