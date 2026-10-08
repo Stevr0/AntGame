@@ -13,7 +13,7 @@ These instructions apply to the entire repository. They are intended for Codex a
 
 ## Game vision (not an implementation checklist)
 
-- The player begins with one founding queen ant, establishes a nest, and eventually raises individual workers.
+- The player begins as an ordinary ant. Becoming a queen is a future progression event whose requirements remain unresolved.
 - Each ant is selectable and directly controllable, with distinct attributes, learned skills, health, hunger, hydration and energy.
 - Unselected ants autonomously perform assigned jobs while responding to urgent needs.
 - Ants traverse floors, walls and ceilings in a 2D side-view environment.
@@ -23,12 +23,13 @@ These instructions apply to the entire repository. They are intended for Codex a
 
 ## Current development boundary
 
-**Initial milestone: Queen Movement Prototype.** Unless the user explicitly changes the approved milestone, work only toward:
+**Initial milestone: Player Ant Movement Prototype.** Unless the user explicitly changes the approved milestone, work only toward:
 
-1. A simple 2D test scene with one queen and an already-open tunnel.
+1. A simple 2D test scene with one ordinary player ant and an already-open tunnel.
 2. Movement on floors, walls and ceilings, including smooth transitions and surface-aligned rotation.
-3. A basic follow camera.
-4. A reproducible in-Editor test of the above.
+3. Directional WASD input, intentional surface choice at junctions, and physically valid Auto Step-Over across a suitable one-tile opening.
+4. A basic follow camera.
+5. A reproducible in-Editor test of the above.
 
 **Not yet in scope:** digging, dynamic terrain editing, automatic pathfinding, worker AI, ant needs, skill progression, brood, reproduction, food/water logistics, multiplayer or networking.
 
@@ -75,7 +76,20 @@ For each implementation task:
 5. Provide a brief step-by-step Editor test procedure and expected results.
 6. Report known limitations and regressions. Never fabricate test results.
 
-For queen movement, check floor traversal, climbing both sides of a tunnel, ceiling traversal, corners, reversal and loss-of-surface behavior. The queen should not spontaneously fall, teleport or oscillate at corners under expected conditions.
+For player-ant movement, check directional input, floor traversal, climbing both sides of a tunnel, ceiling traversal, corners, reversal, Auto Step-Over and loss-of-surface behaviour. The ant should not spontaneously fall, teleport, overlap blockers or oscillate at corners under expected conditions.
+
+## Movement and navigation conventions
+
+- Player-controlled and autonomous ants are control states of the same physical entity, not different ant types.
+- Use one reusable set of surface-traversal and collision rules for both control states. Keep input intent, movement execution and future route/task decisions separate where practical.
+- An ordinary ant has a nominal footprint of approximately one tile, but movement remains smooth and continuous rather than grid-snapped.
+- Solid terrain and other ants block movement. Never solve congestion by disabling collision, overlapping ants, teleporting, jumping, flying or ignoring terrain.
+- Treat one-tile occupancy as a logical navigation and clearance constraint based on the ant's whole footprint, not only its centre point.
+- Auto Step-Over may cross a suitable one-tile opening only when the opposite surface is reachable and the entire crossing is clear. The permitted distance must be configurable and physically validated.
+- Single-width passages allow single-file traffic; double-width passages permit passing only when actual collision geometry and ant size provide enough clearance.
+- Future navigation must distinguish static traversability from dynamic occupancy, movement execution and task navigation without prematurely turning those responsibilities into heavyweight frameworks.
+- Dynamic excavation must invalidate affected traversal data at runtime. Prefer local or event-driven updates over unconditional full-world recalculation.
+- Waiting, deterministic yielding, bounded recovery and route replanning are planned traffic tools. Do not build a complex reservation or traffic-controller system before multi-ant tests justify it.
 
 ## Documentation maintenance
 
