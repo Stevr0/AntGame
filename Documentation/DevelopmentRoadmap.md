@@ -78,7 +78,7 @@ Each step should be tested in the Unity Editor before the next step begins.
    - Tune attachment, query distance, rotation speed and collider size for smooth inside and outside corners.
    - Verify clockwise and counter-clockwise transitions across floor-to-wall, wall-to-ceiling, ceiling-to-wall and wall-to-floor joins.
 
-   **Implementation status:** Implemented in code and authored test content. Concave joins use direct surface candidates; convex edges use bounded look-ahead, connected-line and collider-seam checks, whole-collider path samples, and per-step sweep/overlap checks. Failed clearance stops the transition. Play Mode acceptance and tuning remain pending.
+   **Implementation status:** Implemented in code and authored test content. Live testing exposed a transition-state deadlock; the state exit, reversal, failed-step recovery, and unchanged-input retry defects are fixed. The focused Unity Edit Mode regression passed 1/1, while manual reproduction testing and wider corner acceptance remain pending.
 
 7. **Add Auto Step-Over**
    - Add a configurable maximum crossing distance rather than hard-coding a tile count into movement logic.

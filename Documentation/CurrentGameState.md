@@ -4,7 +4,7 @@
 
 **Milestone 1 — Player Ant Movement Prototype**
 
-**Status:** In progress. The user has confirmed floor movement and vertical wall climbing in Unity Play Mode. Ceiling traversal and connected inside/outside corner transitions are now implemented in code and authored content, but still require Play Mode acceptance.
+**Status:** In progress. The user has confirmed floor movement and vertical wall climbing in Unity Play Mode. Live testing then found a corner-transition deadlock. Its state-machine causes are fixed in code and covered by an automated Editor regression harness, but the fix and the wider ceiling/corner route still require Play Mode acceptance.
 
 ## Repository and architecture
 
@@ -54,12 +54,23 @@ The user has confirmed the previous movement prototype works in Unity Play Mode:
 - If clearance fails, the transition is rejected and the ant remains on the current surface. Releasing input pauses an active transition; opposite intent can reverse it.
 - Position and orientation advance at the slower of configured movement and rotation rates to avoid snapping or uncontrolled acceleration.
 
+### Corner-transition deadlock fix
+
+- Live Play Mode testing confirmed that an ant could enter a corner transition and become unable to move or reverse.
+- The transition step previously recorded a failed sweep/overlap and returned while leaving the motor permanently active. A progress-zero reversal was also validated as a collision step before it could exit to the source, and only the source-opposite direction counted as reverse input.
+- A blocked first step now cancels immediately to the source. A later blocked forward step is latched instead of retried every physics frame, preserving reversal along the validated path.
+- Either the opposite source direction or the opposite destination direction reverses a transition, so escaping does not require an unintuitive key combination at the midpoint.
+- If an already-travelled reverse step becomes blocked by changed geometry, the motor cancels onto a currently detected source/target surface or explicitly detaches at its last valid physical pose.
+- A rejected transition pair is not retried with unchanged held input. Releasing or changing input clears the suppression.
+- Source and destination colliders are ignored only by the redundant movement sweep because they are intentional support contacts; inset pose-overlap validation remains active to prevent penetration.
+
 ### Attachment and debugging
 
 - Attachment states now include `None`, `Floor`, `LeftWall`, `RightWall`, and `Ceiling`, plus an explicit active corner-transition state.
 - Gravity is disabled only while a real surface or prevalidated connected-corner path is active. Losing support restores the Rigidbody2D's authored gravity without teleportation.
 - Fixed-size hit, candidate, and overlap arrays avoid routine movement allocations.
 - Optional gizmos show all four direct probes, input intent, candidate points/normals, the selected attachment, movement direction, active corner path, and the latest rejected transition point.
+- Read-only diagnostics expose transition source, destination, progress, accepted direction, and the last failure reason. Optional `Log Transition Events` output reports state changes and failures without per-frame logging.
 
 ## Authored prototype course
 
@@ -79,7 +90,8 @@ The user has confirmed the previous movement prototype works in Unity Play Mode:
 - The Editor migration serialized the ceiling course, central outside-corner block, new starting position, and new motor configuration.
 - `ValidateSurfaceTransitionPrototype` passed, confirming prefab wiring, the climbable mask, rotatable Rigidbody2D, player scene instance, enclosed floor/wall/ceiling course, and outside-corner block.
 - Repository whitespace validation passed with `git diff --check` after Unity-generated whitespace was cleaned up.
-- The repository still has no NUnit movement test assembly, so no pre-existing automated traversal test suite was available.
+- A focused `AntColony.EditModeTests` Unity Test Framework assembly was added without moving the runtime scripts out of Unity's existing predefined assembly.
+- The focused Edit Mode test passed 1/1. `AntSurfaceMotorRegressionValidation` exercised the actual motor transition method and covered release/pause, both intuitive reversal directions, blocked-first-step cancellation, later-step forward blocking, blocked-reverse safe cancellation, failure-reason recording, retry suppression, and suppression reset after input release.
 
 These checks validate compilation and authored structure. The new ceiling and transition behavior has not been visually verified in Play Mode.
 
@@ -99,10 +111,12 @@ These checks validate compilation and authored structure. The new ceiling and tr
 12. Release input midway through and after transitions; confirm the ant stops and remains supported.
 13. Enable `Show Debug Gizmos` and inspect candidate normals, selected contact, orange transition path, and any red rejected point.
 14. Confirm the Console contains no errors or warnings throughout repeated clockwise and counter-clockwise loops.
+15. Reproduce the original deadlock path, then try release, the opposite source direction, and the opposite destination direction; confirm transition state always pauses, reverses, completes, or cancels instead of permanently consuming input.
 
 ## Known limitations and remaining P1 work
 
-- The newly implemented ceiling and corner behavior is not yet Play Mode accepted and may require tuning of probe distance, look-ahead distance, collider inset, or rotation speed.
+- The corner-deadlock fix has passed automated Editor regression checks but has not yet been re-tested in live Play Mode. It must not be considered resolved until the original reproduction no longer locks movement.
+- The newly implemented ceiling and wider corner behavior is not yet Play Mode accepted and may require tuning of probe distance, look-ahead distance, collider inset, or rotation speed.
 - Corners are intentionally limited to nearby, approximately perpendicular surfaces. Irregular or curved terrain is not supported by this slice.
 - Outside corners require deliberate diagonal intent because both approaching the edge and selecting the outgoing surface must be unambiguous.
 - The transition path is validated against current static collision geometry; runtime excavation and dynamic traversal invalidation do not exist yet.

@@ -16,6 +16,22 @@ namespace AntColony.Ants
     }
 
     /// <summary>
+    /// Describes the most recent reason a corner path was rejected or cancelled.
+    /// The value changes only on transition state changes, not every physics step.
+    /// </summary>
+    public enum AntTransitionFailureReason
+    {
+        None,
+        DisconnectedSurfaces,
+        InvalidTransitionDirection,
+        PrevalidationBlocked,
+        ForwardSweepBlocked,
+        ForwardPoseBlocked,
+        ReverseSweepBlocked,
+        ReversePoseBlocked
+    }
+
+    /// <summary>
     /// Moves one ant across connected floors, walls, ceilings, and right-angle
     /// corners using Rigidbody2D physics.
     ///
@@ -30,7 +46,7 @@ namespace AntColony.Ants
         private const int MaximumProbeHits = 8;
         private const int MaximumSurfaceCandidates = 6;
         private const int MaximumOverlapResults = 12;
-        private const int TransitionClearanceSamples = 7;
+        private const int TransitionClearanceSamples = 24;
 
         [Header("Movement")]
         [SerializeField, Min(0f)] private float movementSpeed = 4f;
@@ -59,6 +75,7 @@ namespace AntColony.Ants
 
         [Header("Debugging")]
         [SerializeField] private bool showDebugGizmos;
+        [SerializeField] private bool logTransitionEvents;
 
         // These arrays are reused by every physics step. None of the normal
         // traversal queries allocate managed memory as the ant moves.
@@ -91,6 +108,11 @@ namespace AntColony.Ants
         private float transitionTargetRotation;
         private float transitionPathLength;
         private float transitionProgress;
+        private bool transitionForwardBlocked;
+        private bool suppressRejectedTransitionRetry;
+        private AntSurfaceType suppressedTransitionSource;
+        private AntSurfaceType suppressedTransitionTarget;
+        private Vector2 suppressedTransitionIntent;
 
         /// <summary>Gets whether a surface or a validated corner path is attached.</summary>
         public bool IsAttached => SurfaceType != AntSurfaceType.None || isTransitioning;
@@ -109,6 +131,21 @@ namespace AntColony.Ants
 
         /// <summary>Gets whether the motor is moving around a validated corner.</summary>
         public bool IsTransitioning => isTransitioning;
+
+        /// <summary>Gets progress from zero at the source to one at the destination.</summary>
+        public float TransitionProgress => transitionProgress;
+
+        /// <summary>Gets the source surface of the active or most recent transition.</summary>
+        public AntSurfaceType TransitionStartSurface => transitionSource.Type;
+
+        /// <summary>Gets the destination surface of the active or most recent transition.</summary>
+        public AntSurfaceType TransitionDestinationSurface => transitionTarget.Type;
+
+        /// <summary>Gets the direction currently accepted by the physical motor.</summary>
+        public Vector2 AcceptedMovementDirection => appliedMovementDirection;
+
+        /// <summary>Gets the most recent transition rejection or cancellation reason.</summary>
+        public AntTransitionFailureReason LastTransitionFailureReason { get; private set; }
 
         /// <summary>Gets the latest normalised world-direction request.</summary>
         public Vector2 MovementIntent => movementIntent;
@@ -138,7 +175,7 @@ namespace AntColony.Ants
 
         private void FixedUpdate()
         {
-            transitionWasRejected = false;
+            UpdateRejectedTransitionSuppression();
 
             if (isTransitioning)
             {
@@ -157,7 +194,11 @@ namespace AntColony.Ants
                 currentSurface.IsValid &&
                 selectedSurface.Type != currentSurface.Type)
             {
-                if (TryBeginCornerTransition(currentSurface, selectedSurface))
+                if (IsTransitionRetrySuppressed(currentSurface, selectedSurface))
+                {
+                    selectedSurface = currentSurface;
+                }
+                else if (TryBeginCornerTransition(currentSurface, selectedSurface))
                 {
                     UpdateCornerTransition();
                     return;
@@ -446,9 +487,16 @@ namespace AntColony.Ants
             SurfaceCandidate source,
             SurfaceCandidate target)
         {
+            // Store both ends before validation so a rejected plan can suppress
+            // repeated attempts for this exact surface pair and unchanged input.
+            transitionSource = source;
+            transitionTarget = target;
+
             if (!TryFindCornerPivot(source, target, out Vector2 pivot))
             {
-                RejectTransition(target.Point);
+                RejectTransition(
+                    target.Point,
+                    AntTransitionFailureReason.DisconnectedSurfaces);
                 return false;
             }
 
@@ -457,7 +505,9 @@ namespace AntColony.Ants
                 target.Normal);
             if (exitDirection.magnitude < transitionInputThreshold)
             {
-                RejectTransition(pivot);
+                RejectTransition(
+                    pivot,
+                    AntTransitionFailureReason.InvalidTransitionDirection);
                 return false;
             }
 
@@ -478,7 +528,9 @@ namespace AntColony.Ants
 
             if (entryDirection.sqrMagnitude < 0.0001f)
             {
-                RejectTransition(pivot);
+                RejectTransition(
+                    pivot,
+                    AntTransitionFailureReason.InvalidTransitionDirection);
                 return false;
             }
 
@@ -500,7 +552,10 @@ namespace AntColony.Ants
             // safely stays on its current surface.
             for (int sample = 1; sample <= TransitionClearanceSamples; sample++)
             {
-                float progress = sample / (TransitionClearanceSamples + 1f);
+                // Include the destination pose and densely sample near the source.
+                // The old sparse sampling skipped the first real physics step,
+                // allowing a transition to start and then fail immediately.
+                float progress = sample / (float)TransitionClearanceSamples;
                 Vector2 samplePosition = EvaluateQuadraticBezier(
                     antBody.position,
                     controlPoint,
@@ -510,7 +565,9 @@ namespace AntColony.Ants
 
                 if (!IsPoseClear(samplePosition, sampleRotation))
                 {
-                    RejectTransition(samplePosition);
+                    RejectTransition(
+                        samplePosition,
+                        AntTransitionFailureReason.PrevalidationBlocked);
                     return false;
                 }
             }
@@ -529,20 +586,30 @@ namespace AntColony.Ants
                 Vector2.Distance(transitionControlPoint, transitionTargetPosition),
                 0.01f);
             transitionProgress = 0f;
+            transitionForwardBlocked = false;
+            suppressRejectedTransitionRetry = false;
+            transitionWasRejected = false;
+            LastTransitionFailureReason = AntTransitionFailureReason.None;
             isTransitioning = true;
             antBody.gravityScale = 0f;
             antBody.linearVelocity = Vector2.zero;
             antBody.angularVelocity = 0f;
+
+            LogTransitionEvent(
+                $"Started {source.Type} -> {target.Type} corner transition.",
+                false);
             return true;
         }
 
         private void UpdateCornerTransition()
         {
             float forwardIntent = Vector2.Dot(movementIntent, transitionExitDirection);
-            float reverseIntent = Vector2.Dot(movementIntent, -transitionEntryDirection);
+            float reverseAlongSource = Vector2.Dot(movementIntent, -transitionEntryDirection);
+            float reverseAgainstDestination = Vector2.Dot(movementIntent, -transitionExitDirection);
+            float reverseIntent = Mathf.Max(reverseAlongSource, reverseAgainstDestination);
             float progressDirection = 0f;
 
-            if (forwardIntent >= transitionInputThreshold)
+            if (forwardIntent >= transitionInputThreshold && !transitionForwardBlocked)
             {
                 progressDirection = 1f;
             }
@@ -574,6 +641,17 @@ namespace AntColony.Ants
             float progressStep = Mathf.Min(linearProgressStep, rotationalProgressStep);
             float proposedProgress = Mathf.Clamp01(
                 transitionProgress + progressDirection * progressStep);
+
+            // Reaching the source is a state-machine exit, not a new movement
+            // step. Evaluating overlap first used to let ordinary source contact
+            // reject cancellation and leave the ant permanently transitioning.
+            if (progressDirection < 0f && proposedProgress <= 0.0001f)
+            {
+                transitionProgress = 0f;
+                FinishCornerTransition(transitionSource, false);
+                return;
+            }
+
             Vector2 proposedPosition = EvaluateQuadraticBezier(
                 transitionStartPosition,
                 transitionControlPoint,
@@ -584,10 +662,41 @@ namespace AntColony.Ants
                 transitionTargetRotation,
                 proposedProgress);
 
-            if (!CanSweepTo(proposedPosition) || !IsPoseClear(proposedPosition, proposedRotation))
+            bool sweepIsClear = CanSweepTo(proposedPosition);
+            bool poseIsClear = sweepIsClear && IsPoseClear(proposedPosition, proposedRotation);
+            if (!sweepIsClear || !poseIsClear)
             {
-                RejectTransition(proposedPosition);
+                AntTransitionFailureReason failureReason = progressDirection > 0f
+                    ? sweepIsClear
+                        ? AntTransitionFailureReason.ForwardPoseBlocked
+                        : AntTransitionFailureReason.ForwardSweepBlocked
+                    : sweepIsClear
+                        ? AntTransitionFailureReason.ReversePoseBlocked
+                        : AntTransitionFailureReason.ReverseSweepBlocked;
+
+                RejectTransition(proposedPosition, failureReason);
                 appliedMovementDirection = Vector2.zero;
+
+                if (progressDirection > 0f)
+                {
+                    // Do not retry the same invalid forward step forever. At the
+                    // source we can cancel immediately; after partial progress we
+                    // pause and preserve the already validated reverse path.
+                    transitionForwardBlocked = true;
+
+                    if (transitionProgress <= 0.0001f)
+                    {
+                        FinishCornerTransition(transitionSource, false);
+                    }
+                }
+                else
+                {
+                    // A changed scene could theoretically obstruct the already
+                    // travelled reverse path. Exit to a real surface at the
+                    // current pose when possible, otherwise detach explicitly.
+                    CancelTransitionAtCurrentPosition();
+                }
+
                 return;
             }
 
@@ -609,21 +718,34 @@ namespace AntColony.Ants
 
             if (Mathf.Approximately(transitionProgress, 1f))
             {
-                FinishCornerTransition(transitionTarget);
+                FinishCornerTransition(transitionTarget, true);
             }
             else if (Mathf.Approximately(transitionProgress, 0f))
             {
-                FinishCornerTransition(transitionSource);
+                FinishCornerTransition(transitionSource, false);
             }
         }
 
-        private void FinishCornerTransition(SurfaceCandidate completedSurface)
+        private void FinishCornerTransition(
+            SurfaceCandidate completedSurface,
+            bool clearFailure)
         {
             isTransitioning = false;
+            transitionForwardBlocked = false;
             SurfaceType = completedSurface.Type;
             surfacePoint = completedSurface.Point;
             surfaceNormal = completedSurface.Normal;
             antBody.gravityScale = 0f;
+
+            if (clearFailure)
+            {
+                transitionWasRejected = false;
+                LastTransitionFailureReason = AntTransitionFailureReason.None;
+            }
+
+            LogTransitionEvent(
+                $"Finished on {completedSurface.Type} at progress {transitionProgress:0.00}.",
+                false);
         }
 
         private bool TryFindCornerPivot(
@@ -686,6 +808,16 @@ namespace AntColony.Ants
             {
                 RaycastHit2D hit = probeHits[index];
                 if (hit.collider == null || hit.collider.attachedRigidbody == antBody)
+                {
+                    continue;
+                }
+
+                // Source and destination colliders are the two surfaces the ant
+                // is intentionally touching around this corner. The inset pose
+                // overlap check still prevents penetrating either one; treating
+                // their expected sweep contacts as blockers caused false stalls.
+                if (hit.collider == transitionSource.Collider ||
+                    hit.collider == transitionTarget.Collider)
                 {
                     continue;
                 }
@@ -766,10 +898,103 @@ namespace AntColony.Ants
             halfLength = Mathf.Max(worldSize.x, worldSize.y) * 0.5f;
         }
 
-        private void RejectTransition(Vector2 point)
+        private void CancelTransitionAtCurrentPosition()
+        {
+            isTransitioning = false;
+            transitionForwardBlocked = false;
+            appliedMovementDirection = Vector2.zero;
+            antBody.linearVelocity = Vector2.zero;
+            antBody.angularVelocity = 0f;
+
+            CollectDirectSurfaceCandidates();
+            SurfaceCandidate sourceAtCurrentPose = FindCandidate(transitionSource.Type);
+            SurfaceCandidate targetAtCurrentPose = FindCandidate(transitionTarget.Type);
+            SurfaceCandidate recoveredSurface = sourceAtCurrentPose.IsValid
+                ? sourceAtCurrentPose
+                : targetAtCurrentPose;
+
+            if (recoveredSurface.IsValid)
+            {
+                ApplyAttachment(recoveredSurface);
+                LogTransitionEvent(
+                    $"Cancelled transition onto nearby {recoveredSurface.Type}.",
+                    true);
+                return;
+            }
+
+            // No supported surface exists at the last validated physical pose.
+            // Detaching is safer than retaining an inescapable virtual corner.
+            SurfaceType = AntSurfaceType.None;
+            surfacePoint = antBody.position;
+            surfaceNormal = Vector2.up;
+            antBody.gravityScale = detachedGravityScale;
+            LogTransitionEvent(
+                "Cancelled transition as detached because no surface remained reachable.",
+                true);
+        }
+
+        private void SuppressRejectedTransitionRetry()
+        {
+            suppressRejectedTransitionRetry = true;
+            suppressedTransitionSource = transitionSource.Type;
+            suppressedTransitionTarget = transitionTarget.Type;
+            suppressedTransitionIntent = movementIntent;
+        }
+
+        private bool IsTransitionRetrySuppressed(
+            SurfaceCandidate source,
+            SurfaceCandidate target)
+        {
+            return suppressRejectedTransitionRetry &&
+                source.Type == suppressedTransitionSource &&
+                target.Type == suppressedTransitionTarget;
+        }
+
+        private void UpdateRejectedTransitionSuppression()
+        {
+            if (!suppressRejectedTransitionRetry)
+            {
+                return;
+            }
+
+            bool inputReleased = movementIntent.sqrMagnitude < 0.0001f;
+            bool inputChanged = !inputReleased &&
+                Vector2.Dot(
+                    movementIntent.normalized,
+                    suppressedTransitionIntent.normalized) < 0.95f;
+
+            if (inputReleased || inputChanged)
+            {
+                suppressRejectedTransitionRetry = false;
+            }
+        }
+
+        private void RejectTransition(
+            Vector2 point,
+            AntTransitionFailureReason reason)
         {
             transitionWasRejected = true;
             rejectedTransitionPoint = point;
+            LastTransitionFailureReason = reason;
+            SuppressRejectedTransitionRetry();
+            LogTransitionEvent($"Transition rejected: {reason}.", true);
+        }
+
+        private void LogTransitionEvent(string message, bool warning)
+        {
+            if (!logTransitionEvents)
+            {
+                return;
+            }
+
+            if (warning)
+            {
+                Debug.LogWarning($"{nameof(AntSurfaceMotor)}: {message}", this);
+            }
+            else
+            {
+                Debug.Log($"{nameof(AntSurfaceMotor)}: {message}", this);
+            }
         }
 
         private void ApplyAttachment(SurfaceCandidate selectedSurface)
@@ -882,6 +1107,8 @@ namespace AntColony.Ants
             movementIntent = Vector2.zero;
             SurfaceType = AntSurfaceType.None;
             isTransitioning = false;
+            transitionForwardBlocked = false;
+            suppressRejectedTransitionRetry = false;
 
             if (antBody != null)
             {
