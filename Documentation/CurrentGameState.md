@@ -4,78 +4,111 @@
 
 **Milestone 1 — Player Ant Movement Prototype**
 
-**Status:** In progress. Floor detection and isolated left/right wall climbing are implemented in code and authored content. Hands-on Play Mode acceptance is still pending.
+**Status:** In progress. The user has confirmed floor movement and vertical wall climbing in Unity Play Mode. Ceiling traversal and connected inside/outside corner transitions are now implemented in code and authored content, but still require Play Mode acceptance.
 
-## Repository assessment
+## Repository and architecture
 
-- The Unity 2D URP project uses Unity `6000.3.8f1`.
-- `Assets/AntColony/Scenes/AntMovementPrototype.unity` is the first build scene; the original template scene remains available.
-- The project uses the new Input System and the existing `Player/Move` action.
-- The current prototype controls one ordinary player ant. Becoming a queen is later progression.
-- No Bootstrap or global manager exists. The milestone continues to use authored scene and prefab references.
-- Netcode, excavation, autonomous navigation, and multi-ant systems are not implemented.
+- The Unity 2D URP project uses Unity `6000.3.8f1` and the new Input System.
+- `Assets/AntColony/Scenes/AntMovementPrototype.unity` is the first build scene.
+- The prototype controls one ordinary player ant. Becoming a queen is later progression.
+- Input and movement retain the established `PlayerMovementInput -> AntSurfaceMotor -> Rigidbody2D` flow.
+- `AntSurfaceMotor.SetMovementIntent(Vector2)` remains the controller-neutral boundary for future autonomous control.
+- No Bootstrap, global manager, AI navigation, excavation, multiplayer, or multi-ant system has been added.
 
-## Implemented systems
+## Implemented and Play Mode confirmed
 
-### Directional input
+The user has confirmed the previous movement prototype works in Unity Play Mode:
 
-- `PlayerMovementInput` reads the existing `Player/Move` action as a `Vector2`, normalises diagonal input, and calls `AntSurfaceMotor.SetMovementIntent(Vector2)`.
-- WASD and arrow-key composites supply up, down, left, and right intent. Opposing composite bindings cancel through the Input System.
-- `AntSurfaceMotor` does not read keyboard or `PlayerInput` state. A future controller can submit the same movement intent after player control is disabled.
+- A/D and Left/Right horizontal floor movement.
+- Stopping and direction reversal.
+- Floor attachment.
+- W upward climbing and S downward movement on left and right walls.
+- Wall attachment without sliding when input is released.
+- Surface-aligned floor and wall rotation.
 
-### Floor and wall motor
+## Newly implemented, pending Play Mode acceptance
 
-- `AntSurfaceMotor` performs three non-allocating `Collider2D.Cast` probes: down, left, and right.
-- Each probe records the nearest contact point, surface normal, and distance. The nearest obstruction must be on the `ClimbableSurface` layer and its normal must match the expected floor or wall direction.
-- Attachment has explicit `None`, `Floor`, `LeftWall`, and `RightWall` states. `IsAttached`, `IsGrounded`, `SurfaceType`, `SurfacePoint`, and `SurfaceNormal` are read-only public state.
-- On a floor, A/D applies horizontal `Rigidbody2D` velocity. A wall is selected only when upward intent is pressed while that wall is within the configured probe distance; walking into it with A/D alone remains blocked by physics.
-- On a wall, W applies upward velocity and S applies downward velocity. Releasing input sets traversal velocity to zero while gravity remains disabled for a valid attachment.
-- The motor restores the Rigidbody2D's authored gravity when no valid supported surface is detected. It does not teleport the ant back to a lost surface and does not provide air steering.
-- Attached orientation is derived from the surface normal and approached at a configurable rotation rate with `Rigidbody2D.MoveRotation`. The physical collider rotates with the ant.
-- Small attachment correction is applied only across a detected positive gap. At contact distance zero, the motor leaves collision resolution to Physics2D instead of continually pushing into terrain.
-- Optional selected-object gizmos show the three probe directions, attached/detached colour, contact point, normal, and applied movement direction. They are disabled by default.
+### Ceiling traversal
 
-### Authored prototype
+- A fourth non-allocating collider cast detects a nearby climbable ceiling.
+- Ceiling attachment uses the same motor, attachment state, gravity handling, and collision system as floors and walls.
+- A/D is projected onto the ceiling tangent, and the ant rotates so its feet face the ceiling.
+- Releasing input produces zero traversal velocity while a valid ceiling remains attached.
 
-- `PlayerAnt.prefab` contains the placeholder sprite, dynamic `Rigidbody2D`, horizontal `CapsuleCollider2D`, `PlayerInput`, `PlayerMovementInput`, and `AntSurfaceMotor`.
-- Rigidbody rotation is no longer frozen because surface alignment is motor-controlled. Gravity scale 4, interpolation, and continuous collision detection remain configured.
-- The motor uses movement speed 4, rotation speed 360 degrees per second, a 0.12-unit surface probe, normal tolerance 0.7, and the `ClimbableSurface` mask.
-- `AntMovementPrototype.unity` contains the existing floor plus left and right six-unit-tall climbable walls. The orthographic camera is framed at size 5.5 to show both climbing sections.
-- `Milestone1PrototypeSetup` can apply the wall-climbing migration without regenerating unrelated assets and can structurally validate the prefab and scene.
+### Directional surface choice
+
+- The current surface remains preferred while stationary or while intent still matches its tangent.
+- A connected perpendicular surface is selected only when its movement direction clearly matches world-space input.
+- Floor-to-wall selection therefore requires upward intent rather than automatically converting A/D into a climb.
+- At a wall-to-ceiling junction, W continues toward the obstruction but does not choose left or right. A or D selects the corresponding valid ceiling direction.
+- Ceiling-to-wall and wall-to-floor choices use the same intent projection rather than surface-specific input code.
+- Selection thresholds and bias are configurable on `AntSurfaceMotor`.
+
+### Inside and outside corners
+
+- Direct down/left/right/up casts provide candidate surfaces at concave inside corners.
+- A short look-ahead from the current contact detects the perpendicular face around a convex outside edge. Zero-distance results are rejected so a ray beginning inside ordinary terrain cannot create a false corner.
+- Candidate surface lines must intersect within the configurable connected-corner distance, and separate source/target colliders must physically touch or fall within a small seam tolerance. This prevents attachment across unsupported gaps.
+- A successful transition follows a smooth quadratic corner path through `Rigidbody2D.MovePosition` and `MoveRotation`; collision is never disabled and the Transform is not moved directly.
+- The complete path is sampled before transition using a slightly inset copy of the ant collider. Every movement step also performs a collider sweep and a pose-overlap check.
+- If clearance fails, the transition is rejected and the ant remains on the current surface. Releasing input pauses an active transition; opposite intent can reverse it.
+- Position and orientation advance at the slower of configured movement and rotation rates to avoid snapping or uncontrolled acceleration.
+
+### Attachment and debugging
+
+- Attachment states now include `None`, `Floor`, `LeftWall`, `RightWall`, and `Ceiling`, plus an explicit active corner-transition state.
+- Gravity is disabled only while a real surface or prevalidated connected-corner path is active. Losing support restores the Rigidbody2D's authored gravity without teleportation.
+- Fixed-size hit, candidate, and overlap arrays avoid routine movement allocations.
+- Optional gizmos show all four direct probes, input intent, candidate points/normals, the selected attachment, movement direction, active corner path, and the latest rejected transition point.
+
+## Authored prototype course
+
+`AntMovementPrototype.unity` now contains:
+
+- the existing climbable floor;
+- left and right climbable walls;
+- a full-width climbable ceiling, forming a continuous enclosed rectangular loop;
+- a floor-connected central block whose upper edges expose outside corners; and
+- the player ant starting left of the central block with room to approach and reverse.
+
+`Milestone1PrototypeSetup` updates or regenerates these named objects without duplicating them. The Editor menu provides `Apply Surface Transition Course` and `Validate Surface Transition Course` commands; the older wall-climbing commands remain compatible wrappers.
 
 ## Automated validation performed
 
-- Unity compiled the runtime and Editor assemblies successfully with exit code 0.
-- The wall-climbing migration completed successfully and serialized the prefab and scene.
-- `ValidateWallClimbingPrototype` passed. It verified the player input and motor components, a rotatable Rigidbody2D, the climbable layer mask, the player scene instance, and colliders/layers for the floor and both walls.
-- Repository whitespace validation passed with `git diff --check` after generated whitespace was cleaned up.
-- No NUnit test assemblies currently exist in the project, so no automated movement test suite was available to run.
+- Unity compiled the updated runtime and Editor assemblies successfully.
+- The Editor migration serialized the ceiling course, central outside-corner block, new starting position, and new motor configuration.
+- `ValidateSurfaceTransitionPrototype` passed, confirming prefab wiring, the climbable mask, rotatable Rigidbody2D, player scene instance, enclosed floor/wall/ceiling course, and outside-corner block.
+- Repository whitespace validation passed with `git diff --check` after Unity-generated whitespace was cleaned up.
+- The repository still has no NUnit movement test assembly, so no pre-existing automated traversal test suite was available.
 
-These checks prove compilation and authored setup only. They do not prove successful physical traversal or movement feel.
+These checks validate compilation and authored structure. The new ceiling and transition behavior has not been visually verified in Play Mode.
 
 ## Manual Play Mode checklist
 
-1. Open `Assets/AntColony/Scenes/AntMovementPrototype.unity`, enter Play Mode, and keep the Console visible.
-2. Use A/D and Left/Right on the floor; confirm normal movement, stopping, cancellation of opposing input, and immediate direction reversal still work.
-3. Hold W/S away from a wall; confirm neither input creates jumping or unsupported vertical movement.
-4. Walk into each wall using A/D alone; confirm the ant stops at the collider and does not automatically climb or pass through it.
-5. While beside a wall, press W; confirm attachment changes to that wall, the ant climbs upward, and its feet rotate toward the wall by approximately 90 degrees.
-6. While attached, press S; confirm the ant descends without sliding through the floor.
-7. Release all input on each wall; confirm the ant remains attached and stationary.
-8. Test diagonal input beside each wall; confirm input remains normalised and does not increase movement speed.
-9. Move beyond a valid wall section if practical; confirm loss of the wall restores gravity rather than creating invisible support or teleporting the ant.
-10. Confirm the ant never crosses the floor or wall colliders and the Console has no errors.
-11. Optionally enable `Show Debug Gizmos` on `AntSurfaceMotor`, select the ant, and inspect probe, point, normal, direction, and attachment-state gizmos in the Scene view.
+1. Confirm the previously working floor movement, stopping, reversal, and both wall directions still behave identically.
+2. Approach a wall using A/D only; confirm collision stops the ant without an automatic climb.
+3. Press W near the wall; confirm floor-to-wall rotation and movement remain smooth and collision-safe.
+4. Climb toward the ceiling using W only; confirm the ant stops without arbitrarily turning left or right.
+5. At the wall/ceiling corner, press the direction leading into the room; confirm a wall-to-ceiling transition and approximately 180-degree ceiling alignment.
+6. Use A/D along the ceiling; confirm normal speed, stopping, and reversal.
+7. Press the appropriate W/S direction at each ceiling end; confirm ceiling-to-wall transitions in both directions.
+8. Descend to the floor and deliberately select the valid A/D floor direction; confirm wall-to-floor transition.
+9. Climb a side of `Outside Corner Block`, then use diagonal intent toward and around an upper edge; confirm a smooth outside-corner transition to its top.
+10. Traverse the opposite outside corner from the block top onto its side, then reverse midway through a transition.
+11. Try choosing the solid-facing or unavailable direction at inside and outside corners; confirm the transition is rejected without clipping, teleporting, or falling through terrain.
+12. Release input midway through and after transitions; confirm the ant stops and remains supported.
+13. Enable `Show Debug Gizmos` and inspect candidate normals, selected contact, orange transition path, and any red rejected point.
+14. Confirm the Console contains no errors or warnings throughout repeated clockwise and counter-clockwise loops.
 
 ## Known limitations and remaining P1 work
 
-- Physical floor and wall traversal has not yet been observed in Play Mode, so this slice is not marked complete.
-- The current wall acquisition is deliberately narrow: upward intent selects a nearby side wall. There is no general junction solver.
-- Ceiling detection, upside-down movement, floor-to-wall corner polish, wall-to-ceiling transitions, inside/outside corners, and bidirectional connected-surface traversal are not implemented.
-- The rotating capsule at the floor/wall join is provisional and may need probe distance, collider, rotation-rate, or clearance tuning after Play Mode observation.
-- Whole-route footprint clearance and obstruction testing are not yet implemented. Collision is currently enforced by the Rigidbody2D/collider and nearest-obstruction probe rule.
-- Auto Step-Over, camera follow, a valid one-tile opening test, excavation, autonomous navigation, and multi-ant occupancy remain future work.
+- The newly implemented ceiling and corner behavior is not yet Play Mode accepted and may require tuning of probe distance, look-ahead distance, collider inset, or rotation speed.
+- Corners are intentionally limited to nearby, approximately perpendicular surfaces. Irregular or curved terrain is not supported by this slice.
+- Outside corners require deliberate diagonal intent because both approaching the edge and selecting the outgoing surface must be unambiguous.
+- The transition path is validated against current static collision geometry; runtime excavation and dynamic traversal invalidation do not exist yet.
+- Auto Step-Over, the physically valid one-tile opening test, and the follow camera remain unimplemented.
+- Autonomous navigation, multi-ant occupancy, and colony simulation remain later milestones.
 
 ## Recommended next P1 slice
 
-First complete the manual floor/wall checklist and tune only the current probe, rotation, and collider values if evidence requires it. Once isolated wall movement is accepted, add isolated ceiling detection and ceiling-tangent movement through the same motor. Keep connected corner transitions and general directional junction choice as a later, separate slice.
+Run and tune the complete transition course in Play Mode first. Once floor, wall, ceiling, inside-corner, and outside-corner acceptance passes, implement Auto Step-Over as a separate bounded feature with swept whole-footprint clearance and an explicitly configured maximum crossing distance.

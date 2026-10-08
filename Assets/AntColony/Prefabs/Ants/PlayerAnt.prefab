@@ -213,6 +213,13 @@ MonoBehaviour:
   surfaceSeparation: 0.02
   attachmentCorrectionStrength: 12
   maximumAttachmentCorrectionSpeed: 2
+  transitionInputThreshold: 0.45
+  transitionSelectionBias: 0.1
+  cornerLookAheadDistance: 0.75
+  cornerProbeInset: 0.08
+  maximumConnectedCornerDistance: 1.25
+  cornerConnectionTolerance: 0.05
+  transitionClearanceInset: 0.04
   showDebugGizmos: 0
 --- !u!114 &8962556877872987603
 MonoBehaviour:

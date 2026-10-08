@@ -9,8 +9,8 @@ using UnityEngine.SceneManagement;
 namespace AntColony.EditorTools
 {
     /// <summary>
-    /// Creates the small, authored scene and prefab used to verify the first
-    /// horizontal-movement slice of Milestone 1.
+    /// Creates and incrementally updates the authored scene and prefab used to
+    /// verify the Milestone 1 surface-movement slices.
     /// </summary>
     public static class Milestone1PrototypeSetup
     {
@@ -56,8 +56,8 @@ namespace AntColony.EditorTools
             Selection.activeObject = AssetDatabase.LoadAssetAtPath<SceneAsset>(ScenePath);
 
             Debug.Log(
-                "Created the Milestone 1 horizontal movement prototype. " +
-                "Open AntMovementPrototype and use A/D or Left/Right in Play Mode.");
+                "Created the Milestone 1 surface-transition prototype. " +
+                "Open AntMovementPrototype and test floor, wall, ceiling, and corner movement.");
         }
 
         private static void EnsureProjectFolders()
@@ -228,6 +228,16 @@ namespace AntColony.EditorTools
         [MenuItem("Ant Colony/Milestone 1/Apply Wall Climbing Prototype")]
         public static void ApplyWallClimbingPrototype()
         {
+            ApplySurfaceTransitionPrototype();
+        }
+
+        /// <summary>
+        /// Expands the authored scene into the P1 floor/wall/ceiling course while
+        /// keeping the existing prefab, input asset, and placeholder art.
+        /// </summary>
+        [MenuItem("Ant Colony/Milestone 1/Apply Surface Transition Course")]
+        public static void ApplySurfaceTransitionPrototype()
+        {
             int climbableLayer = EnsureLayerExists(ClimbableSurfaceLayer);
             Sprite soilSprite = AssetDatabase.LoadAllAssetsAtPath(SoilSpritePath)
                 .OfType<Sprite>()
@@ -272,20 +282,16 @@ namespace AntColony.EditorTools
 
             try
             {
-                CreateOrUpdateSurface(
-                    scene,
-                    "Left Climbable Wall",
-                    new Vector3(-7.5f, 0.5f, 0f),
-                    new Vector3(1f, 6f, 1f),
-                    soilSprite,
-                    climbableLayer);
-                CreateOrUpdateSurface(
-                    scene,
-                    "Right Climbable Wall",
-                    new Vector3(7.5f, 0.5f, 0f),
-                    new Vector3(1f, 6f, 1f),
-                    soilSprite,
-                    climbableLayer);
+                ConfigureSurfaceTransitionCourse(scene, soilSprite, climbableLayer);
+
+                GameObject playerAnt = scene.GetRootGameObjects()
+                    .FirstOrDefault(root => root.name == "Player Ant");
+                if (playerAnt != null)
+                {
+                    playerAnt.transform.SetPositionAndRotation(
+                        new Vector3(-4.5f, -1.6f, 0f),
+                        Quaternion.identity);
+                }
 
                 Camera camera = scene.GetRootGameObjects()
                     .Select(root => root.GetComponent<Camera>())
@@ -308,7 +314,7 @@ namespace AntColony.EditorTools
 
             AssetDatabase.SaveAssets();
             Debug.Log(
-                "Applied the P1 wall-climbing prototype: the ant can rotate and both test walls are authored.");
+                "Applied the P1 transition course with floor, walls, ceiling, and outside-corner block.");
         }
 
         /// <summary>
@@ -318,6 +324,16 @@ namespace AntColony.EditorTools
         /// </summary>
         [MenuItem("Ant Colony/Milestone 1/Validate Wall Climbing Prototype")]
         public static void ValidateWallClimbingPrototype()
+        {
+            ValidateSurfaceTransitionPrototype();
+        }
+
+        /// <summary>
+        /// Structurally validates the complete transition test course. Movement
+        /// quality and collision response still require Play Mode observation.
+        /// </summary>
+        [MenuItem("Ant Colony/Milestone 1/Validate Surface Transition Course")]
+        public static void ValidateSurfaceTransitionPrototype()
         {
             int climbableLayer = LayerMask.NameToLayer(ClimbableSurfaceLayer);
             Require(climbableLayer >= 0, $"Layer '{ClimbableSurfaceLayer}' does not exist.");
@@ -355,6 +371,8 @@ namespace AntColony.EditorTools
                 ValidateSurface(scene, "Prototype Floor", climbableLayer);
                 ValidateSurface(scene, "Left Climbable Wall", climbableLayer);
                 ValidateSurface(scene, "Right Climbable Wall", climbableLayer);
+                ValidateSurface(scene, "Prototype Ceiling", climbableLayer);
+                ValidateSurface(scene, "Outside Corner Block", climbableLayer);
                 Require(
                     scene.GetRootGameObjects().Any(root => root.name == "Player Ant"),
                     "Prototype scene has no Player Ant prefab instance.");
@@ -368,14 +386,20 @@ namespace AntColony.EditorTools
             }
 
             Debug.Log(
-                "Wall-climbing prototype validation passed: prefab wiring, climbable mask, " +
-                "rotatable Rigidbody2D, player instance, floor, and both walls are present.");
+                "Surface-transition prototype validation passed: prefab wiring, climbable mask, " +
+                "rotatable Rigidbody2D, player instance, enclosed course, and outside-corner block are present.");
         }
 
         private static void ValidateSurface(Scene scene, string objectName, int expectedLayer)
         {
-            GameObject surface = scene.GetRootGameObjects()
-                .FirstOrDefault(root => root.name == objectName);
+            GameObject[] matchingSurfaces = scene.GetRootGameObjects()
+                .Where(root => root.name == objectName)
+                .ToArray();
+            Require(
+                matchingSurfaces.Length == 1,
+                $"Prototype scene must contain exactly one '{objectName}', but found {matchingSurfaces.Length}.");
+
+            GameObject surface = matchingSurfaces[0];
             Require(surface != null, $"Prototype scene is missing '{objectName}'.");
             Require(
                 surface.layer == expectedLayer,
@@ -421,6 +445,20 @@ namespace AntColony.EditorTools
             floorRenderer.sprite = soilSprite;
             floor.AddComponent<BoxCollider2D>();
 
+            ConfigureSurfaceTransitionCourse(scene, soilSprite, climbableLayer);
+
+            GameObject antInstance = (GameObject)PrefabUtility.InstantiatePrefab(antPrefab, scene);
+            antInstance.name = "Player Ant";
+            antInstance.transform.position = new Vector3(-4.5f, -1.6f, 0f);
+
+            return scene;
+        }
+
+        private static void ConfigureSurfaceTransitionCourse(
+            Scene scene,
+            Sprite soilSprite,
+            int climbableLayer)
+        {
             CreateOrUpdateSurface(
                 scene,
                 "Left Climbable Wall",
@@ -435,12 +473,24 @@ namespace AntColony.EditorTools
                 new Vector3(1f, 6f, 1f),
                 soilSprite,
                 climbableLayer);
+            CreateOrUpdateSurface(
+                scene,
+                "Prototype Ceiling",
+                new Vector3(0f, 4f, 0f),
+                new Vector3(16f, 1f, 1f),
+                soilSprite,
+                climbableLayer);
 
-            GameObject antInstance = (GameObject)PrefabUtility.InstantiatePrefab(antPrefab, scene);
-            antInstance.name = "Player Ant";
-            antInstance.transform.position = new Vector3(0f, -1.6f, 0f);
-
-            return scene;
+            // This pillar meets the floor and exposes two convex upper corners.
+            // It gives the ant room to reverse during an outside-corner arc while
+            // keeping the main room's four concave corners easy to understand.
+            CreateOrUpdateSurface(
+                scene,
+                "Outside Corner Block",
+                new Vector3(0f, -0.75f, 0f),
+                new Vector3(3f, 2.5f, 1f),
+                soilSprite,
+                climbableLayer);
         }
 
         private static void CreateOrUpdateSurface(

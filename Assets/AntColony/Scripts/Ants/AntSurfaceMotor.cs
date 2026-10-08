@@ -4,29 +4,33 @@ using UnityEngine.Serialization;
 namespace AntColony.Ants
 {
     /// <summary>
-    /// Identifies the simple surfaces supported by the current movement slice.
-    /// Ceilings and corner transitions are intentionally not represented yet.
+    /// Identifies the cardinal climbable surfaces supported by the P1 motor.
     /// </summary>
     public enum AntSurfaceType
     {
         None,
         Floor,
         LeftWall,
-        RightWall
+        RightWall,
+        Ceiling
     }
 
     /// <summary>
-    /// Moves an ant along a detected floor or vertical wall.
+    /// Moves one ant across connected floors, walls, ceilings, and right-angle
+    /// corners using Rigidbody2D physics.
     ///
-    /// Controllers only provide a world-space movement intent. This component
-    /// owns all Rigidbody2D movement and attachment decisions, so a future AI
-    /// controller can reuse the same physical traversal rules as the player.
+    /// Controllers only provide world-space movement intent. Keeping surface
+    /// selection and collision rules here lets a future autonomous controller
+    /// reuse exactly the same physical motor without reading player input.
     /// </summary>
     [RequireComponent(typeof(Rigidbody2D))]
     [RequireComponent(typeof(Collider2D))]
     public sealed class AntSurfaceMotor : MonoBehaviour
     {
         private const int MaximumProbeHits = 8;
+        private const int MaximumSurfaceCandidates = 6;
+        private const int MaximumOverlapResults = 12;
+        private const int TransitionClearanceSamples = 7;
 
         [Header("Movement")]
         [SerializeField, Min(0f)] private float movementSpeed = 4f;
@@ -44,65 +48,89 @@ namespace AntColony.Ants
         [SerializeField, Min(0f)] private float attachmentCorrectionStrength = 12f;
         [SerializeField, Min(0f)] private float maximumAttachmentCorrectionSpeed = 2f;
 
+        [Header("Corner Transitions")]
+        [SerializeField, Range(0f, 1f)] private float transitionInputThreshold = 0.45f;
+        [SerializeField, Range(0f, 1f)] private float transitionSelectionBias = 0.1f;
+        [SerializeField, Min(0.05f)] private float cornerLookAheadDistance = 0.75f;
+        [SerializeField, Min(0.01f)] private float cornerProbeInset = 0.08f;
+        [SerializeField, Min(0.05f)] private float maximumConnectedCornerDistance = 1.25f;
+        [SerializeField, Min(0f)] private float cornerConnectionTolerance = 0.05f;
+        [SerializeField, Min(0f)] private float transitionClearanceInset = 0.04f;
+
         [Header("Debugging")]
         [SerializeField] private bool showDebugGizmos;
 
-        // Collider2D.Cast fills this reusable array. Reusing it avoids creating
-        // garbage every physics step, which becomes important with many ants.
+        // These arrays are reused by every physics step. None of the normal
+        // traversal queries allocate managed memory as the ant moves.
         private readonly RaycastHit2D[] probeHits = new RaycastHit2D[MaximumProbeHits];
+        private readonly SurfaceCandidate[] candidates = new SurfaceCandidate[MaximumSurfaceCandidates];
+        private readonly Collider2D[] overlapResults = new Collider2D[MaximumOverlapResults];
 
         private Rigidbody2D antBody;
         private Collider2D antCollider;
+        private CapsuleCollider2D capsuleCollider;
         private ContactFilter2D probeFilter;
         private Vector2 movementIntent;
         private Vector2 surfacePoint;
         private Vector2 surfaceNormal = Vector2.up;
         private Vector2 appliedMovementDirection;
         private float detachedGravityScale;
+        private int candidateCount;
 
-        /// <summary>Gets whether a supported climbable surface is attached.</summary>
-        public bool IsAttached => SurfaceType != AntSurfaceType.None;
+        private bool isTransitioning;
+        private bool transitionWasRejected;
+        private SurfaceCandidate transitionSource;
+        private SurfaceCandidate transitionTarget;
+        private Vector2 transitionStartPosition;
+        private Vector2 transitionControlPoint;
+        private Vector2 transitionTargetPosition;
+        private Vector2 transitionEntryDirection;
+        private Vector2 transitionExitDirection;
+        private Vector2 rejectedTransitionPoint;
+        private float transitionStartRotation;
+        private float transitionTargetRotation;
+        private float transitionPathLength;
+        private float transitionProgress;
+
+        /// <summary>Gets whether a surface or a validated corner path is attached.</summary>
+        public bool IsAttached => SurfaceType != AntSurfaceType.None || isTransitioning;
 
         /// <summary>Gets whether the current attached surface is a floor.</summary>
-        public bool IsGrounded => SurfaceType == AntSurfaceType.Floor;
+        public bool IsGrounded => !isTransitioning && SurfaceType == AntSurfaceType.Floor;
 
-        /// <summary>Gets the current floor or wall attachment type.</summary>
+        /// <summary>Gets the current cardinal surface attachment type.</summary>
         public AntSurfaceType SurfaceType { get; private set; }
 
-        /// <summary>Gets the latest detected contact point for debugging.</summary>
+        /// <summary>Gets the latest attachment point selected by the motor.</summary>
         public Vector2 SurfacePoint => surfacePoint;
 
-        /// <summary>Gets the outward normal of the attached surface.</summary>
+        /// <summary>Gets the current outward direction away from the surface.</summary>
         public Vector2 SurfaceNormal => surfaceNormal;
 
-        /// <summary>
-        /// Gets the latest normalised world-direction request supplied by the
-        /// active controller.
-        /// </summary>
+        /// <summary>Gets whether the motor is moving around a validated corner.</summary>
+        public bool IsTransitioning => isTransitioning;
+
+        /// <summary>Gets the latest normalised world-direction request.</summary>
         public Vector2 MovementIntent => movementIntent;
 
         private void Awake()
         {
             antBody = GetComponent<Rigidbody2D>();
             antCollider = GetComponent<Collider2D>();
+            capsuleCollider = antCollider as CapsuleCollider2D;
             detachedGravityScale = antBody.gravityScale;
 
-            // Probe every collision layer first. The nearest obstruction is then
-            // checked against climbableSurfaces, preventing attachment through a
-            // non-climbable collider that happens to be closer to the ant.
+            // Query every collision layer first. ProbeSurface then checks the
+            // nearest obstruction against climbableSurfaces, so the ant cannot
+            // attach through a closer non-climbable blocker.
             probeFilter = ContactFilter2D.noFilter;
             probeFilter.useTriggers = false;
         }
 
         /// <summary>
-        /// Supplies the world direction requested by the currently active
-        /// controller. Player input uses this now; a future autonomous controller
-        /// can use the same method after player control has been disabled.
+        /// Supplies the world direction requested by the active controller.
+        /// Values above magnitude one are normalised so diagonals are not faster.
         /// </summary>
-        /// <param name="intent">
-        /// Desired world direction. Values with a magnitude above one are
-        /// normalised so diagonal requests cannot increase movement speed.
-        /// </param>
         public void SetMovementIntent(Vector2 intent)
         {
             movementIntent = Vector2.ClampMagnitude(intent, 1f);
@@ -110,11 +138,36 @@ namespace AntColony.Ants
 
         private void FixedUpdate()
         {
-            SurfaceProbe floor = ProbeSurface(Vector2.down, Vector2.up, AntSurfaceType.Floor);
-            SurfaceProbe leftWall = ProbeSurface(Vector2.left, Vector2.right, AntSurfaceType.LeftWall);
-            SurfaceProbe rightWall = ProbeSurface(Vector2.right, Vector2.left, AntSurfaceType.RightWall);
+            transitionWasRejected = false;
 
-            SurfaceProbe selectedSurface = SelectSurface(floor, leftWall, rightWall);
+            if (isTransitioning)
+            {
+                UpdateCornerTransition();
+                return;
+            }
+
+            CollectDirectSurfaceCandidates();
+            SurfaceCandidate currentSurface = FindCurrentSurfaceCandidate();
+
+            SurfaceCandidate outsideCorner = ProbeOutsideCorner(currentSurface);
+            AddCandidate(outsideCorner);
+
+            SurfaceCandidate selectedSurface = SelectSurface(currentSurface);
+            if (selectedSurface.IsValid &&
+                currentSurface.IsValid &&
+                selectedSurface.Type != currentSurface.Type)
+            {
+                if (TryBeginCornerTransition(currentSurface, selectedSurface))
+                {
+                    UpdateCornerTransition();
+                    return;
+                }
+
+                // A geometrically tempting corner is ignored when the whole
+                // collider cannot follow the path without overlapping terrain.
+                selectedSurface = currentSurface;
+            }
+
             ApplyAttachment(selectedSurface);
 
             if (IsAttached)
@@ -128,70 +181,233 @@ namespace AntColony.Ants
             }
         }
 
-        private SurfaceProbe ProbeSurface(
+        private void CollectDirectSurfaceCandidates()
+        {
+            candidateCount = 0;
+            AddCandidate(ProbeSurface(Vector2.down, Vector2.up, AntSurfaceType.Floor));
+            AddCandidate(ProbeSurface(Vector2.left, Vector2.right, AntSurfaceType.LeftWall));
+            AddCandidate(ProbeSurface(Vector2.right, Vector2.left, AntSurfaceType.RightWall));
+            AddCandidate(ProbeSurface(Vector2.up, Vector2.down, AntSurfaceType.Ceiling));
+        }
+
+        private SurfaceCandidate ProbeSurface(
             Vector2 direction,
             Vector2 expectedNormal,
             AntSurfaceType surfaceType)
         {
-            int hitCount = antCollider.Cast(
-                direction,
+            int hitCount = antCollider.Cast(direction, probeFilter, probeHits, surfaceProbeDistance);
+            RaycastHit2D nearestHit = FindNearestExternalHit(hitCount);
+
+            if (nearestHit.collider == null || !IsClimbableLayer(nearestHit.collider.gameObject.layer))
+            {
+                return SurfaceCandidate.Invalid;
+            }
+
+            // Each cardinal probe accepts only the matching face. This prevents a
+            // floor query from silently acquiring a nearby wall at a junction.
+            if (Vector2.Dot(nearestHit.normal, expectedNormal) < surfaceNormalTolerance)
+            {
+                return SurfaceCandidate.Invalid;
+            }
+
+            return new SurfaceCandidate(
+                surfaceType,
+                nearestHit.point,
+                nearestHit.normal.normalized,
+                nearestHit.distance,
+                false,
+                nearestHit.collider);
+        }
+
+        private SurfaceCandidate ProbeOutsideCorner(SurfaceCandidate currentSurface)
+        {
+            if (!currentSurface.IsValid)
+            {
+                return SurfaceCandidate.Invalid;
+            }
+
+            Vector2 entryDirection = ProjectIntentOntoSurface(
+                movementIntent,
+                currentSurface.Normal);
+            if (entryDirection.magnitude < transitionInputThreshold)
+            {
+                return SurfaceCandidate.Invalid;
+            }
+
+            entryDirection.Normalize();
+
+            // The sample starts just beyond the current contact and slightly
+            // inside the solid's outline. Casting back toward the corner exposes
+            // the perpendicular face around a convex edge without moving the ant
+            // or reaching across a gap.
+            Vector2 probeOrigin = currentSurface.Point +
+                entryDirection * cornerLookAheadDistance -
+                currentSurface.Normal * cornerProbeInset;
+
+            int hitCount = Physics2D.Raycast(
+                probeOrigin,
+                -entryDirection,
                 probeFilter,
                 probeHits,
-                surfaceProbeDistance);
+                cornerLookAheadDistance * 2f);
+            RaycastHit2D nearestHit = FindNearestExternalHit(hitCount);
 
+            if (nearestHit.collider == null ||
+                nearestHit.distance <= 0.001f ||
+                !IsClimbableLayer(nearestHit.collider.gameObject.layer))
+            {
+                return SurfaceCandidate.Invalid;
+            }
+
+            Vector2 nextNormal = nearestHit.normal.normalized;
+            if (Vector2.Dot(nextNormal, entryDirection) < surfaceNormalTolerance ||
+                Mathf.Abs(Vector2.Dot(nextNormal, currentSurface.Normal)) > 1f - surfaceNormalTolerance)
+            {
+                return SurfaceCandidate.Invalid;
+            }
+
+            AntSurfaceType nextType = ClassifySurface(nextNormal);
+            if (nextType == AntSurfaceType.None || nextType == currentSurface.Type)
+            {
+                return SurfaceCandidate.Invalid;
+            }
+
+            return new SurfaceCandidate(
+                nextType,
+                nearestHit.point,
+                nextNormal,
+                nearestHit.distance,
+                true,
+                nearestHit.collider);
+        }
+
+        private RaycastHit2D FindNearestExternalHit(int hitCount)
+        {
             float nearestDistance = float.PositiveInfinity;
             RaycastHit2D nearestHit = default;
 
             for (int index = 0; index < hitCount; index++)
             {
                 RaycastHit2D hit = probeHits[index];
-                if (hit.collider != null && hit.distance < nearestDistance)
+                if (hit.collider == null || hit.collider.attachedRigidbody == antBody)
+                {
+                    continue;
+                }
+
+                if (hit.distance < nearestDistance)
                 {
                     nearestDistance = hit.distance;
                     nearestHit = hit;
                 }
             }
 
-            if (nearestHit.collider == null || !IsClimbableLayer(nearestHit.collider.gameObject.layer))
-            {
-                return SurfaceProbe.Invalid;
-            }
-
-            // A floor probe should not accept a steep wall, and a wall probe
-            // should not accept the floor. This keeps attachment state explicit.
-            if (Vector2.Dot(nearestHit.normal, expectedNormal) < surfaceNormalTolerance)
-            {
-                return SurfaceProbe.Invalid;
-            }
-
-            return new SurfaceProbe(
-                surfaceType,
-                nearestHit.point,
-                nearestHit.normal.normalized,
-                nearestHit.distance);
+            return nearestHit;
         }
 
-        private SurfaceProbe SelectSurface(
-            SurfaceProbe floor,
-            SurfaceProbe leftWall,
-            SurfaceProbe rightWall)
+        private void AddCandidate(SurfaceCandidate candidate)
         {
-            // Once attached to a wall, remain there while its probe is valid.
-            // This means releasing input stops the ant instead of making it fall.
-            if (SurfaceType == AntSurfaceType.LeftWall && leftWall.IsValid)
+            if (!candidate.IsValid || candidateCount >= MaximumSurfaceCandidates)
             {
-                return leftWall;
+                return;
             }
 
-            if (SurfaceType == AntSurfaceType.RightWall && rightWall.IsValid)
+            candidates[candidateCount] = candidate;
+            candidateCount++;
+        }
+
+        private SurfaceCandidate FindCurrentSurfaceCandidate()
+        {
+            if (SurfaceType == AntSurfaceType.None)
             {
-                return rightWall;
+                return SurfaceCandidate.Invalid;
             }
 
-            // Upward intent is the deliberate action that begins a wall climb.
-            // Merely walking into a wall remains collision-safe floor movement.
+            SurfaceCandidate bestMatch = SurfaceCandidate.Invalid;
+            for (int index = 0; index < candidateCount; index++)
+            {
+                SurfaceCandidate candidate = candidates[index];
+                if (candidate.Type != SurfaceType ||
+                    Vector2.Dot(candidate.Normal, surfaceNormal) < surfaceNormalTolerance)
+                {
+                    continue;
+                }
+
+                if (!bestMatch.IsValid || candidate.Distance < bestMatch.Distance)
+                {
+                    bestMatch = candidate;
+                }
+            }
+
+            return bestMatch;
+        }
+
+        private SurfaceCandidate SelectSurface(SurfaceCandidate currentSurface)
+        {
+            if (!currentSurface.IsValid)
+            {
+                return SelectInitialSurface();
+            }
+
+            if (movementIntent.sqrMagnitude < 0.0001f)
+            {
+                return currentSurface;
+            }
+
+            float currentScore = ProjectIntentOntoSurface(
+                movementIntent,
+                currentSurface.Normal).magnitude;
+            SurfaceCandidate bestCandidate = currentSurface;
+            float bestScore = currentScore;
+
+            for (int index = 0; index < candidateCount; index++)
+            {
+                SurfaceCandidate candidate = candidates[index];
+                if (candidate.Type == currentSurface.Type ||
+                    !NormalsFormCorner(currentSurface.Normal, candidate.Normal))
+                {
+                    continue;
+                }
+
+                float candidateScore = ProjectIntentOntoSurface(
+                    movementIntent,
+                    candidate.Normal).magnitude;
+
+                bool intentionallySelectsInsideCorner =
+                    !candidate.IsOutsideCorner &&
+                    candidateScore >= transitionInputThreshold &&
+                    candidateScore > currentScore + transitionSelectionBias;
+
+                bool intentionallyRoundsOutsideCorner =
+                    candidate.IsOutsideCorner &&
+                    currentScore >= transitionInputThreshold &&
+                    candidateScore >= transitionInputThreshold;
+
+                if ((intentionallySelectsInsideCorner || intentionallyRoundsOutsideCorner) &&
+                    candidateScore >= bestScore - transitionSelectionBias)
+                {
+                    bestCandidate = candidate;
+                    bestScore = candidateScore;
+                }
+            }
+
+            return bestCandidate;
+        }
+
+        private SurfaceCandidate SelectInitialSurface()
+        {
+            SurfaceCandidate floor = FindCandidate(AntSurfaceType.Floor);
+            if (floor.IsValid)
+            {
+                return floor;
+            }
+
+            // Detached ants never acquire a ceiling from open air. A nearby wall
+            // may be acquired only through the established upward climb command.
             if (movementIntent.y > wallAttachInputThreshold)
             {
+                SurfaceCandidate leftWall = FindCandidate(AntSurfaceType.LeftWall);
+                SurfaceCandidate rightWall = FindCandidate(AntSurfaceType.RightWall);
+
                 if (movementIntent.x < 0f && leftWall.IsValid)
                 {
                     return leftWall;
@@ -207,21 +423,356 @@ namespace AntColony.Ants
                     return leftWall.Distance <= rightWall.Distance ? leftWall : rightWall;
                 }
 
-                if (leftWall.IsValid)
-                {
-                    return leftWall;
-                }
+                return leftWall.IsValid ? leftWall : rightWall;
+            }
 
-                if (rightWall.IsValid)
+            return SurfaceCandidate.Invalid;
+        }
+
+        private SurfaceCandidate FindCandidate(AntSurfaceType type)
+        {
+            for (int index = 0; index < candidateCount; index++)
+            {
+                if (candidates[index].Type == type)
                 {
-                    return rightWall;
+                    return candidates[index];
                 }
             }
 
-            return floor.IsValid ? floor : SurfaceProbe.Invalid;
+            return SurfaceCandidate.Invalid;
         }
 
-        private void ApplyAttachment(SurfaceProbe selectedSurface)
+        private bool TryBeginCornerTransition(
+            SurfaceCandidate source,
+            SurfaceCandidate target)
+        {
+            if (!TryFindCornerPivot(source, target, out Vector2 pivot))
+            {
+                RejectTransition(target.Point);
+                return false;
+            }
+
+            Vector2 exitDirection = ProjectIntentOntoSurface(
+                movementIntent,
+                target.Normal);
+            if (exitDirection.magnitude < transitionInputThreshold)
+            {
+                RejectTransition(pivot);
+                return false;
+            }
+
+            exitDirection.Normalize();
+
+            Vector2 entryDirection = ProjectIntentOntoSurface(
+                movementIntent,
+                source.Normal);
+            if (entryDirection.sqrMagnitude < 0.0001f)
+            {
+                // Floor-to-wall and wall-to-ceiling choices commonly use an
+                // intent perpendicular to the old surface. In that case, the
+                // geometry tells us which way the ant approached the corner.
+                entryDirection = ProjectIntentOntoSurface(
+                    pivot - antBody.position,
+                    source.Normal);
+            }
+
+            if (entryDirection.sqrMagnitude < 0.0001f)
+            {
+                RejectTransition(pivot);
+                return false;
+            }
+
+            entryDirection.Normalize();
+
+            GetCapsuleClearance(out float halfThickness, out float halfLength);
+            Vector2 targetPosition = pivot +
+                target.Normal * (halfThickness + surfaceSeparation) +
+                exitDirection * (halfLength + surfaceSeparation);
+
+            Vector2 freeCornerDirection = (source.Normal + target.Normal).normalized;
+            Vector2 controlPoint = pivot + freeCornerDirection *
+                (halfLength + halfThickness + surfaceSeparation);
+
+            float targetRotation = Vector2.SignedAngle(Vector2.up, target.Normal);
+
+            // Sample the complete path before committing. A shrunken copy of the
+            // ant's collider must remain clear at every sample; otherwise the ant
+            // safely stays on its current surface.
+            for (int sample = 1; sample <= TransitionClearanceSamples; sample++)
+            {
+                float progress = sample / (TransitionClearanceSamples + 1f);
+                Vector2 samplePosition = EvaluateQuadraticBezier(
+                    antBody.position,
+                    controlPoint,
+                    targetPosition,
+                    progress);
+                float sampleRotation = Mathf.LerpAngle(antBody.rotation, targetRotation, progress);
+
+                if (!IsPoseClear(samplePosition, sampleRotation))
+                {
+                    RejectTransition(samplePosition);
+                    return false;
+                }
+            }
+
+            transitionSource = source;
+            transitionTarget = target;
+            transitionStartPosition = antBody.position;
+            transitionControlPoint = controlPoint;
+            transitionTargetPosition = targetPosition;
+            transitionEntryDirection = entryDirection;
+            transitionExitDirection = exitDirection;
+            transitionStartRotation = antBody.rotation;
+            transitionTargetRotation = targetRotation;
+            transitionPathLength = Mathf.Max(
+                Vector2.Distance(transitionStartPosition, transitionControlPoint) +
+                Vector2.Distance(transitionControlPoint, transitionTargetPosition),
+                0.01f);
+            transitionProgress = 0f;
+            isTransitioning = true;
+            antBody.gravityScale = 0f;
+            antBody.linearVelocity = Vector2.zero;
+            antBody.angularVelocity = 0f;
+            return true;
+        }
+
+        private void UpdateCornerTransition()
+        {
+            float forwardIntent = Vector2.Dot(movementIntent, transitionExitDirection);
+            float reverseIntent = Vector2.Dot(movementIntent, -transitionEntryDirection);
+            float progressDirection = 0f;
+
+            if (forwardIntent >= transitionInputThreshold)
+            {
+                progressDirection = 1f;
+            }
+            else if (reverseIntent >= transitionInputThreshold)
+            {
+                progressDirection = -1f;
+            }
+
+            antBody.gravityScale = 0f;
+            antBody.linearVelocity = Vector2.zero;
+            antBody.angularVelocity = 0f;
+
+            if (progressDirection == 0f)
+            {
+                appliedMovementDirection = Vector2.zero;
+                return;
+            }
+
+            float linearProgressStep = movementSpeed * Time.fixedDeltaTime / transitionPathLength;
+            float transitionAngle = Mathf.Abs(Mathf.DeltaAngle(
+                transitionStartRotation,
+                transitionTargetRotation));
+            float rotationalProgressStep = transitionAngle > 0.01f
+                ? rotationSpeed * Time.fixedDeltaTime / transitionAngle
+                : linearProgressStep;
+
+            // Position and orientation advance together at the slower configured
+            // rate. This prevents a fast positional arc from snapping rotation.
+            float progressStep = Mathf.Min(linearProgressStep, rotationalProgressStep);
+            float proposedProgress = Mathf.Clamp01(
+                transitionProgress + progressDirection * progressStep);
+            Vector2 proposedPosition = EvaluateQuadraticBezier(
+                transitionStartPosition,
+                transitionControlPoint,
+                transitionTargetPosition,
+                proposedProgress);
+            float proposedRotation = Mathf.LerpAngle(
+                transitionStartRotation,
+                transitionTargetRotation,
+                proposedProgress);
+
+            if (!CanSweepTo(proposedPosition) || !IsPoseClear(proposedPosition, proposedRotation))
+            {
+                RejectTransition(proposedPosition);
+                appliedMovementDirection = Vector2.zero;
+                return;
+            }
+
+            transitionProgress = proposedProgress;
+            surfacePoint = Vector2.Lerp(
+                transitionSource.Point,
+                transitionTarget.Point,
+                transitionProgress);
+            surfaceNormal = Vector2.Lerp(
+                transitionSource.Normal,
+                transitionTarget.Normal,
+                transitionProgress).normalized;
+            appliedMovementDirection = progressDirection > 0f
+                ? transitionExitDirection
+                : -transitionEntryDirection;
+
+            antBody.MovePosition(proposedPosition);
+            antBody.MoveRotation(proposedRotation);
+
+            if (Mathf.Approximately(transitionProgress, 1f))
+            {
+                FinishCornerTransition(transitionTarget);
+            }
+            else if (Mathf.Approximately(transitionProgress, 0f))
+            {
+                FinishCornerTransition(transitionSource);
+            }
+        }
+
+        private void FinishCornerTransition(SurfaceCandidate completedSurface)
+        {
+            isTransitioning = false;
+            SurfaceType = completedSurface.Type;
+            surfacePoint = completedSurface.Point;
+            surfaceNormal = completedSurface.Normal;
+            antBody.gravityScale = 0f;
+        }
+
+        private bool TryFindCornerPivot(
+            SurfaceCandidate source,
+            SurfaceCandidate target,
+            out Vector2 pivot)
+        {
+            if (source.Collider == null || target.Collider == null)
+            {
+                pivot = default;
+                return false;
+            }
+
+            if (source.Collider != target.Collider)
+            {
+                ColliderDistance2D colliderDistance = source.Collider.Distance(target.Collider);
+                if (!colliderDistance.isValid || colliderDistance.distance > cornerConnectionTolerance)
+                {
+                    // Intersecting infinite surface lines are not enough: the
+                    // actual colliders must touch, overlap, or be within the very
+                    // small authored seam tolerance. This rejects nearby gaps.
+                    pivot = default;
+                    return false;
+                }
+            }
+
+            Vector2 sourceTangent = Perpendicular(source.Normal);
+            Vector2 targetTangent = Perpendicular(target.Normal);
+            float denominator = Cross(sourceTangent, targetTangent);
+
+            if (Mathf.Abs(denominator) < 0.001f)
+            {
+                pivot = default;
+                return false;
+            }
+
+            float sourceDistance = Cross(target.Point - source.Point, targetTangent) / denominator;
+            pivot = source.Point + sourceTangent * sourceDistance;
+
+            return Vector2.Distance(pivot, source.Point) <= maximumConnectedCornerDistance &&
+                Vector2.Distance(pivot, target.Point) <= maximumConnectedCornerDistance;
+        }
+
+        private bool CanSweepTo(Vector2 proposedPosition)
+        {
+            Vector2 displacement = proposedPosition - antBody.position;
+            float distance = displacement.magnitude;
+            if (distance < 0.0001f)
+            {
+                return true;
+            }
+
+            int hitCount = antCollider.Cast(
+                displacement / distance,
+                probeFilter,
+                probeHits,
+                distance);
+
+            for (int index = 0; index < hitCount; index++)
+            {
+                RaycastHit2D hit = probeHits[index];
+                if (hit.collider == null || hit.collider.attachedRigidbody == antBody)
+                {
+                    continue;
+                }
+
+                // Zero-distance contacts are the source/target surfaces already
+                // supporting the ant. A positive hit along the path is a blocker.
+                if (hit.distance > transitionClearanceInset && hit.distance < distance)
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        private bool IsPoseClear(Vector2 position, float rotation)
+        {
+            int overlapCount;
+
+            if (capsuleCollider != null)
+            {
+                Vector2 scale = new Vector2(
+                    Mathf.Abs(capsuleCollider.transform.lossyScale.x),
+                    Mathf.Abs(capsuleCollider.transform.lossyScale.y));
+                Vector2 size = Vector2.Scale(capsuleCollider.size, scale);
+                size.x = Mathf.Max(0.01f, size.x - transitionClearanceInset * 2f);
+                size.y = Mathf.Max(0.01f, size.y - transitionClearanceInset * 2f);
+                float capsuleRotation = capsuleCollider.direction == CapsuleDirection2D.Horizontal
+                    ? rotation
+                    : rotation + 90f;
+
+                overlapCount = Physics2D.OverlapCapsule(
+                    position,
+                    size,
+                    CapsuleDirection2D.Horizontal,
+                    capsuleRotation,
+                    probeFilter,
+                    overlapResults);
+            }
+            else
+            {
+                Vector2 size = antCollider.bounds.size -
+                    Vector3.one * (transitionClearanceInset * 2f);
+                size.x = Mathf.Max(0.01f, size.x);
+                size.y = Mathf.Max(0.01f, size.y);
+                overlapCount = Physics2D.OverlapBox(
+                    position,
+                    size,
+                    rotation,
+                    probeFilter,
+                    overlapResults);
+            }
+
+            for (int index = 0; index < overlapCount; index++)
+            {
+                Collider2D overlap = overlapResults[index];
+                if (overlap != null && overlap.attachedRigidbody != antBody)
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        private void GetCapsuleClearance(out float halfThickness, out float halfLength)
+        {
+            Vector2 worldSize = antCollider.bounds.size;
+            if (capsuleCollider != null)
+            {
+                Vector2 scale = new Vector2(
+                    Mathf.Abs(capsuleCollider.transform.lossyScale.x),
+                    Mathf.Abs(capsuleCollider.transform.lossyScale.y));
+                worldSize = Vector2.Scale(capsuleCollider.size, scale);
+            }
+
+            halfThickness = Mathf.Min(worldSize.x, worldSize.y) * 0.5f;
+            halfLength = Mathf.Max(worldSize.x, worldSize.y) * 0.5f;
+        }
+
+        private void RejectTransition(Vector2 point)
+        {
+            transitionWasRejected = true;
+            rejectedTransitionPoint = point;
+        }
+
+        private void ApplyAttachment(SurfaceCandidate selectedSurface)
         {
             if (!selectedSurface.IsValid)
             {
@@ -241,19 +792,16 @@ namespace AntColony.Ants
 
         private void MoveAlongAttachedSurface(float distanceFromSurface)
         {
-            appliedMovementDirection = SurfaceType == AntSurfaceType.Floor
-                ? new Vector2(movementIntent.x, 0f)
-                : new Vector2(0f, movementIntent.y);
-
+            appliedMovementDirection = ProjectIntentOntoSurface(movementIntent, surfaceNormal);
             Vector2 velocity = appliedMovementDirection * movementSpeed;
 
-            // Correct only an actual gap. At zero cast distance the physics
-            // solver already has contact and pushing farther inward causes jitter.
+            // Correct only a positive gap. At contact distance zero, the normal
+            // Physics2D solver owns collision response and the motor does not push
+            // continuously into terrain.
             float gap = Mathf.Max(0f, distanceFromSurface - surfaceSeparation);
             float correctionSpeed = Mathf.Min(
                 gap * attachmentCorrectionStrength,
                 maximumAttachmentCorrectionSpeed);
-
             antBody.linearVelocity = velocity - surfaceNormal * correctionSpeed;
         }
 
@@ -262,8 +810,8 @@ namespace AntColony.Ants
             appliedMovementDirection = Vector2.zero;
             antBody.angularVelocity = 0f;
 
-            // Air steering is outside this slice. Preserve gravity-driven vertical
-            // speed, but do not carry the last surface movement into open space.
+            // Unsupported ants explicitly return to authored gravity. Air control
+            // and recovery teleportation are intentionally outside this slice.
             antBody.linearVelocity = new Vector2(0f, antBody.linearVelocity.y);
         }
 
@@ -281,6 +829,49 @@ namespace AntColony.Ants
             }
         }
 
+        private static Vector2 ProjectIntentOntoSurface(Vector2 intent, Vector2 normal)
+        {
+            Vector2 tangent = Perpendicular(normal);
+            return tangent * Vector2.Dot(intent, tangent);
+        }
+
+        private static Vector2 Perpendicular(Vector2 vector)
+        {
+            return new Vector2(-vector.y, vector.x);
+        }
+
+        private static float Cross(Vector2 first, Vector2 second)
+        {
+            return first.x * second.y - first.y * second.x;
+        }
+
+        private static bool NormalsFormCorner(Vector2 first, Vector2 second)
+        {
+            return Mathf.Abs(Vector2.Dot(first, second)) < 0.35f;
+        }
+
+        private static Vector2 EvaluateQuadraticBezier(
+            Vector2 start,
+            Vector2 control,
+            Vector2 end,
+            float progress)
+        {
+            float inverse = 1f - progress;
+            return inverse * inverse * start +
+                2f * inverse * progress * control +
+                progress * progress * end;
+        }
+
+        private static AntSurfaceType ClassifySurface(Vector2 normal)
+        {
+            if (Mathf.Abs(normal.y) >= Mathf.Abs(normal.x))
+            {
+                return normal.y >= 0f ? AntSurfaceType.Floor : AntSurfaceType.Ceiling;
+            }
+
+            return normal.x >= 0f ? AntSurfaceType.LeftWall : AntSurfaceType.RightWall;
+        }
+
         private bool IsClimbableLayer(int layer)
         {
             return (climbableSurfaces.value & (1 << layer)) != 0;
@@ -290,6 +881,7 @@ namespace AntColony.Ants
         {
             movementIntent = Vector2.zero;
             SurfaceType = AntSurfaceType.None;
+            isTransitioning = false;
 
             if (antBody != null)
             {
@@ -307,6 +899,11 @@ namespace AntColony.Ants
             surfaceSeparation = Mathf.Max(0f, surfaceSeparation);
             attachmentCorrectionStrength = Mathf.Max(0f, attachmentCorrectionStrength);
             maximumAttachmentCorrectionSpeed = Mathf.Max(0f, maximumAttachmentCorrectionSpeed);
+            cornerLookAheadDistance = Mathf.Max(0.05f, cornerLookAheadDistance);
+            cornerProbeInset = Mathf.Max(0.01f, cornerProbeInset);
+            maximumConnectedCornerDistance = Mathf.Max(0.05f, maximumConnectedCornerDistance);
+            cornerConnectionTolerance = Mathf.Max(0f, cornerConnectionTolerance);
+            transitionClearanceInset = Mathf.Max(0f, transitionClearanceInset);
         }
 
 #if UNITY_EDITOR
@@ -328,6 +925,18 @@ namespace AntColony.Ants
             Gizmos.DrawLine(centre, centre + Vector3.down * surfaceProbeDistance);
             Gizmos.DrawLine(centre, centre + Vector3.left * surfaceProbeDistance);
             Gizmos.DrawLine(centre, centre + Vector3.right * surfaceProbeDistance);
+            Gizmos.DrawLine(centre, centre + Vector3.up * surfaceProbeDistance);
+
+            Gizmos.color = Color.white;
+            Gizmos.DrawLine(centre, centre + (Vector3)movementIntent);
+
+            for (int index = 0; index < candidateCount; index++)
+            {
+                SurfaceCandidate candidate = candidates[index];
+                Gizmos.color = candidate.IsOutsideCorner ? Color.yellow : Color.blue;
+                Gizmos.DrawWireSphere(candidate.Point, 0.06f);
+                Gizmos.DrawLine(candidate.Point, candidate.Point + candidate.Normal * 0.35f);
+            }
 
             if (IsAttached)
             {
@@ -338,23 +947,50 @@ namespace AntColony.Ants
                 Gizmos.color = Color.magenta;
                 Gizmos.DrawLine(centre, centre + (Vector3)appliedMovementDirection);
             }
+
+            if (isTransitioning)
+            {
+                Gizmos.color = new Color(1f, 0.5f, 0f);
+                Vector2 previous = transitionStartPosition;
+                for (int segment = 1; segment <= 12; segment++)
+                {
+                    float progress = segment / 12f;
+                    Vector2 next = EvaluateQuadraticBezier(
+                        transitionStartPosition,
+                        transitionControlPoint,
+                        transitionTargetPosition,
+                        progress);
+                    Gizmos.DrawLine(previous, next);
+                    previous = next;
+                }
+            }
+
+            if (transitionWasRejected)
+            {
+                Gizmos.color = Color.red;
+                Gizmos.DrawWireSphere(rejectedTransitionPoint, 0.12f);
+            }
         }
 #endif
 
-        private readonly struct SurfaceProbe
+        private readonly struct SurfaceCandidate
         {
-            public static readonly SurfaceProbe Invalid = default;
+            public static readonly SurfaceCandidate Invalid = default;
 
-            public SurfaceProbe(
+            public SurfaceCandidate(
                 AntSurfaceType type,
                 Vector2 point,
                 Vector2 normal,
-                float distance)
+                float distance,
+                bool isOutsideCorner,
+                Collider2D collider)
             {
                 Type = type;
                 Point = point;
                 Normal = normal;
                 Distance = distance;
+                IsOutsideCorner = isOutsideCorner;
+                Collider = collider;
                 IsValid = true;
             }
 
@@ -362,6 +998,8 @@ namespace AntColony.Ants
             public Vector2 Point { get; }
             public Vector2 Normal { get; }
             public float Distance { get; }
+            public bool IsOutsideCorner { get; }
+            public Collider2D Collider { get; }
             public bool IsValid { get; }
         }
     }
