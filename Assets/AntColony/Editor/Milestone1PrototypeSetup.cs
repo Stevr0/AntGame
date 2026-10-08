@@ -178,10 +178,44 @@ namespace AntColony.EditorTools
             SerializedObject serializedMotor = new SerializedObject(motor);
             serializedMotor.FindProperty("climbableSurfaces").intValue = 1 << climbableLayer;
             serializedMotor.ApplyModifiedPropertiesWithoutUndo();
+            ant.AddComponent<PlayerMovementInput>();
 
             GameObject prefab = PrefabUtility.SaveAsPrefabAsset(ant, AntPrefabPath);
             Object.DestroyImmediate(ant);
             return prefab;
+        }
+
+        /// <summary>
+        /// Adds the dedicated player-input component to the existing ant prefab
+        /// without regenerating the scene, placeholder art, or unrelated assets.
+        /// </summary>
+        [MenuItem("Ant Colony/Milestone 1/Apply Directional Input Separation")]
+        public static void ApplyDirectionalInputSeparation()
+        {
+            GameObject prefabRoot = PrefabUtility.LoadPrefabContents(AntPrefabPath);
+
+            try
+            {
+                if (prefabRoot.GetComponent<PlayerInput>() == null ||
+                    prefabRoot.GetComponent<AntSurfaceMotor>() == null)
+                {
+                    throw new System.InvalidOperationException(
+                        "PlayerAnt.prefab is missing its PlayerInput or AntSurfaceMotor component.");
+                }
+
+                if (prefabRoot.GetComponent<PlayerMovementInput>() == null)
+                {
+                    prefabRoot.AddComponent<PlayerMovementInput>();
+                    PrefabUtility.SaveAsPrefabAsset(prefabRoot, AntPrefabPath);
+                }
+            }
+            finally
+            {
+                PrefabUtility.UnloadPrefabContents(prefabRoot);
+            }
+
+            AssetDatabase.SaveAssets();
+            Debug.Log("PlayerAnt.prefab now forwards directional input through PlayerMovementInput.");
         }
 
         private static Scene CreatePrototypeScene(

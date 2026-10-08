@@ -1,5 +1,4 @@
 using UnityEngine;
-using UnityEngine.InputSystem;
 
 namespace AntColony.Ants
 {
@@ -12,7 +11,6 @@ namespace AntColony.Ants
     /// </summary>
     [RequireComponent(typeof(Rigidbody2D))]
     [RequireComponent(typeof(Collider2D))]
-    [RequireComponent(typeof(PlayerInput))]
     public sealed class AntSurfaceMotor : MonoBehaviour
     {
         [Header("Movement")]
@@ -22,13 +20,9 @@ namespace AntColony.Ants
         [SerializeField] private LayerMask climbableSurfaces;
         [SerializeField, Min(0.01f)] private float floorProbeDistance = 0.12f;
 
-        [Header("Input Actions")]
-        [SerializeField] private string movementActionName = "Move";
-
         private Rigidbody2D antBody;
         private Collider2D antCollider;
-        private PlayerInput playerInput;
-        private InputAction movementAction;
+        private Vector2 _movementIntent;
 
         /// <summary>
         /// Gets whether the ant's floor probe currently touches a climbable surface.
@@ -37,35 +31,54 @@ namespace AntColony.Ants
         /// </summary>
         public bool IsGrounded { get; private set; }
 
+        /// <summary>
+        /// Gets the latest normalised world-direction request supplied by the
+        /// active controller. Vertical intent is retained for later traversal
+        /// work, but this floor-only motor currently acts on the X value only.
+        /// </summary>
+        public Vector2 MovementIntent => _movementIntent;
+
         private void Awake()
         {
             antBody = GetComponent<Rigidbody2D>();
             antCollider = GetComponent<Collider2D>();
-            playerInput = GetComponent<PlayerInput>();
+        }
 
-            // PlayerInput owns the shared Input Action asset. Looking up the action
-            // by name keeps this component small and avoids a second input system.
-            movementAction = playerInput.actions?.FindAction(movementActionName);
-
-            if (movementAction == null)
-            {
-                Debug.LogError(
-                    $"{nameof(AntSurfaceMotor)} on '{name}' could not find the " +
-                    $"'{movementActionName}' input action.",
-                    this);
-            }
+        /// <summary>
+        /// Supplies the world direction requested by the currently active
+        /// controller. Player input uses this now; a future autonomous controller
+        /// can use the same method after player control has been disabled.
+        /// </summary>
+        /// <param name="intent">
+        /// Desired world direction. Values with a magnitude above one are
+        /// normalised so diagonal requests cannot increase movement speed.
+        /// </param>
+        public void SetMovementIntent(Vector2 intent)
+        {
+            _movementIntent = Vector2.ClampMagnitude(intent, 1f);
         }
 
         private void FixedUpdate()
         {
             UpdateGroundedState();
 
-            float horizontalInput = movementAction?.ReadValue<Vector2>().x ?? 0f;
-
             // The ant may only steer while it is standing on the test floor.
-            // Gravity remains responsible for landing and vertical movement.
-            float horizontalSpeed = IsGrounded ? horizontalInput * movementSpeed : 0f;
+            // Vertical intent is deliberately stored but ignored until wall and
+            // ceiling traversal are implemented in later P1 slices.
+            float horizontalSpeed = IsGrounded ? _movementIntent.x * movementSpeed : 0f;
             antBody.linearVelocity = new Vector2(horizontalSpeed, antBody.linearVelocity.y);
+        }
+
+        private void OnDisable()
+        {
+            _movementIntent = Vector2.zero;
+
+            // Prevent the Rigidbody2D from retaining the last commanded horizontal
+            // velocity if movement execution itself is disabled.
+            if (antBody != null)
+            {
+                antBody.linearVelocity = new Vector2(0f, antBody.linearVelocity.y);
+            }
         }
 
         private void UpdateGroundedState()

@@ -14,6 +14,7 @@ GameObject:
   - component: {fileID: 7366873159376346397}
   - component: {fileID: 2428772095069895776}
   - component: {fileID: 3034327907045833996}
+  - component: {fileID: 8962556877872987603}
   m_Layer: 0
   m_Name: PlayerAnt
   m_TagString: Untagged
@@ -206,4 +207,16 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 256
   floorProbeDistance: 0.12
-  movementActionName: Move
+--- !u!114 &8962556877872987603
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2103454066276451890}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a4baee83ff753694f9a1bb0e0d3f3a90, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::AntColony.Ants.PlayerMovementInput
+  _movementActionName: Move

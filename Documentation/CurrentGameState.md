@@ -3,7 +3,7 @@
 ## Current milestone
 
 **Milestone 1 — Player Ant Movement Prototype**
-**Status:** In progress. The horizontal floor-movement slice is implemented; manual Play Mode verification is pending.
+**Status:** In progress. Directional input is separated from the horizontal floor motor; manual Play Mode verification is pending.
 
 ## Repository assessment
 
@@ -26,16 +26,20 @@
 
 ## Implemented systems
 
-- `AntSurfaceMotor` reads the existing `Player/Move` Input System action and applies grounded horizontal velocity through `Rigidbody2D` in `FixedUpdate`.
+- `PlayerMovementInput` reads the existing `Player/Move` Input System action as a `Vector2`, normalises diagonal input, and supplies movement intent to the motor.
+- The existing WASD and arrow-key 2D composites provide up, down, left and right intent; opposing bindings cancel through the Input System composite.
+- `AntSurfaceMotor` no longer references `PlayerInput` or keyboard actions. Its public `SetMovementIntent(Vector2)` method accepts a controller-neutral direction request for the currently active controller.
+- `AntSurfaceMotor` retains the full normalised intent but currently applies only its X component as grounded horizontal velocity through `Rigidbody2D` in `FixedUpdate`.
+- Disabling `PlayerMovementInput` clears the request, and disabling `AntSurfaceMotor` clears intent and stops retained horizontal velocity.
 - A short floor probe limits steering to the authored `ClimbableSurface` layer. Jumping and free flight are intentionally absent.
-- `PlayerAnt.prefab` contains the placeholder sprite, `Rigidbody2D`, horizontal `CapsuleCollider2D`, `PlayerInput`, and movement component with its layer reference assigned.
+- `PlayerAnt.prefab` contains the placeholder sprite, `Rigidbody2D`, horizontal `CapsuleCollider2D`, `PlayerInput`, `PlayerMovementInput`, and movement component with its layer reference assigned.
 - `AntMovementPrototype.unity` contains a camera, one wide prototype floor, and one prefab instance of the ordinary player ant.
 - The prototype scene is the first enabled scene in Build Settings; the original template scene remains available.
 - `Milestone1PrototypeSetup` is an Editor-only, repeatable setup command. It authors project assets and is not a runtime Bootstrap or manager.
 
 ## Verified working features
 
-The open Unity Editor successfully compiled the new scripts and executed the setup command to create the prefab and scene assets. Serialized-file inspection confirmed the expected component references, physics layer mask, and Build Settings entry.
+Unity successfully compiled the final scripts with exit code 0 and no C# compiler errors or runtime exception patterns in the validation log. The targeted Editor migration added one `PlayerMovementInput` component to `PlayerAnt.prefab` without regenerating the scene or placeholder assets. Serialized-file inspection confirmed that the existing scene still references the upgraded prefab.
 
 Repository inspection confirmed that:
 
@@ -49,8 +53,6 @@ Horizontal input, grounded movement, stopping, and direction reversal have not y
 
 ## Designed but not implemented
 
-- Full WASD world-direction interpretation. The current motor reads the `Move` action but uses only its horizontal component.
-- Separation of direct-input intent from reusable physical movement execution.
 - Surface attachment and rotation on walls, ceilings, inside corners and outside corners.
 - Directional choice between reachable surfaces at junctions.
 - Configurable Auto Step-Over with swept-footprint, landing-surface and obstruction checks.
@@ -66,7 +68,7 @@ These are agreed design requirements. Their specific algorithms and component bo
 
 - Horizontal floor movement still requires hands-on Play Mode verification with A/D and Left/Right input.
 - Wall, ceiling, corner-transition, surface-alignment, and camera-follow behaviour are not implemented yet.
-- W/S surface selection and directional junction choice are not implemented; the existing floor-only motor intentionally ignores vertical input.
+- W/S intent reaches and is retained by the motor, but surface selection and directional junction choice are not implemented. The floor-only motor intentionally does not convert vertical intent into jumping or vertical motion.
 - Auto Step-Over distance, clearance query shape and transition timing require prototype testing before their final values are chosen.
 - Surface transitions around corners are the main technical risk for Milestone 1. They should be developed after flat floor, wall, and ceiling movement work independently.
 - The routing representation, yielding priority, reservation needs and deadlock-recovery limits remain unresolved future implementation decisions.
@@ -82,12 +84,23 @@ The first implementation slice created the following setup:
    - a placeholder `SpriteRenderer`;
    - a dynamic `Rigidbody2D` with gravity scale 4, interpolation enabled, continuous collision detection, and frozen rotation;
    - a horizontal `CapsuleCollider2D` sized to 1.2 by 0.6 units;
-   - `PlayerInput` using `InputSystem_Actions` and the `Player` action map; and
+   - `PlayerInput` using `InputSystem_Actions` and the `Player` action map;
+   - `PlayerMovementInput` forwarding normalised directional intent; and
    - `AntSurfaceMotor` with speed 4, a 0.12-unit floor probe, and the `ClimbableSurface` mask.
 5. The Main Camera is orthographic with size 5 and remains stationary for this floor-only slice.
 
-Before continuing, open `AntMovementPrototype`, enter Play Mode, and verify that A/D and Left/Right move, stop, and reverse the ant without Console errors.
+## Manual Play Mode checklist
+
+1. Open `AntMovementPrototype` and enter Play Mode.
+2. Hold A/D and Left/Right separately; confirm the ant moves horizontally in the expected direction.
+3. Release all movement keys; confirm horizontal movement stops.
+4. Hold A+D, then Left+Right; confirm opposing horizontal inputs cancel.
+5. Reverse directly between left and right; confirm direction changes without retained input.
+6. Hold W/S and Up/Down separately; confirm they create no jump, climb or other unintended vertical motion.
+7. Hold a horizontal key together with W or S; confirm diagonal input does not produce horizontal speed above the normal configured movement speed.
+8. Confirm the ant remains grounded on the prototype floor throughout the checks.
+9. Confirm the Console contains no errors.
 
 ## Next approved development step
 
-Manually verify the horizontal floor-movement slice in Play Mode. If it behaves correctly, the next small implementation slice should separate WASD world-direction intent from `AntSurfaceMotor` while preserving the current floor behaviour. Surface detection and alignment can then consume that shared intent without introducing autonomous AI or pathfinding.
+Manually verify directional input and horizontal floor movement in Play Mode. If it behaves correctly, the next small implementation slice is bounded surface detection and alignment for isolated floors, walls and ceilings. It must consume the existing movement intent without adding corner transitions, Auto Step-Over, autonomous AI or pathfinding yet.

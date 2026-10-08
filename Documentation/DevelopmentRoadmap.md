@@ -8,7 +8,7 @@ This roadmap reflects the repository as inspected on 8 October 2026. Milestone 1
 
 ## Milestone 1 — Player Ant Movement Prototype
 
-**Status:** In progress. The authored prototype scene, player-ant prefab, and horizontal floor movement are implemented. Manual Play Mode verification is pending before wall and ceiling work begins.
+**Status:** In progress. The authored prototype, horizontal floor motor, and dedicated directional-input component are implemented. Manual Play Mode verification is pending before surface detection and alignment work begins.
 
 **Goal:** Prove that one directly controlled ordinary ant can move through a small, authored 2D underground tunnel and that a simple camera can follow it. Becoming a queen is later progression and is outside this milestone.
 
@@ -54,6 +54,8 @@ Each step should be tested in the Unity Editor before the next step begins.
    - Interpret WASD as an intended world direction for the selected ant.
    - Keep direct-input interpretation separate from the physical surface motor so future autonomous navigation can submit movement intent without receiving different collision rules.
    - Do not implement selection, autonomous behaviour or pathfinding during this step.
+
+   **Implementation status:** Implemented in code and prefab; Unity compilation passed. Manual Play Mode input verification remains pending.
 
 4. **Add surface detection and alignment**
    - Detect nearby climbable surfaces with bounded 2D physics queries.
@@ -123,8 +125,8 @@ Assets/
 
 The initial script set should remain small:
 
-- `AntSurfaceMotor.cs` — executes physical surface movement, attachment and clearance rules. Its current floor-only version still reads input directly; separating that input is the next planned slice.
-- A small direct-input component may be added to translate WASD into world-direction intent once the existing floor slice is manually verified. This is not an autonomous navigation system.
+- `AntSurfaceMotor.cs` — accepts a normalised `Vector2` movement intent and executes grounded horizontal movement. It retains vertical intent for future traversal work but does not act on it yet.
+- `PlayerMovementInput.cs` — reads the existing `Move` action, normalises the result, and supplies it to `AntSurfaceMotor`. It contains no physics or autonomous navigation logic.
 - `CameraFollow2D.cs` — follows a target position with simple smoothing while keeping the camera upright.
 
 The existing root-level Unity template assets can remain where they are until the authored Ant Colony scene replaces the template scene. No Bootstrap exists in the current repository; Milestone 1 should use authored scene and prefab references and should not add a global manager or new bootstrap system.
