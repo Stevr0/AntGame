@@ -11,7 +11,7 @@ Design intent: Build a small, finishable colony simulation in which individual a
 | Item | Definition |
 | --- | --- |
 | Genre | 2D side-view colony simulation / management |
-| Starting scenario | One founding queen arrives at the surface, digs a founding chamber and raises the first workers. |
+| Starting scenario | The player begins as an ordinary ant. Becoming a queen is a later progression event whose requirements are still to be designed. |
 | Primary interaction | Select ants, designate jobs and mark soil for excavation. |
 | Defining feature | Each ant is a persistent, selectable individual with its own needs, stats, skills and autonomous behaviour. |
 | Target | Small single-player game; initial colony target of up to approximately 20 ants. |
@@ -26,7 +26,7 @@ Design intent: Build a small, finishable colony simulation in which individual a
 - Finishability first: implement and polish one complete play loop before adding broad simulation features.
 ## 3. Player fantasy and game loop
 
-The player begins as a newly arrived queen. They choose an entry point, establish an underground chamber and eventually oversee a small, self-sustaining nest. The colony grows from personal labour into coordinated work.
+The player begins as an ordinary ant. They initially explore and work directly, then later gain the ability to become a queen through a progression event that is still to be designed. Colony founding, reproduction and the transition into colony management occur after that transformation.
 
 Core loop: Mark accessible soil → an assigned ant travels to it → excavates it → collects a soil unit → carries it to a dump location → returns for another job. As the colony grows, workers also gather food and water, rest, and gain skills.
 
@@ -68,9 +68,9 @@ All ants are persistent individuals. A caste defines biological capabilities; at
 
 Autonomous priority: immediate danger → critical personal needs → assigned job → idle behaviour. Ants should automatically eat, drink and rest when supplies are available. Job interruption and resumption must be predictable.
 
-## 7. Queen, brood and colony progression
+## 7. Queen transformation, brood and colony progression
 
-The founding queen starts alone, excavates the first chamber and later lays eggs. Brood matures through simplified stages until workers become selectable individuals. Once workers exist, the queen primarily focuses on reproduction and brood care; direct player selection remains possible.
+The player starts as an ordinary ant rather than a queen. Becoming a queen happens later through a progression event whose trigger, costs and presentation are open design questions. After transforming, the queen establishes the colony and later lays eggs. Brood matures through simplified stages until workers become selectable individuals. Once workers exist, the queen primarily focuses on reproduction and brood care; direct player selection remains possible.
 
 The exact egg-production timings, mating biology, nutrition costs and brood-care systems are open design decisions, not implementation requirements for the first prototype.
 
@@ -109,7 +109,7 @@ Lose/pressure conditions are deliberately light in v1: a failed colony may occur
 
 | Stage | Deliverable / test |
 | --- | --- |
-| P1 — Surface traversal | One queen follows floor, wall and ceiling in a pre-excavated test tunnel with no collision glitches. |
+| P1 — Surface traversal | One player ant follows floor, wall and ceiling in a pre-excavated test tunnel with no collision glitches. |
 | P2 — Tile excavation | Mark accessible tiles; queen/worker navigates, removes and opens paths. |
 | P3 — Soil logistics | For each excavated tile, one soil unit reaches a fixed deposit point; no loss/duplication. |
 | P4 — Individual ants | Multiple selectable ants, basic roles and autonomous job completion. |
@@ -136,7 +136,8 @@ Lose/pressure conditions are deliberately light in v1: a failed colony may occur
 ## 15. Open design questions
 
 - Exactly how does direct ant control work alongside point-and-click designation?
-- Does the founding queen dig and haul before workers hatch, and how is her energy replenished?
+- What event, requirements and costs allow the starting ordinary ant to become a queen?
+- After transformation, does the queen dig and haul before workers hatch, and how is her energy replenished?
 - How is brood nurtured, and what inputs are needed to hatch the first worker?
 - Are ants individually named by the player or automatically numbered?
 - Should stockpiled soil ever have mechanical value before placement is introduced?
@@ -145,4 +146,4 @@ Lose/pressure conditions are deliberately light in v1: a failed colony may occur
 
 An idea is not added to the current milestone unless it directly enables its acceptance test or fixes a blocker. New ideas go into the backlog, and the project remains single-player until a finished small game exists.
 
-Immediate next task: prototype one queen traversing a pre-cut floor/wall/ceiling tunnel. Do not start reproduction, complex AI or nutrient simulation before that movement test passes.
+Immediate next task: prototype one ordinary player ant traversing a pre-cut floor/wall/ceiling tunnel. Do not start queen transformation, reproduction, complex AI or nutrient simulation before that movement test passes.

@@ -2,33 +2,39 @@
 
 ## Current milestone
 
-**Milestone 1 — Queen Movement Prototype**  
-**Status:** Planning complete; implementation has not started and is awaiting approval.
+**Milestone 1 — Player Ant Movement Prototype**
+**Status:** In progress. The horizontal floor-movement slice is implemented; manual Play Mode verification is pending.
 
 ## Repository assessment
 
 - A Unity project exists at the repository root and uses Unity `6000.3.8f1`.
 - The project was created from a Unity 2D URP template.
-- `Assets/Scenes/SampleScene.unity` is the only build scene. Its authored content is limited to the template `Main Camera` and `Global Light 2D`.
+- `Assets/AntColony/Scenes/AntMovementPrototype.unity` is the first build scene, and the original `Assets/Scenes/SampleScene.unity` remains available as the second scene.
 - The new Input System is enabled and the template input actions asset contains a `Player/Move` action.
 - Unity's 2D, Tilemap, Tilemap Extras, Sprite Shape, 2D Animation, URP, and Test Framework packages are already available.
 - Netcode for GameObjects is not installed. The built-in Multiplayer Center entry is present, but no networking gameplay package or networking code is present.
-- No C# gameplay scripts, prefabs, ant art, Tilemaps, tunnel geometry, or tests are present.
+- The first movement script, player-ant prefab, placeholder visuals, and flat-floor prototype scene are present. Tilemaps, a complete tunnel, and automated tests are not present yet.
 - No Bootstrap or global game manager exists. Future work should preserve an authored-content-first approach and should not introduce one unless a later requirement genuinely needs it.
 
 ## Documentation status
 
-- `Documentation/GameDesignDocument.md` is missing. It must be supplied or created with developer approval before it can serve as the primary design reference.
+- `Documentation/GameDesignDocument.md` version 0.1 is present and is the primary design reference.
+- The GDD confirms P1 surface traversal with one ordinary player ant as the immediate task. Becoming a queen is later progression; excavation, logistics, multiple ants, survival, and growth remain in later acceptance gates.
 - `Documentation/DevelopmentRoadmap.md` now records the approved Milestone 1 scope and proposed implementation order.
 - This file records the inspected baseline; it does not claim that gameplay has been tested.
 
 ## Implemented systems
 
-There are currently no Ant Colony gameplay systems. The repository contains only the Unity project foundation and template assets.
+- `AntSurfaceMotor` reads the existing `Player/Move` Input System action and applies grounded horizontal velocity through `Rigidbody2D` in `FixedUpdate`.
+- A short floor probe limits steering to the authored `ClimbableSurface` layer. Jumping and free flight are intentionally absent.
+- `PlayerAnt.prefab` contains the placeholder sprite, `Rigidbody2D`, horizontal `CapsuleCollider2D`, `PlayerInput`, and movement component with its layer reference assigned.
+- `AntMovementPrototype.unity` contains a camera, one wide prototype floor, and one prefab instance of the ordinary player ant.
+- The prototype scene is the first enabled scene in Build Settings; the original template scene remains available.
+- `Milestone1PrototypeSetup` is an Editor-only, repeatable setup command. It authors project assets and is not a runtime Bootstrap or manager.
 
 ## Verified working features
 
-No gameplay feature has been verified in the Unity Editor.
+The open Unity Editor successfully compiled the new scripts and executed the setup command to create the prefab and scene assets. Serialized-file inspection confirmed the expected component references, physics layer mask, and Build Settings entry.
 
 Repository inspection confirmed that:
 
@@ -38,33 +44,32 @@ Repository inspection confirmed that:
 - the expected 2D physics and rendering packages are declared; and
 - generated Unity folders are excluded by `.gitignore`.
 
-These are file-level checks, not Play Mode validation.
+Horizontal input, grounded movement, stopping, and direction reversal have not yet been observed in Play Mode. This implementation slice is therefore not marked complete.
 
 ## Known issues and risks
 
-- The GDD is absent, so design details beyond the supplied Milestone 1 brief cannot be validated.
-- The test scene, queen prefab, tunnel collision geometry, surface layer, movement code, and camera-follow code do not exist yet.
+- Horizontal floor movement still requires hands-on Play Mode verification with A/D and Left/Right input.
+- Wall, ceiling, corner-transition, surface-alignment, and camera-follow behaviour are not implemented yet.
 - Surface transitions around corners are the main technical risk for Milestone 1. They should be developed after flat floor, wall, and ceiling movement work independently.
+- The GDD intentionally leaves direct-control inputs provisional. Milestone 1 should test one simple movement scheme without building both direct-control and command-style systems.
 
-## Required Unity Editor setup for Milestone 1
+## Authored Unity Editor setup
 
-After implementation is approved, the following authored setup will be required in the Unity Editor:
+The first implementation slice created the following setup:
 
-1. Create and save an Ant Colony prototype scene under `Assets/AntColony/Scenes`.
-2. Create a `ClimbableSurface` physics layer.
-3. Build a small continuous tunnel using simple 2D colliders initially, or a Grid and Tilemap with `TilemapCollider2D` if representative tiles are available.
-4. Create a queen GameObject with:
+1. `Assets/AntColony/Scenes/AntMovementPrototype.unity` is the prototype scene.
+2. `ClimbableSurface` is user layer 8.
+3. `Prototype Floor` uses a visible placeholder sprite and `BoxCollider2D` on the climbable layer.
+4. `PlayerAnt.prefab` contains:
    - a placeholder `SpriteRenderer`;
-   - a `Rigidbody2D` configured for the movement prototype;
-   - a simple `CapsuleCollider2D` or `CircleCollider2D` sized to the placeholder art; and
-   - the future queen movement component.
-5. Save the queen as a prefab under `Assets/AntColony/Prefabs/Ants`.
-6. Assign the `ClimbableSurface` layer mask and other movement tuning values in the queen component's Inspector.
-7. Add the future camera-follow component to the Main Camera and assign the queen as its target.
-8. Add the prototype scene to Build Settings and remove or disable `SampleScene` once the replacement scene is verified.
+   - a dynamic `Rigidbody2D` with gravity scale 4, interpolation enabled, continuous collision detection, and frozen rotation;
+   - a horizontal `CapsuleCollider2D` sized to 1.2 by 0.6 units;
+   - `PlayerInput` using `InputSystem_Actions` and the `Player` action map; and
+   - `AntSurfaceMotor` with speed 4, a 0.12-unit floor probe, and the `ClimbableSurface` mask.
+5. The Main Camera is orthographic with size 5 and remains stationary for this floor-only slice.
 
-Exact Rigidbody2D settings, physics query distances, speeds, and smoothing values should be documented after they have been tuned and verified in Unity rather than guessed in advance.
+Before continuing, open `AntMovementPrototype`, enter Play Mode, and verify that A/D and Left/Right move, stop, and reverse the ant without Console errors.
 
 ## Next approved development step
 
-Wait for developer approval of the assessment and Milestone 1 plan. After approval, create only the minimal Milestone 1 folder structure and authored prototype scene setup, then implement and verify horizontal floor movement before adding wall or ceiling traversal.
+Manually verify the horizontal floor-movement slice in Play Mode. If it behaves correctly, implement isolated wall and ceiling surface detection/alignment before attempting connected corners.
