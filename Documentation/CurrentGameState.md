@@ -3,104 +3,79 @@
 ## Current milestone
 
 **Milestone 1 — Player Ant Movement Prototype**
-**Status:** In progress. Directional input is separated from the horizontal floor motor; manual Play Mode verification is pending.
+
+**Status:** In progress. Floor detection and isolated left/right wall climbing are implemented in code and authored content. Hands-on Play Mode acceptance is still pending.
 
 ## Repository assessment
 
-- A Unity project exists at the repository root and uses Unity `6000.3.8f1`.
-- The project was created from a Unity 2D URP template.
-- `Assets/AntColony/Scenes/AntMovementPrototype.unity` is the first build scene, and the original `Assets/Scenes/SampleScene.unity` remains available as the second scene.
-- The new Input System is enabled and the template input actions asset contains a `Player/Move` action.
-- Unity's 2D, Tilemap, Tilemap Extras, Sprite Shape, 2D Animation, URP, and Test Framework packages are already available.
-- Netcode for GameObjects is not installed. The built-in Multiplayer Center entry is present, but no networking gameplay package or networking code is present.
-- The first movement script, player-ant prefab, placeholder visuals, and flat-floor prototype scene are present. Tilemaps, a complete tunnel, and automated tests are not present yet.
-- No Bootstrap or global game manager exists. Future work should preserve an authored-content-first approach and should not introduce one unless a later requirement genuinely needs it.
-
-## Documentation status
-
-- `Documentation/GameDesignDocument.md` version 0.2 is the primary design reference.
-- The GDD confirms P1 individual surface traversal with one ordinary player ant as the immediate task. Becoming a queen is later progression.
-- Directional WASD input, whole-footprint clearance, physical ant occupancy, Auto Step-Over, tunnel-width rules, shared player/autonomous traversal, dynamic excavation updates and future traffic recovery are now established design rules.
-- `Documentation/DevelopmentRoadmap.md` now records the approved Milestone 1 scope and proposed implementation order.
-- Documented rules are not treated as implemented or verified gameplay.
+- The Unity 2D URP project uses Unity `6000.3.8f1`.
+- `Assets/AntColony/Scenes/AntMovementPrototype.unity` is the first build scene; the original template scene remains available.
+- The project uses the new Input System and the existing `Player/Move` action.
+- The current prototype controls one ordinary player ant. Becoming a queen is later progression.
+- No Bootstrap or global manager exists. The milestone continues to use authored scene and prefab references.
+- Netcode, excavation, autonomous navigation, and multi-ant systems are not implemented.
 
 ## Implemented systems
 
-- `PlayerMovementInput` reads the existing `Player/Move` Input System action as a `Vector2`, normalises diagonal input, and supplies movement intent to the motor.
-- The existing WASD and arrow-key 2D composites provide up, down, left and right intent; opposing bindings cancel through the Input System composite.
-- `AntSurfaceMotor` no longer references `PlayerInput` or keyboard actions. Its public `SetMovementIntent(Vector2)` method accepts a controller-neutral direction request for the currently active controller.
-- `AntSurfaceMotor` retains the full normalised intent but currently applies only its X component as grounded horizontal velocity through `Rigidbody2D` in `FixedUpdate`.
-- Disabling `PlayerMovementInput` clears the request, and disabling `AntSurfaceMotor` clears intent and stops retained horizontal velocity.
-- A short floor probe limits steering to the authored `ClimbableSurface` layer. Jumping and free flight are intentionally absent.
-- `PlayerAnt.prefab` contains the placeholder sprite, `Rigidbody2D`, horizontal `CapsuleCollider2D`, `PlayerInput`, `PlayerMovementInput`, and movement component with its layer reference assigned.
-- `AntMovementPrototype.unity` contains a camera, one wide prototype floor, and one prefab instance of the ordinary player ant.
-- The prototype scene is the first enabled scene in Build Settings; the original template scene remains available.
-- `Milestone1PrototypeSetup` is an Editor-only, repeatable setup command. It authors project assets and is not a runtime Bootstrap or manager.
+### Directional input
 
-## Verified working features
+- `PlayerMovementInput` reads the existing `Player/Move` action as a `Vector2`, normalises diagonal input, and calls `AntSurfaceMotor.SetMovementIntent(Vector2)`.
+- WASD and arrow-key composites supply up, down, left, and right intent. Opposing composite bindings cancel through the Input System.
+- `AntSurfaceMotor` does not read keyboard or `PlayerInput` state. A future controller can submit the same movement intent after player control is disabled.
 
-Unity successfully compiled the final scripts with exit code 0 and no C# compiler errors or runtime exception patterns in the validation log. The targeted Editor migration added one `PlayerMovementInput` component to `PlayerAnt.prefab` without regenerating the scene or placeholder assets. Serialized-file inspection confirmed that the existing scene still references the upgraded prefab.
+### Floor and wall motor
 
-Repository inspection confirmed that:
+- `AntSurfaceMotor` performs three non-allocating `Collider2D.Cast` probes: down, left, and right.
+- Each probe records the nearest contact point, surface normal, and distance. The nearest obstruction must be on the `ClimbableSurface` layer and its normal must match the expected floor or wall direction.
+- Attachment has explicit `None`, `Floor`, `LeftWall`, and `RightWall` states. `IsAttached`, `IsGrounded`, `SurfaceType`, `SurfacePoint`, and `SurfaceNormal` are read-only public state.
+- On a floor, A/D applies horizontal `Rigidbody2D` velocity. A wall is selected only when upward intent is pressed while that wall is within the configured probe distance; walking into it with A/D alone remains blocked by physics.
+- On a wall, W applies upward velocity and S applies downward velocity. Releasing input sets traversal velocity to zero while gravity remains disabled for a valid attachment.
+- The motor restores the Rigidbody2D's authored gravity when no valid supported surface is detected. It does not teleport the ant back to a lost surface and does not provide air steering.
+- Attached orientation is derived from the surface normal and approached at a configurable rotation rate with `Rigidbody2D.MoveRotation`. The physical collider rotates with the ant.
+- Small attachment correction is applied only across a detected positive gap. At contact distance zero, the motor leaves collision resolution to Physics2D instead of continually pushing into terrain.
+- Optional selected-object gizmos show the three probe directions, attached/detached colour, contact point, normal, and applied movement direction. They are disabled by default.
 
-- the Unity project version and package manifests are present;
-- the sample scene is included in Build Settings;
-- the project uses the new Input System;
-- the expected 2D physics and rendering packages are declared; and
-- generated Unity folders are excluded by `.gitignore`.
+### Authored prototype
 
-Horizontal input, grounded movement, stopping, and direction reversal have not yet been observed in Play Mode. This implementation slice is therefore not marked complete.
+- `PlayerAnt.prefab` contains the placeholder sprite, dynamic `Rigidbody2D`, horizontal `CapsuleCollider2D`, `PlayerInput`, `PlayerMovementInput`, and `AntSurfaceMotor`.
+- Rigidbody rotation is no longer frozen because surface alignment is motor-controlled. Gravity scale 4, interpolation, and continuous collision detection remain configured.
+- The motor uses movement speed 4, rotation speed 360 degrees per second, a 0.12-unit surface probe, normal tolerance 0.7, and the `ClimbableSurface` mask.
+- `AntMovementPrototype.unity` contains the existing floor plus left and right six-unit-tall climbable walls. The orthographic camera is framed at size 5.5 to show both climbing sections.
+- `Milestone1PrototypeSetup` can apply the wall-climbing migration without regenerating unrelated assets and can structurally validate the prefab and scene.
 
-## Designed but not implemented
+## Automated validation performed
 
-- Surface attachment and rotation on walls, ceilings, inside corners and outside corners.
-- Directional choice between reachable surfaces at junctions.
-- Configurable Auto Step-Over with swept-footprint, landing-surface and obstruction checks.
-- Tile-scale logical occupancy based on each ant's physical footprint.
-- Multiple ants, selection handover, ant-to-ant collision validation, following distance, passing, yielding and deadlock recovery.
-- Static surface connectivity, dynamic occupancy, route planning, task navigation and blocked-route recovery.
-- Incremental navigation updates after runtime excavation.
-- Scalability measures such as shared traversal data, event-driven invalidation and distributed simulation work.
+- Unity compiled the runtime and Editor assemblies successfully with exit code 0.
+- The wall-climbing migration completed successfully and serialized the prefab and scene.
+- `ValidateWallClimbingPrototype` passed. It verified the player input and motor components, a rotatable Rigidbody2D, the climbable layer mask, the player scene instance, and colliders/layers for the floor and both walls.
+- Repository whitespace validation passed with `git diff --check` after generated whitespace was cleaned up.
+- No NUnit test assemblies currently exist in the project, so no automated movement test suite was available to run.
 
-These are agreed design requirements. Their specific algorithms and component boundaries remain deferred until their roadmap stage is approved and can be tested incrementally.
-
-## Known issues and risks
-
-- Horizontal floor movement still requires hands-on Play Mode verification with A/D and Left/Right input.
-- Wall, ceiling, corner-transition, surface-alignment, and camera-follow behaviour are not implemented yet.
-- W/S intent reaches and is retained by the motor, but surface selection and directional junction choice are not implemented. The floor-only motor intentionally does not convert vertical intent into jumping or vertical motion.
-- Auto Step-Over distance, clearance query shape and transition timing require prototype testing before their final values are chosen.
-- Surface transitions around corners are the main technical risk for Milestone 1. They should be developed after flat floor, wall, and ceiling movement work independently.
-- The routing representation, yielding priority, reservation needs and deadlock-recovery limits remain unresolved future implementation decisions.
-
-## Authored Unity Editor setup
-
-The first implementation slice created the following setup:
-
-1. `Assets/AntColony/Scenes/AntMovementPrototype.unity` is the prototype scene.
-2. `ClimbableSurface` is user layer 8.
-3. `Prototype Floor` uses a visible placeholder sprite and `BoxCollider2D` on the climbable layer.
-4. `PlayerAnt.prefab` contains:
-   - a placeholder `SpriteRenderer`;
-   - a dynamic `Rigidbody2D` with gravity scale 4, interpolation enabled, continuous collision detection, and frozen rotation;
-   - a horizontal `CapsuleCollider2D` sized to 1.2 by 0.6 units;
-   - `PlayerInput` using `InputSystem_Actions` and the `Player` action map;
-   - `PlayerMovementInput` forwarding normalised directional intent; and
-   - `AntSurfaceMotor` with speed 4, a 0.12-unit floor probe, and the `ClimbableSurface` mask.
-5. The Main Camera is orthographic with size 5 and remains stationary for this floor-only slice.
+These checks prove compilation and authored setup only. They do not prove successful physical traversal or movement feel.
 
 ## Manual Play Mode checklist
 
-1. Open `AntMovementPrototype` and enter Play Mode.
-2. Hold A/D and Left/Right separately; confirm the ant moves horizontally in the expected direction.
-3. Release all movement keys; confirm horizontal movement stops.
-4. Hold A+D, then Left+Right; confirm opposing horizontal inputs cancel.
-5. Reverse directly between left and right; confirm direction changes without retained input.
-6. Hold W/S and Up/Down separately; confirm they create no jump, climb or other unintended vertical motion.
-7. Hold a horizontal key together with W or S; confirm diagonal input does not produce horizontal speed above the normal configured movement speed.
-8. Confirm the ant remains grounded on the prototype floor throughout the checks.
-9. Confirm the Console contains no errors.
+1. Open `Assets/AntColony/Scenes/AntMovementPrototype.unity`, enter Play Mode, and keep the Console visible.
+2. Use A/D and Left/Right on the floor; confirm normal movement, stopping, cancellation of opposing input, and immediate direction reversal still work.
+3. Hold W/S away from a wall; confirm neither input creates jumping or unsupported vertical movement.
+4. Walk into each wall using A/D alone; confirm the ant stops at the collider and does not automatically climb or pass through it.
+5. While beside a wall, press W; confirm attachment changes to that wall, the ant climbs upward, and its feet rotate toward the wall by approximately 90 degrees.
+6. While attached, press S; confirm the ant descends without sliding through the floor.
+7. Release all input on each wall; confirm the ant remains attached and stationary.
+8. Test diagonal input beside each wall; confirm input remains normalised and does not increase movement speed.
+9. Move beyond a valid wall section if practical; confirm loss of the wall restores gravity rather than creating invisible support or teleporting the ant.
+10. Confirm the ant never crosses the floor or wall colliders and the Console has no errors.
+11. Optionally enable `Show Debug Gizmos` on `AntSurfaceMotor`, select the ant, and inspect probe, point, normal, direction, and attachment-state gizmos in the Scene view.
 
-## Next approved development step
+## Known limitations and remaining P1 work
 
-Manually verify directional input and horizontal floor movement in Play Mode. If it behaves correctly, the next small implementation slice is bounded surface detection and alignment for isolated floors, walls and ceilings. It must consume the existing movement intent without adding corner transitions, Auto Step-Over, autonomous AI or pathfinding yet.
+- Physical floor and wall traversal has not yet been observed in Play Mode, so this slice is not marked complete.
+- The current wall acquisition is deliberately narrow: upward intent selects a nearby side wall. There is no general junction solver.
+- Ceiling detection, upside-down movement, floor-to-wall corner polish, wall-to-ceiling transitions, inside/outside corners, and bidirectional connected-surface traversal are not implemented.
+- The rotating capsule at the floor/wall join is provisional and may need probe distance, collider, rotation-rate, or clearance tuning after Play Mode observation.
+- Whole-route footprint clearance and obstruction testing are not yet implemented. Collision is currently enforced by the Rigidbody2D/collider and nearest-obstruction probe rule.
+- Auto Step-Over, camera follow, a valid one-tile opening test, excavation, autonomous navigation, and multi-ant occupancy remain future work.
+
+## Recommended next P1 slice
+
+First complete the manual floor/wall checklist and tune only the current probe, rotation, and collider values if evidence requires it. Once isolated wall movement is accepted, add isolated ceiling detection and ceiling-tangent movement through the same motor. Keep connected corner transitions and general directional junction choice as a later, separate slice.

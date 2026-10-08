@@ -2,13 +2,13 @@
 
 ## Roadmap status
 
-This roadmap reflects the repository as inspected on 8 October 2026. Milestone 1 is in progress. The first horizontal-movement slice is implemented but is not complete until its Play Mode acceptance checks pass.
+This roadmap reflects the repository as inspected on 8 October 2026. Milestone 1 is in progress. Directional input, floor detection, and isolated left/right wall movement are implemented, but physical traversal still requires Play Mode acceptance.
 
 `GameDesignDocument.md` version 0.2 is the primary design reference. Its P1 individual-traversal gate requires one ordinary player ant to use directional input across floors, walls, ceilings, corners and a physically valid one-tile opening. This roadmap breaks that gate into small implementation steps; it does not replace the GDD.
 
 ## Milestone 1 — Player Ant Movement Prototype
 
-**Status:** In progress. The authored prototype, horizontal floor motor, and dedicated directional-input component are implemented. Manual Play Mode verification is pending before surface detection and alignment work begins.
+**Status:** In progress. The authored prototype, dedicated directional-input component, bounded floor/wall probes, attachment state, and isolated vertical wall movement are implemented. Manual Play Mode verification is pending. Ceilings, connected corners, and later P1 capabilities remain unimplemented.
 
 **Goal:** Prove that one directly controlled ordinary ant can move through a small, authored 2D underground tunnel and that a simple camera can follow it. Becoming a queen is later progression and is outside this milestone.
 
@@ -63,11 +63,15 @@ Each step should be tested in the Unity Editor before the next step begins.
    - Rotate toward that orientation at a configurable rate rather than snapping instantly.
    - Validate enough free space for the ant's whole collider, not only its centre point.
 
+   **Implementation status:** Floor and side-wall casts, contact point/normal state, attachment, gravity handling, and smooth motor-controlled alignment are implemented. Physics collisions still provide the current whole-collider barrier; dedicated route-clearance validation remains pending. Structural Editor validation passed, while Play Mode acceptance is pending.
+
 5. **Support walls, ceilings and directional junction choice**
    - Move along the tangent of the selected surface instead of assuming world-horizontal movement.
    - Verify movement on isolated floor, wall and ceiling sections before testing corners.
    - At a junction, use the player's intended world direction to choose among reachable connected surfaces.
    - Ensure the ant does not drift away, tunnel through terrain or acquire an inaccessible surface.
+
+   **Implementation status:** The isolated vertical-wall portion is implemented for both sides. Upward intent acquires a nearby wall; W/S then climb and descend, and no input maintains attachment. Ceiling movement and general directional junction choice are not implemented. Physical behaviour is not yet Play Mode verified.
 
 6. **Support connected-surface transitions**
    - Add short forward and around-corner checks so the ant can acquire the next connected surface.
@@ -125,7 +129,7 @@ Assets/
 
 The initial script set should remain small:
 
-- `AntSurfaceMotor.cs` — accepts a normalised `Vector2` movement intent and executes grounded horizontal movement. It retains vertical intent for future traversal work but does not act on it yet.
+- `AntSurfaceMotor.cs` — accepts a normalised `Vector2` movement intent, detects nearby floors and side walls, owns attachment/gravity, and moves or aligns the Rigidbody2D along the selected supported surface.
 - `PlayerMovementInput.cs` — reads the existing `Move` action, normalises the result, and supplies it to `AntSurfaceMotor`. It contains no physics or autonomous navigation logic.
 - `CameraFollow2D.cs` — follows a target position with simple smoothing while keeping the camera upright.
 

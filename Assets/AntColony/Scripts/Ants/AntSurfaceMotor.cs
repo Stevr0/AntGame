@@ -1,47 +1,97 @@
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace AntColony.Ants
 {
     /// <summary>
-    /// Moves the directly controlled ant along a flat floor.
+    /// Identifies the simple surfaces supported by the current movement slice.
+    /// Ceilings and corner transitions are intentionally not represented yet.
+    /// </summary>
+    public enum AntSurfaceType
+    {
+        None,
+        Floor,
+        LeftWall,
+        RightWall
+    }
+
+    /// <summary>
+    /// Moves an ant along a detected floor or vertical wall.
     ///
-    /// This first milestone slice deliberately supports horizontal floors only.
-    /// Wall, ceiling, and corner traversal will be added after floor movement is
-    /// verified in the Unity Editor.
+    /// Controllers only provide a world-space movement intent. This component
+    /// owns all Rigidbody2D movement and attachment decisions, so a future AI
+    /// controller can reuse the same physical traversal rules as the player.
     /// </summary>
     [RequireComponent(typeof(Rigidbody2D))]
     [RequireComponent(typeof(Collider2D))]
     public sealed class AntSurfaceMotor : MonoBehaviour
     {
+        private const int MaximumProbeHits = 8;
+
         [Header("Movement")]
         [SerializeField, Min(0f)] private float movementSpeed = 4f;
+        [SerializeField, Min(0f)] private float rotationSpeed = 360f;
 
-        [Header("Floor Detection")]
+        [Header("Surface Detection")]
         [SerializeField] private LayerMask climbableSurfaces;
-        [SerializeField, Min(0.01f)] private float floorProbeDistance = 0.12f;
+        [FormerlySerializedAs("floorProbeDistance")]
+        [SerializeField, Min(0.01f)] private float surfaceProbeDistance = 0.18f;
+        [SerializeField, Range(0f, 1f)] private float surfaceNormalTolerance = 0.7f;
+        [SerializeField, Range(0f, 1f)] private float wallAttachInputThreshold = 0.5f;
+
+        [Header("Surface Attachment")]
+        [SerializeField, Min(0f)] private float surfaceSeparation = 0.02f;
+        [SerializeField, Min(0f)] private float attachmentCorrectionStrength = 12f;
+        [SerializeField, Min(0f)] private float maximumAttachmentCorrectionSpeed = 2f;
+
+        [Header("Debugging")]
+        [SerializeField] private bool showDebugGizmos;
+
+        // Collider2D.Cast fills this reusable array. Reusing it avoids creating
+        // garbage every physics step, which becomes important with many ants.
+        private readonly RaycastHit2D[] probeHits = new RaycastHit2D[MaximumProbeHits];
 
         private Rigidbody2D antBody;
         private Collider2D antCollider;
-        private Vector2 _movementIntent;
+        private ContactFilter2D probeFilter;
+        private Vector2 movementIntent;
+        private Vector2 surfacePoint;
+        private Vector2 surfaceNormal = Vector2.up;
+        private Vector2 appliedMovementDirection;
+        private float detachedGravityScale;
 
-        /// <summary>
-        /// Gets whether the ant's floor probe currently touches a climbable surface.
-        /// This is public so later animation and tests can read the result without
-        /// being allowed to change it.
-        /// </summary>
-        public bool IsGrounded { get; private set; }
+        /// <summary>Gets whether a supported climbable surface is attached.</summary>
+        public bool IsAttached => SurfaceType != AntSurfaceType.None;
+
+        /// <summary>Gets whether the current attached surface is a floor.</summary>
+        public bool IsGrounded => SurfaceType == AntSurfaceType.Floor;
+
+        /// <summary>Gets the current floor or wall attachment type.</summary>
+        public AntSurfaceType SurfaceType { get; private set; }
+
+        /// <summary>Gets the latest detected contact point for debugging.</summary>
+        public Vector2 SurfacePoint => surfacePoint;
+
+        /// <summary>Gets the outward normal of the attached surface.</summary>
+        public Vector2 SurfaceNormal => surfaceNormal;
 
         /// <summary>
         /// Gets the latest normalised world-direction request supplied by the
-        /// active controller. Vertical intent is retained for later traversal
-        /// work, but this floor-only motor currently acts on the X value only.
+        /// active controller.
         /// </summary>
-        public Vector2 MovementIntent => _movementIntent;
+        public Vector2 MovementIntent => movementIntent;
 
         private void Awake()
         {
             antBody = GetComponent<Rigidbody2D>();
             antCollider = GetComponent<Collider2D>();
+            detachedGravityScale = antBody.gravityScale;
+
+            // Probe every collision layer first. The nearest obstruction is then
+            // checked against climbableSurfaces, preventing attachment through a
+            // non-climbable collider that happens to be closer to the ant.
+            probeFilter = ContactFilter2D.noFilter;
+            probeFilter.useTriggers = false;
         }
 
         /// <summary>
@@ -55,65 +105,264 @@ namespace AntColony.Ants
         /// </param>
         public void SetMovementIntent(Vector2 intent)
         {
-            _movementIntent = Vector2.ClampMagnitude(intent, 1f);
+            movementIntent = Vector2.ClampMagnitude(intent, 1f);
         }
 
         private void FixedUpdate()
         {
-            UpdateGroundedState();
+            SurfaceProbe floor = ProbeSurface(Vector2.down, Vector2.up, AntSurfaceType.Floor);
+            SurfaceProbe leftWall = ProbeSurface(Vector2.left, Vector2.right, AntSurfaceType.LeftWall);
+            SurfaceProbe rightWall = ProbeSurface(Vector2.right, Vector2.left, AntSurfaceType.RightWall);
 
-            // The ant may only steer while it is standing on the test floor.
-            // Vertical intent is deliberately stored but ignored until wall and
-            // ceiling traversal are implemented in later P1 slices.
-            float horizontalSpeed = IsGrounded ? _movementIntent.x * movementSpeed : 0f;
-            antBody.linearVelocity = new Vector2(horizontalSpeed, antBody.linearVelocity.y);
+            SurfaceProbe selectedSurface = SelectSurface(floor, leftWall, rightWall);
+            ApplyAttachment(selectedSurface);
+
+            if (IsAttached)
+            {
+                MoveAlongAttachedSurface(selectedSurface.Distance);
+                AlignToSurface();
+            }
+            else
+            {
+                MoveWhileDetached();
+            }
+        }
+
+        private SurfaceProbe ProbeSurface(
+            Vector2 direction,
+            Vector2 expectedNormal,
+            AntSurfaceType surfaceType)
+        {
+            int hitCount = antCollider.Cast(
+                direction,
+                probeFilter,
+                probeHits,
+                surfaceProbeDistance);
+
+            float nearestDistance = float.PositiveInfinity;
+            RaycastHit2D nearestHit = default;
+
+            for (int index = 0; index < hitCount; index++)
+            {
+                RaycastHit2D hit = probeHits[index];
+                if (hit.collider != null && hit.distance < nearestDistance)
+                {
+                    nearestDistance = hit.distance;
+                    nearestHit = hit;
+                }
+            }
+
+            if (nearestHit.collider == null || !IsClimbableLayer(nearestHit.collider.gameObject.layer))
+            {
+                return SurfaceProbe.Invalid;
+            }
+
+            // A floor probe should not accept a steep wall, and a wall probe
+            // should not accept the floor. This keeps attachment state explicit.
+            if (Vector2.Dot(nearestHit.normal, expectedNormal) < surfaceNormalTolerance)
+            {
+                return SurfaceProbe.Invalid;
+            }
+
+            return new SurfaceProbe(
+                surfaceType,
+                nearestHit.point,
+                nearestHit.normal.normalized,
+                nearestHit.distance);
+        }
+
+        private SurfaceProbe SelectSurface(
+            SurfaceProbe floor,
+            SurfaceProbe leftWall,
+            SurfaceProbe rightWall)
+        {
+            // Once attached to a wall, remain there while its probe is valid.
+            // This means releasing input stops the ant instead of making it fall.
+            if (SurfaceType == AntSurfaceType.LeftWall && leftWall.IsValid)
+            {
+                return leftWall;
+            }
+
+            if (SurfaceType == AntSurfaceType.RightWall && rightWall.IsValid)
+            {
+                return rightWall;
+            }
+
+            // Upward intent is the deliberate action that begins a wall climb.
+            // Merely walking into a wall remains collision-safe floor movement.
+            if (movementIntent.y > wallAttachInputThreshold)
+            {
+                if (movementIntent.x < 0f && leftWall.IsValid)
+                {
+                    return leftWall;
+                }
+
+                if (movementIntent.x > 0f && rightWall.IsValid)
+                {
+                    return rightWall;
+                }
+
+                if (leftWall.IsValid && rightWall.IsValid)
+                {
+                    return leftWall.Distance <= rightWall.Distance ? leftWall : rightWall;
+                }
+
+                if (leftWall.IsValid)
+                {
+                    return leftWall;
+                }
+
+                if (rightWall.IsValid)
+                {
+                    return rightWall;
+                }
+            }
+
+            return floor.IsValid ? floor : SurfaceProbe.Invalid;
+        }
+
+        private void ApplyAttachment(SurfaceProbe selectedSurface)
+        {
+            if (!selectedSurface.IsValid)
+            {
+                SurfaceType = AntSurfaceType.None;
+                surfacePoint = antBody.position;
+                surfaceNormal = Vector2.up;
+                antBody.gravityScale = detachedGravityScale;
+                return;
+            }
+
+            SurfaceType = selectedSurface.Type;
+            surfacePoint = selectedSurface.Point;
+            surfaceNormal = selectedSurface.Normal;
+            antBody.gravityScale = 0f;
+            antBody.angularVelocity = 0f;
+        }
+
+        private void MoveAlongAttachedSurface(float distanceFromSurface)
+        {
+            appliedMovementDirection = SurfaceType == AntSurfaceType.Floor
+                ? new Vector2(movementIntent.x, 0f)
+                : new Vector2(0f, movementIntent.y);
+
+            Vector2 velocity = appliedMovementDirection * movementSpeed;
+
+            // Correct only an actual gap. At zero cast distance the physics
+            // solver already has contact and pushing farther inward causes jitter.
+            float gap = Mathf.Max(0f, distanceFromSurface - surfaceSeparation);
+            float correctionSpeed = Mathf.Min(
+                gap * attachmentCorrectionStrength,
+                maximumAttachmentCorrectionSpeed);
+
+            antBody.linearVelocity = velocity - surfaceNormal * correctionSpeed;
+        }
+
+        private void MoveWhileDetached()
+        {
+            appliedMovementDirection = Vector2.zero;
+            antBody.angularVelocity = 0f;
+
+            // Air steering is outside this slice. Preserve gravity-driven vertical
+            // speed, but do not carry the last surface movement into open space.
+            antBody.linearVelocity = new Vector2(0f, antBody.linearVelocity.y);
+        }
+
+        private void AlignToSurface()
+        {
+            float targetRotation = Vector2.SignedAngle(Vector2.up, surfaceNormal);
+            float nextRotation = Mathf.MoveTowardsAngle(
+                antBody.rotation,
+                targetRotation,
+                rotationSpeed * Time.fixedDeltaTime);
+
+            if (Mathf.Abs(Mathf.DeltaAngle(antBody.rotation, nextRotation)) > 0.1f)
+            {
+                antBody.MoveRotation(nextRotation);
+            }
+        }
+
+        private bool IsClimbableLayer(int layer)
+        {
+            return (climbableSurfaces.value & (1 << layer)) != 0;
         }
 
         private void OnDisable()
         {
-            _movementIntent = Vector2.zero;
+            movementIntent = Vector2.zero;
+            SurfaceType = AntSurfaceType.None;
 
-            // Prevent the Rigidbody2D from retaining the last commanded horizontal
-            // velocity if movement execution itself is disabled.
             if (antBody != null)
             {
+                antBody.gravityScale = detachedGravityScale;
+                antBody.angularVelocity = 0f;
                 antBody.linearVelocity = new Vector2(0f, antBody.linearVelocity.y);
             }
-        }
-
-        private void UpdateGroundedState()
-        {
-            Bounds colliderBounds = antCollider.bounds;
-            Vector2 probeOrigin = new Vector2(colliderBounds.center.x, colliderBounds.min.y + 0.01f);
-
-            IsGrounded = Physics2D.Raycast(
-                probeOrigin,
-                Vector2.down,
-                floorProbeDistance,
-                climbableSurfaces);
         }
 
         private void OnValidate()
         {
             movementSpeed = Mathf.Max(0f, movementSpeed);
-            floorProbeDistance = Mathf.Max(0.01f, floorProbeDistance);
+            rotationSpeed = Mathf.Max(0f, rotationSpeed);
+            surfaceProbeDistance = Mathf.Max(0.01f, surfaceProbeDistance);
+            surfaceSeparation = Mathf.Max(0f, surfaceSeparation);
+            attachmentCorrectionStrength = Mathf.Max(0f, attachmentCorrectionStrength);
+            maximumAttachmentCorrectionSpeed = Mathf.Max(0f, maximumAttachmentCorrectionSpeed);
         }
 
 #if UNITY_EDITOR
         private void OnDrawGizmosSelected()
         {
+            if (!showDebugGizmos)
+            {
+                return;
+            }
+
             Collider2D currentCollider = GetComponent<Collider2D>();
             if (currentCollider == null)
             {
                 return;
             }
 
-            Bounds colliderBounds = currentCollider.bounds;
-            Vector3 probeOrigin = new Vector3(colliderBounds.center.x, colliderBounds.min.y + 0.01f);
+            Vector3 centre = currentCollider.bounds.center;
+            Gizmos.color = IsAttached ? Color.green : Color.yellow;
+            Gizmos.DrawLine(centre, centre + Vector3.down * surfaceProbeDistance);
+            Gizmos.DrawLine(centre, centre + Vector3.left * surfaceProbeDistance);
+            Gizmos.DrawLine(centre, centre + Vector3.right * surfaceProbeDistance);
 
-            Gizmos.color = IsGrounded ? Color.green : Color.yellow;
-            Gizmos.DrawLine(probeOrigin, probeOrigin + Vector3.down * floorProbeDistance);
+            if (IsAttached)
+            {
+                Gizmos.color = Color.cyan;
+                Gizmos.DrawSphere(surfacePoint, 0.05f);
+                Gizmos.DrawLine(surfacePoint, surfacePoint + surfaceNormal * 0.5f);
+
+                Gizmos.color = Color.magenta;
+                Gizmos.DrawLine(centre, centre + (Vector3)appliedMovementDirection);
+            }
         }
 #endif
+
+        private readonly struct SurfaceProbe
+        {
+            public static readonly SurfaceProbe Invalid = default;
+
+            public SurfaceProbe(
+                AntSurfaceType type,
+                Vector2 point,
+                Vector2 normal,
+                float distance)
+            {
+                Type = type;
+                Point = point;
+                Normal = normal;
+                Distance = distance;
+                IsValid = true;
+            }
+
+            public AntSurfaceType Type { get; }
+            public Vector2 Point { get; }
+            public Vector2 Normal { get; }
+            public float Distance { get; }
+            public bool IsValid { get; }
+        }
     }
 }
