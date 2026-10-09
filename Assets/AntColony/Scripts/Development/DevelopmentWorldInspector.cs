@@ -22,6 +22,7 @@ namespace AntColony.Development
         private readonly StringBuilder textBuilder = new(512);
         private string statusMessage = "Click a world cell to inspect it.";
         private bool backgroundOnlyVisuals;
+        private Vector2 panelScrollPosition;
 
         public Vector2Int SelectedCell => selectedCell;
 
@@ -38,7 +39,16 @@ namespace AntColony.Development
                         worldHost.TilemapRenderer != null
                             ? worldHost.TilemapRenderer.WorldPositionToWorldCell(worldPoint)
                             : WorldTileCoordinates.WorldPositionToCell(worldPoint);
-                    statusMessage = "Selection updated.";
+                    if (worldHost != null)
+                    {
+                        worldHost.TryAssignAutonomousDestination(
+                            selectedCell,
+                            out statusMessage);
+                    }
+                    else
+                    {
+                        statusMessage = "Selection updated; world host unavailable.";
+                    }
                 }
             }
 
@@ -63,6 +73,7 @@ namespace AntColony.Development
             GUILayout.BeginArea(
                 new Rect(12f, 12f, PanelWidth - 20f, Screen.height - 24f),
                 GUI.skin.box);
+            panelScrollPosition = GUILayout.BeginScrollView(panelScrollPosition);
             GUILayout.Label("ANT GAME DEVELOPMENT WORLD");
             GUILayout.Label("Click terrain to inspect. WASD/arrows pan, wheel zoom,");
             GUILayout.Label("middle-drag pans, Home resets the camera.");
@@ -93,6 +104,7 @@ namespace AntColony.Development
 
             GUILayout.Space(8f);
             GUILayout.Label(statusMessage);
+            GUILayout.EndScrollView();
             GUILayout.EndArea();
         }
 
@@ -117,6 +129,7 @@ namespace AntColony.Development
             textBuilder.Append("Rendered Background cell: ")
                 .Append(tilemapCell)
                 .AppendLine();
+            AppendAutonomousAntDiagnostics(textBuilder);
 
             if (worldHost == null ||
                 !worldHost.TryGetCell(selectedCell, out WorldTileCellData cell))
@@ -180,6 +193,27 @@ namespace AntColony.Development
                 worldHost.ToggleForegroundSolid(selectedCell)
                     ? "Foreground data, visual and collision refreshed."
                     : "Foreground toggle rejected: select a generated cell.";
+        }
+
+        private void AppendAutonomousAntDiagnostics(StringBuilder builder)
+        {
+            AntAutonomousMotor ant = worldHost != null
+                ? worldHost.AutonomousAnt
+                : null;
+            if (ant == null || !ant.gameObject.activeInHierarchy)
+            {
+                builder.AppendLine("Autonomous ant: unavailable");
+                return;
+            }
+
+            builder.Append("Ant position: ").Append(ant.Position).AppendLine();
+            builder.Append("Ant state: ").Append(ant.State)
+                .Append("   Moving: ").Append(ant.IsMoving)
+                .AppendLine();
+            builder.Append("Destination: ")
+                .Append(ant.HasDestination ? ant.Destination.ToString() : "None")
+                .AppendLine();
+            builder.Append("Ant report: ").Append(ant.StatusMessage).AppendLine();
         }
 
         private void TogglePreparedBackground()

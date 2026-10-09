@@ -35,6 +35,10 @@ namespace AntColony.EditorTools
             "Assets/AntColony/Data/WorldMaterials/Solid_Stone.asset";
         private const string CollisionTilePath =
             "Assets/AntColony/Art/WorldTiles/BlockingTerrainCollision.asset";
+        private const string AntSpritePath =
+            "Assets/AntColony/Art/Placeholder/PlayerAntPrototype.asset";
+        private const string AutonomousAntPrefabPath =
+            "Assets/AntColony/Prefabs/Ants/AutonomousAnt.prefab";
 
         [MenuItem("Ant Colony/Build Integrated Development World")]
         public static void BuildIntegratedDevelopmentWorld()
@@ -76,6 +80,15 @@ namespace AntColony.EditorTools
             Require(collisionRenderer != null, "Terrain collision renderer is missing.");
             Require(inspector != null, "Development inspector is missing.");
             Require(cameraController != null, "Development camera controller is missing.");
+            Require(host.AutonomousAntPrefab != null,
+                "Autonomous Ant prefab reference is missing.");
+            ValidateAutonomousAntPrefab(host.AutonomousAntPrefab);
+            Require(FindAll<AntAutonomousMotor>(scene).Length == 0,
+                "The autonomous ant must be spawned after world validation, not authored twice.");
+            Require(scene.GetRootGameObjects()
+                    .SelectMany(root => root.GetComponentsInChildren<Transform>(true))
+                    .Count(item => item.name == "Autonomous Destination Marker") == 1,
+                "The scene must contain one autonomous destination marker.");
             Require(FindAll<Tilemap>(scene).Length == 3,
                 "The scene must contain exactly three Tilemaps.");
             Require(FindAll<TilemapCollider2D>(scene).Length == 1,
@@ -100,6 +113,12 @@ namespace AntColony.EditorTools
         private static void CreateAssetsAndScene()
         {
             Sprite whitePixelSprite = GetOrCreateWhitePixelSprite();
+            Sprite antSprite = AssetDatabase.LoadAllAssetsAtPath(AntSpritePath)
+                .OfType<Sprite>()
+                .FirstOrDefault();
+            Require(antSprite != null, "Existing development ant Sprite is missing.");
+            AntAutonomousMotor autonomousAntPrefab =
+                GetOrCreateAutonomousAntPrefab(antSprite);
             GetOrCreateTile(
                 SkyTilePath,
                 whitePixelSprite,
@@ -207,6 +226,17 @@ namespace AntColony.EditorTools
             inspectionObject.GetComponent<DevelopmentWorldInspector>()
                 .Configure(host, worldCamera);
 
+            GameObject markerObject = new(
+                "Autonomous Destination Marker",
+                typeof(SpriteRenderer));
+            markerObject.transform.SetParent(sceneRoot.transform, false);
+            markerObject.transform.localScale = new Vector3(0.24f, 0.24f, 1f);
+            SpriteRenderer markerRenderer = markerObject.GetComponent<SpriteRenderer>();
+            markerRenderer.sprite = whitePixelSprite;
+            markerRenderer.color = new Color32(255, 224, 92, 255);
+            markerRenderer.sortingOrder = 4;
+            markerObject.SetActive(false);
+
             host.Configure(
                 2203,
                 SampleWorldGenerator.DefaultMinimumChunk,
@@ -218,7 +248,10 @@ namespace AntColony.EditorTools
                 soil,
                 stoneSolid,
                 visualRenderer,
-                collisionRenderer);
+                collisionRenderer,
+                autonomousAntPrefab,
+                markerObject.transform,
+                markerRenderer);
 
             EditorSceneManager.MarkSceneDirty(scene);
             Require(EditorSceneManager.SaveScene(scene, ScenePath),
@@ -239,6 +272,67 @@ namespace AntColony.EditorTools
             tilemap.tileAnchor = new Vector3(0.5f, 0.5f, 0f);
             child.GetComponent<TilemapRenderer>().sortingOrder = sortingOrder;
             return tilemap;
+        }
+
+        private static AntAutonomousMotor GetOrCreateAutonomousAntPrefab(
+            Sprite antSprite)
+        {
+            GameObject root = new(
+                "AutonomousAnt",
+                typeof(Rigidbody2D),
+                typeof(CapsuleCollider2D),
+                typeof(AntAutonomousMotor));
+            GameObject visual = new("Visual", typeof(SpriteRenderer));
+            visual.transform.SetParent(root.transform, false);
+            visual.transform.localScale = new Vector3(0.96f, 0.3f, 1f);
+
+            SpriteRenderer spriteRenderer = visual.GetComponent<SpriteRenderer>();
+            spriteRenderer.sprite = antSprite;
+            spriteRenderer.color = new Color32(247, 214, 82, 255);
+            spriteRenderer.sortingOrder = 3;
+
+            Rigidbody2D body = root.GetComponent<Rigidbody2D>();
+            body.bodyType = RigidbodyType2D.Dynamic;
+            body.gravityScale = 4f;
+            body.interpolation = RigidbodyInterpolation2D.Interpolate;
+            body.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
+            body.constraints = RigidbodyConstraints2D.FreezeRotation;
+
+            CapsuleCollider2D collider = root.GetComponent<CapsuleCollider2D>();
+            collider.direction = CapsuleDirection2D.Horizontal;
+            collider.size = AntCollisionProfile.OrdinaryAnt.Size;
+
+            root.GetComponent<AntAutonomousMotor>().Configure(
+                body,
+                spriteRenderer,
+                2f,
+                0.08f);
+
+            GameObject saved = PrefabUtility.SaveAsPrefabAsset(
+                root,
+                AutonomousAntPrefabPath);
+            UnityEngine.Object.DestroyImmediate(root);
+            Require(saved != null, "Unity could not save the Autonomous Ant prefab.");
+            return saved.GetComponent<AntAutonomousMotor>();
+        }
+
+        private static void ValidateAutonomousAntPrefab(AntAutonomousMotor prefab)
+        {
+            Rigidbody2D body = prefab.GetComponent<Rigidbody2D>();
+            CapsuleCollider2D collider = prefab.GetComponent<CapsuleCollider2D>();
+            Require(body != null && collider != null,
+                "Autonomous Ant requires one Rigidbody2D and CapsuleCollider2D.");
+            Require(body.bodyType == RigidbodyType2D.Dynamic &&
+                    body.constraints == RigidbodyConstraints2D.FreezeRotation,
+                "Autonomous Ant Rigidbody settings are incorrect.");
+            Require(collider.direction == CapsuleDirection2D.Horizontal &&
+                    collider.size == AntCollisionProfile.OrdinaryAnt.Size,
+                "Autonomous Ant collider must match the ordinary-ant profile.");
+            Require(prefab.GetComponents<MonoBehaviour>()
+                    .All(component => component == null ||
+                        component.GetType().Name != "PlayerMovementInput" &&
+                        component.GetType().Name != "AntSurfaceMotor"),
+                "Autonomous Ant must not contain legacy player movement components.");
         }
 
         private static WorldTerrainCollisionRenderer CreateCollisionTilemap(

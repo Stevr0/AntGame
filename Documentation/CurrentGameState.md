@@ -2,11 +2,11 @@
 
 ## Current milestone
 
-**Milestone 1 — Player Ant Movement Prototype**
+**Milestone 2.3A — First Autonomous Ant: Ground Movement**
 
-**Status:** In progress. The user has confirmed floor movement, vertical wall climbing, and resolution of the previously reported corner-transition deadlock in Unity Play Mode. Ceiling/corner route acceptance is still incomplete. Bounded Auto Step-Over is now implemented for one-tile openings and awaits its first Play Mode acceptance pass.
+**Status:** Implemented and automated; manual Play Mode acceptance pending. The legacy player-controlled Milestone 1 scene and scripts remain preserved as regression fixtures, including their still-pending ceiling/corner and Auto Step-Over acceptance work.
 
-Milestone 1 is explicitly a prototype and regression baseline, not the final player control design. Milestones 2.1B through 2.2B are complete and verified alongside that prototype; Milestone 2.2B passed 155/155 automated tests and all 9 manual clearance checks. Milestone 2.2C Background movement capability and gravity eligibility is implemented and automated, but still needs its separate graphics-enabled manual Scene-view acceptance. A bounded integrated sample world has now been implemented as a development checkpoint before 2.2D; its Play Mode acceptance is still pending. Autonomous navigation, Surface Preparation gameplay, skills, colony management and individual task assignment have not been implemented.
+Milestones 2.1B through 2.2B are complete and verified. Milestone 2.2C Background movement capability and gravity eligibility is implemented and automated, but still needs its separate graphics-enabled manual Scene-view acceptance. The integrated sample world has passed manual Play Mode validation for readability, camera controls, inspection, foreground mutation, prepared-Background replacement and the corrected Background colour round trip. Milestone 2.3A adds only one short-corridor ground-moving ant; general navigation, climbing, falling, Surface Preparation gameplay, skills, colony management and individual task assignment remain unimplemented.
 
 ## Repository and architecture
 
@@ -17,7 +17,7 @@ Milestone 1 is explicitly a prototype and regression baseline, not the final pla
 - Input and movement retain the established `PlayerMovementInput -> AntSurfaceMotor -> Rigidbody2D` flow.
 - `AntSurfaceMotor.SetMovementIntent(Vector2)` remains a useful prototype boundary while the future movement model is developed and validated.
 - The current authored collider course is not evidence of the approved Background Tile/Solid Tile data model.
-- The integrated scene has a small authored `World Bootstrap` coordinator, not a global manager or second world-data implementation. The world-data authority remains an ordinary, scene-independent C# object; AI navigation, excavation gameplay, multiplayer, and multi-ant systems remain absent.
+- The integrated scene has a small authored `World Bootstrap` coordinator, not a global manager or second world-data implementation. The world-data authority remains an ordinary, scene-independent C# object; excavation gameplay, multiplayer and multi-ant systems remain absent.
 
 ### Milestone 2.1B world-data foundation
 
@@ -104,8 +104,18 @@ Milestone 1 is explicitly a prototype and regression baseline, not the final pla
 - Wheel zoom previously assumed a roughly 120-unit Windows mouse delta and scaled the raw value directly, making approximately 1-unit device deltas visually negligible. Scroll is now normalised into device-independent steps, changes the target by 4 orthographic units per step, smoothly approaches that target over `0.08` seconds and remains clamped to an orthographic size of 4–64. Home resets both the current and target size to 30; pan and middle-drag remain in the same controller.
 - A subsequent manual check showed that authoritative Unprepared-to-Prepared mutation, grip and movement eligibility changed while the visible Background remained brown. A graphics-enabled authored-scene test at the reported cell `(-1,15)` ruled out coordinate mismatch and occlusion. `Tilemap.SetTile` stored the prepared Tile asset but preserved the cell's previous Earth `TileData` colour; neither `RefreshTile` nor the bounded `RefreshAllTiles` diagnostic replaced that stale colour. Single-cell projection now copies a standard Tile's authored colour into the cell, temporarily unlocking only `LockColor` and restoring the effective flags before refreshing that cell. The effective authored flag remains `LockTransform`.
 - The development inspection panel now reports the world and Tilemap coordinates, material ID, Tile name, Tile asset colour, effective cell colour, Tilemap colour, sampled Sprite pixel, composed expected colour, asset and cell flags, renderer material/shader, sorting, and active/enabled state. A development-only button isolates the Background visual Tilemap by hiding the foreground visual layer, without changing authoritative data or collision.
-- The graphics-backed regression renders the authored camera at `(-1,15)`: Earth is `RGBA(0.318, 0.271, 0.220)`, prepared is `RGBA(0.388, 0.545, 0.384)`, the isolated prepared pixel is identical, and toggling back restores Earth. Five sample-world integration tests, 9/9 focused camera tests, the coordinate refresh test and the rendered-pixel test pass as part of the complete 208/208 Edit Mode suite. Graphics-enabled Play Mode re-acceptance of the corrected palette, zoom and Background visual refresh remains required, so this checkpoint is implemented but not yet manually accepted.
-- This checkpoint does not complete Milestone 2.2C, begin 2.2D, add autonomous movement, perform real excavation or Surface Preparation jobs, stream chunks, or save/load the world.
+- The graphics-backed regression renders the authored camera at `(-1,15)`: Earth is `RGBA(0.318, 0.271, 0.220)`, prepared is `RGBA(0.388, 0.545, 0.384)`, the isolated prepared pixel is identical, and toggling back restores Earth. The user subsequently confirmed the corrected palette, camera controls, inspection, foreground mutation and prepared-Background colour round trip in Play Mode. The integrated sample-world checkpoint is manually accepted.
+- This checkpoint does not complete Milestone 2.2C, begin general directional connections, perform real excavation or Surface Preparation jobs, stream chunks, or save/load the world.
+
+### Milestone 2.3A first autonomous ant — ground movement
+
+- `AutonomousAnt.prefab` is separate from `PlayerAnt.prefab`. It uses the ordinary ant's 0.96×0.3 horizontal capsule, a dynamic continuous-collision `Rigidbody2D` with frozen rotation, a bright development visual and `AntAutonomousMotor`. It contains no `PlayerInput`, `PlayerMovementInput` or `AntSurfaceMotor`.
+- `AntGameDevelopmentWorldHost` searches at most 20 surface columns around preferred X `-12`. Each candidate must be resident, physically clear, centre-supported, horizontally permitted and reported Grounded by `AntMovementCapabilityEvaluator`. A failed bounded search logs a clear error and creates no ant; repeated initialisation resets the existing instance rather than duplicating it.
+- Left-clicking outside the inspection panel still selects and inspects the clicked cell, and now also requests a destination for the ant. Clicking either a supporting floor cell or its exposed cell resolves the same standing pose. Invalid commands hide the marker and report the rejection reason.
+- `DirectGroundRouteValidator` is a scene-independent, read-only corridor check. It permits at most 24 world units, rejects height differences over 0.05, and samples at most every 0.2 world units. Every sample requires whole-body clearance, Grounded horizontal capability and blocking/supporting Solid directly beneath the body centre. It therefore rejects walls, gaps, unsupported spans, missing chunks and unrelated levels without A*, detours or implicit generation.
+- `AntAutonomousMotor` advances through `Rigidbody2D.MovePosition` in `FixedUpdate`, turns its visual when direction changes and stops within a configurable 0.08-unit tolerance. It revalidates each immediate step so new blocking terrain or removed support stops movement. Collision remains enabled; the motor never writes `Transform.position`, jumps, climbs, deliberately falls or consumes manual movement input.
+- The existing panel reports ant position, Idle/Moving/Arrived/Blocked state, destination and readable status. A small yellow marker shows an accepted destination and becomes green on arrival.
+- Focused coverage includes eight route-validator cases, five authored-scene spawn/destination/wiring cases and three physics-backed Play Mode cases for arrival, new blockers and lost support. Unity scene structural validation, the complete 221/221 Edit Mode suite and the complete 3/3 Play Mode suite pass. Manual observable Play Mode acceptance remains required before Milestone 2.3A is complete.
 
 ## Approved future design, not implemented beyond the data foundation
 
@@ -324,15 +334,15 @@ For the Milestone 2.2C movement-capability slice:
 - Auto Step-Over and its authored fixtures are implemented but have not completed automated Unity execution or manual Play Mode acceptance on this machine.
 - The current Step-Over path is intentionally straight between parallel supports. Irregular, curved, offset, or routed openings remain unsupported.
 - The ant-follow camera remains unimplemented; the integrated sample scene has only a developer-controlled inspection camera.
-- World data, material visuals and authoritative terrain collision are now connected in both the separate navigation fixture and the bounded integrated development scene. The integrated scene adds explicit sample generation, but persistence, pathfinding, autonomous movement, excavation gameplay and legacy DirtBlock conversion remain absent.
+- World data, material visuals and authoritative terrain collision are connected in both the separate navigation fixture and the bounded integrated development scene. The integrated scene now demonstrates one direct grounded autonomous corridor, but persistence, general pathfinding, excavation gameplay and legacy DirtBlock conversion remain absent.
 - The collision projection currently requires an explicit cell, chunk or bounded-region refresh after authoritative Solid mutation; no terrain-change event stream or chunk streaming lifecycle exists yet. Clearance itself reads world data directly and does not share that staleness risk.
 - Static clearance does not validate Background permissions, grip, grounding, gravity, a swept movement segment, directional movement edge, route connectivity, Reachable Space, dynamic objects or ant-to-ant separation.
 - Mathematical tangency is permitted within a `0.00001`-unit tolerance; future movement integration may use a small positive profile margin to remain conservative relative to Unity Physics2D contact handling.
-- Background Material movement/grip/gravity properties are implemented as read-only capability data. Actual gravity forces, movement execution, Surface Preparation jobs, resource consumption, universal 0–100 skills and inactivity decay above 50 are not implemented.
+- Background Material movement/grip/gravity properties remain read-only capability data. Milestone 2.3A executes grounded horizontal movement only; climbing, intentional falling, Surface Preparation jobs, resource consumption, universal 0–100 skills and inactivity decay above 50 are not implemented.
 - Milestone 2.2C needs graphics-enabled manual Scene-view acceptance before it can be marked complete.
-- The integrated sample scene needs graphics-enabled Play Mode acceptance for visual readability, pan/zoom, cell selection, both mutation round trips and a clean Console.
-- Autonomous navigation, multi-ant occupancy, and colony simulation remain later milestones.
+- The integrated sample-world visibility, camera, inspection and mutation checklist is user-confirmed complete. Milestone 2.3A still needs its separate visible ant-spawn, round-trip movement, rejection and clean-Console Play Mode acceptance.
+- Full directional navigation, multi-ant occupancy and colony simulation remain later milestones.
 
 ## Recommended next implementation step
 
-Complete the graphics-enabled `AntGameDevelopment.unity` Play Mode checklist, while keeping the separate Milestone 2.2C Scene-view acceptance status explicit. Do not begin 2.2D directional connections until the required acceptance work is confirmed; Surface Preparation gameplay, skills, pathfinding and autonomous movement remain later work.
+Complete the Milestone 2.3A `AntGameDevelopment.unity` one-ant Play Mode checklist while keeping the separate Milestone 2.2C Scene-view acceptance status explicit. Do not expand into climbing, falling, full directional connections, route search, Surface Preparation, skills or colony work.

@@ -30,7 +30,15 @@ namespace AntColony.Development
         [SerializeField] private WorldTilemapRenderer tilemapRenderer;
         [SerializeField] private WorldTerrainCollisionRenderer collisionRenderer;
 
+        [Header("First autonomous ant")]
+        [SerializeField] private AntAutonomousMotor autonomousAntPrefab;
+        [SerializeField] private int preferredSpawnX = -12;
+        [SerializeField, Min(0)] private int spawnSearchRadius = 20;
+        [SerializeField] private Transform destinationMarker;
+        [SerializeField] private SpriteRenderer destinationMarkerRenderer;
+
         private GeneratedSampleWorld generatedWorld;
+        private AntAutonomousMotor autonomousAnt;
 
         public bool IsWorldDataAvailable => generatedWorld != null;
         public ChunkedWorldData WorldData => generatedWorld?.WorldData;
@@ -42,6 +50,10 @@ namespace AntColony.Development
         public string SoilSolidMaterialId => soilSolid != null
             ? soilSolid.StableMaterialId
             : string.Empty;
+        public AntAutonomousMotor AutonomousAnt => autonomousAnt;
+        public AntAutonomousMotor AutonomousAntPrefab => autonomousAntPrefab;
+        public int SpawnedAutonomousAntCount =>
+            GetComponentsInChildren<AntAutonomousMotor>(true).Length;
 
         private void Awake()
         {
@@ -73,7 +85,26 @@ namespace AntColony.Development
             tilemapRenderer.BindWorldData(WorldData);
             collisionRenderer.BindWorldData(WorldData);
             RefreshAllChunks();
+
+            if (Application.isPlaying)
+            {
+                SpawnOrResetAutonomousAnt(out _);
+            }
             return true;
+        }
+
+        private void Update()
+        {
+            if (destinationMarkerRenderer == null || autonomousAnt == null ||
+                !destinationMarkerRenderer.gameObject.activeSelf)
+            {
+                return;
+            }
+
+            destinationMarkerRenderer.color = autonomousAnt.State ==
+                AntAutonomousMovementState.Arrived
+                    ? new Color32(114, 230, 136, 255)
+                    : new Color32(255, 224, 92, 255);
         }
 
         /// <summary>Refreshes the exact authored region; it never discovers chunks.</summary>
@@ -160,6 +191,150 @@ namespace AntColony.Development
                 WorldCellQueryResult.Available;
         }
 
+        /// <summary>
+        /// Finds a valid surface pose in a bounded X range and creates or resets
+        /// exactly one autonomous development ant. Queries never create chunks.
+        /// </summary>
+        public bool SpawnOrResetAutonomousAnt(out string message)
+        {
+            if (!IsWorldDataAvailable || autonomousAntPrefab == null)
+            {
+                message = "Autonomous ant spawn failed: world or prefab is unavailable.";
+                Debug.LogError(message, this);
+                return false;
+            }
+
+            if (!TryFindSafeSpawnPosition(out Vector2 spawnPosition, out message))
+            {
+                if (autonomousAnt != null)
+                {
+                    autonomousAnt.gameObject.SetActive(false);
+                }
+
+                HideDestinationMarker();
+                Debug.LogError(message, this);
+                return false;
+            }
+
+            if (autonomousAnt == null)
+            {
+                autonomousAnt = Instantiate(
+                    autonomousAntPrefab,
+                    spawnPosition,
+                    Quaternion.identity,
+                    transform);
+                autonomousAnt.name = "Autonomous Ant";
+            }
+            else
+            {
+                autonomousAnt.gameObject.SetActive(true);
+                autonomousAnt.transform.SetPositionAndRotation(
+                    spawnPosition,
+                    Quaternion.identity);
+                Rigidbody2D body = autonomousAnt.GetComponent<Rigidbody2D>();
+                body.position = spawnPosition;
+                body.linearVelocity = Vector2.zero;
+                body.angularVelocity = 0f;
+            }
+
+            autonomousAnt.BindWorldData(WorldData);
+            HideDestinationMarker();
+            message = $"Autonomous ant spawned safely at {spawnPosition}.";
+            return true;
+        }
+
+        /// <summary>Resolves and validates a clicked direct-ground destination.</summary>
+        public bool TryAssignAutonomousDestination(
+            Vector2Int selectedCell,
+            out string message)
+        {
+            if (autonomousAnt == null || !autonomousAnt.gameObject.activeInHierarchy)
+            {
+                message = "Destination rejected: no autonomous ant is available.";
+                HideDestinationMarker();
+                return false;
+            }
+
+            var validator = new DirectGroundRouteValidator(
+                WorldData,
+                AntCollisionProfile.OrdinaryAnt);
+            DirectGroundRouteResult poseResult = validator.ResolveGroundedPosition(
+                selectedCell,
+                out Vector2 destination);
+            if (!poseResult.Succeeded)
+            {
+                message = $"Destination rejected: {poseResult.Status}.";
+                HideDestinationMarker();
+                return false;
+            }
+
+            DirectGroundRouteResult routeResult =
+                autonomousAnt.TrySetDestination(destination);
+            if (!routeResult.Succeeded)
+            {
+                message = autonomousAnt.StatusMessage;
+                HideDestinationMarker();
+                return false;
+            }
+
+            ShowDestinationMarker(destination);
+            message = $"Destination accepted at {destination}.";
+            return true;
+        }
+
+        /// <summary>Searches only the generated sample's authored surface range.</summary>
+        public bool TryFindSafeSpawnPosition(
+            out Vector2 spawnPosition,
+            out string message)
+        {
+            spawnPosition = default;
+            if (!IsWorldDataAvailable)
+            {
+                message = "Safe spawn search requires resident world data.";
+                return false;
+            }
+
+            int minimumX = minimumChunk.x * WorldTileCoordinates.ChunkSize;
+            int maximumX = minimumX + generatedWorld.WidthInCells - 1;
+            var validator = new DirectGroundRouteValidator(
+                WorldData,
+                AntCollisionProfile.OrdinaryAnt);
+
+            for (int distance = 0; distance <= spawnSearchRadius; distance++)
+            {
+                int candidateCount = distance == 0 ? 1 : 2;
+                for (int candidateIndex = 0;
+                    candidateIndex < candidateCount;
+                    candidateIndex++)
+                {
+                    int x = preferredSpawnX +
+                        (candidateIndex == 0 ? distance : -distance);
+                    if (x < minimumX || x > maximumX)
+                    {
+                        continue;
+                    }
+
+                    int surfaceY = generatedWorld.SurfaceHeights[x - minimumX];
+                    var exposedCell = new Vector2Int(x, surfaceY + 1);
+                    DirectGroundRouteResult result =
+                        validator.ResolveGroundedPosition(
+                            exposedCell,
+                            out Vector2 candidatePosition);
+                    if (result.Succeeded)
+                    {
+                        spawnPosition = candidatePosition;
+                        message = string.Empty;
+                        return true;
+                    }
+                }
+            }
+
+            message =
+                $"No safe grounded spawn exists within {spawnSearchRadius} cells " +
+                $"of X={preferredSpawnX}.";
+            return false;
+        }
+
         /// <summary>Used only by the scene authoring utility and focused tests.</summary>
         public void Configure(
             int seed,
@@ -172,7 +347,10 @@ namespace AntColony.Development
             SolidTileMaterialDefinition soil,
             SolidTileMaterialDefinition stoneSolidDefinition,
             WorldTilemapRenderer visualRenderer,
-            WorldTerrainCollisionRenderer terrainCollisionRenderer)
+            WorldTerrainCollisionRenderer terrainCollisionRenderer,
+            AntAutonomousMotor antPrefab,
+            Transform marker,
+            SpriteRenderer markerRenderer)
         {
             worldSeed = seed;
             minimumChunk = authoredMinimumChunk;
@@ -185,6 +363,9 @@ namespace AntColony.Development
             stoneSolid = stoneSolidDefinition;
             tilemapRenderer = visualRenderer;
             collisionRenderer = terrainCollisionRenderer;
+            autonomousAntPrefab = antPrefab;
+            destinationMarker = marker;
+            destinationMarkerRenderer = markerRenderer;
         }
 
         private bool HasRequiredReferences()
@@ -193,6 +374,26 @@ namespace AntColony.Development
                 stoneBackground != null && preparedBackground != null &&
                 soilSolid != null && stoneSolid != null &&
                 tilemapRenderer != null && collisionRenderer != null;
+        }
+
+        private void ShowDestinationMarker(Vector2 position)
+        {
+            if (destinationMarker == null || destinationMarkerRenderer == null)
+            {
+                return;
+            }
+
+            destinationMarker.position = new Vector3(position.x, position.y, 0f);
+            destinationMarker.gameObject.SetActive(true);
+            destinationMarkerRenderer.color = new Color32(255, 224, 92, 255);
+        }
+
+        private void HideDestinationMarker()
+        {
+            if (destinationMarker != null)
+            {
+                destinationMarker.gameObject.SetActive(false);
+            }
         }
 
         private SampleWorldMaterialIds BuildMaterialIds()
