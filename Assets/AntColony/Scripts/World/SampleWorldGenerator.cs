@@ -1,0 +1,318 @@
+using System;
+using UnityEngine;
+
+namespace AntColony.World
+{
+    /// <summary>
+    /// Stable material IDs used by the bounded development-world generator.
+    /// Keeping IDs in one value makes the generator independent of scene assets.
+    /// </summary>
+    public readonly struct SampleWorldMaterialIds
+    {
+        public SampleWorldMaterialIds(
+            string skyBackground,
+            string earthBackground,
+            string stoneBackground,
+            string preparedBackground,
+            string soilSolid,
+            string stoneSolid)
+        {
+            SkyBackground = skyBackground;
+            EarthBackground = earthBackground;
+            StoneBackground = stoneBackground;
+            PreparedBackground = preparedBackground;
+            SoilSolid = soilSolid;
+            StoneSolid = stoneSolid;
+        }
+
+        public string SkyBackground { get; }
+        public string EarthBackground { get; }
+        public string StoneBackground { get; }
+        public string PreparedBackground { get; }
+        public string SoilSolid { get; }
+        public string StoneSolid { get; }
+    }
+
+    /// <summary>Immutable result and bounds for one generated sample world.</summary>
+    public sealed class GeneratedSampleWorld
+    {
+        internal GeneratedSampleWorld(
+            ChunkedWorldData worldData,
+            Vector2Int minimumChunk,
+            Vector2Int sizeInChunks,
+            int[] surfaceHeights)
+        {
+            WorldData = worldData;
+            MinimumChunk = minimumChunk;
+            SizeInChunks = sizeInChunks;
+            SurfaceHeights = surfaceHeights;
+        }
+
+        public ChunkedWorldData WorldData { get; }
+        public Vector2Int MinimumChunk { get; }
+        public Vector2Int SizeInChunks { get; }
+        public int[] SurfaceHeights { get; }
+        public int WidthInCells => SizeInChunks.x * WorldTileCoordinates.ChunkSize;
+        public int HeightInCells => SizeInChunks.y * WorldTileCoordinates.ChunkSize;
+    }
+
+    /// <summary>
+    /// Builds the small, deterministic world used by AntGameDevelopment. It only
+    /// writes through <see cref="ChunkedWorldData"/> and never creates chunks in
+    /// response to a query.
+    /// </summary>
+    public static class SampleWorldGenerator
+    {
+        public static readonly Vector2Int DefaultMinimumChunk = new(-2, -2);
+        public static readonly Vector2Int DefaultSizeInChunks = new(4, 4);
+        public const int StoneBackgroundMaximumY = -24;
+        public const int MainPassageY = -8;
+
+        /// <summary>Generates all data first; scene projection is a separate step.</summary>
+        public static GeneratedSampleWorld Generate(
+            WorldMaterialRegistry registry,
+            SampleWorldMaterialIds materials,
+            int seed,
+            Vector2Int minimumChunk,
+            Vector2Int sizeInChunks)
+        {
+            if (registry == null)
+            {
+                throw new ArgumentNullException(nameof(registry));
+            }
+
+            if (sizeInChunks.x <= 0 || sizeInChunks.y <= 0)
+            {
+                throw new ArgumentOutOfRangeException(
+                    nameof(sizeInChunks),
+                    "The sample world must contain at least one chunk on each axis.");
+            }
+
+            ValidateMaterialIds(registry, materials);
+            var worldData = new ChunkedWorldData(registry, seed);
+
+            for (int chunkY = 0; chunkY < sizeInChunks.y; chunkY++)
+            {
+                for (int chunkX = 0; chunkX < sizeInChunks.x; chunkX++)
+                {
+                    RequireSuccess(worldData.CreateChunk(
+                        minimumChunk + new Vector2Int(chunkX, chunkY),
+                        materials.SkyBackground));
+                }
+            }
+
+            int minimumX = minimumChunk.x * WorldTileCoordinates.ChunkSize;
+            int minimumY = minimumChunk.y * WorldTileCoordinates.ChunkSize;
+            int width = sizeInChunks.x * WorldTileCoordinates.ChunkSize;
+            int height = sizeInChunks.y * WorldTileCoordinates.ChunkSize;
+            var surfaceHeights = new int[width];
+
+            for (int localX = 0; localX < width; localX++)
+            {
+                int worldX = minimumX + localX;
+                int surfaceY = GetSurfaceHeight(worldX, seed);
+                surfaceHeights[localX] = surfaceY;
+
+                for (int localY = 0; localY < height; localY++)
+                {
+                    int worldY = minimumY + localY;
+                    if (worldY > surfaceY)
+                    {
+                        continue;
+                    }
+
+                    var worldCell = new Vector2Int(worldX, worldY);
+                    bool isStone = worldY <= StoneBackgroundMaximumY;
+                    RequireSuccess(worldData.SetBackgroundMaterial(
+                        worldCell,
+                        isStone ? materials.StoneBackground : materials.EarthBackground));
+                    RequireSuccess(worldData.SetSolidMaterial(
+                        worldCell,
+                        worldY >= surfaceY - 7
+                            ? materials.SoilSolid
+                            : materials.StoneSolid));
+                }
+            }
+
+            CarveSampleGeometry(worldData, materials, minimumX, minimumY, width, height);
+            return new GeneratedSampleWorld(
+                worldData,
+                minimumChunk,
+                sizeInChunks,
+                surfaceHeights);
+        }
+
+        /// <summary>Convenience overload for the authored four-by-four scene.</summary>
+        public static GeneratedSampleWorld Generate(
+            WorldMaterialRegistry registry,
+            SampleWorldMaterialIds materials,
+            int seed)
+        {
+            return Generate(
+                registry,
+                materials,
+                seed,
+                DefaultMinimumChunk,
+                DefaultSizeInChunks);
+        }
+
+        private static void CarveSampleGeometry(
+            ChunkedWorldData worldData,
+            SampleWorldMaterialIds materials,
+            int minimumX,
+            int minimumY,
+            int width,
+            int height)
+        {
+            int maximumX = minimumX + width - 1;
+            int maximumY = minimumY + height - 1;
+
+            CarveRectangle(worldData, -48, 48, MainPassageY - 1, MainPassageY + 1);
+            CarveEllipse(worldData, new Vector2Int(-27, -16), 8, 6);
+            CarveEllipse(worldData, new Vector2Int(27, -27), 9, 7);
+            CarveRectangle(worldData, -29, 27, -29, -27);
+            CarveRectangle(worldData, -1, 1, MainPassageY, maximumY);
+            CarveRectangle(worldData, 25, 27, -27, MainPassageY);
+
+            // The green strip is deliberately exposed so clicking it proves that
+            // Background grip changes without changing foreground occupancy.
+            for (int y = MainPassageY - 1; y <= MainPassageY + 1; y++)
+            {
+                for (int x = -18; x <= -8; x++)
+                {
+                    var cell = new Vector2Int(x, y);
+                    if (IsInside(cell, minimumX, minimumY, maximumX, maximumY))
+                    {
+                        RequireSuccess(worldData.SetBackgroundMaterial(
+                            cell,
+                            materials.PreparedBackground));
+                    }
+                }
+            }
+        }
+
+        private static void CarveRectangle(
+            ChunkedWorldData worldData,
+            int minimumX,
+            int maximumX,
+            int minimumY,
+            int maximumY)
+        {
+            for (int y = minimumY; y <= maximumY; y++)
+            {
+                for (int x = minimumX; x <= maximumX; x++)
+                {
+                    RemoveSolidIfPresent(worldData, new Vector2Int(x, y));
+                }
+            }
+        }
+
+        private static void CarveEllipse(
+            ChunkedWorldData worldData,
+            Vector2Int centre,
+            int radiusX,
+            int radiusY)
+        {
+            for (int y = -radiusY; y <= radiusY; y++)
+            {
+                for (int x = -radiusX; x <= radiusX; x++)
+                {
+                    float normalisedX = x / (float)radiusX;
+                    float normalisedY = y / (float)radiusY;
+                    if (normalisedX * normalisedX + normalisedY * normalisedY <= 1f)
+                    {
+                        RemoveSolidIfPresent(worldData, centre + new Vector2Int(x, y));
+                    }
+                }
+            }
+        }
+
+        private static void RemoveSolidIfPresent(
+            ChunkedWorldData worldData,
+            Vector2Int worldCell)
+        {
+            if (worldData.GetCell(worldCell, out WorldTileCellData cell) ==
+                    WorldCellQueryResult.Available &&
+                cell.HasSolidTile)
+            {
+                RequireSuccess(worldData.RemoveSolidMaterial(worldCell));
+            }
+        }
+
+        private static bool IsInside(
+            Vector2Int cell,
+            int minimumX,
+            int minimumY,
+            int maximumX,
+            int maximumY)
+        {
+            return cell.x >= minimumX && cell.x <= maximumX &&
+                cell.y >= minimumY && cell.y <= maximumY;
+        }
+
+        private static int GetSurfaceHeight(int worldX, int seed)
+        {
+            const int anchorSpacing = 8;
+            int leftAnchor = FloorDivide(worldX, anchorSpacing);
+            int localX = worldX - leftAnchor * anchorSpacing;
+            int leftHeight = 16 + HeightOffset(leftAnchor, seed);
+            int rightHeight = 16 + HeightOffset(leftAnchor + 1, seed);
+            return Mathf.RoundToInt(Mathf.Lerp(
+                leftHeight,
+                rightHeight,
+                localX / (float)anchorSpacing));
+        }
+
+        private static int HeightOffset(int anchor, int seed)
+        {
+            unchecked
+            {
+                uint value = (uint)(anchor * 374761393 + seed * 668265263);
+                value = (value ^ (value >> 13)) * 1274126177u;
+                return (int)(value % 7u) - 3;
+            }
+        }
+
+        private static int FloorDivide(int value, int divisor)
+        {
+            int quotient = value / divisor;
+            int remainder = value % divisor;
+            return remainder < 0 ? quotient - 1 : quotient;
+        }
+
+        private static void ValidateMaterialIds(
+            WorldMaterialRegistry registry,
+            SampleWorldMaterialIds materials)
+        {
+            if (!registry.ContainsBackgroundMaterial(materials.SkyBackground) ||
+                !registry.ContainsBackgroundMaterial(materials.EarthBackground) ||
+                !registry.ContainsBackgroundMaterial(materials.StoneBackground) ||
+                !registry.ContainsBackgroundMaterial(materials.PreparedBackground) ||
+                !registry.ContainsSolidMaterial(materials.SoilSolid) ||
+                !registry.ContainsSolidMaterial(materials.StoneSolid))
+            {
+                throw new ArgumentException(
+                    "Every sample-world material ID must exist in the supplied registry.",
+                    nameof(materials));
+            }
+        }
+
+        private static void RequireSuccess(WorldChunkCreationResult result)
+        {
+            if (result != WorldChunkCreationResult.Success)
+            {
+                throw new InvalidOperationException(
+                    $"Sample-world chunk creation failed with {result}.");
+            }
+        }
+
+        private static void RequireSuccess(WorldCellMutationResult result)
+        {
+            if (result != WorldCellMutationResult.Success)
+            {
+                throw new InvalidOperationException(
+                    $"Sample-world cell mutation failed with {result}.");
+            }
+        }
+    }
+}

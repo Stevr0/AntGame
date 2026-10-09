@@ -6,17 +6,18 @@
 
 **Status:** In progress. The user has confirmed floor movement, vertical wall climbing, and resolution of the previously reported corner-transition deadlock in Unity Play Mode. Ceiling/corner route acceptance is still incomplete. Bounded Auto Step-Over is now implemented for one-tile openings and awaits its first Play Mode acceptance pass.
 
-Milestone 1 is explicitly a prototype and regression baseline, not the final player control design. Milestones 2.1B through 2.2B are complete and verified alongside that prototype; Milestone 2.2B passed 155/155 automated tests and all 9 manual clearance checks. Milestone 2.2C Background movement capability and gravity eligibility is implemented and automated, but still needs graphics-enabled manual Scene-view acceptance. Autonomous navigation, Surface Preparation gameplay, skills, colony management and individual task assignment have not been implemented.
+Milestone 1 is explicitly a prototype and regression baseline, not the final player control design. Milestones 2.1B through 2.2B are complete and verified alongside that prototype; Milestone 2.2B passed 155/155 automated tests and all 9 manual clearance checks. Milestone 2.2C Background movement capability and gravity eligibility is implemented and automated, but still needs its separate graphics-enabled manual Scene-view acceptance. A bounded integrated sample world has now been implemented as a development checkpoint before 2.2D; its Play Mode acceptance is still pending. Autonomous navigation, Surface Preparation gameplay, skills, colony management and individual task assignment have not been implemented.
 
 ## Repository and architecture
 
 - The Unity 2D URP project uses Unity `6000.3.8f1` and the new Input System.
 - `Assets/AntColony/Scenes/AntMovementPrototype.unity` is the first build scene.
+- `Assets/AntColony/Scenes/AntGameDevelopment.unity` is the integrated development scene. The movement and navigation prototype scenes remain available temporarily as regression fixtures.
 - The prototype controls one ordinary player ant. Becoming a queen is later progression.
 - Input and movement retain the established `PlayerMovementInput -> AntSurfaceMotor -> Rigidbody2D` flow.
 - `AntSurfaceMotor.SetMovementIntent(Vector2)` remains a useful prototype boundary while the future movement model is developed and validated.
 - The current authored collider course is not evidence of the approved Background Tile/Solid Tile data model.
-- No Bootstrap or global manager has been added. The world-data authority is an ordinary, scene-independent C# object; AI navigation, excavation, multiplayer, and multi-ant systems remain absent.
+- The integrated scene has a small authored `World Bootstrap` coordinator, not a global manager or second world-data implementation. The world-data authority remains an ordinary, scene-independent C# object; AI navigation, excavation gameplay, multiplayer, and multi-ant systems remain absent.
 
 ### Milestone 2.1B world-data foundation
 
@@ -25,7 +26,7 @@ Milestone 1 is explicitly a prototype and regression baseline, not the final pla
 - Central coordinate utilities use floor division for negative positions, keep local coordinates in the 0–31 range, and preserve the prototype convention that integer coordinates are tile centres in world space.
 - Missing chunks return `ChunkUnavailable`; they never masquerade as exposed cells. Duplicate creation and unknown material IDs are rejected without overwriting data.
 - `Background_Default` (`background.default`) and `Solid_Soil` (`solid.soil`) are initial authored ScriptableObject definitions. Milestone 2.1E assigns each a simple development-only visual Tile while retaining the material definition as the source of that reference.
-- A world seed can be stored for future deterministic generation, but no generation, unloading, streaming, persistence, or gameplay scene host exists. The later 2.1D developer fixture is deliberately separate from gameplay.
+- The 2.1B foundation stores a world seed without implicit generation. The later integrated checkpoint now consumes that seed through one explicit bounded generator; unloading, streaming and persistence still do not exist, and ordinary queries still never generate terrain.
 - The existing `DirtBlock` objects have not been imported. The prototype scene, prefab, movement code, Rigidbody2D, colliders, gravity, and input remain unchanged.
 - The focused Milestone 2.1B Unity Edit Mode suite passed 25/25, and the user confirmed that existing ant movement still works in Play Mode. Milestone 2.1B is complete.
 
@@ -90,6 +91,17 @@ Milestone 1 is explicitly a prototype and regression baseline, not the final pla
 - The existing `SetBackgroundMaterial` mutation safely demonstrates Unprepared Earth to Prepared replacement without changing foreground occupancy, creating chunks or introducing Surface Preparation gameplay. `WorldTilemapRenderer.RefreshCell` explicitly refreshes its presentation.
 - `AntNavigationPrototype.unity` includes one `Ant Movement Capability Inspector` at the unsupported chamber centre. It reports Background ID, clearance, ground, grip, direction permissions, gravity and suggested state; its explicit toggle button replaces the selected Background, refreshes the visual cell and requeries.
 - Focused capability tests pass 37/37. The expanded structural scene validator, focused 2/2 legacy movement regression and complete 192/192 Edit Mode suite pass. Graphics-enabled manual Scene-view acceptance remains pending, so Milestone 2.2C is in progress rather than complete.
+
+### Integrated development sample world checkpoint
+
+- `AntGameDevelopment.unity` combines the existing authoritative chunk data, material registries, visual Tilemaps, collision-only Tilemap, clearance validator and movement-capability evaluator in one Play Mode inspection environment. It does not contain the legacy manually controlled ant.
+- `SampleWorldGenerator` explicitly creates a bounded 4×4 group of 32×32 chunks from `(-2,-2)` through `(1,1)`, for an initial 128×128-cell resident world. Queries outside that region remain unavailable and do not create chunks.
+- Seed `2203` deterministically produces gently varied surface elevation, exposed Sky, Earth and Stone Background regions, Soil and Stone foreground terrain, two chambers, connected passages, one vertical shaft and a prepared grippable Background strip. All authoritative cells are populated before Tilemap or collision projection.
+- The scene hierarchy contains `World Bootstrap`, one half-cell-offset `World Grid`, separate Background and foreground visual Tilemaps, one hidden foreground collision Tilemap, `Main Camera`, and `Development Inspection UI`. No per-tile GameObjects or duplicate terrain colliders are introduced.
+- WASD or arrow keys pan, the mouse wheel zooms, middle-mouse drag pans and Home returns to the starting view. Clicking outside the panel selects a cell. The panel reports authoritative cell/chunk/material data, blocking state, ordinary-ant clearance, grip, grounded/falling eligibility and voluntary directions.
+- `F` or the foreground button toggles the selected Solid Tile and explicitly refreshes both foreground presentation and collision. `P` or the Background button switches exposed underground space between prepared and its depth-appropriate unprepared material, preserving foreground occupancy and refreshing the inspection result.
+- The setup utility generated and structurally validated the scene. Five focused sample-world integration tests pass, and the complete Edit Mode suite passes 197/197. Graphics-enabled Play Mode acceptance is still required, so this checkpoint is implemented but not yet manually accepted.
+- This checkpoint does not complete Milestone 2.2C, begin 2.2D, add autonomous movement, perform real excavation or Surface Preparation jobs, stream chunks, or save/load the world.
 
 ## Approved future design, not implemented beyond the data foundation
 
@@ -307,15 +319,16 @@ For the Milestone 2.2C movement-capability slice:
 - The transition path is validated against current static collision geometry; runtime excavation and dynamic traversal invalidation do not exist yet.
 - Auto Step-Over and its authored fixtures are implemented but have not completed automated Unity execution or manual Play Mode acceptance on this machine.
 - The current Step-Over path is intentionally straight between parallel supports. Irregular, curved, offset, or routed openings remain unsupported.
-- The follow camera remains unimplemented.
-- World data, material visuals, the classifier and authoritative terrain collision are connected only to the separate developer navigation scene. They are not connected to generation, persistence, pathfinding, autonomous movement, excavation gameplay, or legacy DirtBlocks.
+- The ant-follow camera remains unimplemented; the integrated sample scene has only a developer-controlled inspection camera.
+- World data, material visuals and authoritative terrain collision are now connected in both the separate navigation fixture and the bounded integrated development scene. The integrated scene adds explicit sample generation, but persistence, pathfinding, autonomous movement, excavation gameplay and legacy DirtBlock conversion remain absent.
 - The collision projection currently requires an explicit cell, chunk or bounded-region refresh after authoritative Solid mutation; no terrain-change event stream or chunk streaming lifecycle exists yet. Clearance itself reads world data directly and does not share that staleness risk.
 - Static clearance does not validate Background permissions, grip, grounding, gravity, a swept movement segment, directional movement edge, route connectivity, Reachable Space, dynamic objects or ant-to-ant separation.
 - Mathematical tangency is permitted within a `0.00001`-unit tolerance; future movement integration may use a small positive profile margin to remain conservative relative to Unity Physics2D contact handling.
 - Background Material movement/grip/gravity properties are implemented as read-only capability data. Actual gravity forces, movement execution, Surface Preparation jobs, resource consumption, universal 0–100 skills and inactivity decay above 50 are not implemented.
 - Milestone 2.2C needs graphics-enabled manual Scene-view acceptance before it can be marked complete.
+- The integrated sample scene needs graphics-enabled Play Mode acceptance for visual readability, pan/zoom, cell selection, both mutation round trips and a clean Console.
 - Autonomous navigation, multi-ant occupancy, and colony simulation remain later milestones.
 
 ## Recommended next implementation step
 
-Complete the graphics-enabled Milestone 2.2C Scene-view checklist for Grounded, Gripping, Falling, blocked and unavailable states plus the explicit Background replacement round trip. Do not begin 2.2D directional connections until that acceptance is confirmed; Surface Preparation gameplay, skills, pathfinding and autonomous movement remain later work.
+Complete the graphics-enabled `AntGameDevelopment.unity` Play Mode checklist, while keeping the separate Milestone 2.2C Scene-view acceptance status explicit. Do not begin 2.2D directional connections until the required acceptance work is confirmed; Surface Preparation gameplay, skills, pathfinding and autonomous movement remain later work.
