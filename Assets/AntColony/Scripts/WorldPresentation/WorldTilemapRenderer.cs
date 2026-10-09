@@ -186,6 +186,22 @@ namespace AntColony.WorldPresentation
             return new Vector3Int(worldCell.x, worldCell.y, 0);
         }
 
+        /// <summary>
+        /// Converts a clicked world position through the authored Background
+        /// Tilemap Grid. This keeps development selection aligned with the exact
+        /// presentation cell even if the Grid transform changes later.
+        /// </summary>
+        public Vector2Int WorldPositionToWorldCell(Vector3 worldPosition)
+        {
+            if (backgroundTilemap == null)
+            {
+                return WorldTileCoordinates.WorldPositionToCell(worldPosition);
+            }
+
+            Vector3Int tilemapCell = backgroundTilemap.WorldToCell(worldPosition);
+            return new Vector2Int(tilemapCell.x, tilemapCell.y);
+        }
+
         /// <summary>Resolves a Background visual without substituting another tile.</summary>
         public static WorldTilemapRefreshResult ResolveBackgroundVisual(
             ChunkedWorldData worldData,
@@ -256,8 +272,8 @@ namespace AntColony.WorldPresentation
             if (worldData.GetCell(worldCell, out WorldTileCellData cell) ==
                 WorldCellQueryResult.ChunkUnavailable)
             {
-                backgroundTilemap.SetTile(tilemapCell, null);
-                foregroundTilemap.SetTile(tilemapCell, null);
+                SetAndRefreshTile(backgroundTilemap, tilemapCell, null);
+                SetAndRefreshTile(foregroundTilemap, tilemapCell, null);
                 return new WorldTilemapRefreshResult(
                     WorldTilemapRefreshStatus.ChunkUnavailable,
                     worldCell);
@@ -268,11 +284,11 @@ namespace AntColony.WorldPresentation
                 cell.BackgroundMaterialId,
                 worldCell,
                 out TileBase backgroundVisual);
-            backgroundTilemap.SetTile(tilemapCell, backgroundVisual);
+            SetAndRefreshTile(backgroundTilemap, tilemapCell, backgroundVisual);
 
             if (!cell.HasSolidTile)
             {
-                foregroundTilemap.SetTile(tilemapCell, null);
+                SetAndRefreshTile(foregroundTilemap, tilemapCell, null);
                 return firstFailure;
             }
 
@@ -281,8 +297,21 @@ namespace AntColony.WorldPresentation
                 cell.SolidMaterialId,
                 worldCell,
                 out TileBase solidVisual);
-            foregroundTilemap.SetTile(tilemapCell, solidVisual);
+            SetAndRefreshTile(foregroundTilemap, tilemapCell, solidVisual);
             return firstFailure.Succeeded ? solidResult : firstFailure;
+        }
+
+        private static void SetAndRefreshTile(
+            Tilemap tilemap,
+            Vector3Int tilemapCell,
+            TileBase tile)
+        {
+            tilemap.SetTile(tilemapCell, tile);
+
+            // SetTile updates Tilemap data immediately, but an explicit refresh
+            // also invalidates the rendered chunk when two materials share the
+            // same source Sprite and differ only by their Tile tint.
+            tilemap.RefreshTile(tilemapCell);
         }
 
         private WorldTilemapRefreshResult RefreshChunkWithoutDiagnostic(

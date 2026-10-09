@@ -35,6 +35,7 @@ namespace AntColony.Development
         public bool IsWorldDataAvailable => generatedWorld != null;
         public ChunkedWorldData WorldData => generatedWorld?.WorldData;
         public GeneratedSampleWorld GeneratedWorld => generatedWorld;
+        public WorldTilemapRenderer TilemapRenderer => tilemapRenderer;
         public int WorldSeed => worldSeed;
         public Vector2Int MinimumChunk => minimumChunk;
         public Vector2Int SizeInChunks => sizeInChunks;

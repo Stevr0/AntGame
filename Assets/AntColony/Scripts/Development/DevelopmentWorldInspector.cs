@@ -1,7 +1,9 @@
 using System.Text;
 using AntColony.World;
+using AntColony.WorldPresentation;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.Tilemaps;
 
 namespace AntColony.Development
 {
@@ -31,7 +33,10 @@ namespace AntColony.Development
                 if (screenPoint.x > PanelWidth)
                 {
                     Vector3 worldPoint = worldCamera.ScreenToWorldPoint(screenPoint);
-                    selectedCell = WorldTileCoordinates.WorldPositionToCell(worldPoint);
+                    selectedCell = worldHost != null &&
+                        worldHost.TilemapRenderer != null
+                            ? worldHost.TilemapRenderer.WorldPositionToWorldCell(worldPoint)
+                            : WorldTileCoordinates.WorldPositionToCell(worldPoint);
                     statusMessage = "Selection updated.";
                 }
             }
@@ -100,6 +105,12 @@ namespace AntColony.Development
                 .Append(WorldTileCoordinates.GetChunkCoordinate(selectedCell))
                 .AppendLine();
 
+            Vector3Int tilemapCell =
+                WorldTilemapRenderer.WorldCellToTilemapCell(selectedCell);
+            textBuilder.Append("Rendered Background cell: ")
+                .Append(tilemapCell)
+                .AppendLine();
+
             if (worldHost == null ||
                 !worldHost.TryGetCell(selectedCell, out WorldTileCellData cell))
             {
@@ -108,6 +119,13 @@ namespace AntColony.Development
             }
 
             ChunkedWorldData worldData = worldHost.WorldData;
+            TileBase renderedBackground = worldHost.TilemapRenderer != null &&
+                worldHost.TilemapRenderer.BackgroundTilemap != null
+                ? worldHost.TilemapRenderer.BackgroundTilemap.GetTile(tilemapCell)
+                : null;
+            textBuilder.Append("Rendered Background tile: ")
+                .Append(renderedBackground != null ? renderedBackground.name : "None")
+                .AppendLine();
             textBuilder.Append("Background: ")
                 .Append(GetBackgroundName(worldData, cell.BackgroundMaterialId))
                 .AppendLine();
@@ -160,7 +178,8 @@ namespace AntColony.Development
         {
             statusMessage = worldHost != null &&
                 worldHost.TogglePreparedBackground(selectedCell)
-                    ? "Background replaced; foreground was preserved."
+                    ? $"Background replaced and refreshed at Tilemap cell " +
+                        $"{WorldTilemapRenderer.WorldCellToTilemapCell(selectedCell)}."
                     : "Background toggle requires exposed underground space.";
         }
 
