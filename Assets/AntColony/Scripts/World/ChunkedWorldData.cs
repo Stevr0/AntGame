@@ -180,6 +180,18 @@ namespace AntColony.World
                 : WorldCellMutationResult.SolidTileNotPresent;
         }
 
+        /// <summary>
+        /// Resolves the definition registered with this world-data owner. Keeping
+        /// this access internal prevents classifiers from being paired with a
+        /// different material registry than the one that validated cell writes.
+        /// </summary>
+        internal bool TryGetSolidMaterialDefinition(
+            string materialId,
+            out SolidTileMaterialDefinition definition)
+        {
+            return materials.TryGetSolidMaterial(materialId, out definition);
+        }
+
         private bool TryGetCellChunk(
             Vector2Int worldCell,
             out WorldChunk chunk,

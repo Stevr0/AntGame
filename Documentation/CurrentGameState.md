@@ -6,7 +6,7 @@
 
 **Status:** In progress. The user has confirmed floor movement, vertical wall climbing, and resolution of the previously reported corner-transition deadlock in Unity Play Mode. Ceiling/corner route acceptance is still incomplete. Bounded Auto Step-Over is now implemented for one-tile openings and awaits its first Play Mode acceptance pass.
 
-Milestone 1 is explicitly a prototype and regression baseline, not the final player control design. Milestone 2.1B now adds a data-only two-layer world model alongside that prototype. Autonomous navigation, tile presentation, terrain migration, colony management and individual task assignment have not been implemented.
+Milestone 1 is explicitly a prototype and regression baseline, not the final player control design. Milestone 2.1B's data-only two-layer world model is complete and verified alongside that prototype. Milestone 2.1C navigation classification is implemented and awaiting focused Unity validation. Autonomous navigation, tile presentation, terrain migration, colony management and individual task assignment have not been implemented.
 
 ## Repository and architecture
 
@@ -27,6 +27,16 @@ Milestone 1 is explicitly a prototype and regression baseline, not the final pla
 - `Background_Default` (`background.default`) and `Solid_Soil` (`solid.soil`) are initial authored ScriptableObject definitions. Their optional visual Tile references are currently empty because rendering is outside this milestone.
 - A world seed can be stored for future deterministic generation, but no generation, unloading, streaming, persistence, or scene-level host exists.
 - The existing `DirtBlock` objects have not been imported. The prototype scene, prefab, movement code, Rigidbody2D, colliders, gravity, and input remain unchanged.
+- The focused Milestone 2.1B Unity Edit Mode suite passed 25/25, and the user confirmed that existing ant movement still works in Play Mode. Milestone 2.1B is complete.
+
+### Milestone 2.1C navigation classification
+
+- `WorldNavigationClassifier` is a plain C# service that reads `ChunkedWorldData` directly. It does not use scene colliders, physics queries, Tilemaps, movement components, or a scene host.
+- Occupancy results distinguish `Unavailable`, `Covered`, and `Exposed`. Only a Solid Tile whose registered material has `BlocksMovement` enabled makes its cell Covered.
+- Exposed cells separately report `Supported`, `Unsupported`, or `Unknown` support. This does not claim Traversable or Reachable status because body clearance, obstacles, movement-edge checks, and connectivity are not implemented.
+- Only north, south, east, and west neighbours can support a cell. The neighbouring Solid Material must have `SupportsNavigation` enabled; Background Tiles and diagonal solids never qualify.
+- Classification crosses positive and negative chunk boundaries. Missing target chunks are Unavailable. A missing neighbour produces Unknown only when no resident cardinal neighbour already provides confirmed support.
+- Results are uncached and therefore reflect successful Solid Tile mutations immediately. Change notifications are deferred until a later cached visualisation or incremental navigation consumer genuinely requires them.
 
 ## Approved future design, not implemented beyond the data foundation
 
@@ -148,8 +158,13 @@ For the Auto Step-Over slice:
 
 For the Milestone 2.1B world-data slice:
 
-- Focused Edit Mode tests were added for all required coordinate examples, negative boundaries, cell/world round trips, explicit and duplicate chunk creation, 1,024-cell Background coverage, optional Solid mutation, invalid IDs, read/mutation isolation, four-direction expansion, and the absence of gameplay GameObjects.
-- Static source and repository checks can be performed outside Unity. The focused Unity suite has not yet run because this project is already open in another Unity instance and the desktop automation bridge cannot access that window; compilation and test results therefore remain pending rather than passed.
+- Focused Edit Mode tests cover all required coordinate examples, negative boundaries, cell/world round trips, explicit and duplicate chunk creation, 1,024-cell Background coverage, optional Solid mutation, invalid IDs, read/mutation isolation, four-direction expansion, and the absence of gameplay GameObjects.
+- The focused Unity suite passed 25/25. The user also confirmed that the existing ant movement remained functional in Play Mode.
+
+For the Milestone 2.1C navigation-classification slice:
+
+- Focused Edit Mode coverage was added for occupancy, all four support directions, diagonal rejection, independent material flags, positive and negative chunk boundaries, all quadrants, unavailable-neighbour uncertainty, support precedence, live mutation results, isolation, and scene independence.
+- Unity imported the new scripts and compiled both `AntColony.World` and `AntColony.EditModeTests` successfully; an independent Unity 6 Roslyn runtime check also passed. The focused Test Framework run then stalled during Licensing Client reconnection before producing result XML, so execution remains pending and 2.1C is not yet marked complete.
 
 ## Manual Play Mode checklist
 
@@ -185,9 +200,9 @@ For the Milestone 2.1B world-data slice:
 - Auto Step-Over and its authored fixtures are implemented but have not completed automated Unity execution or manual Play Mode acceptance on this machine.
 - The current Step-Over path is intentionally straight between parallel supports. Irregular, curved, offset, or routed openings remain unsupported.
 - The follow camera remains unimplemented.
-- The Milestone 2.1B data model is not connected to a scene, Tilemap, collider, generator, persistence layer, navigation classifier, or the legacy DirtBlocks.
+- The world data and classifier are not connected to a scene, Tilemap, collider, generator, persistence layer, pathfinder, autonomous movement system, or the legacy DirtBlocks.
 - Autonomous navigation, multi-ant occupancy, and colony simulation remain later milestones.
 
 ## Recommended next implementation step
 
-Run the existing movement validation still pending for Milestone 1, and import/compile the new `AntColony.World` assembly in the open Editor. Then run `ChunkedWorldDataTests` before marking Milestone 2.1B complete. The next authorised world slice should begin with navigation classification and visualisation over authoritative resident chunk data; do not connect or replace the legacy prototype terrain implicitly.
+Import/compile the updated `AntColony.World` assembly and run `WorldNavigationClassifierTests` alongside the existing 25 world-data cases. After 2.1C passes, the next authorised slice can visualise these classification results without adding pathfinding, autonomous movement, clearance claims, or an implicit legacy-terrain import.
