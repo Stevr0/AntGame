@@ -6,7 +6,7 @@
 
 **Status:** In progress. The user has confirmed floor movement, vertical wall climbing, and resolution of the previously reported corner-transition deadlock in Unity Play Mode. Ceiling/corner route acceptance is still incomplete. Bounded Auto Step-Over is now implemented for one-tile openings and awaits its first Play Mode acceptance pass.
 
-Milestone 1 is explicitly a prototype and regression baseline, not the final player control design. Milestones 2.1B through 2.1D are complete and verified alongside that prototype; the user confirmed all 11 manual 2.1D visual checks. Milestone 2.1E now projects authoritative world data into two development Tilemaps and has passed automated validation, while its manual visual-alignment check remains pending. Autonomous navigation, terrain collision migration, colony management and individual task assignment have not been implemented.
+Milestone 1 is explicitly a prototype and regression baseline, not the final player control design. Milestones 2.1B through 2.1E are complete and verified alongside that prototype; the user confirmed all 11 manual 2.1D checks and all 10 manual 2.1E visual checks. Milestone 2.2A now projects blocking terrain collision from authoritative world data in the dedicated navigation prototype and passes automated validation. Its manual Unity collision check remains pending, so 2.2A is not complete. Autonomous navigation, colony management and individual task assignment have not been implemented.
 
 ## Repository and architecture
 
@@ -56,8 +56,19 @@ Milestone 1 is explicitly a prototype and regression baseline, not the final pla
 - Missing chunks are cleared rather than generated. Unknown IDs and missing visual references return precise diagnostics, clear stale presentation, and leave world data and navigation classification unchanged.
 - The initial material definitions reference two colour-tinted development Tiles that reuse the existing one-pixel placeholder soil Sprite. Both Tile assets explicitly disable collider generation.
 - Background, foreground, and navigation-overlay visibility remain independent. The overlay still reads only `WorldNavigationClassifier` and renders above both Tilemaps.
-- No `TilemapCollider2D`, `CompositeCollider2D`, terrain `Rigidbody2D`, per-tile GameObject, pathfinding, excavation, or autonomous movement was added.
-- Unity compilation, scene validation, and all 89/89 Edit Mode tests pass. A graphics-enabled manual visual-alignment and visibility check remains pending, so Milestone 2.1E is not yet complete.
+- Milestone 2.1E added no collision components, per-tile GameObjects, pathfinding, excavation, or autonomous movement.
+- Unity compilation, scene validation, and all 89/89 Edit Mode tests passed. The user subsequently confirmed all 10 graphics-enabled manual visual checks, so Milestone 2.1E is complete.
+
+### Milestone 2.2A authoritative terrain collision
+
+- `AntNavigationPrototype.unity` contains a third, collision-only `Foreground Collision Tilemap` beneath the same half-cell-offset Grid. The Background and visual foreground Tilemaps remain collider-free.
+- `WorldTerrainCollisionRenderer` is a one-way projection from `ChunkedWorldData`: it places an invisible Grid-collider Tile only when the registered Solid Material has `BlocksMovement` enabled. It never treats Tilemap or collider occupancy as authoritative world state.
+- Visual foreground occupancy, physical collision and navigation support remain independent. The fixture includes a non-blocking supporting Solid and a blocking non-supporting Solid to demonstrate that `BlocksMovement` and `SupportsNavigation` are not aliases.
+- One `TilemapCollider2D` feeds one manually generated `CompositeCollider2D` on a static `Rigidbody2D` using the existing `ClimbableSurface` layer. Adjacent cells merge without per-tile GameObjects or duplicate terrain hits.
+- Explicit cell, chunk and bounded-region refreshes update only requested collision occupancy. `SynchronizeCollisionGeometry` processes pending Tilemap collider changes, regenerates composite geometry and synchronizes transforms before development physics queries.
+- The custom inspector reports authoritative blocking state and projected collision occupancy for the selected debug cell, refreshes a cell or selected region, coordinates the existing controlled Solid mutation, and can toggle collision-outline Gizmos.
+- Unity compilation, the expanded scene/material/collider validator, and all 117/117 Edit Mode tests pass. The 28 new tests use Physics2D queries for presence, absence, mutation and alignment across signed chunk boundaries. Manual graphics-enabled collision verification remains pending, so Milestone 2.2A is not complete.
+- This collision projection is development-scene infrastructure only. It does not establish whole-body clearance, connectivity, reachability, pathfinding, autonomous movement, procedural generation or excavation gameplay.
 
 ## Approved future design, not implemented beyond the data foundation
 
@@ -200,7 +211,15 @@ For the Milestone 2.1E world-Tilemap slice:
 - The scene validator passed the one-root hierarchy, two material-driven Tilemaps, all 8,192 resident Background visuals, foreground ordering, signed coordinate alignment, remove/restore refresh sequence, unchanged classifier behavior, and absence of colliders or terrain Rigidbody2D components.
 - The complete Edit Mode suite passed 89/89: the existing 61 regression cases plus 28 new Tilemap projection cases.
 - The new cases cover both material layers, foreground removal with Background persistence, non-blocking and differently identified Solid visuals, missing references and unknown IDs, missing chunks, positive and negative boundaries, exact cell refresh scope, bulk negative-chunk refresh, repeated refresh object stability, classification isolation, and collision absence.
-- Manual graphics-enabled verification of visual alignment, layer ordering, visibility toggles, and the removal/restore demonstration remains pending.
+- The user confirmed all 10 graphics-enabled checks for visual alignment, layer ordering, visibility toggles, removal/restore behaviour, Background persistence, classifier refresh, and unchanged original ant movement. Milestone 2.1E is complete.
+
+For the Milestone 2.2A terrain-collision slice:
+
+- Unity compiled the collision projection, custom Editor tooling, generated assets, updated prototype scene and focused tests without C# errors.
+- The scene validator passed the single collision-only Tilemap hierarchy, collider-free visual layers, material references and independent flag examples, `ClimbableSurface` assignment, static composite configuration, signed boundary alignment, mutation refresh, Background persistence, classifier isolation and duplicate-hit check.
+- The complete Edit Mode suite passed 117/117: the existing 89 regression cases plus 28 new collision cases.
+- The new cases exercise real Physics2D queries for blocking and non-blocking materials, all four blocking/support flag combinations, add/remove/replace mutations, merged neighbours, immediate explicit synchronization, requested-region isolation, unavailable chunks, repeated-refresh component stability, integer-centred cells and positive/negative X and Y chunk boundaries.
+- Graphics-enabled manual collision verification is still pending; 2.2A therefore remains in progress.
 
 ## Manual Play Mode checklist
 
@@ -236,10 +255,12 @@ For the Milestone 2.1E world-Tilemap slice:
 - Auto Step-Over and its authored fixtures are implemented but have not completed automated Unity execution or manual Play Mode acceptance on this machine.
 - The current Step-Over path is intentionally straight between parallel supports. Irregular, curved, offset, or routed openings remain unsupported.
 - The follow camera remains unimplemented.
-- World data, material visuals, and the classifier are connected only to the separate developer navigation scene. They are not connected to gameplay colliders, generation, persistence, pathfinding, autonomous movement, or legacy DirtBlocks.
-- The Milestone 2.1E Tilemap projection has passed automated tests and structural validation but still needs a graphics-enabled manual Scene/Game visual-alignment check.
+- World data, material visuals, the classifier and authoritative terrain collision are connected only to the separate developer navigation scene. They are not connected to generation, persistence, pathfinding, autonomous movement, excavation gameplay, or legacy DirtBlocks.
+- The collision projection currently requires an explicit cell, chunk or bounded-region refresh after authoritative Solid mutation; no terrain-change event stream or chunk streaming lifecycle exists yet.
+- Navigation classification still describes local occupancy and cardinal support only. It does not yet validate ant-body or obstacle clearance against the new collider geometry.
+- Milestone 2.2A needs a graphics-enabled manual Unity collision check before it can be marked complete.
 - Autonomous navigation, multi-ant occupancy, and colony simulation remain later milestones.
 
 ## Recommended next implementation step
 
-Open `Assets/AntColony/Scenes/AntNavigationPrototype.unity` in a graphics-enabled Unity Editor and complete the Milestone 2.1E manual check: verify integer-centred alignment on both sides of chunk boundaries, independently toggle both Tilemaps and the navigation overlay, then use `Toggle Test Solid and Refresh Cell` twice to confirm foreground removal/restoration, persistent Background presentation, and matching overlay classification. Do not begin pathfinding, autonomous movement, excavation, or terrain collision migration as part of that acceptance pass.
+Open `Assets/AntColony/Scenes/AntNavigationPrototype.unity` in a graphics-enabled Unity Editor and complete the Milestone 2.2A manual collision check. Inspect representative ground, wall, ceiling, tunnel, chamber and signed-boundary cells; enable collision outlines; confirm Background and non-blocking foreground cells have no terrain collision; confirm blocking/non-supporting and blocking/supporting examples do; then use `Toggle Test Solid and Refresh Cell` twice and verify visuals, collision and classification remove and restore together while Background remains. Confirm an appropriate Rigidbody2D/Collider2D probe cannot penetrate blocking terrain and does not collide with non-blocking examples. Do not begin clearance, pathfinding, autonomous movement, excavation gameplay or movement replacement as part of that pass.

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using AntColony.World;
 using UnityEngine;
 
@@ -12,11 +13,15 @@ namespace AntColony.NavigationDebug
     {
         public static readonly Vector2Int MutationCell = new Vector2Int(0, 1);
         public static readonly Vector2Int TilemapMutationCell = Vector2Int.zero;
+        public static readonly Vector2Int SupportOnlySolidCell = new Vector2Int(-34, 5);
+        public static readonly Vector2Int BlockingOnlySolidCell = new Vector2Int(-32, 5);
         public static readonly Vector2Int UnknownSupportCell = new Vector2Int(10, 31);
         public static readonly Vector2Int DiagonalOnlyCell = new Vector2Int(-29, 21);
 
         [SerializeField] private BackgroundTileMaterialDefinition backgroundMaterial;
         [SerializeField] private SolidTileMaterialDefinition solidMaterial;
+        [SerializeField] private SolidTileMaterialDefinition supportOnlyMaterial;
+        [SerializeField] private SolidTileMaterialDefinition blockingOnlyMaterial;
         [SerializeField] private int worldSeed = 2104;
 
         private ChunkedWorldData worldData;
@@ -55,7 +60,7 @@ namespace AntColony.NavigationDebug
 
             var registry = new WorldMaterialRegistry(
                 new[] { backgroundMaterial },
-                new[] { solidMaterial });
+                BuildSolidDefinitions());
             worldData = new ChunkedWorldData(registry, worldSeed);
 
             // Two rows of four chunks cover x=-64..63 and y=-32..31. The row
@@ -133,6 +138,18 @@ namespace AntColony.NavigationDebug
 
             // The marked cell at (-29,21) sees this tile diagonally only.
             SetSolid(new Vector2Int(-30, 20));
+
+            // Optional development materials prove that blocking and navigation
+            // support remain independent properties in the authored scene.
+            if (supportOnlyMaterial != null)
+            {
+                SetSolid(SupportOnlySolidCell, supportOnlyMaterial);
+            }
+
+            if (blockingOnlyMaterial != null)
+            {
+                SetSolid(BlockingOnlySolidCell, blockingOnlyMaterial);
+            }
         }
 
         private void FillHorizontal(int minimumX, int maximumX, int y)
@@ -153,9 +170,30 @@ namespace AntColony.NavigationDebug
 
         private void SetSolid(Vector2Int worldCell)
         {
+            SetSolid(worldCell, solidMaterial);
+        }
+
+        private void SetSolid(
+            Vector2Int worldCell,
+            SolidTileMaterialDefinition material)
+        {
             RequireSuccess(
-                worldData.SetSolidMaterial(worldCell, solidMaterial.StableMaterialId),
+                worldData.SetSolidMaterial(worldCell, material.StableMaterialId),
                 $"set fixture Solid Tile at {worldCell}");
+        }
+
+        private IEnumerable<SolidTileMaterialDefinition> BuildSolidDefinitions()
+        {
+            yield return solidMaterial;
+            if (supportOnlyMaterial != null)
+            {
+                yield return supportOnlyMaterial;
+            }
+
+            if (blockingOnlyMaterial != null)
+            {
+                yield return blockingOnlyMaterial;
+            }
         }
 
         private static void RequireSuccess(WorldChunkCreationResult result, string action)

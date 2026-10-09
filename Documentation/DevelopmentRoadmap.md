@@ -141,7 +141,7 @@ The existing root-level Unity template assets can remain where they are until th
 
 ## Milestone 2 — World Tiles and Autonomous Navigation
 
-**Status:** In progress. Milestones 2.1B through 2.1D are complete and verified, including all 11 manual 2.1D visual checks. Milestone 2.1E's authoritative-data-driven Tilemap presentation is implemented and automated validation passes; manual visual acceptance remains pending.
+**Status:** In progress. Milestones 2.1B through 2.1E are complete and verified, including all 11 manual 2.1D checks and all 10 manual 2.1E visual checks. Milestone 2.2A's authoritative-data-driven terrain collision is implemented and automated validation passes; manual Unity collision acceptance remains pending.
 
 **Goal:** Establish the approved two-layer world representation, then prove that one ant can autonomously route and move through Exposed Space that is cardinally adjacent to Qualifying Geometry without entering Unsupported Space or requiring direct movement input.
 
@@ -155,8 +155,8 @@ Milestone 2 must retain `AntSurfaceMotor` and `PlayerMovementInput` as prototype
 - The Milestone 2.1B Unity Edit Mode suite passed 25/25, and the existing ant movement remained functional in the user's Play Mode verification.
 - **2.1C — Navigation classification:** Complete. Direct, uncached queries over authoritative world data distinguish Unavailable, Covered, and Exposed occupancy, while exposed cells report Supported, Unsupported, or Unknown cardinal support. Unknown prevents missing adjacent chunks from being mistaken for definitively unsupported terrain. The user-confirmed acceptance run passed 50/50 Edit Mode tests.
 - **2.1D — Navigation visualisation:** Complete. The separate `AntNavigationPrototype` developer scene uses a deterministic eight-chunk fixture and one bounded batched mesh to display the actual classifier's Covered, Supported, Unsupported, Unknown, and Unavailable results. The automated suite passed 61/61 and the user confirmed all 11 manual visual acceptance checks plus unchanged original ant movement.
-- **2.1E — World Tilemap integration:** Implemented. Separate Background and foreground Solid Tilemaps project explicitly requested resident chunks from `ChunkedWorldData` through registered material definitions. Explicit cell, chunk, and bounded-region refreshes preserve Background visuals during Solid mutation, diagnose missing visuals safely, align signed cells through an explicit half-cell Grid offset, and add no collision components.
-- The complete Edit Mode suite passes 89/89, including 28 Tilemap projection cases, and the expanded scene validator passes. A graphics-enabled manual Scene/Game alignment and layer check is still pending, so 2.1E is not yet complete.
+- **2.1E — World Tilemap integration:** Complete. Separate Background and foreground Solid Tilemaps project explicitly requested resident chunks from `ChunkedWorldData` through registered material definitions. Explicit cell, chunk, and bounded-region refreshes preserve Background visuals during Solid mutation, diagnose missing visuals safely, align signed cells through an explicit half-cell Grid offset, and add no collision components.
+- The 2.1E Edit Mode suite passed 89/89, including 28 Tilemap projection cases, the expanded scene validator passed, and the user confirmed all 10 manual visual checks.
 - Supported classification remains only terrain eligibility; body clearance, obstacles, connectivity, and Reachable Space are later work.
 - Preserve Background Tiles when a coordinate is covered by a Solid Tile.
 - Visualise which cardinal Qualifying Geometry makes an Exposed Space navigation-eligible.
@@ -168,6 +168,10 @@ Milestone 2 must retain `AntSurfaceMotor` and `PlayerMovementInput` as prototype
 
 ### 2.2 — Autonomous Destination Navigation
 
+- **2.2A — Authoritative terrain collision:** Implemented; manual acceptance pending. The dedicated navigation scene has a separate invisible collision Tilemap derived from authoritative Solid Material `BlocksMovement` flags. Background and visual foreground Tilemaps remain collider-free, while `SupportsNavigation` stays independent. One Tilemap collider, static Rigidbody2D and manually refreshed Composite collider merge adjacent blocking cells on `ClimbableSurface` without per-tile GameObjects.
+- Explicit cell, chunk and bounded-region collision refreshes process pending Tilemap changes and synchronize Physics2D before validation. The deterministic fixture adds supporting/non-blocking and blocking/non-supporting examples alongside its existing terrain and signed chunk boundaries.
+- Unity compilation and the expanded scene/material/collider validator pass. The full Edit Mode suite passes 117/117, including 28 new Physics2D collision cases. A graphics-enabled manual collision pass is still required before 2.2A is complete.
+- Collision does not yet imply ant-body clearance, route connectivity or reachability. This slice adds no pathfinding, autonomous movement, procedural generation or excavation gameplay.
 - Provide a developer tool to assign one destination to one ant.
 - Calculate a route through connected, clearance-valid navigation space.
 - Follow route waypoints with continuous 2D movement and no direct movement input.
@@ -210,4 +214,4 @@ These milestones are ordered direction, not approved implementation work. Their 
 | 9 — Enemy colonies and hostile interactions | Reuse the same terrain navigation for other colonies and add high-level engage, retreat, avoid, defend and assistance responses. | Not started |
 | 10 — Survival, growth and finished slice | Add needs, skill progression, later queen/brood progression, onboarding, objectives, save/load and usability in bounded slices. | Not started |
 
-No new milestone is complete without implementation and validation evidence. Milestone 2.1B passed 25/25 focused Unity Edit Mode tests and is complete. Milestone 2.1C passed the user-confirmed 50/50 acceptance run and is complete. Milestone 2.1D passed 61/61 plus all 11 manual visual checks and is complete. Milestone 2.1E passes 89/89 and structural validation, but manual visual acceptance is pending. Terrain collision migration, pathfinding, autonomous navigation, clearance validation, procedural generation, persistence, and streaming are not implemented.
+No new milestone is complete without implementation and validation evidence. Milestone 2.1B passed 25/25 focused Unity Edit Mode tests and is complete. Milestone 2.1C passed the user-confirmed 50/50 acceptance run and is complete. Milestone 2.1D passed 61/61 plus all 11 manual visual checks and is complete. Milestone 2.1E passed 89/89 plus all 10 manual visual checks and is complete. Milestone 2.2A passes 117/117 and structural validation, but manual Unity collision acceptance is pending. Clearance validation, pathfinding, autonomous navigation, procedural generation, excavation gameplay, persistence, and streaming are not implemented.

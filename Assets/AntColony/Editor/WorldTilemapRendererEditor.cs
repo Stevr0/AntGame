@@ -37,6 +37,8 @@ namespace AntColony.EditorTools
                 {
                     tilemapRenderer.RefreshCell(
                         NavigationTestWorldHost.TilemapMutationCell);
+                    FindInScene<WorldTerrainCollisionRenderer>(tilemapRenderer)
+                        ?.RefreshCell(NavigationTestWorldHost.TilemapMutationCell);
                     RefreshNavigationOverlay(tilemapRenderer);
                 }
             }
@@ -44,6 +46,8 @@ namespace AntColony.EditorTools
             if (GUILayout.Button("Refresh Selected Region"))
             {
                 tilemapRenderer.RefreshSelectedRegion();
+                FindInScene<WorldTerrainCollisionRenderer>(tilemapRenderer)
+                    ?.RefreshSelectedRegion();
                 SceneView.RepaintAll();
             }
 
@@ -78,6 +82,17 @@ namespace AntColony.EditorTools
             WorldTilemapRenderer tilemapRenderer)
         {
             return tilemapRenderer.WorldDataProvider as NavigationTestWorldHost;
+        }
+
+        private static TComponent FindInScene<TComponent>(
+            WorldTilemapRenderer tilemapRenderer)
+            where TComponent : Component
+        {
+            return Object.FindObjectsByType<TComponent>(
+                    FindObjectsInactive.Include,
+                    FindObjectsSortMode.None)
+                .FirstOrDefault(candidate =>
+                    candidate.gameObject.scene == tilemapRenderer.gameObject.scene);
         }
     }
 }
