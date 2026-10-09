@@ -14,9 +14,9 @@ These instructions apply to the entire repository. They are intended for Codex a
 ## Game vision (not an implementation checklist)
 
 - The player begins as an ordinary ant. Becoming a queen is a future progression event whose requirements remain unresolved.
-- Each ant is selectable and directly controllable, with distinct attributes, learned skills, health, hunger, hydration and energy.
-- Unselected ants autonomously perform assigned jobs while responding to urgent needs.
-- Ants traverse floors, walls and ceilings in a 2D side-view environment.
+- Each ant is selectable and inspectable, with distinct attributes, learned skills, health, hunger, hydration and energy.
+- Ants autonomously perform work selected from colony priorities or specifically assigned to them while responding to urgent needs.
+- Ants move continuously through supported tile-adjacent space in a 2D side-view environment; normal play does not directly steer them.
 - The player marks soil tiles for excavation. Assigned ants find reachable tiles, excavate them, carry away loose soil and deposit it at designated locations.
 - Skills improve through doing relevant work. Later features may include soil placement and tunnel sealing.
 - **Do not implement these future systems until their milestone is explicitly approved.**
@@ -32,6 +32,8 @@ These instructions apply to the entire repository. They are intended for Codex a
 5. A reproducible in-Editor test of the above.
 
 **Not yet in scope:** digging, dynamic terrain editing, automatic pathfinding, worker AI, ant needs, skill progression, brood, reproduction, food/water logistics, multiplayer or networking.
+
+The movement prototype is a regression baseline, not the final player-facing control model. Once Milestone 1 is fully accepted, the next planned milestone is Autonomous Tile-Adjacent Navigation, beginning with classification visualisation that does not alter movement. Do not begin that implementation without explicit approval.
 
 For the *first* Codex session: inspect the repository, describe the minimal structure and propose the smallest implementation plan **before writing gameplay code**. Wait for approval to implement that plan. In later sessions, carry out the specifically approved task without needlessly re-requesting permission for every small edit.
 
@@ -80,16 +82,15 @@ For player-ant movement, check directional input, floor traversal, climbing both
 
 ## Movement and navigation conventions
 
-- Player-controlled and autonomous ants are control states of the same physical entity, not different ant types.
-- Use one reusable set of surface-traversal and collision rules for both control states. Keep input intent, movement execution and future route/task decisions separate where practical.
+- Normal gameplay uses autonomous movement; `PlayerMovementInput` remains a developer-only testing tool and gives no traffic priority.
+- Use one tile-adjacent terrain-navigation model for all colonies. Keep task choice, shared navigation data, per-ant route following, movement execution, local avoidance and physics/collision separate where practical.
 - An ordinary ant has a nominal footprint of approximately one tile, but movement remains smooth and continuous rather than grid-snapped.
-- Solid terrain and other ants block movement. Never solve congestion by disabling collision, overlapping ants, teleporting, jumping, flying or ignoring terrain.
-- Treat one-tile occupancy as a logical navigation and clearance constraint based on the ant's whole footprint, not only its centre point.
-- Auto Step-Over may cross a suitable one-tile opening only when the opposite surface is reachable and the entire crossing is clear. The permitted distance must be configurable and physically validated.
-- Single-width passages allow single-file traffic; double-width passages permit passing only when actual collision geometry and ant size provide enough clearance.
-- Future navigation must distinguish static traversability from dynamic occupancy, movement execution and task navigation without prematurely turning those responsibilities into heavyweight frameworks.
-- Dynamic excavation must invalidate affected traversal data at runtime. Prefer local or event-driven updates over unconditional full-world recalculation.
-- Waiting, deterministic yielding, bounded recovery and route replanning are planned traffic tools. Do not build a complex reservation or traffic-controller system before multi-ant tests justify it.
+- Potentially traversable empty tiles require qualifying solid geometry in a cardinal direction and adequate whole-body clearance. Diagonal adjacency alone does not qualify; traversability and reachability remain distinct.
+- Eight-direction route connections are allowed, but full path segments must remain supported and cannot cut diagonally through blocked corners.
+- A surface gap cannot be crossed through unsupported space. Existing Auto Step-Over behaviour is prototype-only and is not an exception.
+- Multiple ants may share a tile. Use local avoidance and hybrid separation; temporary friendly overlap is acceptable to prevent deadlock, but avoidance must never push an ant into terrain or unsupported space.
+- Dynamic excavation must invalidate affected shared navigation data at runtime. Prefer local or event-driven updates over unconditional full-world recalculation.
+- Design for potentially hundreds of ants using shared data, efficient nearby-ant lookup and controlled update rates. Do not add DOTS/ECS or another major dependency before profiling shows a need.
 
 ## Documentation maintenance
 

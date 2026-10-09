@@ -4,13 +4,13 @@
 
 This roadmap reflects the repository as inspected on 9 October 2026. Milestone 1 is in progress. The user has confirmed floor and isolated wall movement plus resolution of the reported corner deadlock in Play Mode. Ceiling/corner route acceptance and the newly implemented Auto Step-Over slice still await complete Play Mode acceptance.
 
-`GameDesignDocument.md` version 0.2 is the primary design reference. Its P1 individual-traversal gate requires one ordinary player ant to use directional input across floors, walls, ceilings, corners and a physically valid one-tile opening. This roadmap breaks that gate into small implementation steps; it does not replace the GDD.
+`GameDesignDocument.md` version 0.3 is the primary design reference. Milestone 1 records the existing manually driven movement prototype as a regression baseline. The approved player-facing direction is autonomous tile-adjacent navigation and Hybrid Task Management; manual movement remains developer-only after the prototype is validated.
 
 ## Milestone 1 — Player Ant Movement Prototype
 
 **Status:** In progress. Directional input, floor movement, isolated wall movement, and the corner-deadlock fix are Play Mode confirmed. Ceiling movement, intentional junction selection, the complete corner route, and bounded Auto Step-Over are implemented but not yet fully Play Mode accepted. Camera follow remains unimplemented.
 
-**Goal:** Prove that one directly controlled ordinary ant can move through a small, authored 2D underground tunnel and that a simple camera can follow it. Becoming a queen is later progression and is outside this milestone.
+**Goal:** Preserve and finish validating the existing directly controlled movement prototype as a technical baseline. This milestone does not define the final player control scheme. Becoming a queen is later progression and is outside this milestone.
 
 ### Scope
 
@@ -139,16 +139,64 @@ The initial script set should remain small:
 
 The existing root-level Unity template assets can remain where they are until the authored Ant Colony scene replaces the template scene. No Bootstrap exists in the current repository; Milestone 1 should use authored scene and prefab references and should not add a global manager or new bootstrap system.
 
-## Later GDD stages
+## Milestone 2 — Autonomous Tile-Adjacent Navigation
 
-These stages are recorded from GDD version 0.2 for visibility. They are not approved implementation work while Milestone 1 remains incomplete.
+**Status:** Approved design; not started.
 
-| GDD stage | Deliverable | Status |
+**Goal:** Prove that one ant can autonomously route and move through empty space that is cardinally adjacent to qualifying solid geometry, without entering unsupported airspace or requiring direct movement input.
+
+Milestone 2 must retain `AntSurfaceMotor` and `PlayerMovementInput` as prototype and developer-test tools until the replacement movement is validated. Existing corner-following and Auto Step-Over behaviour are not authoritative navigation rules.
+
+### 2.1 — Navigation Visualisation
+
+- Classify solid, potentially traversable and unsupported tiles.
+- Visualise which cardinal neighbour qualifies each traversable tile.
+- Keep local traversability distinct from connectivity and current reachability.
+- Confirm classification in the current prototype scene, including tunnels and unsupported chamber centres.
+- Do not change existing movement behaviour.
+
+**Acceptance:** The visualisation consistently identifies qualifying solid adjacency, rejects diagonal-only support and unsupported air, and makes classification errors inspectable without moving the ant differently.
+
+### 2.2 — Autonomous Destination Movement
+
+- Provide a developer tool to assign one destination to one ant.
+- Calculate a route through connected, clearance-valid navigation space.
+- Follow route waypoints with continuous 2D movement and no direct movement input.
+- Report invalid and unreachable destinations clearly and fail safely.
+
+**Acceptance:** One ant reaches valid destinations on connected routes, while invalid or disconnected destinations produce clear feedback without teleportation, free flight or an invalid movement state.
+
+### 2.3 — Movement Validation
+
+- Validate routes beside ground, vertical walls, ceilings, corners and overhangs.
+- Validate excavated tunnels and large chambers using strict cardinal adjacency.
+- Prevent unsupported-air traversal and diagonal corner-cutting.
+- Validate every path segment for the full ant-body clearance, not only tile centres.
+- Confirm invalid navigation states stop, recover or report failure safely.
+
+**Acceptance:** The validation course proves the same movement model across all listed geometry and rejects every deliberately unsupported, obstructed or insufficient-clearance route.
+
+### 2.4 — Dynamic Terrain Navigation
+
+- Reclassify affected navigation regions after excavation or another terrain change.
+- Update or invalidate routes whose traversability, connectivity or clearance changed.
+- Prefer local, incremental updates over rebuilding the entire map.
+
+**Acceptance:** Representative terrain changes update only the affected navigation data, and an impacted ant safely replans or reports failure without using stale route segments.
+
+## Subsequent milestones
+
+These milestones are ordered direction, not approved implementation work. Their detailed acceptance criteria should be written only when each milestone is authorised.
+
+| Milestone | Intended outcome | Status |
 | --- | --- | --- |
-| P2 — Tile excavation integration | Designate and remove accessible tiles, then update affected surfaces and connectivity at runtime. | Not started |
-| P3 — Soil logistics and basic autonomous navigation | Let one autonomous ant follow a surface-aware route between work and deposit destinations, recover from invalid routes, and deliver exactly one soil unit per tile. | Not started |
-| P4 — Multi-ant occupancy and control | Support multiple selectable ants, physical collision, single-width blocking, clearance-based passing, control handover and bounded traffic recovery. | Not started |
-| P5 — Survival and growth | Add food, water, rest, the queen brood cycle, and skill-by-doing at small scale. | Not started |
-| P6 — Finished slice | Add onboarding, a clear objective, win/lose feedback, save/load, and a usability pass. | Not started |
+| 3 — Ant selection and inspection | Select an individual and read its attributes, skills, health, needs, assigned task and current activity. | Not started |
+| 4 — Hybrid task assignment | Support colony-wide designations and priorities plus specific task assignment to an eligible individual. | Not started |
+| 5 — Multiple-ant movement | Allow shared-tile presence, local avoidance, temporary friendly overlap, congestion-aware routing and bounded recovery without invalid displacement. | Not started |
+| 6 — Autonomous worker loop | Select and perform eligible work while responding predictably to urgent needs and task invalidation. | Not started |
+| 7 — Excavation and soil transport | Excavate reachable designated terrain, carry removed soil and update navigation incrementally. | Not started |
+| 8 — Population and performance | Scale toward potentially hundreds of independently simulated ants using shared navigation data, efficient nearby-ant lookup and controlled update frequencies. | Not started |
+| 9 — Enemy colonies and hostile interactions | Reuse the same terrain navigation for other colonies and add high-level engage, retreat, avoid, defend and assistance responses. | Not started |
+| 10 — Survival, growth and finished slice | Add needs, skill progression, later queen/brood progression, onboarding, objectives, save/load and usability in bounded slices. | Not started |
 
-No later stage should begin until the current acceptance gate is verified and the developer approves the next stage.
+No new milestone is complete without implementation and validation evidence. Finish the remaining Milestone 1 acceptance work before implementation of Milestone 2.1 unless the developer explicitly changes that order.
