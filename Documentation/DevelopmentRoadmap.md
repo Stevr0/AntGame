@@ -141,7 +141,7 @@ The existing root-level Unity template assets can remain where they are until th
 
 ## Milestone 2 — World Tiles and Autonomous Navigation
 
-**Status:** In progress. Milestone 2.1B is complete and verified; Milestone 2.1C terrain classification is implemented and awaiting focused Unity validation.
+**Status:** In progress. Milestones 2.1B and 2.1C are complete and verified. Milestone 2.1D's developer navigation visualisation is implemented and automated validation passes; manual visual acceptance remains pending.
 
 **Goal:** Establish the approved two-layer world representation, then prove that one ant can autonomously route and move through Exposed Space that is cardinally adjacent to Qualifying Geometry without entering Unsupported Space or requiring direct movement input.
 
@@ -153,15 +153,17 @@ Milestone 2 must retain `AntSurfaceMotor` and `PlayerMovementInput` as prototype
 - **2.1B — Chunk data foundation:** Complete. A scene-independent sparse dictionary owns explicitly created 32×32 chunks. Each resident chunk contains 1,024 Background Tile IDs and zero or one Solid Tile ID per cell. Coordinate conversion supports positive and negative chunk positions, and missing chunks return an unavailable status without implicit generation.
 - Stable ScriptableObject material definitions now provide the initial `background.default` and `solid.soil` IDs. A stored world seed is reserved for later deterministic generation but causes no generation itself.
 - The Milestone 2.1B Unity Edit Mode suite passed 25/25, and the existing ant movement remained functional in the user's Play Mode verification.
-- **2.1C — Navigation classification:** Implemented as direct, uncached queries over authoritative world data. Results distinguish Unavailable, Covered, and Exposed occupancy, while exposed cells report Supported, Unsupported, or Unknown cardinal support. Unknown prevents missing adjacent chunks from being mistaken for definitively unsupported terrain.
-- **Later 2.1 work:** Validate 2.1C in Unity, then add data visualisation without changing movement. Supported classification remains only terrain eligibility; body clearance, obstacles, connectivity, and Reachable Space are later work.
+- **2.1C — Navigation classification:** Complete. Direct, uncached queries over authoritative world data distinguish Unavailable, Covered, and Exposed occupancy, while exposed cells report Supported, Unsupported, or Unknown cardinal support. Unknown prevents missing adjacent chunks from being mistaken for definitively unsupported terrain. The user-confirmed acceptance run passed 50/50 Edit Mode tests.
+- **2.1D — Navigation visualisation:** Implemented in the separate `AntNavigationPrototype` developer scene. A deterministic eight-chunk fixture and one bounded batched mesh display the actual classifier's Covered, Supported, Unsupported, Unknown, and Unavailable results. Cell inspection, chunk boundaries, overlay visibility, and explicit terrain-mutation refresh controls are included without changing movement or adding colliders.
+- The full automated Edit Mode suite passes 61/61, including 11 visualisation cases, and the prototype structural validator passes. A graphics-enabled manual Scene/Game visual check is still pending, so 2.1D is not yet complete.
+- Supported classification remains only terrain eligibility; body clearance, obstacles, connectivity, and Reachable Space are later work.
 - Preserve Background Tiles when a coordinate is covered by a Solid Tile.
 - Visualise which cardinal Qualifying Geometry makes an Exposed Space navigation-eligible.
 - Keep local traversability distinct from connectivity and Reachable Space.
 - Confirm classification in the current prototype scene, including open sky, tunnels and unsupported chamber centres.
 - Do not change existing movement behaviour.
 
-**Acceptance:** Every inspected coordinate has one Background Tile and no more than one Solid Tile; visualisation consistently distinguishes Covered, Exposed, Unsupported and Traversable Space, rejects diagonal-only or Background-Tile-only support, and changes no ant movement.
+**Acceptance:** Every inspected resident coordinate has one Background Tile and no more than one Solid Tile; visualisation consistently distinguishes Covered, Supported, Unsupported, Unknown, and Unavailable cells, rejects diagonal-only or Background-Tile-only support, and changes no ant movement. Supported does not imply clearance, connectivity, or reachability.
 
 ### 2.2 — Autonomous Destination Navigation
 
@@ -207,4 +209,4 @@ These milestones are ordered direction, not approved implementation work. Their 
 | 9 — Enemy colonies and hostile interactions | Reuse the same terrain navigation for other colonies and add high-level engage, retreat, avoid, defend and assistance responses. | Not started |
 | 10 — Survival, growth and finished slice | Add needs, skill progression, later queen/brood progression, onboarding, objectives, save/load and usability in bounded slices. | Not started |
 
-No new milestone is complete without implementation and validation evidence. Milestone 2.1B passed 25/25 focused Unity Edit Mode tests and is complete. Milestone 2.1C classification is implemented but remains pending focused Unity execution. Visualisation, pathfinding, autonomous navigation, clearance validation, terrain migration, procedural generation, persistence, and streaming are not implemented.
+No new milestone is complete without implementation and validation evidence. Milestone 2.1B passed 25/25 focused Unity Edit Mode tests and is complete. Milestone 2.1C passed the user-confirmed 50/50 acceptance run and is complete. Milestone 2.1D visualisation is implemented and its current full automated run passes 61/61, but manual visual acceptance is pending. Pathfinding, autonomous navigation, clearance validation, terrain migration, procedural generation, persistence, and streaming are not implemented.

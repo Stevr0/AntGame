@@ -6,7 +6,7 @@
 
 **Status:** In progress. The user has confirmed floor movement, vertical wall climbing, and resolution of the previously reported corner-transition deadlock in Unity Play Mode. Ceiling/corner route acceptance is still incomplete. Bounded Auto Step-Over is now implemented for one-tile openings and awaits its first Play Mode acceptance pass.
 
-Milestone 1 is explicitly a prototype and regression baseline, not the final player control design. Milestone 2.1B's data-only two-layer world model is complete and verified alongside that prototype. Milestone 2.1C navigation classification is implemented and awaiting focused Unity validation. Autonomous navigation, tile presentation, terrain migration, colony management and individual task assignment have not been implemented.
+Milestone 1 is explicitly a prototype and regression baseline, not the final player control design. Milestone 2.1B's data-only two-layer world model and Milestone 2.1C's navigation classification are complete and verified alongside that prototype. Milestone 2.1D's separate developer visualisation is implemented and has passed automated validation; its manual Scene/Game visual check remains pending. Autonomous navigation, gameplay tile presentation, terrain migration, colony management and individual task assignment have not been implemented.
 
 ## Repository and architecture
 
@@ -25,7 +25,7 @@ Milestone 1 is explicitly a prototype and regression baseline, not the final pla
 - Central coordinate utilities use floor division for negative positions, keep local coordinates in the 0–31 range, and preserve the prototype convention that integer coordinates are tile centres in world space.
 - Missing chunks return `ChunkUnavailable`; they never masquerade as exposed cells. Duplicate creation and unknown material IDs are rejected without overwriting data.
 - `Background_Default` (`background.default`) and `Solid_Soil` (`solid.soil`) are initial authored ScriptableObject definitions. Their optional visual Tile references are currently empty because rendering is outside this milestone.
-- A world seed can be stored for future deterministic generation, but no generation, unloading, streaming, persistence, or scene-level host exists.
+- A world seed can be stored for future deterministic generation, but no generation, unloading, streaming, persistence, or gameplay scene host exists. The later 2.1D developer fixture is deliberately separate from gameplay.
 - The existing `DirtBlock` objects have not been imported. The prototype scene, prefab, movement code, Rigidbody2D, colliders, gravity, and input remain unchanged.
 - The focused Milestone 2.1B Unity Edit Mode suite passed 25/25, and the user confirmed that existing ant movement still works in Play Mode. Milestone 2.1B is complete.
 
@@ -37,6 +37,16 @@ Milestone 1 is explicitly a prototype and regression baseline, not the final pla
 - Only north, south, east, and west neighbours can support a cell. The neighbouring Solid Material must have `SupportsNavigation` enabled; Background Tiles and diagonal solids never qualify.
 - Classification crosses positive and negative chunk boundaries. Missing target chunks are Unavailable. A missing neighbour produces Unknown only when no resident cardinal neighbour already provides confirmed support.
 - Results are uncached and therefore reflect successful Solid Tile mutations immediately. Change notifications are deferred until a later cached visualisation or incremental navigation consumer genuinely requires them.
+- The user-confirmed Milestone 2.1C acceptance suite passed 50/50 Edit Mode tests. The subsequent full Milestone 2.1D run also retained all classifier coverage, and Milestone 2.1C is complete.
+
+### Milestone 2.1D navigation visualisation
+
+- `Assets/AntColony/Scenes/AntNavigationPrototype.unity` is a separate developer-only scene. It does not alter `AntMovementPrototype.unity` or the existing movement, Rigidbody2D, input, and collider prototype.
+- `NavigationTestWorldHost` authors a deterministic eight-chunk fixture through `ChunkedWorldData` APIs. It includes open floor, a wall and overhang, a narrow tunnel, a large unsupported chamber centre, negative coordinates, chunk boundaries, diagonal-only geometry, and an absent neighbouring chunk.
+- One bounded batched mesh visualises 3,564 queried cells without per-cell GameObjects or colliders: Covered is brown, Exposed and Supported is green, Unsupported is red, Unknown is amber, and Unavailable is grey.
+- The renderer reads the real `WorldNavigationClassifier`. Optional chunk-boundary lines, overlay visibility, Scene-view cell selection, world/chunk/local inspection, and an explicit Solid Tile mutation-and-refresh control are developer diagnostics only.
+- Supported still means local cardinal terrain support only. The display does not claim body clearance, obstacle clearance, connectivity, reachability, or pathfinding.
+- Automated validation passes, but the graphics-enabled Scene/Game visual inspection remains pending; Milestone 2.1D is therefore not yet marked complete.
 
 ## Approved future design, not implemented beyond the data foundation
 
@@ -164,7 +174,14 @@ For the Milestone 2.1B world-data slice:
 For the Milestone 2.1C navigation-classification slice:
 
 - Focused Edit Mode coverage was added for occupancy, all four support directions, diagonal rejection, independent material flags, positive and negative chunk boundaries, all quadrants, unavailable-neighbour uncertainty, support precedence, live mutation results, isolation, and scene independence.
-- Unity imported the new scripts and compiled both `AntColony.World` and `AntColony.EditModeTests` successfully; an independent Unity 6 Roslyn runtime check also passed. The focused Test Framework run then stalled during Licensing Client reconnection before producing result XML, so execution remains pending and 2.1C is not yet marked complete.
+- The user-confirmed acceptance run passed 50/50 Edit Mode tests. The current full run passed 61/61, including all 23 `WorldNavigationClassifierTests`; Milestone 2.1C is complete.
+
+For the Milestone 2.1D navigation-visualisation slice:
+
+- Unity imported and compiled the new `AntColony.NavigationDebug` runtime assembly, its custom Editor tooling, the prototype scene, and the expanded Edit Mode tests.
+- The structural validator passed the authoritative eight-chunk fixture, bounded 3,564-cell overlay, representative classification examples, and absence of 2D or 3D colliders.
+- The complete Edit Mode suite passed 61/61: 25 world-data, 23 classifier, 11 visualisation, and 2 movement-regression cases.
+- A graphics-enabled manual check of colours, labels, boundaries, toggles, and the mutation refresh is still required before Milestone 2.1D can be marked complete.
 
 ## Manual Play Mode checklist
 
@@ -200,9 +217,10 @@ For the Milestone 2.1C navigation-classification slice:
 - Auto Step-Over and its authored fixtures are implemented but have not completed automated Unity execution or manual Play Mode acceptance on this machine.
 - The current Step-Over path is intentionally straight between parallel supports. Irregular, curved, offset, or routed openings remain unsupported.
 - The follow camera remains unimplemented.
-- The world data and classifier are not connected to a scene, Tilemap, collider, generator, persistence layer, pathfinder, autonomous movement system, or the legacy DirtBlocks.
+- The world data and classifier are connected only to the separate developer visualisation scene. They are not connected to gameplay Tilemaps, colliders, generation, persistence, pathfinding, autonomous movement, or legacy DirtBlocks.
+- The Milestone 2.1D visualisation has passed automated tests and structural validation but still needs a graphics-enabled manual Scene/Game visual check.
 - Autonomous navigation, multi-ant occupancy, and colony simulation remain later milestones.
 
 ## Recommended next implementation step
 
-Import/compile the updated `AntColony.World` assembly and run `WorldNavigationClassifierTests` alongside the existing 25 world-data cases. After 2.1C passes, the next authorised slice can visualise these classification results without adding pathfinding, autonomous movement, clearance claims, or an implicit legacy-terrain import.
+Open `Assets/AntColony/Scenes/AntNavigationPrototype.unity` in a graphics-enabled Unity Editor and complete the Milestone 2.1D visual check: inspect representative cells, toggle the overlay and chunk boundaries, mutate the test Solid Tile, explicitly refresh, and confirm the displayed classification changes. Do not begin pathfinding, autonomous movement, excavation, or gameplay-terrain migration as part of that acceptance pass.
