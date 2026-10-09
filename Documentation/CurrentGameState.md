@@ -6,7 +6,7 @@
 
 **Status:** In progress. The user has confirmed floor movement, vertical wall climbing, and resolution of the previously reported corner-transition deadlock in Unity Play Mode. Ceiling/corner route acceptance is still incomplete. Bounded Auto Step-Over is now implemented for one-tile openings and awaits its first Play Mode acceptance pass.
 
-Milestone 1 is now explicitly a prototype and regression baseline, not the final player control design. The approved future direction is autonomous tile-adjacent navigation with colony management and individual task assignment. No autonomous navigation implementation was added by this documentation update.
+Milestone 1 is explicitly a prototype and regression baseline, not the final player control design. The approved future direction is a two-layer world tile model plus autonomous tile-adjacent navigation, colony management and individual task assignment. Neither the two-layer model nor autonomous navigation has been implemented.
 
 ## Repository and architecture
 
@@ -15,17 +15,21 @@ Milestone 1 is now explicitly a prototype and regression baseline, not the final
 - The prototype controls one ordinary player ant. Becoming a queen is later progression.
 - Input and movement retain the established `PlayerMovementInput -> AntSurfaceMotor -> Rigidbody2D` flow.
 - `AntSurfaceMotor.SetMovementIntent(Vector2)` remains a useful prototype boundary while the future movement model is developed and validated.
-- No Bootstrap, global manager, AI navigation, excavation, multiplayer, or multi-ant system has been added.
+- The current authored collider course is not evidence of the approved Background Tile/Solid Tile data model.
+- No Bootstrap, global manager, two-layer world tile data, AI navigation, excavation, multiplayer, or multi-ant system has been added.
 
 ## Approved future design, not implemented
 
 - Normal play manages ants through selection, inspection, designations, colony priorities and specific task assignments; it does not directly steer them.
-- Traversable empty tiles require qualifying solid geometry in a cardinal direction, adequate whole-body clearance and connection to the ant's reachable region.
+- Every world coordinate contains one permanent Background Tile and may additionally contain one foreground Solid Tile.
+- Excavation removes an excavatable Solid Tile, leaves its Background Tile unchanged, updates collision and reevaluates affected navigation.
+- Background Tiles do not inherently block movement or provide navigation support.
+- Traversable Exposed Spaces require Qualifying Geometry in a cardinal direction, adequate whole-body clearance and applicable obstacle clearance. Reachable Space additionally requires a valid connection to the ant's current navigation region.
 - Eight-direction route connections are allowed, but diagonal corner-cutting and unsupported-air movement are not.
 - Large chamber centres without cardinal support remain unsupported; perimeter routes may be valid.
 - Multiple ants may share a tile and use hybrid separation, local avoidance and bounded recovery rather than universal one-ant-per-tile occupancy.
 - Friendly, neutral and hostile colonies share the same terrain navigation model.
-- The proposed architecture separates colony task decisions, per-ant route following, shared tile navigation data, continuous movement, local avoidance and authoritative collision.
+- The proposed architecture separates world tile data, terrain/excavation changes, colony task decisions, shared navigation data, per-ant route following, continuous movement, local avoidance and authoritative collision.
 - The design target allows potentially hundreds of simulated ants, but no DOTS/ECS or other substantial dependency is approved before profiling demonstrates a need.
 
 ## Implemented and Play Mode confirmed
@@ -170,4 +174,4 @@ For the Auto Step-Over slice:
 
 ## Recommended next implementation step
 
-Restore a healthy Unity Licensing Client connection, run the 2/2 focused Edit Mode suite and both structural validators, perform the complete transition and Auto Step-Over Play Mode checklist, then add and validate the remaining simple upright follow camera. After Milestone 1 is accepted, begin Milestone 2.1 by visualising solid, traversable and unsupported tiles without changing existing movement behaviour.
+Restore a healthy Unity Licensing Client connection, run the 2/2 focused Edit Mode suite and both structural validators, perform the complete transition and Auto Step-Over Play Mode checklist, then add and validate the remaining simple upright follow camera. After Milestone 1 is accepted, begin Milestone 2.1 by inspecting the current world representation and prototyping the smallest permanent-Background/optional-Solid tile data model and classification visualisation without changing movement behaviour.

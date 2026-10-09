@@ -17,7 +17,7 @@ These instructions apply to the entire repository. They are intended for Codex a
 - Each ant is selectable and inspectable, with distinct attributes, learned skills, health, hunger, hydration and energy.
 - Ants autonomously perform work selected from colony priorities or specifically assigned to them while responding to urgent needs.
 - Ants move continuously through supported tile-adjacent space in a 2D side-view environment; normal play does not directly steer them.
-- The player marks soil tiles for excavation. Assigned ants find reachable tiles, excavate them, carry away loose soil and deposit it at designated locations.
+- The player marks soil Solid Tiles for excavation. Assigned ants find reachable designations, excavate the foreground material, carry away loose soil and deposit it at designated locations.
 - Skills improve through doing relevant work. Later features may include soil placement and tunnel sealing.
 - **Do not implement these future systems until their milestone is explicitly approved.**
 
@@ -33,7 +33,7 @@ These instructions apply to the entire repository. They are intended for Codex a
 
 **Not yet in scope:** digging, dynamic terrain editing, automatic pathfinding, worker AI, ant needs, skill progression, brood, reproduction, food/water logistics, multiplayer or networking.
 
-The movement prototype is a regression baseline, not the final player-facing control model. Once Milestone 1 is fully accepted, the next planned milestone is Autonomous Tile-Adjacent Navigation, beginning with classification visualisation that does not alter movement. Do not begin that implementation without explicit approval.
+The movement prototype is a regression baseline, not the final player-facing control model. Once Milestone 1 is fully accepted, the next planned milestone is World Tiles and Autonomous Navigation, beginning with the two-layer tile model and classification visualisation without altering movement. Do not begin that implementation without explicit approval.
 
 For the *first* Codex session: inspect the repository, describe the minimal structure and propose the smallest implementation plan **before writing gameplay code**. Wait for approval to implement that plan. In later sessions, carry out the specifically approved task without needlessly re-requesting permission for every small edit.
 
@@ -83,9 +83,12 @@ For player-ant movement, check directional input, floor traversal, climbing both
 ## Movement and navigation conventions
 
 - Normal gameplay uses autonomous movement; `PlayerMovementInput` remains a developer-only testing tool and gives no traffic priority.
-- Use one tile-adjacent terrain-navigation model for all colonies. Keep task choice, shared navigation data, per-ant route following, movement execution, local avoidance and physics/collision separate where practical.
+- Every world coordinate has one permanent Background Tile and may have zero or one foreground Solid Tile. Excavation removes only an excavatable Solid Tile; it never removes its Background Tile.
+- Background Tiles do not inherently block movement or provide navigation support. Solid Tiles normally block movement and provide support unless their configuration explicitly says otherwise.
+- Use Covered Space, Exposed Space, Traversable Space, Unsupported Space, Reachable Space and Qualifying Geometry consistently as defined in the GDD; avoid describing excavated coordinates as empty tiles.
+- Use one tile-adjacent terrain-navigation model for all colonies. Keep world tile data, excavation, task choice, shared navigation data, per-ant route following, movement execution, local avoidance and physics/collision separate where practical.
 - An ordinary ant has a nominal footprint of approximately one tile, but movement remains smooth and continuous rather than grid-snapped.
-- Potentially traversable empty tiles require qualifying solid geometry in a cardinal direction and adequate whole-body clearance. Diagonal adjacency alone does not qualify; traversability and reachability remain distinct.
+- Potentially Traversable Space requires Qualifying Geometry in a cardinal direction and adequate whole-body clearance. Diagonal adjacency alone does not qualify; traversability and reachability remain distinct.
 - Eight-direction route connections are allowed, but full path segments must remain supported and cannot cut diagonally through blocked corners.
 - A surface gap cannot be crossed through unsupported space. Existing Auto Step-Over behaviour is prototype-only and is not an exception.
 - Multiple ants may share a tile. Use local avoidance and hybrid separation; temporary friendly overlap is acceptable to prevent deadlock, but avoidance must never push an ant into terrain or unsupported space.
