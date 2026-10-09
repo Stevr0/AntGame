@@ -6,7 +6,7 @@
 
 **Status:** In progress. The user has confirmed floor movement, vertical wall climbing, and resolution of the previously reported corner-transition deadlock in Unity Play Mode. Ceiling/corner route acceptance is still incomplete. Bounded Auto Step-Over is now implemented for one-tile openings and awaits its first Play Mode acceptance pass.
 
-Milestone 1 is explicitly a prototype and regression baseline, not the final player control design. Milestones 2.1B through 2.2A are complete and verified alongside that prototype; Milestone 2.2A passed 117/117 automated tests and all 12 manual collision checks. A Milestone 2.2B whole-capsule prototype passes automated validation, but GDD v3.2 now requires physical clearance to be independent of support/grip and the implementation still requires an old `Supported` centre classification. It must be revised before manual acceptance or completion. Autonomous navigation, Background movement capability, Surface Preparation, skills, colony management and individual task assignment have not been implemented.
+Milestone 1 is explicitly a prototype and regression baseline, not the final player control design. Milestones 2.1B through 2.2A are complete and verified alongside that prototype; Milestone 2.2A passed 117/117 automated tests and all 12 manual collision checks. Milestone 2.2B physical clearance now satisfies GDD v3.2's support-independent contract and passes automated and structural validation, but still needs graphics-enabled manual Scene-view acceptance before completion. Autonomous navigation, Background movement capability, Surface Preparation, skills, colony management and individual task assignment have not been implemented.
 
 ## Repository and architecture
 
@@ -74,11 +74,11 @@ Milestone 1 is explicitly a prototype and regression baseline, not the final pla
 
 - `AntClearanceValidator` is a scene-independent, read-only service that checks a complete rotated capsule directly against authoritative movement-blocking Solid cells. It does not read Tilemaps or collider geometry and therefore cannot return a stale result after a successful world-data mutation.
 - `AntCollisionProfile` carries local capsule size, offset, long axis and optional clearance margin. The initial `OrdinaryAnt` profile matches the unchanged movement-scene ant: its prefab-local 1.2×0.6 capsule is scaled by the authored 0.8×0.5 instance scale to an effective horizontal 0.96×0.3-world-unit body with zero offset.
-- Results currently distinguish Clear, Blocked by terrain, Unsupported centre, Unavailable/unknown world data and invalid query/profile. The tested implementation requires an exposed, Supported centre plus a fully available, non-blocking footprint.
+- Results distinguish Clear, Blocked by terrain, Unavailable world data and invalid query/profile. Clearance does not inspect foreground support, Background movement permissions, grip, grounding, gravity, movement state, connectivity or reachability.
 - Capsule-versus-cell testing uses the exact central segment plus radius against candidate 1×1 axis-aligned cells. Rotation and collider offset are applied mathematically, only the footprint's bounded cell range is queried, exact tangency is permitted within a `0.00001`-unit tolerance, and an optional margin provides conservative separation.
-- This support requirement is no longer the approved physical-clearance contract. GDD v3.2 defines clearance as physical fit only, allowing a falling ant to be Clear in non-grippable exposed space; Background grip, grounding, gravity and voluntary directions move to Milestone 2.2C.
+- A valid capsule is Clear when every touched cell is available and no overlapping Solid Material blocks movement. A known blocking overlap takes precedence over missing data elsewhere in the footprint because it already proves the pose invalid; otherwise any missing touched cell returns Unavailable. Physically fitting open Sky and unprepared shafts are therefore Clear.
 - `AntNavigationPrototype.unity` includes an `Ant Clearance Inspector` with an editable position, orientation and profile, a colour-coded exact capsule outline, a Scene-view position handle, a result label and explicit query button. It creates no gameplay ant, collider or Rigidbody2D.
-- Unity compilation, focused 36/36 clearance tests, the expanded scene validator and the full 153/153 Edit Mode suite pass for the current implementation. Those results remain valid regression evidence but do not prove the revised support-independent requirement. Manual acceptance is deferred until the implementation and tests are reconciled; Milestone 2.2B is not complete.
+- Unity compilation, focused 38/38 clearance tests, the expanded scene validator, the focused 2/2 movement regression and the full 155/155 Edit Mode suite pass. Graphics-enabled Scene-view acceptance remains pending, so Milestone 2.2B is still in progress.
 
 ## Approved future design, not implemented beyond the data foundation
 
@@ -237,10 +237,10 @@ For the Milestone 2.2A terrain-collision slice:
 For the Milestone 2.2B ant-clearance slice:
 
 - Unity compiled the authoritative clearance API, Scene-view inspector and focused tests without C# errors.
-- The focused clearance suite passed 36/36, covering support/occupancy failure reasons, complete-body overlap, four material-flag combinations, horizontal/vertical/intermediate rotation, rotated offset, margin, narrow passages, concave corners, tangency tolerance, all signed chunk boundaries and quadrants, four-chunk footprints, missing target/footprint chunks, live mutations, and scene/physics independence.
+- The corrected focused clearance suite passed 38/38, covering physically clear unsupported Sky, a support-free unprepared shaft, prepared/unprepared Background neutrality, complete-body overlap, four foreground material-flag combinations, blocked-over-unavailable precedence, horizontal/vertical/intermediate rotation, rotated offset, margin, narrow passages, concave corners, tangency tolerance, all signed chunk boundaries and quadrants, four-chunk footprints, missing target/footprint chunks, live mutations, and scene/physics independence.
 - The scene validator passed the authored ordinary-ant 0.96×0.3 effective profile, Clear test pose, and absence of gameplay physics components on the inspector.
-- The complete Edit Mode suite passed 153/153: all 117 existing regression cases plus 36 new clearance cases. Existing movement regression coverage remains 2/2.
-- GDD v3.2 supersedes the tested requirement that physical Clear needs a Supported centre. The implementation and focused tests must first separate physical fit from Background grip/grounding eligibility; manual Scene-view acceptance follows that revision. Milestone 2.2B remains in progress.
+- The complete Edit Mode suite passed 155/155: all 117 pre-clearance regression cases plus 38 clearance cases. The existing movement regression fixture also passed separately at 2/2.
+- Physical clearance now matches GDD v3.2 and is independent of Background grip/grounding eligibility. Manual graphics-enabled Scene-view acceptance remains outstanding; Milestone 2.2B remains in progress until that check is confirmed.
 
 ## Manual Play Mode checklist
 
@@ -278,13 +278,12 @@ For the Milestone 2.2B ant-clearance slice:
 - The follow camera remains unimplemented.
 - World data, material visuals, the classifier and authoritative terrain collision are connected only to the separate developer navigation scene. They are not connected to generation, persistence, pathfinding, autonomous movement, excavation gameplay, or legacy DirtBlocks.
 - The collision projection currently requires an explicit cell, chunk or bounded-region refresh after authoritative Solid mutation; no terrain-change event stream or chunk streaming lifecycle exists yet. Clearance itself reads world data directly and does not share that staleness risk.
-- Static clearance currently rejects a physically fitting but unsupported pose. This conflicts with the approved physical-fit-only contract and must be corrected before 2.2B acceptance.
 - Static clearance does not validate Background permissions, grip, grounding, gravity, a swept movement segment, directional movement edge, route connectivity, Reachable Space, dynamic objects or ant-to-ant separation.
 - Mathematical tangency is permitted within a `0.00001`-unit tolerance; future movement integration may use a small positive profile margin to remain conservative relative to Unity Physics2D contact handling.
 - Background Material movement/grip/gravity properties, Surface Preparation, resource consumption, universal 0–100 skills and inactivity decay above 50 are design-approved but not implemented.
-- Milestone 2.2B needs implementation/test reconciliation and then a graphics-enabled manual Scene-view clearance check before it can be marked complete.
+- Milestone 2.2B needs a graphics-enabled manual Scene-view clearance check before it can be marked complete.
 - Autonomous navigation, multi-ant occupancy, and colony simulation remain later milestones.
 
 ## Recommended next implementation step
 
-Revise the Milestone 2.2B clearance contract, tests and diagnostics so they report only whether the complete capsule physically fits in available, non-blocking authoritative space. A physically clear pose in Sky or an unprepared shaft must not fail merely because it lacks grip or foreground support. Preserve the tested rotation, offset, margin, mutation and signed-chunk behavior, then repeat automated and manual Scene-view acceptance. Do not begin 2.2C Background movement capability, directional connections, Surface Preparation gameplay, skills, pathfinding or autonomous movement as part of that correction.
+Complete the graphics-enabled Milestone 2.2B Scene-view acceptance for clear open Sky, clear shaft space, blocked foreground and unavailable footprint states. After that evidence is confirmed, begin Milestone 2.2C Background movement capability and gravity eligibility as a separate system; directional connections, Surface Preparation gameplay, skills, pathfinding and autonomous movement remain later work.

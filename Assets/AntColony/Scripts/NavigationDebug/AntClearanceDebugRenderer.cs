@@ -146,8 +146,6 @@ namespace AntColony.NavigationDebug
                     return Color.green;
                 case AntClearanceStatus.BlockedByTerrain:
                     return Color.red;
-                case AntClearanceStatus.UnsupportedLocation:
-                    return new Color(0.25f, 0.55f, 1f);
                 case AntClearanceStatus.UnavailableWorldData:
                     return new Color(1f, 0.65f, 0f);
                 default:

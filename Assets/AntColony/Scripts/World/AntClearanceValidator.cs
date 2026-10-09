@@ -15,6 +15,7 @@ namespace AntColony.World
     {
         Clear,
         BlockedByTerrain,
+        [Obsolete("Physical clearance no longer reports navigation support.")]
         UnsupportedLocation,
         UnavailableWorldData,
         InvalidQueryOrProfile
@@ -97,7 +98,6 @@ namespace AntColony.World
             Vector2 bodyCentre,
             Vector2Int centreCell,
             Vector2Int problemCell,
-            WorldNavigationClassification centreClassification,
             int touchedCellCount)
         {
             Status = status;
@@ -105,7 +105,6 @@ namespace AntColony.World
             BodyCentre = bodyCentre;
             CentreCell = centreCell;
             ProblemCell = problemCell;
-            CentreClassification = centreClassification;
             TouchedCellCount = touchedCellCount;
         }
 
@@ -114,7 +113,6 @@ namespace AntColony.World
         public Vector2 BodyCentre { get; }
         public Vector2Int CentreCell { get; }
         public Vector2Int ProblemCell { get; }
-        public WorldNavigationClassification CentreClassification { get; }
         public int TouchedCellCount { get; }
         public bool IsClear => Status == AntClearanceStatus.Clear;
     }
@@ -131,15 +129,11 @@ namespace AntColony.World
         public const float GeometryTolerance = 0.00001f;
 
         private readonly ChunkedWorldData worldData;
-        private readonly WorldNavigationClassifier classifier;
 
         public AntClearanceValidator(ChunkedWorldData worldData)
         {
             this.worldData = worldData ??
                 throw new ArgumentNullException(nameof(worldData));
-            // Construct from the same authority so classification and footprint
-            // occupancy can never accidentally read different worlds.
-            classifier = new WorldNavigationClassifier(worldData);
         }
 
         /// <summary>
@@ -175,45 +169,6 @@ namespace AntColony.World
 
             Vector2Int centreCell =
                 WorldTileCoordinates.WorldPositionToCell(bodyCentre);
-            WorldNavigationClassification centreClassification =
-                classifier.Classify(centreCell);
-
-            if (centreClassification.Occupancy == NavigationCellOccupancy.Unavailable ||
-                centreClassification.Support == NavigationSupportStatus.Unknown)
-            {
-                return Result(
-                    AntClearanceStatus.UnavailableWorldData,
-                    worldPosition,
-                    bodyCentre,
-                    centreCell,
-                    centreCell,
-                    centreClassification,
-                    0);
-            }
-
-            if (centreClassification.Occupancy == NavigationCellOccupancy.Covered)
-            {
-                return Result(
-                    AntClearanceStatus.BlockedByTerrain,
-                    worldPosition,
-                    bodyCentre,
-                    centreCell,
-                    centreCell,
-                    centreClassification,
-                    1);
-            }
-
-            if (centreClassification.Support != NavigationSupportStatus.Supported)
-            {
-                return Result(
-                    AntClearanceStatus.UnsupportedLocation,
-                    worldPosition,
-                    bodyCentre,
-                    centreCell,
-                    centreCell,
-                    centreClassification,
-                    0);
-            }
 
             GetCandidateCellBounds(
                 segmentStart,
@@ -300,8 +255,20 @@ namespace AntColony.World
                 }
             }
 
-            // Incomplete footprint data takes precedence because a result must
-            // never look fully evaluated when one touched chunk is missing.
+            // A known blocking overlap already proves that the pose is invalid,
+            // even when another part of the footprint has not loaded yet.
+            if (foundBlockingOverlap)
+            {
+                return Result(
+                    AntClearanceStatus.BlockedByTerrain,
+                    worldPosition,
+                    bodyCentre,
+                    centreCell,
+                    blockingCell,
+                    touchedCellCount);
+            }
+
+            // A physically clear result requires data for every touched cell.
             if (foundUnavailable)
             {
                 return Result(
@@ -310,19 +277,15 @@ namespace AntColony.World
                     bodyCentre,
                     centreCell,
                     unavailableCell,
-                    centreClassification,
                     touchedCellCount);
             }
 
             return Result(
-                foundBlockingOverlap
-                    ? AntClearanceStatus.BlockedByTerrain
-                    : AntClearanceStatus.Clear,
+                AntClearanceStatus.Clear,
                 worldPosition,
                 bodyCentre,
                 centreCell,
-                foundBlockingOverlap ? blockingCell : centreCell,
-                centreClassification,
+                centreCell,
                 touchedCellCount);
         }
 
@@ -537,7 +500,6 @@ namespace AntColony.World
                 requestedPosition,
                 default,
                 default,
-                default,
                 0);
         }
 
@@ -547,7 +509,6 @@ namespace AntColony.World
             Vector2 bodyCentre,
             Vector2Int centreCell,
             Vector2Int problemCell,
-            WorldNavigationClassification centreClassification,
             int touchedCellCount)
         {
             return new AntClearanceResult(
@@ -556,7 +517,6 @@ namespace AntColony.World
                 bodyCentre,
                 centreCell,
                 problemCell,
-                centreClassification,
                 touchedCellCount);
         }
 

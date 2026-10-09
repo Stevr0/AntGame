@@ -10,6 +10,8 @@ namespace AntColony.Tests.EditMode
     public sealed class AntClearanceValidatorTests
     {
         private const string BackgroundId = "background.clearance-test";
+        private const string PreparedBackgroundId =
+            "background.prepared-clearance-test";
         private const string BlockingSupportingId = "solid.blocking-supporting";
         private const string BlockingOnlyId = "solid.blocking-only";
         private const string SupportOnlyId = "solid.support-only";
@@ -17,6 +19,7 @@ namespace AntColony.Tests.EditMode
 
         private readonly List<Object> temporaryObjects = new();
         private BackgroundTileMaterialDefinition background;
+        private BackgroundTileMaterialDefinition preparedBackground;
         private SolidTileMaterialDefinition blockingSupporting;
         private SolidTileMaterialDefinition blockingOnly;
         private SolidTileMaterialDefinition supportOnly;
@@ -28,6 +31,9 @@ namespace AntColony.Tests.EditMode
         public void SetUp()
         {
             background = CreateDefinition<BackgroundTileMaterialDefinition>(BackgroundId);
+            preparedBackground =
+                CreateDefinition<BackgroundTileMaterialDefinition>(
+                    PreparedBackgroundId);
             blockingSupporting = CreateSolid(
                 BlockingSupportingId,
                 blocksMovement: true,
@@ -46,7 +52,7 @@ namespace AntColony.Tests.EditMode
                 supportsNavigation: false);
             world = new ChunkedWorldData(
                 new WorldMaterialRegistry(
-                    new[] { background },
+                    new[] { background, preparedBackground },
                     new[]
                     {
                         blockingSupporting,
@@ -86,18 +92,15 @@ namespace AntColony.Tests.EditMode
             AntClearanceResult result = Validate(Vector2.zero);
 
             Assert.That(result.Status, Is.EqualTo(AntClearanceStatus.Clear));
-            Assert.That(result.CentreClassification.HasConfirmedSupport, Is.True);
             Assert.That(result.TouchedCellCount, Is.GreaterThan(0));
         }
 
         [Test]
-        public void UnsupportedCentre_IsRejectedBeforeClearanceCanBeClear()
+        public void OpenSkyWithoutForegroundSupport_IsPhysicallyClear()
         {
             AntClearanceResult result = Validate(Vector2.zero);
 
-            Assert.That(
-                result.Status,
-                Is.EqualTo(AntClearanceStatus.UnsupportedLocation));
+            Assert.That(result.Status, Is.EqualTo(AntClearanceStatus.Clear));
         }
 
         [Test]
@@ -108,9 +111,7 @@ namespace AntColony.Tests.EditMode
             AntClearanceResult result = Validate(Vector2.zero);
 
             Assert.That(result.Status, Is.EqualTo(AntClearanceStatus.BlockedByTerrain));
-            Assert.That(
-                result.CentreClassification.Occupancy,
-                Is.EqualTo(NavigationCellOccupancy.Covered));
+            Assert.That(result.ProblemCell, Is.EqualTo(Vector2Int.zero));
         }
 
         [Test]
@@ -127,13 +128,19 @@ namespace AntColony.Tests.EditMode
         }
 
         [Test]
-        public void BackgroundOnlyFootprint_DoesNotBlock()
+        public void PreparedAndUnpreparedBackground_DoNotChangePhysicalClearance()
         {
-            AddSupport(Vector2Int.zero);
+            AntClearanceResult unprepared = Validate(Vector2.zero);
+            Assert.That(
+                world.SetBackgroundMaterial(
+                    Vector2Int.zero,
+                    PreparedBackgroundId),
+                Is.EqualTo(WorldCellMutationResult.Success));
 
-            AntClearanceResult result = Validate(new Vector2(-0.2f, 0f));
+            AntClearanceResult prepared = Validate(Vector2.zero);
 
-            Assert.That(result.Status, Is.EqualTo(AntClearanceStatus.Clear));
+            Assert.That(unprepared.Status, Is.EqualTo(AntClearanceStatus.Clear));
+            Assert.That(prepared.Status, Is.EqualTo(AntClearanceStatus.Clear));
         }
 
         [Test]
@@ -166,11 +173,31 @@ namespace AntColony.Tests.EditMode
         }
 
         [Test]
-        public void Support_UsesSupportsNavigationIndependentlyOfBlocking()
+        public void NavigationSupport_DoesNotChangePhysicalClearance()
         {
+            AntClearanceResult withoutSupport = Validate(Vector2.zero);
             SetSolid(Vector2Int.up, SupportOnlyId);
 
-            AntClearanceResult result = Validate(Vector2.zero);
+            AntClearanceResult withSupport = Validate(Vector2.zero);
+
+            Assert.That(withoutSupport.Status, Is.EqualTo(AntClearanceStatus.Clear));
+            Assert.That(withSupport.Status, Is.EqualTo(AntClearanceStatus.Clear));
+        }
+
+        [Test]
+        public void UnpreparedVerticalShaftWithEnoughRoom_IsPhysicallyClear()
+        {
+            SetSolid(Vector2Int.left, BlockingOnlyId);
+            SetSolid(Vector2Int.right, BlockingOnlyId);
+            var verticalProfile = new AntCollisionProfile(
+                new Vector2(0.3f, 0.96f),
+                Vector2.zero,
+                AntCapsuleAxis.Vertical);
+
+            AntClearanceResult result = validator.Validate(
+                Vector2.zero,
+                0f,
+                verticalProfile);
 
             Assert.That(result.Status, Is.EqualTo(AntClearanceStatus.Clear));
         }
@@ -383,7 +410,6 @@ namespace AntColony.Tests.EditMode
         [Test]
         public void MissingFootprintNeighbour_ReturnsUnavailableWithoutGeneration()
         {
-            SetSolid(new Vector2Int(31, 1), SupportOnlyId);
             int chunkCount = world.ResidentChunkCount;
 
             AntClearanceResult result = Validate(new Vector2(31.2f, 0f));
@@ -392,6 +418,19 @@ namespace AntColony.Tests.EditMode
                 result.Status,
                 Is.EqualTo(AntClearanceStatus.UnavailableWorldData));
             Assert.That(result.ProblemCell.x, Is.EqualTo(32));
+            Assert.That(world.ResidentChunkCount, Is.EqualTo(chunkCount));
+        }
+
+        [Test]
+        public void KnownBlockingOverlap_TakesPrecedenceOverMissingFootprintData()
+        {
+            SetSolid(new Vector2Int(31, 0), BlockingOnlyId);
+            int chunkCount = world.ResidentChunkCount;
+
+            AntClearanceResult result = Validate(new Vector2(31.2f, 0f));
+
+            Assert.That(result.Status, Is.EqualTo(AntClearanceStatus.BlockedByTerrain));
+            Assert.That(result.ProblemCell, Is.EqualTo(new Vector2Int(31, 0)));
             Assert.That(world.ResidentChunkCount, Is.EqualTo(chunkCount));
         }
 

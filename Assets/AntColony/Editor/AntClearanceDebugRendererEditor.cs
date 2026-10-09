@@ -38,9 +38,9 @@ namespace AntColony.EditorTools
                 "Touched Cells",
                 debugRenderer.LastResult.TouchedCellCount.ToString());
             EditorGUILayout.HelpBox(
-                "Green is Clear, red is Blocked, blue is Unsupported, amber is " +
-                "Unavailable/Unknown, and grey is Invalid. This is a static " +
-                "authoritative query, not reachability or swept-path validation.",
+                "Green is Clear, red is Blocked, amber is Unavailable, and grey " +
+                "is Invalid. This physical-fit query does not evaluate support, " +
+                "grip, grounding, gravity, reachability, or a swept path.",
                 MessageType.Info);
         }
 
