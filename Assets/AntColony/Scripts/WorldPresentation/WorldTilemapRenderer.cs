@@ -308,9 +308,21 @@ namespace AntColony.WorldPresentation
         {
             tilemap.SetTile(tilemapCell, tile);
 
-            // SetTile updates Tilemap data immediately, but an explicit refresh
-            // also invalidates the rendered chunk when two materials share the
-            // same source Sprite and differ only by their Tile tint.
+            if (tile is Tile colouredTile)
+            {
+                // Unity preserves a cell's previous TileData colour when a Tile
+                // is replaced. These development tiles share one white Sprite,
+                // so that stale cell colour otherwise hides the new asset tint.
+                // Temporarily unlock only colour, write the authored tint, then
+                // restore the Tile's effective flags (normally LockTransform).
+                TileFlags flags = tilemap.GetTileFlags(tilemapCell);
+                tilemap.SetTileFlags(tilemapCell, flags & ~TileFlags.LockColor);
+                tilemap.SetColor(tilemapCell, colouredTile.color);
+                tilemap.SetTileFlags(tilemapCell, flags);
+            }
+
+            // Rebuild the affected render chunk after both asset and colour are
+            // current. RefreshAllTiles is intentionally unnecessary here.
             tilemap.RefreshTile(tilemapCell);
         }
 

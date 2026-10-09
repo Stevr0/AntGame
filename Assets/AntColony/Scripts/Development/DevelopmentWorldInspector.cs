@@ -21,6 +21,7 @@ namespace AntColony.Development
 
         private readonly StringBuilder textBuilder = new(512);
         private string statusMessage = "Click a world cell to inspect it.";
+        private bool backgroundOnlyVisuals;
 
         public Vector2Int SelectedCell => selectedCell;
 
@@ -77,6 +78,12 @@ namespace AntColony.Development
             {
                 TogglePreparedBackground();
             }
+            if (GUILayout.Button(backgroundOnlyVisuals
+                    ? "Restore Foreground Visuals"
+                    : "Isolate Background Visuals"))
+            {
+                ToggleBackgroundIsolation();
+            }
             if (GUILayout.Button("Regenerate Seeded World"))
             {
                 statusMessage = worldHost.RebuildWorld()
@@ -126,6 +133,7 @@ namespace AntColony.Development
             textBuilder.Append("Rendered Background tile: ")
                 .Append(renderedBackground != null ? renderedBackground.name : "None")
                 .AppendLine();
+            AppendRenderingDiagnostics(textBuilder, tilemapCell, renderedBackground);
             textBuilder.Append("Background: ")
                 .Append(GetBackgroundName(worldData, cell.BackgroundMaterialId))
                 .AppendLine();
@@ -181,6 +189,125 @@ namespace AntColony.Development
                     ? $"Background replaced and refreshed at Tilemap cell " +
                         $"{WorldTilemapRenderer.WorldCellToTilemapCell(selectedCell)}."
                     : "Background toggle requires exposed underground space.";
+        }
+
+        private void ToggleBackgroundIsolation()
+        {
+            if (worldHost == null || worldHost.TilemapRenderer == null)
+            {
+                statusMessage = "Background isolation unavailable: renderer is missing.";
+                return;
+            }
+
+            backgroundOnlyVisuals = !backgroundOnlyVisuals;
+            worldHost.TilemapRenderer.SetBackgroundVisible(true);
+            worldHost.TilemapRenderer.SetForegroundVisible(!backgroundOnlyVisuals);
+            statusMessage = backgroundOnlyVisuals
+                ? "Background isolated; foreground visuals are hidden."
+                : "Foreground visuals restored.";
+        }
+
+        private void AppendRenderingDiagnostics(
+            StringBuilder builder,
+            Vector3Int tilemapCell,
+            TileBase renderedBackground)
+        {
+            WorldTilemapRenderer renderer = worldHost.TilemapRenderer;
+            if (renderer == null || renderer.BackgroundTilemap == null)
+            {
+                builder.AppendLine("Background renderer: unavailable");
+                return;
+            }
+
+            Tilemap tilemap = renderer.BackgroundTilemap;
+            TilemapRenderer tilemapRenderer = tilemap.GetComponent<TilemapRenderer>();
+            Tile tile = renderedBackground as Tile;
+            Color tileColour = tile != null ? tile.color : Color.white;
+            Color cellColour = tilemap.GetColor(tilemapCell);
+            Color tilemapColour = tilemap.color;
+            Color spritePixel = TryGetSpritePixel(tile, out Color sampledPixel)
+                ? sampledPixel
+                : Color.white;
+            Color expectedColour = MultiplyColours(
+                cellColour,
+                tilemapColour,
+                spritePixel);
+
+            builder.Append("Tile asset colour: ")
+                .Append(ColorUtility.ToHtmlStringRGBA(tileColour))
+                .AppendLine();
+            builder.Append("Tilemap cell colour: ")
+                .Append(ColorUtility.ToHtmlStringRGBA(cellColour))
+                .AppendLine();
+            builder.Append("Tilemap component colour: ")
+                .Append(ColorUtility.ToHtmlStringRGBA(tilemapColour))
+                .AppendLine();
+            builder.Append("Sprite pixel: ")
+                .Append(ColorUtility.ToHtmlStringRGBA(spritePixel))
+                .Append("   Expected: ")
+                .Append(ColorUtility.ToHtmlStringRGBA(expectedColour))
+                .AppendLine();
+            builder.Append("Tile asset flags: ")
+                .Append(tile != null ? tile.flags.ToString() : "Unavailable")
+                .AppendLine();
+            builder.Append("Tilemap cell flags: ")
+                .Append(tilemap.GetTileFlags(tilemapCell))
+                .AppendLine();
+
+            Material material = tilemapRenderer != null
+                ? tilemapRenderer.sharedMaterial
+                : null;
+            builder.Append("Renderer material/shader: ")
+                .Append(material != null ? material.name : "None")
+                .Append(" / ")
+                .Append(material != null && material.shader != null
+                    ? material.shader.name
+                    : "None")
+                .AppendLine();
+            builder.Append("Sorting: ")
+                .Append(tilemapRenderer != null
+                    ? tilemapRenderer.sortingLayerName
+                    : "Unavailable")
+                .Append(" / ")
+                .Append(tilemapRenderer != null
+                    ? tilemapRenderer.sortingOrder
+                    : 0)
+                .AppendLine();
+            builder.Append("Background active/enabled: ")
+                .Append(tilemap.gameObject.activeInHierarchy)
+                .Append(" / ")
+                .Append(tilemapRenderer != null && tilemapRenderer.enabled)
+                .AppendLine();
+        }
+
+        private static bool TryGetSpritePixel(Tile tile, out Color pixel)
+        {
+            if (tile != null && tile.sprite != null &&
+                tile.sprite.texture != null && tile.sprite.texture.isReadable)
+            {
+                Rect textureRect = tile.sprite.textureRect;
+                int x = Mathf.FloorToInt(textureRect.center.x);
+                int y = Mathf.FloorToInt(textureRect.center.y);
+                pixel = tile.sprite.texture.GetPixel(x, y);
+                return true;
+            }
+
+            pixel = Color.white;
+            return false;
+        }
+
+        private static Color MultiplyColours(params Color[] colours)
+        {
+            Color result = Color.white;
+            foreach (Color colour in colours)
+            {
+                result.r *= colour.r;
+                result.g *= colour.g;
+                result.b *= colour.b;
+                result.a *= colour.a;
+            }
+
+            return result;
         }
 
         private static string GetBackgroundName(
