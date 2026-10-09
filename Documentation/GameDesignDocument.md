@@ -158,7 +158,7 @@ The current `AntSurfaceMotor` provides manually tested surface movement, corner 
 
 The player marks one or more excavatable Solid Tiles for removal using a dig-designation tool. Excavation workers select reachable designations beside Exposed Space; inaccessible Solid Tiles remain queued until prior digging creates a valid route.
 
-For the first soil implementation, each excavated soil Solid Tile yields one loose-soil unit. Other materials may later define different yields. The ant that dug it collects that unit and delivers it to a fixed deposit location at the surface before taking another order. Soil piles are visible but initially non-blocking.
+For the first playable resource model, excavating one resource-bearing foreground Solid Tile produces one transportable item representing that material (for example Soil or Stone). The excavating ant places the item into its personal inventory rather than destroying or automatically depositing it. Each item occupies one slot and does not stack. An excavation that would produce an item must not complete unless the resulting item can be safely accommodated; cargo must never silently disappear. The ant can subsequently deliver the item to storage, place it, or supply it to a construction or Surface Preparation job. An initial known deposit point may be used as a simple storage destination; player-designated storage zones are future work.
 
 When excavation work completes:
 
@@ -177,8 +177,10 @@ Excavation never removes or destroys a Background Tile and never automatically m
 | Access | Workers can only dig Solid Tiles with a reachable exposed face. |
 | Job ownership | A Solid Tile excavation job is reserved by at most one worker at a time. |
 | Excavation | Work progresses over time, potentially modified by excavation skill later. |
-| Hauling | Each removed soil Solid Tile generates one soil unit; one delivery per job in the first prototype. |
-| Deposit | Use one known surface deposit point initially; player-defined zones later. |
+| Excavated cargo | One resource-bearing Solid Tile yields one item, added to the excavating ant's inventory after a valid completion; no stacking. |
+| Hauling | Ants transport carried tile-derived resources or objects to storage or to applicable work sites. |
+| Deposit | A known surface storage point is acceptable initially; player-designated zones later. |
+| Full inventory | Do not complete an item-producing excavation without a free slot or a separately approved safe transfer; redirect to unloading first. |
 | Failure recovery | If path or dig location becomes invalid, release reservation and retry another valid order. |
 
 ### 5.1 Surface Preparation
@@ -194,7 +196,7 @@ Excavation never removes or destroys a Background Tile and never automatically m
 
 Vertical routes must be prepared progressively. A worker can stand at an accessible base, prepare the first reachable section, climb only after it completes, then work on the next section from a newly valid nearby position. The system must never require a worker to occupy an inaccessible target merely to prepare it.
 
-Future logistics may add resource reservation, hauling to the work area, work over time and material consumption. These are approved directions, not implemented systems.
+Stone obtained by excavating a Stone Solid Tile may be carried by an ant and embedded into an exposed Background Tile during Surface Preparation. Such use transfers or consumes the Stone item as part of a valid, completed work transaction; interrupted work must retain or account for materials without silent loss. Resource reservation, delivery, quantities and work times are future implementation details, not yet implemented systems.
 
 ## 6. Ants: individuality, roles and needs
 
@@ -225,7 +227,26 @@ Skills improve through meaningful successful work rather than conventional level
 
 Gains may slow as a skill approaches 100. Higher skill may reduce completion time or waste, or improve productivity, effectiveness or consistency, but each skill uses only effects relevant to its task. Exact gain formulas, success criteria, difficulty modifiers and performance curves remain balancing decisions.
 
-### 8.1 Inactivity decay above 50
+### 8.1 Personal inventory and Hauling capacity
+
+Every ant begins with **one personal inventory slot**, and the number of slots is determined by its **Hauling skill (0–100)**. Gain one additional slot at Hauling skill thresholds **20, 40, 60 and 80**, to a maximum of **five slots**. Skill 100 does not award a sixth slot.
+
+| Hauling skill | Available slots |
+| --- | ---: |
+| 0–19 | 1 |
+| 20–39 | 2 |
+| 40–59 | 3 |
+| 60–79 | 4 |
+| 80–100 | 5 |
+
+- Each slot holds exactly one tile-derived resource or transportable object; **items do not stack** in the initial model.
+- Excavated items remain in the excavating ant's inventory until stored, placed, delivered for use or otherwise transferred by an approved interaction.
+- Resource transport, storage, placement and consumption must conserve items. Background preparation may use carried or delivered Stone to create a completed grippable background.
+- If Hauling skill decays across a capacity threshold, carried items are **never destroyed**. Existing cargo is temporarily retained even if occupied slots exceed the new effective capacity; the ant cannot collect additional items until occupancy falls below its current capacity.
+- The one-item-per-slot rule also applies to transportable objects in the first playable colony. Larger-object capacity rules are deliberately deferred.
+- Hauling slots, cargo transfer, stockpiles and construction consumption are **approved design**, not implemented systems.
+
+### 8.2 Inactivity decay above 50
 
 - Each skill tracks successful use independently for each ant.
 - Skills at or below 50 never decay through inactivity.
@@ -234,7 +255,7 @@ Gains may slow as a skill approaches 100. Higher skill may reduce completion tim
 - Decay never produces a negative value or reduces a skill below 50.
 - A configurable inactivity grace period should prevent ordinary rest, eating or short task changes from causing decay.
 
-The exact grace period and decay rate are not yet defined. For example, an ant with Excavation 85, Surface Preparation 72, Hauling 43 and Foraging 18 will gradually retain 50 in the two unused high skills, while Hauling and Foraging remain unchanged.
+The exact grace period and decay rate are not yet defined. For example, an ant with Excavation 85, Surface Preparation 72, Hauling 43 and Foraging 18 will gradually retain 50 in the two unused high skills, while Hauling and Foraging remain unchanged. Hauling decay can reduce future carrying capacity, but must never delete cargo already held.
 
 ## 9. Food, water and productivity
 
@@ -348,6 +369,7 @@ Removing a foreground Solid Tile exposes its unchanged Background Tile. This can
 - What production clearance margin and swept-body test are accurate enough for corners and non-square geometry without becoming too costly?
 - What Background Material data best represents allowed directions, grip strength and gravity behavior without hardcoding individual materials?
 - What Surface Preparation resource quantities, work duration, quality effects and nearby work-position rules produce useful progression?
+- What stockpile, transfer and full-inventory recovery behaviour should be prioritised in the first playable resource loop?
 - What skill gain curve, successful-work definition, inactivity grace period and decay rate preserve specialisation without excessive maintenance?
 - Which congestion cost and yielding policy best balances task urgency, carrying status, danger and fairness?
 - Which qualifying constructed objects should provide navigation support in the first playable slice?
