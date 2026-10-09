@@ -6,7 +6,7 @@
 
 **Status:** In progress. The user has confirmed floor movement, vertical wall climbing, and resolution of the previously reported corner-transition deadlock in Unity Play Mode. Ceiling/corner route acceptance is still incomplete. Bounded Auto Step-Over is now implemented for one-tile openings and awaits its first Play Mode acceptance pass.
 
-Milestone 1 is explicitly a prototype and regression baseline, not the final player control design. Milestones 2.1B through 2.2A are complete and verified alongside that prototype; Milestone 2.2A passed 117/117 automated tests and all 12 manual collision checks. Milestone 2.2B physical clearance now satisfies GDD v3.2's support-independent contract and passes automated and structural validation, but still needs graphics-enabled manual Scene-view acceptance before completion. Autonomous navigation, Background movement capability, Surface Preparation, skills, colony management and individual task assignment have not been implemented.
+Milestone 1 is explicitly a prototype and regression baseline, not the final player control design. Milestones 2.1B through 2.2B are complete and verified alongside that prototype; Milestone 2.2B passed 155/155 automated tests and all 9 manual clearance checks. Milestone 2.2C Background movement capability and gravity eligibility is implemented and automated, but still needs graphics-enabled manual Scene-view acceptance. Autonomous navigation, Surface Preparation gameplay, skills, colony management and individual task assignment have not been implemented.
 
 ## Repository and architecture
 
@@ -78,7 +78,18 @@ Milestone 1 is explicitly a prototype and regression baseline, not the final pla
 - Capsule-versus-cell testing uses the exact central segment plus radius against candidate 1×1 axis-aligned cells. Rotation and collider offset are applied mathematically, only the footprint's bounded cell range is queried, exact tangency is permitted within a `0.00001`-unit tolerance, and an optional margin provides conservative separation.
 - A valid capsule is Clear when every touched cell is available and no overlapping Solid Material blocks movement. A known blocking overlap takes precedence over missing data elsewhere in the footprint because it already proves the pose invalid; otherwise any missing touched cell returns Unavailable. Physically fitting open Sky and unprepared shafts are therefore Clear.
 - `AntNavigationPrototype.unity` includes an `Ant Clearance Inspector` with an editable position, orientation and profile, a colour-coded exact capsule outline, a Scene-view position handle, a result label and explicit query button. It creates no gameplay ant, collider or Rigidbody2D.
-- Unity compilation, focused 38/38 clearance tests, the expanded scene validator, the focused 2/2 movement regression and the full 155/155 Edit Mode suite pass. Graphics-enabled Scene-view acceptance remains pending, so Milestone 2.2B is still in progress.
+- Unity compilation, focused 38/38 clearance tests, the expanded scene validator, the focused 2/2 movement regression and the full 155/155 Edit Mode suite passed. The user subsequently confirmed all 9 graphics-enabled manual clearance checks, so Milestone 2.2B is complete.
+
+### Milestone 2.2C Background movement capability and gravity eligibility
+
+- `BackgroundTileMaterialDefinition` now stores explicit horizontal, upward and downward voluntary movement permissions, intrinsic climbing grip, and whether gravity applies when unsupported.
+- Authored development materials define Sky, Unprepared Earth and Unprepared Stone as grounded-horizontal-only, non-gripping and gravity-eligible. Prepared Grippable Background enables horizontal/up/down movement, supplies intrinsic grip and suppresses gravity while gripping.
+- `AntMovementCapabilityEvaluator` is a read-only, scene-independent service. It composes the unchanged `AntClearanceValidator`, the centre Background Material and an authoritative ground-contact query into explicit `Grounded`, `Gripping` or `Falling` eligibility plus detailed permissions and failure diagnostics.
+- Ground support uses the full rotated capsule's lowest extent and a `0.02`-world-unit contact tolerance against top faces of registered Solid Materials that both block movement and support navigation. Side walls, ceilings, non-blocking solids and Background Tiles do not become floor support.
+- Grounded unprepared space permits horizontal walking only. Unsupported unprepared space is Falling with gravity eligibility but no voluntary downward movement. Prepared grip enables its configured voluntary directions and suppresses falling without changing physical clearance.
+- The existing `SetBackgroundMaterial` mutation safely demonstrates Unprepared Earth to Prepared replacement without changing foreground occupancy, creating chunks or introducing Surface Preparation gameplay. `WorldTilemapRenderer.RefreshCell` explicitly refreshes its presentation.
+- `AntNavigationPrototype.unity` includes one `Ant Movement Capability Inspector` at the unsupported chamber centre. It reports Background ID, clearance, ground, grip, direction permissions, gravity and suggested state; its explicit toggle button replaces the selected Background, refreshes the visual cell and requeries.
+- Focused capability tests pass 37/37. The expanded structural scene validator, focused 2/2 legacy movement regression and complete 192/192 Edit Mode suite pass. Graphics-enabled manual Scene-view acceptance remains pending, so Milestone 2.2C is in progress rather than complete.
 
 ## Approved future design, not implemented beyond the data foundation
 
@@ -92,6 +103,7 @@ Milestone 1 is explicitly a prototype and regression baseline, not the final pla
 - Navigation connections may be directional; diagonal corner-cutting through blocking geometry remains invalid.
 - Every ant starts every ordinary skill at 0, can perform ordinary tasks without a specialist gate, and improves from successful work on a 0–100 scale. Roles remain preferences and priorities.
 - Independently tracked skills above 50 slowly decay after inactivity and stop at exactly 50; skills at or below 50 do not decay through inactivity.
+- The proposed carrying system remains future work: one initial carrying slot plus one slot per 20 Hauling skill, capped at five slots, with one item per slot.
 - Multiple ants may share a tile and use hybrid separation, local avoidance and bounded recovery rather than universal one-ant-per-tile occupancy.
 - Friendly, neutral and hostile colonies share the same terrain navigation model.
 - The proposed architecture separates world tile data, terrain/excavation and preparation changes, physical clearance, Background movement capability, directional navigation, colony task decisions, per-ant route following, continuous movement, local avoidance and authoritative collision.
@@ -240,7 +252,27 @@ For the Milestone 2.2B ant-clearance slice:
 - The corrected focused clearance suite passed 38/38, covering physically clear unsupported Sky, a support-free unprepared shaft, prepared/unprepared Background neutrality, complete-body overlap, four foreground material-flag combinations, blocked-over-unavailable precedence, horizontal/vertical/intermediate rotation, rotated offset, margin, narrow passages, concave corners, tangency tolerance, all signed chunk boundaries and quadrants, four-chunk footprints, missing target/footprint chunks, live mutations, and scene/physics independence.
 - The scene validator passed the authored ordinary-ant 0.96×0.3 effective profile, Clear test pose, and absence of gameplay physics components on the inspector.
 - The complete Edit Mode suite passed 155/155: all 117 pre-clearance regression cases plus 38 clearance cases. The existing movement regression fixture also passed separately at 2/2.
-- Physical clearance now matches GDD v3.2 and is independent of Background grip/grounding eligibility. Manual graphics-enabled Scene-view acceptance remains outstanding; Milestone 2.2B remains in progress until that check is confirmed.
+- Physical clearance now matches GDD v3.2 and is independent of Background grip/grounding eligibility. The user confirmed all 9 graphics-enabled manual clearance checks; Milestone 2.2B is complete.
+
+For the Milestone 2.2C movement-capability slice:
+
+- Unity compiled the Background properties, movement-capability evaluator, debug inspector, scene authoring and focused tests without C# errors or warnings.
+- The focused capability suite passed 37/37, covering all four Background configurations, floor-only grounding, wall/ceiling/non-blocking rejection, grounded walking, prepared grip, unsupported falling, voluntary-versus-gravity descent, clearance separation, controlled Background replacement, signed chunk boundaries and all quadrants, unavailable data and scene/physics independence.
+- The scene validator passed the four authored Background definitions, capability inspector, Falling-to-Gripping-to-Falling replacement round trip, explicit Tilemap refresh, unchanged classifier examples and absence of extra physics components.
+- The complete Edit Mode suite passed 192/192, and the existing movement regression fixture passed separately at 2/2.
+- Manual graphics-enabled Scene-view checks remain pending, so Milestone 2.2C is implemented and automated but not complete.
+
+### Milestone 2.2C manual Scene-view checklist
+
+1. Open `AntNavigationPrototype.unity`, select `Ant Movement Capability Inspector`, and confirm the default chamber-centre result is physically Clear, ungrounded, non-gripping and Falling.
+2. Click `Toggle Prepared Background, Refresh, and Requery`; confirm the selected cell changes visual, reports the prepared material ID, enables horizontal/up/down movement, reports grip and changes to Gripping with gravity disabled.
+3. Toggle again; confirm the original unprepared visual and Falling result return immediately.
+4. Move the handle to a clearance-valid pose exactly `0.15` units above a floor top; confirm Grounded and horizontal-only voluntary movement.
+5. Place the handle beside a wall and below a ceiling without a floor; confirm neither produces Grounded.
+6. Place the capsule over blocking foreground; confirm `BlockedByTerrain` and no valid movement state.
+7. Move the handle into a missing chunk or across a missing footprint boundary; confirm an explicit unavailable result rather than Falling or Gripping.
+8. Confirm the existing navigation-classification overlay does not change when only Background preparation changes.
+9. Confirm the Console remains clean and the original `AntMovementPrototype` movement still behaves unchanged.
 
 ## Manual Play Mode checklist
 
@@ -280,10 +312,10 @@ For the Milestone 2.2B ant-clearance slice:
 - The collision projection currently requires an explicit cell, chunk or bounded-region refresh after authoritative Solid mutation; no terrain-change event stream or chunk streaming lifecycle exists yet. Clearance itself reads world data directly and does not share that staleness risk.
 - Static clearance does not validate Background permissions, grip, grounding, gravity, a swept movement segment, directional movement edge, route connectivity, Reachable Space, dynamic objects or ant-to-ant separation.
 - Mathematical tangency is permitted within a `0.00001`-unit tolerance; future movement integration may use a small positive profile margin to remain conservative relative to Unity Physics2D contact handling.
-- Background Material movement/grip/gravity properties, Surface Preparation, resource consumption, universal 0–100 skills and inactivity decay above 50 are design-approved but not implemented.
-- Milestone 2.2B needs a graphics-enabled manual Scene-view clearance check before it can be marked complete.
+- Background Material movement/grip/gravity properties are implemented as read-only capability data. Actual gravity forces, movement execution, Surface Preparation jobs, resource consumption, universal 0–100 skills and inactivity decay above 50 are not implemented.
+- Milestone 2.2C needs graphics-enabled manual Scene-view acceptance before it can be marked complete.
 - Autonomous navigation, multi-ant occupancy, and colony simulation remain later milestones.
 
 ## Recommended next implementation step
 
-Complete the graphics-enabled Milestone 2.2B Scene-view acceptance for clear open Sky, clear shaft space, blocked foreground and unavailable footprint states. After that evidence is confirmed, begin Milestone 2.2C Background movement capability and gravity eligibility as a separate system; directional connections, Surface Preparation gameplay, skills, pathfinding and autonomous movement remain later work.
+Complete the graphics-enabled Milestone 2.2C Scene-view checklist for Grounded, Gripping, Falling, blocked and unavailable states plus the explicit Background replacement round trip. Do not begin 2.2D directional connections until that acceptance is confirmed; Surface Preparation gameplay, skills, pathfinding and autonomous movement remain later work.

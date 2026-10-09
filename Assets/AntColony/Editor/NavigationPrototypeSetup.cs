@@ -26,8 +26,14 @@ namespace AntColony.EditorTools
             MaterialFolder + "/NavigationOverlay.mat";
         private const string WorldTileFolder =
             "Assets/AntColony/Art/WorldTiles";
-        private const string BackgroundTilePath =
-            WorldTileFolder + "/Background_Default.asset";
+        private const string SkyBackgroundTilePath =
+            WorldTileFolder + "/Background_Sky.asset";
+        private const string EarthBackgroundTilePath =
+            WorldTileFolder + "/Background_UnpreparedEarth.asset";
+        private const string StoneBackgroundTilePath =
+            WorldTileFolder + "/Background_UnpreparedStone.asset";
+        private const string PreparedBackgroundTilePath =
+            WorldTileFolder + "/Background_PreparedGrippable.asset";
         private const string SolidTilePath =
             WorldTileFolder + "/Solid_Soil.asset";
         private const string SupportOnlyTilePath =
@@ -38,8 +44,14 @@ namespace AntColony.EditorTools
             WorldTileFolder + "/BlockingTerrainCollision.asset";
         private const string PlaceholderSpritePath =
             "Assets/AntColony/Art/Placeholder/SoilPrototype.asset";
-        private const string BackgroundMaterialPath =
-            "Assets/AntColony/Data/WorldMaterials/Background_Default.asset";
+        private const string SkyBackgroundMaterialPath =
+            "Assets/AntColony/Data/WorldMaterials/Background_Sky.asset";
+        private const string EarthBackgroundMaterialPath =
+            "Assets/AntColony/Data/WorldMaterials/Background_UnpreparedEarth.asset";
+        private const string StoneBackgroundMaterialPath =
+            "Assets/AntColony/Data/WorldMaterials/Background_UnpreparedStone.asset";
+        private const string PreparedBackgroundMaterialPath =
+            "Assets/AntColony/Data/WorldMaterials/Background_PreparedGrippable.asset";
         private const string SolidMaterialPath =
             "Assets/AntColony/Data/WorldMaterials/Solid_Soil.asset";
         private const string SupportOnlyMaterialPath =
@@ -64,13 +76,9 @@ namespace AntColony.EditorTools
             // Load authored assets after replacing the untitled batch scene.
             // Loading first would allow NewSceneMode.Single to unload them before
             // their references are serialized onto the new scene components.
-            BackgroundTileMaterialDefinition background =
-                AssetDatabase.LoadAssetAtPath<BackgroundTileMaterialDefinition>(
-                    BackgroundMaterialPath);
             SolidTileMaterialDefinition solid =
                 AssetDatabase.LoadAssetAtPath<SolidTileMaterialDefinition>(
                     SolidMaterialPath);
-            Require(background != null, "Default Background material asset is missing.");
             Require(solid != null, "Soil Solid material asset is missing.");
 
             Material overlayMaterial = GetOrCreateOverlayMaterial();
@@ -79,10 +87,22 @@ namespace AntColony.EditorTools
                 .OfType<Sprite>()
                 .FirstOrDefault();
             Require(placeholderSprite != null, "The placeholder soil Sprite is missing.");
-            Tile backgroundTile = GetOrCreateTile(
-                BackgroundTilePath,
+            Tile skyBackgroundTile = GetOrCreateTile(
+                SkyBackgroundTilePath,
+                placeholderSprite,
+                new Color(0.12f, 0.18f, 0.28f, 1f));
+            Tile earthBackgroundTile = GetOrCreateTile(
+                EarthBackgroundTilePath,
                 placeholderSprite,
                 new Color(0.24f, 0.19f, 0.16f, 1f));
+            Tile stoneBackgroundTile = GetOrCreateTile(
+                StoneBackgroundTilePath,
+                placeholderSprite,
+                new Color(0.28f, 0.29f, 0.32f, 1f));
+            Tile preparedBackgroundTile = GetOrCreateTile(
+                PreparedBackgroundTilePath,
+                placeholderSprite,
+                new Color(0.17f, 0.42f, 0.30f, 1f));
             Tile solidTile = GetOrCreateTile(
                 SolidTilePath,
                 placeholderSprite,
@@ -103,8 +123,51 @@ namespace AntColony.EditorTools
                 null,
                 Color.clear,
                 Tile.ColliderType.Grid);
-            AssignVisualTile(background, backgroundTile);
             AssignVisualTile(solid, solidTile);
+            BackgroundTileMaterialDefinition skyBackground =
+                GetOrCreateBackgroundMaterial(
+                    SkyBackgroundMaterialPath,
+                    "background.sky",
+                    "Sky",
+                    skyBackgroundTile,
+                    true,
+                    false,
+                    false,
+                    false,
+                    true);
+            BackgroundTileMaterialDefinition earthBackground =
+                GetOrCreateBackgroundMaterial(
+                    EarthBackgroundMaterialPath,
+                    "background.earth.unprepared",
+                    "Unprepared Earth",
+                    earthBackgroundTile,
+                    true,
+                    false,
+                    false,
+                    false,
+                    true);
+            BackgroundTileMaterialDefinition stoneBackground =
+                GetOrCreateBackgroundMaterial(
+                    StoneBackgroundMaterialPath,
+                    "background.stone.unprepared",
+                    "Unprepared Stone",
+                    stoneBackgroundTile,
+                    true,
+                    false,
+                    false,
+                    false,
+                    true);
+            BackgroundTileMaterialDefinition preparedBackground =
+                GetOrCreateBackgroundMaterial(
+                    PreparedBackgroundMaterialPath,
+                    "background.prepared.grippable",
+                    "Prepared Grippable Background",
+                    preparedBackgroundTile,
+                    true,
+                    true,
+                    true,
+                    true,
+                    false);
             SolidTileMaterialDefinition supportOnlyMaterial =
                 GetOrCreateSolidMaterial(
                     SupportOnlyMaterialPath,
@@ -133,7 +196,10 @@ namespace AntColony.EditorTools
                 hostObject.GetComponent<NavigationTestWorldHost>();
             ConfigureHost(
                 host,
-                background,
+                earthBackground,
+                skyBackground,
+                stoneBackground,
+                preparedBackground,
                 solid,
                 supportOnlyMaterial,
                 blockingOnlyMaterial);
@@ -194,6 +260,16 @@ namespace AntColony.EditorTools
                 AntCollisionProfile.OrdinaryAnt,
                 0f);
 
+            GameObject capabilityObject = new GameObject(
+                "Ant Movement Capability Inspector",
+                typeof(AntMovementCapabilityDebugRenderer));
+            capabilityObject.transform.SetParent(sceneRoot.transform, false);
+            capabilityObject.GetComponent<AntMovementCapabilityDebugRenderer>().Configure(
+                host,
+                NavigationTestWorldHost.BackgroundMutationCell,
+                AntCollisionProfile.OrdinaryAnt,
+                0f);
+
             GameObject cameraObject = new GameObject(
                 "Main Camera",
                 typeof(Camera),
@@ -227,7 +303,7 @@ namespace AntColony.EditorTools
                 "Created AntNavigationPrototype with an authoritative eight-chunk " +
                 "fixture, two visual Tilemaps, one blocking-only collision Tilemap, " +
                 "one batched navigation overlay, and one ordinary-ant clearance " +
-                "inspector.");
+                "inspector, and one Background movement-capability inspector.");
         }
 
         /// <summary>Command-line entry point used for repeatable scene authoring.</summary>
@@ -244,9 +320,18 @@ namespace AntColony.EditorTools
             Scene scene = openedForValidation
                 ? EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Additive)
                 : existingScene;
-            BackgroundTileMaterialDefinition background =
+            BackgroundTileMaterialDefinition skyBackground =
                 AssetDatabase.LoadAssetAtPath<BackgroundTileMaterialDefinition>(
-                    BackgroundMaterialPath);
+                    SkyBackgroundMaterialPath);
+            BackgroundTileMaterialDefinition earthBackground =
+                AssetDatabase.LoadAssetAtPath<BackgroundTileMaterialDefinition>(
+                    EarthBackgroundMaterialPath);
+            BackgroundTileMaterialDefinition stoneBackground =
+                AssetDatabase.LoadAssetAtPath<BackgroundTileMaterialDefinition>(
+                    StoneBackgroundMaterialPath);
+            BackgroundTileMaterialDefinition preparedBackground =
+                AssetDatabase.LoadAssetAtPath<BackgroundTileMaterialDefinition>(
+                    PreparedBackgroundMaterialPath);
             SolidTileMaterialDefinition solid =
                 AssetDatabase.LoadAssetAtPath<SolidTileMaterialDefinition>(
                     SolidMaterialPath);
@@ -260,7 +345,8 @@ namespace AntColony.EditorTools
 
             try
             {
-                Require(background != null && solid != null &&
+                Require(skyBackground != null && earthBackground != null &&
+                    stoneBackground != null && preparedBackground != null && solid != null &&
                     supportOnly != null && blockingOnly != null,
                     "Required world material definitions are missing.");
                 Require(collisionTile != null,
@@ -270,6 +356,8 @@ namespace AntColony.EditorTools
                     FindInScene<NavigationDebugRenderer>(scene);
                 AntClearanceDebugRenderer[] clearanceRenderers =
                     FindInScene<AntClearanceDebugRenderer>(scene);
+                AntMovementCapabilityDebugRenderer[] capabilityRenderers =
+                    FindInScene<AntMovementCapabilityDebugRenderer>(scene);
                 WorldTilemapRenderer[] tilemapRenderers =
                     FindInScene<WorldTilemapRenderer>(scene);
                 WorldTerrainCollisionRenderer[] collisionRenderers =
@@ -279,6 +367,8 @@ namespace AntColony.EditorTools
                 Require(renderers.Length == 1, "Scene must contain exactly one debug renderer.");
                 Require(clearanceRenderers.Length == 1,
                     "Scene must contain exactly one ant clearance inspector.");
+                Require(capabilityRenderers.Length == 1,
+                    "Scene must contain exactly one movement-capability inspector.");
                 Require(tilemapRenderers.Length == 1,
                     "Scene must contain exactly one world Tilemap renderer.");
                 Require(collisionRenderers.Length == 1,
@@ -299,6 +389,8 @@ namespace AntColony.EditorTools
                 NavigationTestWorldHost host = hosts[0];
                 NavigationDebugRenderer renderer = renderers[0];
                 AntClearanceDebugRenderer clearanceRenderer = clearanceRenderers[0];
+                AntMovementCapabilityDebugRenderer capabilityRenderer =
+                    capabilityRenderers[0];
                 WorldTilemapRenderer tilemapRenderer = tilemapRenderers[0];
                 WorldTerrainCollisionRenderer collisionRenderer =
                     collisionRenderers[0];
@@ -319,6 +411,15 @@ namespace AntColony.EditorTools
                 Require(clearanceRenderer.GetComponents<Collider2D>().Length == 0 &&
                     clearanceRenderer.GetComponent<Rigidbody2D>() == null,
                     "The clearance inspector must not create gameplay physics components.");
+                Require(capabilityRenderer.RunQuery(),
+                    "The authored movement-capability query could not run.");
+                Require(capabilityRenderer.LastResult.SuggestedState ==
+                    AntMovementEligibilityState.Falling &&
+                    capabilityRenderer.LastResult.IsPhysicallyClear,
+                    "The unprepared chamber-centre query must be physically Clear and Falling.");
+                Require(capabilityRenderer.GetComponents<Collider2D>().Length == 0 &&
+                    capabilityRenderer.GetComponent<Rigidbody2D>() == null,
+                    "The capability inspector must not create gameplay physics components.");
                 Require(host.WorldData.ResidentChunkCount == 8,
                     "Fixture must contain exactly eight explicit resident chunks.");
                 Require(renderer.DisplayedCellCount ==
@@ -329,9 +430,17 @@ namespace AntColony.EditorTools
                     "Both Tilemap references must be assigned.");
                 Require(FindInScene<TilemapRenderer>(scene).Length == 3,
                     "Each Tilemap must have exactly one TilemapRenderer.");
-                Require(background.VisualTile != null && solid.VisualTile != null &&
+                Require(skyBackground.VisualTile != null &&
+                    earthBackground.VisualTile != null &&
+                    stoneBackground.VisualTile != null &&
+                    preparedBackground.VisualTile != null && solid.VisualTile != null &&
                     supportOnly.VisualTile != null && blockingOnly.VisualTile != null,
                     "All fixture world materials must reference authored Tile visuals.");
+                ValidateBackgroundMovementMaterials(
+                    skyBackground,
+                    earthBackground,
+                    stoneBackground,
+                    preparedBackground);
                 Require(!supportOnly.BlocksMovement && supportOnly.SupportsNavigation,
                     "Support-only fixture material flags are incorrect.");
                 Require(blockingOnly.BlocksMovement && !blockingOnly.SupportsNavigation,
@@ -348,7 +457,7 @@ namespace AntColony.EditorTools
                 Require(renderedBackgroundCount == 8 * WorldTileCoordinates.CellsPerChunk,
                     "Every cell in the eight resident chunks needs a Background visual.");
                 Require(tilemapRenderer.BackgroundTilemap.GetTile(Vector3Int.zero) ==
-                    background.VisualTile,
+                    earthBackground.VisualTile,
                     "The origin Background visual does not match its material definition.");
                 Require(tilemapRenderer.ForegroundTilemap.GetTile(Vector3Int.zero) ==
                     solid.VisualTile,
@@ -376,6 +485,28 @@ namespace AntColony.EditorTools
                     Vector2Int.zero,
                     NavigationCellOccupancy.Covered,
                     NavigationSupportStatus.NotApplicable);
+
+                Require(host.TogglePreparedBackground(
+                        NavigationTestWorldHost.BackgroundMutationCell),
+                    "Could not replace the test Background with prepared material.");
+                Require(tilemapRenderer.RefreshCell(
+                        NavigationTestWorldHost.BackgroundMutationCell).Succeeded,
+                    "Prepared Background presentation did not refresh.");
+                Require(capabilityRenderer.RunQuery() &&
+                    capabilityRenderer.LastResult.SuggestedState ==
+                        AntMovementEligibilityState.Gripping &&
+                    capabilityRenderer.LastResult.HasBackgroundGrip,
+                    "Prepared Background must change the test query to Gripping.");
+                Require(host.TogglePreparedBackground(
+                        NavigationTestWorldHost.BackgroundMutationCell),
+                    "Could not restore the unprepared test Background.");
+                Require(tilemapRenderer.RefreshCell(
+                        NavigationTestWorldHost.BackgroundMutationCell).Succeeded,
+                    "Restored Background presentation did not refresh.");
+                Require(capabilityRenderer.RunQuery() &&
+                    capabilityRenderer.LastResult.SuggestedState ==
+                        AntMovementEligibilityState.Falling,
+                    "Restoring unprepared Background must restore Falling capability.");
                 RequireClassification(
                     host,
                     NavigationTestWorldHost.MutationCell,
@@ -413,7 +544,7 @@ namespace AntColony.EditorTools
                 collisionRenderer.RefreshCell(NavigationTestWorldHost.TilemapMutationCell);
                 renderer.RefreshOverlay();
                 Require(tilemapRenderer.BackgroundTilemap.GetTile(Vector3Int.zero) ==
-                    background.VisualTile,
+                    earthBackground.VisualTile,
                     "Removing a Solid Tile must preserve its Background visual.");
                 Require(tilemapRenderer.ForegroundTilemap.GetTile(Vector3Int.zero) == null,
                     "Removing a Solid Tile must clear its foreground visual.");
@@ -442,8 +573,8 @@ namespace AntColony.EditorTools
                     "Navigation prototype validation passed: authoritative fixture, " +
                     "aligned visual and collision Tilemaps, merged blocking-only " +
                     "terrain collision, mutation refresh, classification examples, " +
-                    "ordinary-ant clearance inspection, and no duplicate collider " +
-                    "geometry.");
+                    "ordinary-ant clearance and movement-capability inspection, " +
+                    "Background replacement, and no duplicate collider geometry.");
             }
             finally
             {
@@ -456,13 +587,23 @@ namespace AntColony.EditorTools
 
         private static void ConfigureHost(
             NavigationTestWorldHost host,
-            BackgroundTileMaterialDefinition background,
+            BackgroundTileMaterialDefinition earthBackground,
+            BackgroundTileMaterialDefinition skyBackground,
+            BackgroundTileMaterialDefinition stoneBackground,
+            BackgroundTileMaterialDefinition preparedBackground,
             SolidTileMaterialDefinition solid,
             SolidTileMaterialDefinition supportOnly,
             SolidTileMaterialDefinition blockingOnly)
         {
             var serializedHost = new SerializedObject(host);
-            serializedHost.FindProperty("backgroundMaterial").objectReferenceValue = background;
+            serializedHost.FindProperty("backgroundMaterial").objectReferenceValue =
+                earthBackground;
+            serializedHost.FindProperty("skyBackgroundMaterial").objectReferenceValue =
+                skyBackground;
+            serializedHost.FindProperty("stoneBackgroundMaterial").objectReferenceValue =
+                stoneBackground;
+            serializedHost.FindProperty("preparedBackgroundMaterial").objectReferenceValue =
+                preparedBackground;
             serializedHost.FindProperty("solidMaterial").objectReferenceValue = solid;
             serializedHost.FindProperty("supportOnlyMaterial").objectReferenceValue =
                 supportOnly;
@@ -639,6 +780,71 @@ namespace AntColony.EditorTools
             serializedDefinition.ApplyModifiedPropertiesWithoutUndo();
             EditorUtility.SetDirty(definition);
             return definition;
+        }
+
+        private static BackgroundTileMaterialDefinition GetOrCreateBackgroundMaterial(
+            string assetPath,
+            string stableId,
+            string materialName,
+            TileBase visualTile,
+            bool allowsHorizontal,
+            bool allowsUpward,
+            bool allowsDownward,
+            bool providesGrip,
+            bool gravityWhenUnsupported)
+        {
+            BackgroundTileMaterialDefinition definition =
+                AssetDatabase.LoadAssetAtPath<BackgroundTileMaterialDefinition>(assetPath);
+            if (definition == null)
+            {
+                definition = ScriptableObject
+                    .CreateInstance<BackgroundTileMaterialDefinition>();
+                definition.name = System.IO.Path.GetFileNameWithoutExtension(assetPath);
+                AssetDatabase.CreateAsset(definition, assetPath);
+            }
+
+            var serializedDefinition = new SerializedObject(definition);
+            serializedDefinition.FindProperty("stableMaterialId").stringValue = stableId;
+            serializedDefinition.FindProperty("displayName").stringValue = materialName;
+            serializedDefinition.FindProperty("visualTile").objectReferenceValue = visualTile;
+            serializedDefinition.FindProperty("allowsHorizontalMovement").boolValue =
+                allowsHorizontal;
+            serializedDefinition.FindProperty("allowsUpwardMovement").boolValue =
+                allowsUpward;
+            serializedDefinition.FindProperty("allowsDownwardMovement").boolValue =
+                allowsDownward;
+            serializedDefinition.FindProperty("providesClimbingGrip").boolValue =
+                providesGrip;
+            serializedDefinition.FindProperty("gravityAppliesWhenUnsupported").boolValue =
+                gravityWhenUnsupported;
+            serializedDefinition.ApplyModifiedPropertiesWithoutUndo();
+            EditorUtility.SetDirty(definition);
+            return definition;
+        }
+
+        private static void ValidateBackgroundMovementMaterials(
+            BackgroundTileMaterialDefinition sky,
+            BackgroundTileMaterialDefinition earth,
+            BackgroundTileMaterialDefinition stone,
+            BackgroundTileMaterialDefinition prepared)
+        {
+            BackgroundTileMaterialDefinition[] unprepared = { sky, earth, stone };
+            foreach (BackgroundTileMaterialDefinition material in unprepared)
+            {
+                Require(material.AllowsHorizontalMovement &&
+                    !material.AllowsUpwardMovement &&
+                    !material.AllowsDownwardMovement &&
+                    !material.ProvidesClimbingGrip &&
+                    material.GravityAppliesWhenUnsupported,
+                    $"Background material '{material.name}' has invalid unprepared flags.");
+            }
+
+            Require(prepared.AllowsHorizontalMovement &&
+                prepared.AllowsUpwardMovement &&
+                prepared.AllowsDownwardMovement &&
+                prepared.ProvidesClimbingGrip &&
+                !prepared.GravityAppliesWhenUnsupported,
+                "Prepared Background movement flags are incorrect.");
         }
 
         private static void AssignVisualTile(

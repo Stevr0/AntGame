@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2193439cba2e469792e4f416723d2488, type: 3}
+  m_Name: Background_Sky
+  m_EditorClassIdentifier: AntColony.World::AntColony.World.BackgroundTileMaterialDefinition
+  stableMaterialId: background.sky
+  displayName: Sky
+  visualTile: {fileID: 11400000, guid: f10eab934d1c43344a439f933bb3f6aa, type: 2}
+  allowsHorizontalMovement: 1
+  allowsUpwardMovement: 0
+  allowsDownwardMovement: 0
+  providesClimbingGrip: 0
+  gravityAppliesWhenUnsupported: 1

@@ -17,8 +17,15 @@ namespace AntColony.NavigationDebug
         public static readonly Vector2Int BlockingOnlySolidCell = new Vector2Int(-32, 5);
         public static readonly Vector2Int UnknownSupportCell = new Vector2Int(10, 31);
         public static readonly Vector2Int DiagonalOnlyCell = new Vector2Int(-29, 21);
+        public static readonly Vector2Int BackgroundMutationCell =
+            new Vector2Int(20, 8);
 
+        // Kept under its original field name so existing scene serialization
+        // continues to resolve it as the fixture's unprepared Earth material.
         [SerializeField] private BackgroundTileMaterialDefinition backgroundMaterial;
+        [SerializeField] private BackgroundTileMaterialDefinition skyBackgroundMaterial;
+        [SerializeField] private BackgroundTileMaterialDefinition stoneBackgroundMaterial;
+        [SerializeField] private BackgroundTileMaterialDefinition preparedBackgroundMaterial;
         [SerializeField] private SolidTileMaterialDefinition solidMaterial;
         [SerializeField] private SolidTileMaterialDefinition supportOnlyMaterial;
         [SerializeField] private SolidTileMaterialDefinition blockingOnlyMaterial;
@@ -59,7 +66,7 @@ namespace AntColony.NavigationDebug
             }
 
             var registry = new WorldMaterialRegistry(
-                new[] { backgroundMaterial },
+                BuildBackgroundDefinitions(),
                 BuildSolidDefinitions());
             worldData = new ChunkedWorldData(registry, worldSeed);
 
@@ -89,6 +96,27 @@ namespace AntColony.NavigationDebug
         public bool ToggleMutationSolid()
         {
             return ToggleSolidAt(MutationCell);
+        }
+
+        /// <summary>
+        /// Development-only proof that Background replacement immediately changes
+        /// capability data without changing or creating a foreground Solid Tile.
+        /// </summary>
+        public bool TogglePreparedBackground(Vector2Int worldCell)
+        {
+            if (!IsInitialized || preparedBackgroundMaterial == null ||
+                worldData.GetCell(worldCell, out WorldTileCellData cell) !=
+                    WorldCellQueryResult.Available)
+            {
+                return false;
+            }
+
+            string replacementId = cell.BackgroundMaterialId ==
+                preparedBackgroundMaterial.StableMaterialId
+                    ? backgroundMaterial.StableMaterialId
+                    : preparedBackgroundMaterial.StableMaterialId;
+            return worldData.SetBackgroundMaterial(worldCell, replacementId) ==
+                WorldCellMutationResult.Success;
         }
 
         /// <summary>
@@ -193,6 +221,26 @@ namespace AntColony.NavigationDebug
             if (blockingOnlyMaterial != null)
             {
                 yield return blockingOnlyMaterial;
+            }
+        }
+
+        private IEnumerable<BackgroundTileMaterialDefinition>
+            BuildBackgroundDefinitions()
+        {
+            yield return backgroundMaterial;
+            if (skyBackgroundMaterial != null)
+            {
+                yield return skyBackgroundMaterial;
+            }
+
+            if (stoneBackgroundMaterial != null)
+            {
+                yield return stoneBackgroundMaterial;
+            }
+
+            if (preparedBackgroundMaterial != null)
+            {
+                yield return preparedBackgroundMaterial;
             }
         }
 
