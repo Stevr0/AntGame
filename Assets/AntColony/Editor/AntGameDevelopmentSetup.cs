@@ -17,8 +17,18 @@ namespace AntColony.EditorTools
         public const string ScenePath =
             "Assets/AntColony/Scenes/AntGameDevelopment.unity";
 
-        private const string PlaceholderSpritePath =
-            "Assets/AntColony/Art/Placeholder/SoilPrototype.asset";
+        private const string WhitePixelSpritePath =
+            "Assets/AntColony/Art/WorldTiles/DevelopmentWhitePixel.asset";
+        private const string SkyTilePath =
+            "Assets/AntColony/Art/WorldTiles/Background_Sky.asset";
+        private const string EarthTilePath =
+            "Assets/AntColony/Art/WorldTiles/Background_UnpreparedEarth.asset";
+        private const string StoneBackgroundTilePath =
+            "Assets/AntColony/Art/WorldTiles/Background_UnpreparedStone.asset";
+        private const string PreparedTilePath =
+            "Assets/AntColony/Art/WorldTiles/Background_PreparedGrippable.asset";
+        private const string SoilTilePath =
+            "Assets/AntColony/Art/WorldTiles/Solid_Soil.asset";
         private const string StoneTilePath =
             "Assets/AntColony/Art/WorldTiles/Solid_Stone.asset";
         private const string StoneMaterialPath =
@@ -82,22 +92,43 @@ namespace AntColony.EditorTools
             Require(collisionRenderer.TilemapCollider.compositeOperation ==
                     Collider2D.CompositeOperation.Merge,
                 "Terrain Tilemap collision must merge into the composite.");
+            ValidateDevelopmentPalette();
 
             Debug.Log("Integrated development world structural validation passed.");
         }
 
         private static void CreateAssetsAndScene()
         {
-            Sprite placeholderSprite = AssetDatabase
-                .LoadAllAssetsAtPath(PlaceholderSpritePath)
-                .OfType<Sprite>()
-                .FirstOrDefault();
-            Require(placeholderSprite != null, "Placeholder tile Sprite is missing.");
-
+            Sprite whitePixelSprite = GetOrCreateWhitePixelSprite();
+            GetOrCreateTile(
+                SkyTilePath,
+                whitePixelSprite,
+                new Color32(113, 155, 193, 255),
+                Tile.ColliderType.None);
+            GetOrCreateTile(
+                EarthTilePath,
+                whitePixelSprite,
+                new Color32(81, 68, 57, 255),
+                Tile.ColliderType.None);
+            GetOrCreateTile(
+                StoneBackgroundTilePath,
+                whitePixelSprite,
+                new Color32(67, 76, 86, 255),
+                Tile.ColliderType.None);
+            GetOrCreateTile(
+                PreparedTilePath,
+                whitePixelSprite,
+                new Color32(100, 139, 98, 255),
+                Tile.ColliderType.None);
+            GetOrCreateTile(
+                SoilTilePath,
+                whitePixelSprite,
+                new Color32(152, 99, 66, 255),
+                Tile.ColliderType.None);
             Tile stoneTile = GetOrCreateTile(
                 StoneTilePath,
-                placeholderSprite,
-                new Color(0.38f, 0.40f, 0.44f, 1f),
+                whitePixelSprite,
+                new Color32(115, 126, 137, 255),
                 Tile.ColliderType.None);
             SolidTileMaterialDefinition stoneSolid = GetOrCreateSolidMaterial(
                 StoneMaterialPath,
@@ -167,7 +198,7 @@ namespace AntColony.EditorTools
             worldCamera.orthographic = true;
             worldCamera.orthographicSize = 30f;
             worldCamera.clearFlags = CameraClearFlags.SolidColor;
-            worldCamera.backgroundColor = new Color(0.04f, 0.055f, 0.08f, 1f);
+            worldCamera.backgroundColor = new Color32(36, 52, 66, 255);
 
             GameObject inspectionObject = new(
                 "Development Inspection UI",
@@ -271,6 +302,74 @@ namespace AntColony.EditorTools
             tile.colliderType = colliderType;
             EditorUtility.SetDirty(tile);
             return tile;
+        }
+
+        private static Sprite GetOrCreateWhitePixelSprite()
+        {
+            Sprite existingSprite = AssetDatabase
+                .LoadAllAssetsAtPath(WhitePixelSpritePath)
+                .OfType<Sprite>()
+                .FirstOrDefault();
+            if (existingSprite != null)
+            {
+                return existingSprite;
+            }
+
+            var texture = new Texture2D(1, 1, TextureFormat.RGBA32, false)
+            {
+                name = "Development White Pixel Texture",
+                filterMode = FilterMode.Point,
+                wrapMode = TextureWrapMode.Clamp
+            };
+            texture.SetPixel(0, 0, Color.white);
+            texture.Apply(false, false);
+            AssetDatabase.CreateAsset(texture, WhitePixelSpritePath);
+
+            Sprite sprite = Sprite.Create(
+                texture,
+                new Rect(0f, 0f, 1f, 1f),
+                new Vector2(0.5f, 0.5f),
+                1f,
+                0,
+                SpriteMeshType.FullRect);
+            sprite.name = "Development White Pixel Sprite";
+            AssetDatabase.AddObjectToAsset(sprite, texture);
+            EditorUtility.SetDirty(texture);
+            EditorUtility.SetDirty(sprite);
+            AssetDatabase.SaveAssetIfDirty(texture);
+            return sprite;
+        }
+
+        private static void ValidateDevelopmentPalette()
+        {
+            ValidateTileColour(SkyTilePath, new Color32(113, 155, 193, 255));
+            ValidateTileColour(EarthTilePath, new Color32(81, 68, 57, 255));
+            ValidateTileColour(
+                StoneBackgroundTilePath,
+                new Color32(67, 76, 86, 255));
+            ValidateTileColour(PreparedTilePath, new Color32(100, 139, 98, 255));
+            ValidateTileColour(SoilTilePath, new Color32(152, 99, 66, 255));
+            ValidateTileColour(StoneTilePath, new Color32(115, 126, 137, 255));
+        }
+
+        private static void ValidateTileColour(string path, Color32 expectedColour)
+        {
+            Tile tile = AssetDatabase.LoadAssetAtPath<Tile>(path);
+            Require(tile != null, $"Development Tile is missing: {path}");
+            Require(ColoursMatch((Color32)tile.color, expectedColour),
+                $"Development Tile has an unexpected colour: {path}");
+            Require(tile.sprite != null && tile.sprite.texture != null,
+                $"Development Tile has no source Sprite: {path}");
+            Require(ColoursMatch(
+                    (Color32)tile.sprite.texture.GetPixel(0, 0),
+                    new Color32(255, 255, 255, 255)),
+                $"Development Tile source Sprite must be neutral white: {path}");
+        }
+
+        private static bool ColoursMatch(Color32 first, Color32 second)
+        {
+            return first.r == second.r && first.g == second.g &&
+                first.b == second.b && first.a == second.a;
         }
 
         private static SolidTileMaterialDefinition GetOrCreateSolidMaterial(

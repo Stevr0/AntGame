@@ -4,7 +4,8 @@
     "references": [
         "AntColony.World",
         "AntColony.NavigationDebug",
-        "AntColony.WorldPresentation"
+        "AntColony.WorldPresentation",
+        "AntColony.Development"
     ],
     "includePlatforms": [
         "Editor"
