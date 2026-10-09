@@ -83,7 +83,7 @@ For player-ant movement, check directional input, floor traversal, climbing both
 ## Movement and navigation conventions
 
 - Normal gameplay uses autonomous movement; `PlayerMovementInput` remains a developer-only testing tool and gives no traffic priority.
-- Every world coordinate has one permanent Background Tile and may have zero or one foreground Solid Tile. Excavation removes only an excavatable Solid Tile; it never removes its Background Tile.
+- Every coordinate in a generated 32×32 chunk has one permanent Background Tile and may have zero or one foreground Solid Tile. Ungenerated chunks are unavailable, not exposed. Excavation removes only an excavatable Solid Tile; it never removes its Background Tile.
 - Background Tiles do not inherently block movement or provide navigation support. Solid Tiles normally block movement and provide support unless their configuration explicitly says otherwise.
 - Use Covered Space, Exposed Space, Traversable Space, Unsupported Space, Reachable Space and Qualifying Geometry consistently as defined in the GDD; avoid describing excavated coordinates as empty tiles.
 - Use one tile-adjacent terrain-navigation model for all colonies. Keep world tile data, excavation, task choice, shared navigation data, per-ant route following, movement execution, local avoidance and physics/collision separate where practical.

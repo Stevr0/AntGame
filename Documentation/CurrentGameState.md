@@ -6,7 +6,7 @@
 
 **Status:** In progress. The user has confirmed floor movement, vertical wall climbing, and resolution of the previously reported corner-transition deadlock in Unity Play Mode. Ceiling/corner route acceptance is still incomplete. Bounded Auto Step-Over is now implemented for one-tile openings and awaits its first Play Mode acceptance pass.
 
-Milestone 1 is explicitly a prototype and regression baseline, not the final player control design. The approved future direction is a two-layer world tile model plus autonomous tile-adjacent navigation, colony management and individual task assignment. Neither the two-layer model nor autonomous navigation has been implemented.
+Milestone 1 is explicitly a prototype and regression baseline, not the final player control design. Milestone 2.1B now adds a data-only two-layer world model alongside that prototype. Autonomous navigation, tile presentation, terrain migration, colony management and individual task assignment have not been implemented.
 
 ## Repository and architecture
 
@@ -16,12 +16,22 @@ Milestone 1 is explicitly a prototype and regression baseline, not the final pla
 - Input and movement retain the established `PlayerMovementInput -> AntSurfaceMotor -> Rigidbody2D` flow.
 - `AntSurfaceMotor.SetMovementIntent(Vector2)` remains a useful prototype boundary while the future movement model is developed and validated.
 - The current authored collider course is not evidence of the approved Background Tile/Solid Tile data model.
-- No Bootstrap, global manager, two-layer world tile data, AI navigation, excavation, multiplayer, or multi-ant system has been added.
+- No Bootstrap or global manager has been added. The world-data authority is an ordinary, scene-independent C# object; AI navigation, excavation, multiplayer, and multi-ant systems remain absent.
 
-## Approved future design, not implemented
+### Milestone 2.1B world-data foundation
+
+- `ChunkedWorldData` explicitly owns resident chunks in a sparse dictionary. Creating or reading world data does not create GameObjects, components, colliders, or neighbouring chunks.
+- Each `WorldChunk` is 32×32 cells and immediately fills all 1,024 Background Tile entries. A parallel compact array stores zero or one optional Solid Tile ID per cell.
+- Central coordinate utilities use floor division for negative positions, keep local coordinates in the 0–31 range, and preserve the prototype convention that integer coordinates are tile centres in world space.
+- Missing chunks return `ChunkUnavailable`; they never masquerade as exposed cells. Duplicate creation and unknown material IDs are rejected without overwriting data.
+- `Background_Default` (`background.default`) and `Solid_Soil` (`solid.soil`) are initial authored ScriptableObject definitions. Their optional visual Tile references are currently empty because rendering is outside this milestone.
+- A world seed can be stored for future deterministic generation, but no generation, unloading, streaming, persistence, or scene-level host exists.
+- The existing `DirtBlock` objects have not been imported. The prototype scene, prefab, movement code, Rigidbody2D, colliders, gravity, and input remain unchanged.
+
+## Approved future design, not implemented beyond the data foundation
 
 - Normal play manages ants through selection, inspection, designations, colony priorities and specific task assignments; it does not directly steer them.
-- Every world coordinate contains one permanent Background Tile and may additionally contain one foreground Solid Tile.
+- Every coordinate in a generated chunk contains one permanent Background Tile and may additionally contain one foreground Solid Tile; ungenerated chunks remain unavailable.
 - Excavation removes an excavatable Solid Tile, leaves its Background Tile unchanged, updates collision and reevaluates affected navigation.
 - Background Tiles do not inherently block movement or provide navigation support.
 - Traversable Exposed Spaces require Qualifying Geometry in a cardinal direction, adequate whole-body clearance and applicable obstacle clearance. Reachable Space additionally requires a valid connection to the ant's current navigation region.
@@ -136,6 +146,11 @@ For the Auto Step-Over slice:
 - A second Unity Test Framework case and `ValidateAutoStepOverRegression` were added. They exercise real floor/ceiling/wall detection, release pause, reversal to source, over-wide rejection, blocked-path rejection, failure reasons, and retry-suppression release.
 - The current machine's Unity Licensing Client repeatedly lost its IPC connection before the migration method or test runner could execute. Consequently, the new 2/2 Edit Mode result, Editor structural validator, and automated scene import remain **not run**, not passed.
 
+For the Milestone 2.1B world-data slice:
+
+- Focused Edit Mode tests were added for all required coordinate examples, negative boundaries, cell/world round trips, explicit and duplicate chunk creation, 1,024-cell Background coverage, optional Solid mutation, invalid IDs, read/mutation isolation, four-direction expansion, and the absence of gameplay GameObjects.
+- Static source and repository checks can be performed outside Unity. The focused Unity suite has not yet run because this project is already open in another Unity instance and the desktop automation bridge cannot access that window; compilation and test results therefore remain pending rather than passed.
+
 ## Manual Play Mode checklist
 
 1. Confirm the previously working floor movement, stopping, reversal, and both wall directions still behave identically.
@@ -170,8 +185,9 @@ For the Auto Step-Over slice:
 - Auto Step-Over and its authored fixtures are implemented but have not completed automated Unity execution or manual Play Mode acceptance on this machine.
 - The current Step-Over path is intentionally straight between parallel supports. Irregular, curved, offset, or routed openings remain unsupported.
 - The follow camera remains unimplemented.
+- The Milestone 2.1B data model is not connected to a scene, Tilemap, collider, generator, persistence layer, navigation classifier, or the legacy DirtBlocks.
 - Autonomous navigation, multi-ant occupancy, and colony simulation remain later milestones.
 
 ## Recommended next implementation step
 
-Restore a healthy Unity Licensing Client connection, run the 2/2 focused Edit Mode suite and both structural validators, perform the complete transition and Auto Step-Over Play Mode checklist, then add and validate the remaining simple upright follow camera. After Milestone 1 is accepted, begin Milestone 2.1 by inspecting the current world representation and prototyping the smallest permanent-Background/optional-Solid tile data model and classification visualisation without changing movement behaviour.
+Run the existing movement validation still pending for Milestone 1, and import/compile the new `AntColony.World` assembly in the open Editor. Then run `ChunkedWorldDataTests` before marking Milestone 2.1B complete. The next authorised world slice should begin with navigation classification and visualisation over authoritative resident chunk data; do not connect or replace the legacy prototype terrain implicitly.

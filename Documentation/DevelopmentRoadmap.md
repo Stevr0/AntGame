@@ -141,7 +141,7 @@ The existing root-level Unity template assets can remain where they are until th
 
 ## Milestone 2 — World Tiles and Autonomous Navigation
 
-**Status:** Approved design; not started.
+**Status:** In progress. The data-only Milestone 2.1B chunk foundation is implemented; focused Unity test execution is pending.
 
 **Goal:** Establish the approved two-layer world representation, then prove that one ant can autonomously route and move through Exposed Space that is cardinally adjacent to Qualifying Geometry without entering Unsupported Space or requiring direct movement input.
 
@@ -149,10 +149,12 @@ Milestone 2 must retain `AntSurfaceMotor` and `PlayerMovementInput` as prototype
 
 ### 2.1 — World Tile Model and Navigation Visualisation
 
-- Inspect and document the existing world representation before choosing an implementation.
-- Establish the smallest representation for one permanent Background Tile per coordinate and zero or one foreground Solid Tile.
+- **2.1A — Architecture audit:** Completed. The existing authored `DirtBlock` collider course remains the movement prototype and is not authoritative tile data.
+- **2.1B — Chunk data foundation:** Implemented as a scene-independent sparse dictionary of explicitly created 32×32 chunks. Each resident chunk contains 1,024 Background Tile IDs and zero or one Solid Tile ID per cell. Coordinate conversion supports positive and negative chunk positions, and missing chunks return an unavailable status without implicit generation.
+- Stable ScriptableObject material definitions now provide the initial `background.default` and `solid.soil` IDs. A stored world seed is reserved for later deterministic generation but causes no generation itself.
+- Focused Edit Mode coverage has been added for coordinate boundaries and round trips, explicit creation, missing-chunk reads, layer invariants, invalid material IDs, isolation, and expansion in all directions. Unity execution remains pending, so 2.1B is not marked complete.
+- **Later 2.1 work:** Classify Covered, Exposed, Unsupported and Traversable Space and add a data visualisation without changing movement.
 - Preserve Background Tiles when a coordinate is covered by a Solid Tile.
-- Classify Covered, Exposed, Unsupported and Traversable Space.
 - Visualise which cardinal Qualifying Geometry makes an Exposed Space navigation-eligible.
 - Keep local traversability distinct from connectivity and Reachable Space.
 - Confirm classification in the current prototype scene, including open sky, tunnels and unsupported chamber centres.
@@ -204,4 +206,4 @@ These milestones are ordered direction, not approved implementation work. Their 
 | 9 — Enemy colonies and hostile interactions | Reuse the same terrain navigation for other colonies and add high-level engage, retreat, avoid, defend and assistance responses. | Not started |
 | 10 — Survival, growth and finished slice | Add needs, skill progression, later queen/brood progression, onboarding, objectives, save/load and usability in bounded slices. | Not started |
 
-No new milestone is complete without implementation and validation evidence. Finish the remaining Milestone 1 acceptance work before implementation of Milestone 2.1 unless the developer explicitly changes that order. The two-layer tile architecture and autonomous navigation remain approved design, not implemented functionality.
+No new milestone is complete without implementation and validation evidence. Milestone 2.1B now provides the data-only two-layer chunk architecture, but remains pending focused Unity execution. Navigation classification, visualisation, autonomous navigation, terrain migration, procedural generation, persistence, and streaming are not implemented.

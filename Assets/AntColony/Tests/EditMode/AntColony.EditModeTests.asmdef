@@ -1,7 +1,9 @@
 {
     "name": "AntColony.EditModeTests",
     "rootNamespace": "AntColony.Tests.EditMode",
-    "references": [],
+    "references": [
+        "AntColony.World"
+    ],
     "includePlatforms": [
         "Editor"
     ],

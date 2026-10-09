@@ -33,13 +33,15 @@ Core loop: Mark an accessible soil Solid Tile → an assigned ant travels to it 
 
 ## 4. World tiles, movement and navigation
 
-The game uses a 2D side-view grid. Every 1×1 world coordinate always contains one permanent **Background Tile** and may additionally contain one foreground **Solid Tile**. The initial prototype uses a small authored map rather than procedural generation; the approved two-layer model is future design and is not yet claimed as implemented.
+The game uses a 2D side-view grid divided into sparse 32×32 chunks. A generated, resident chunk contains one permanent **Background Tile** at every 1×1 coordinate and may additionally contain one foreground **Solid Tile** at each coordinate. Chunks can be created at positive or negative coordinates, so the world can expand in all four directions without allocating one enormous rectangular array. Coordinates in chunks that have not been generated are unavailable; they are not silently treated as exposed terrain.
+
+The data-only chunk model is implemented independently of the current authored `DirtBlock` course. It does not yet generate, stream, save, render, classify, or collide tiles, and it does not import the prototype terrain.
 
 ### 4.1 Two-layer world model
 
 #### Background Tile layer
 
-- Every world coordinate contains exactly one Background Tile.
+- Every coordinate in a generated chunk contains exactly one Background Tile.
 - Background Tiles are permanent, cannot be excavated or collected, and remain beneath Solid Tiles.
 - Removing a Solid Tile exposes the Background Tile without changing or destroying it.
 - Background Tiles may hold visual material, biome, depth, temperature, moisture, environmental modifiers and decorative information.
@@ -65,7 +67,7 @@ Possible Solid Tile materials include soil, sand, clay, stone, rock and later ex
 | **Reachable Space** | Traversable Space connected to the ant's current navigation region by a valid route. |
 | **Qualifying Geometry** | Solid terrain or an explicitly configured object that provides valid adjacency for movement. |
 
-Exposed does not automatically mean traversable, and traversable does not automatically mean reachable. An Exposed Space may contain a blocking placed object. Background Tiles do not provide support merely because they exist, and the world never contains a coordinate without a Background Tile.
+Exposed does not automatically mean traversable, and traversable does not automatically mean reachable. An Exposed Space may contain a blocking placed object. Background Tiles do not provide support merely because they exist. A resident generated coordinate always has a Background Tile; an ungenerated chunk is unavailable rather than exposed.
 
 ### 4.2 Player control and hybrid task management
 
@@ -218,7 +220,7 @@ Lose/pressure conditions are deliberately light in v1: a failed colony may occur
 | Stage | Deliverable / test |
 | --- | --- |
 | Milestone 1 — Movement prototype baseline | Preserve and finish validating the current manually driven surface-movement prototype as regression evidence; it is not the final player control design. |
-| Milestone 2 — World tiles and autonomous navigation | Establish the two-layer tile representation, visualise navigation classification, route one ant to a developer-assigned destination, validate all supported geometry, then update terrain and navigation incrementally. |
+| Milestone 2 — World tiles and autonomous navigation | Build on the sparse 32×32 two-layer chunk data foundation, visualise navigation classification, route one ant to a developer-assigned destination, validate all supported geometry, then update terrain and navigation incrementally. |
 | Selection and task management | Inspect individual ants and support both colony-wide priorities and individual task assignments. |
 | Multi-ant movement | Add hybrid separation, congestion-aware routing and bounded recovery. |
 | Autonomous work | Perform excavation, soil transport, gathering and needs-driven behaviour. |
@@ -254,7 +256,7 @@ Autonomous movement is approved but not implemented. It must support excavation 
 
 The design separates these conceptual responsibilities. They describe boundaries, not mandatory class names:
 
-- **World Tile Data:** stores the permanent Background Tile layer and optional foreground Solid Tile layer plus their configured properties.
+- **World Tile Data:** stores resident 32×32 chunks containing a permanent Background Tile layer and optional foreground Solid Tile layer plus their configured properties. Missing chunks remain explicitly unavailable.
 - **Terrain/Excavation System:** removes completed excavatable Solid Tiles, produces configured resources, updates collision and announces affected regions.
 - **Colony Task System:** decides what work exists and which ants may perform it, using designations, priorities, roles, skills, availability and explicit individual assignments.
 - **Ant Navigation Agent:** selects destinations, requests paths, follows routes and reports invalid or unreachable results.
