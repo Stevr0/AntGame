@@ -184,6 +184,16 @@ namespace AntColony.EditorTools
                 overlayMaterial);
             overlayObject.GetComponent<MeshRenderer>().sortingOrder = 10;
 
+            GameObject clearanceObject = new GameObject(
+                "Ant Clearance Inspector",
+                typeof(AntClearanceDebugRenderer));
+            clearanceObject.transform.SetParent(sceneRoot.transform, false);
+            clearanceObject.GetComponent<AntClearanceDebugRenderer>().Configure(
+                host,
+                new Vector2(2f, 1f),
+                AntCollisionProfile.OrdinaryAnt,
+                0f);
+
             GameObject cameraObject = new GameObject(
                 "Main Camera",
                 typeof(Camera),
@@ -216,7 +226,8 @@ namespace AntColony.EditorTools
             Debug.Log(
                 "Created AntNavigationPrototype with an authoritative eight-chunk " +
                 "fixture, two visual Tilemaps, one blocking-only collision Tilemap, " +
-                "and one batched navigation overlay.");
+                "one batched navigation overlay, and one ordinary-ant clearance " +
+                "inspector.");
         }
 
         /// <summary>Command-line entry point used for repeatable scene authoring.</summary>
@@ -257,6 +268,8 @@ namespace AntColony.EditorTools
                 NavigationTestWorldHost[] hosts = FindInScene<NavigationTestWorldHost>(scene);
                 NavigationDebugRenderer[] renderers =
                     FindInScene<NavigationDebugRenderer>(scene);
+                AntClearanceDebugRenderer[] clearanceRenderers =
+                    FindInScene<AntClearanceDebugRenderer>(scene);
                 WorldTilemapRenderer[] tilemapRenderers =
                     FindInScene<WorldTilemapRenderer>(scene);
                 WorldTerrainCollisionRenderer[] collisionRenderers =
@@ -264,6 +277,8 @@ namespace AntColony.EditorTools
                 Tilemap[] tilemaps = FindInScene<Tilemap>(scene);
                 Require(hosts.Length == 1, "Scene must contain exactly one world host.");
                 Require(renderers.Length == 1, "Scene must contain exactly one debug renderer.");
+                Require(clearanceRenderers.Length == 1,
+                    "Scene must contain exactly one ant clearance inspector.");
                 Require(tilemapRenderers.Length == 1,
                     "Scene must contain exactly one world Tilemap renderer.");
                 Require(collisionRenderers.Length == 1,
@@ -283,6 +298,7 @@ namespace AntColony.EditorTools
 
                 NavigationTestWorldHost host = hosts[0];
                 NavigationDebugRenderer renderer = renderers[0];
+                AntClearanceDebugRenderer clearanceRenderer = clearanceRenderers[0];
                 WorldTilemapRenderer tilemapRenderer = tilemapRenderers[0];
                 WorldTerrainCollisionRenderer collisionRenderer =
                     collisionRenderers[0];
@@ -292,6 +308,17 @@ namespace AntColony.EditorTools
                 Require(collisionRenderer.RefreshSelectedRegion().Succeeded,
                     "The selected terrain collision region did not refresh successfully.");
                 renderer.RefreshOverlay();
+                Require(clearanceRenderer.RunQuery(),
+                    "The authored ant clearance query could not run.");
+                Require(clearanceRenderer.LastResult.Status == AntClearanceStatus.Clear,
+                    "The authored ordinary-ant clearance pose must be Clear.");
+                Require(clearanceRenderer.BodySize == new Vector2(0.96f, 0.3f) &&
+                    clearanceRenderer.BodyOffset == Vector2.zero &&
+                    clearanceRenderer.CapsuleAxis == AntCapsuleAxis.Horizontal,
+                    "The clearance inspector must match the PlayerAnt capsule profile.");
+                Require(clearanceRenderer.GetComponents<Collider2D>().Length == 0 &&
+                    clearanceRenderer.GetComponent<Rigidbody2D>() == null,
+                    "The clearance inspector must not create gameplay physics components.");
                 Require(host.WorldData.ResidentChunkCount == 8,
                     "Fixture must contain exactly eight explicit resident chunks.");
                 Require(renderer.DisplayedCellCount ==
@@ -415,7 +442,8 @@ namespace AntColony.EditorTools
                     "Navigation prototype validation passed: authoritative fixture, " +
                     "aligned visual and collision Tilemaps, merged blocking-only " +
                     "terrain collision, mutation refresh, classification examples, " +
-                    "and no duplicate collider geometry.");
+                    "ordinary-ant clearance inspection, and no duplicate collider " +
+                    "geometry.");
             }
             finally
             {

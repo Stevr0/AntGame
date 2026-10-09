@@ -40,6 +40,7 @@ namespace AntColony.EditorTools
                     FindInScene<WorldTerrainCollisionRenderer>(tilemapRenderer)
                         ?.RefreshCell(NavigationTestWorldHost.TilemapMutationCell);
                     RefreshNavigationOverlay(tilemapRenderer);
+                    FindInScene<AntClearanceDebugRenderer>(tilemapRenderer)?.RunQuery();
                 }
             }
 
@@ -48,6 +49,7 @@ namespace AntColony.EditorTools
                 tilemapRenderer.RefreshSelectedRegion();
                 FindInScene<WorldTerrainCollisionRenderer>(tilemapRenderer)
                     ?.RefreshSelectedRegion();
+                FindInScene<AntClearanceDebugRenderer>(tilemapRenderer)?.RunQuery();
                 SceneView.RepaintAll();
             }
 

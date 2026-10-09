@@ -1,6 +1,6 @@
 # ANT COLONY
 
-**Game Design Document  |  Version 0.4**
+**Game Design Document  |  Version 3.2**
 
 Working title • Unity 6 • Single-player • 2D side-view • PC-first prototype
 
@@ -12,7 +12,7 @@ Design intent: Build a small, finishable colony simulation in which individual a
 | --- | --- |
 | Genre | 2D side-view colony simulation / management |
 | Starting scenario | The player begins as an ordinary ant. Becoming a queen is a later progression event whose requirements are still to be designed. |
-| Primary interaction | Select ants, designate jobs and mark soil Solid Tiles for excavation. |
+| Primary interaction | Select ants, designate jobs, excavate foreground Solid Tiles and prepare exposed Background Materials. |
 | Defining feature | Each ant is a persistent, selectable individual with its own needs, stats, skills and autonomous behaviour. |
 | Target | Small single-player game; initial colony target of up to approximately 20 ants. |
 | Status | Core movement and navigation rules agreed; balance, queen transformation and later progression details remain provisional. |
@@ -29,28 +29,28 @@ Design intent: Build a small, finishable colony simulation in which individual a
 
 The player begins with a single ordinary ant and gradually develops a functioning colony. Becoming a queen is a possible later progression event whose requirements are still to be designed; it is not part of the initial gameplay. The player manages the ant and later colony through selection, inspection, designations, priorities and task assignments rather than direct movement control.
 
-Core loop: Mark an accessible soil Solid Tile → an assigned ant travels to it → excavates the foreground material → collects a soil unit → carries it to a dump location → returns for another job. As the colony grows, workers also gather food and water, rest, and gain skills.
+Core loop: Designate accessible work → an ant travels to a valid work position → excavates foreground material or prepares exposed background → moves required or produced resources → returns for another job. As the colony grows, workers also gather food and water, rest, and improve through successful work.
 
 ## 4. World tiles, movement and navigation
 
-The game uses a 2D side-view grid divided into sparse 32×32 chunks. A generated, resident chunk contains one permanent **Background Tile** at every 1×1 coordinate and may additionally contain one foreground **Solid Tile** at each coordinate. Chunks can be created at positive or negative coordinates, so the world can expand in all four directions without allocating one enormous rectangular array. Coordinates in chunks that have not been generated are unavailable; they are not silently treated as exposed terrain.
+The game uses a 2D side-view grid divided into sparse 32×32 chunks. A generated, resident chunk contains one permanently present **Background Tile** at every 1×1 coordinate, whose material may be replaced, and may additionally contain one foreground **Solid Tile** at each coordinate. Chunks can be created at positive or negative coordinates, so the world can expand in all four directions without allocating one enormous rectangular array. Coordinates in chunks that have not been generated are unavailable; they are not silently treated as exposed terrain.
 
-The data-only chunk model is implemented independently of the current authored `DirtBlock` course. It does not yet generate, stream, save, render, classify, or collide tiles, and it does not import the prototype terrain.
+The authoritative chunk model remains independent of the current authored `DirtBlock` course and never imports that legacy terrain. Implementation and verification status belongs in `CurrentGameState.md`; the rules below define the approved target design.
 
 ### 4.1 Two-layer world model
 
 #### Background Tile layer
 
-- Every coordinate in a generated chunk contains exactly one Background Tile.
-- Background Tiles are permanent, cannot be excavated or collected, and remain beneath Solid Tiles.
-- Removing a Solid Tile exposes the Background Tile without changing or destroying it.
-- Background Tiles may hold visual material, biome, depth, temperature, moisture, environmental modifiers and decorative information.
-- Those properties are future capabilities, not a requirement to implement a complete environmental simulation now.
-- A Background Tile does not inherently block movement or qualify as navigation-supporting geometry.
+- Every coordinate in a generated chunk contains exactly one valid Background Tile.
+- The layer is permanently present: its material may be replaced, but the coordinate can never be left without a Background Tile.
+- Background Tiles cannot be excavated or collected and remain beneath foreground Solid Tiles. Removing a Solid exposes the existing Background without automatically changing it.
+- The Background Material is the primary authority for voluntary movement directions, intrinsic climbing grip and applicable gravity behaviour at its coordinate.
+- Background Materials may also hold visual material, biome, depth, temperature, moisture, environmental modifiers and decorative information.
+- Physical occupancy remains separate: Background permission or grip never allows an ant to pass through a blocking foreground Solid Tile.
 
 #### Foreground Solid Tile layer
 
-A coordinate contains zero or one foreground Solid Tile. Solid Tiles normally block movement and provide qualifying geometry for adjacent navigation. Exceptions must be explicit properties of the material or object configuration.
+A coordinate contains zero or one foreground Solid Tile. Solid Tiles represent natural terrain, resource deposits, constructed solids, obstacles and structural elements. A Solid Material's `BlocksMovement` property controls physical occupancy. Its `SupportsNavigation` property remains independent and may describe applicable physical support; neither flag is inferred from the other, and not every Solid automatically provides climbing grip.
 
 Possible Solid Tile materials include soil, sand, clay, stone, rock and later excavatable or non-excavatable materials. Material data may define hardness, durability, excavation requirements, whether it is excavatable, resource yield, movement blocking, navigation support and structural properties.
 
@@ -58,16 +58,17 @@ Possible Solid Tile materials include soil, sand, clay, stone, rock and later ex
 
 | Term | Definition |
 | --- | --- |
-| **Background Tile** | The permanent tile occupying every world coordinate. |
+| **Background Tile** | The permanently present layer entry at every generated coordinate; its Background Material may be replaced. |
 | **Solid Tile** | An optional foreground tile occupying the same coordinate as its Background Tile. |
 | **Covered Space** | A coordinate containing a movement-blocking foreground Solid Tile. |
 | **Exposed Space** | A coordinate whose Background Tile is not covered by a foreground Solid Tile. |
-| **Traversable Space** | Exposed Space satisfying navigation adjacency, whole-body clearance and applicable obstacle constraints. |
-| **Unsupported Space** | Exposed Space that lacks the required supporting geometry. |
+| **Traversable Space** | Exposed Space the ant can occupy and enter under applicable Background movement, grip, grounding, gravity, whole-body-clearance and obstacle rules. |
+| **Unsupported Space** | Exposed Space with neither applicable physical ground support nor valid Background grip for controlled locomotion; it may still be physically clear or traversed directionally by falling. |
 | **Reachable Space** | Traversable Space connected to the ant's current navigation region by a valid route. |
-| **Qualifying Geometry** | Solid terrain or an explicitly configured object that provides valid adjacency for movement. |
+| **Prepared Background** | An exposed Background Material whose completed preparation grants configured grip and movement permissions. |
+| **Qualifying Geometry** | Solid terrain or an explicitly configured object that provides applicable physical support; it is not the universal source of climbing permission. |
 
-Exposed does not automatically mean traversable, and traversable does not automatically mean reachable. An Exposed Space may contain a blocking placed object. Background Tiles do not provide support merely because they exist. A resident generated coordinate always has a Background Tile; an ungenerated chunk is unavailable rather than exposed.
+Exposed does not automatically mean physically clear, voluntarily traversable or reachable. Background existence alone grants no permission: its material properties determine movement and grip. A resident generated coordinate always has a Background Tile; an ungenerated chunk is unavailable rather than exposed.
 
 ### 4.2 Player control and hybrid task management
 
@@ -82,32 +83,49 @@ The player can select an ant and inspect its identity, attributes, skills, healt
 
 Developer-only manual movement remains available for testing and regression work. It is not an intended player-facing control mode and grants no movement or traffic priority.
 
-### 4.3 Free tile-adjacent movement
+### 4.3 Background-driven movement and gravity
 
 - An ordinary ant has a nominal physical footprint of approximately one tile.
 - Ants move smoothly and continuously through permitted space rather than hopping between tile centres.
-- Movement may be horizontal, vertical or diagonal. Navigation may connect eight neighbouring tiles, but diagonal corner-cutting through solid or blocked geometry is prohibited.
-- Ordinary locomotion is not driven by gravity. Ants do not jump, fly or cross unsupported open airspace.
+- Movement may be horizontal, vertical or diagonal when the current Background Material permits it. Navigation may connect eight neighbouring tiles, but diagonal corner-cutting through solid or blocked geometry is prohibited.
+- Background movement permissions, intrinsic grip, physical grounding and gravity are separate inputs. A blocking foreground Solid always prevents occupancy regardless of Background permissions.
 - Solid terrain and configured solid objects remain authoritative collision boundaries.
 - Clearance checks use the ant's whole footprint rather than only its centre point.
 - The entire path segment, not only its endpoints or tile centres, must remain within navigable space and provide adequate body clearance.
 - Future ant types may have larger footprints and may require wider passages.
 
-An Exposed Space is **potentially traversable** when it has Qualifying Geometry in at least one cardinal direction (north, south, east or west), provides enough physical clearance, and is not otherwise blocked. Diagonal adjacency alone never qualifies a space. **Reachability** is separate: a locally Traversable Space may still be disconnected from the ant's current navigation region.
+The previous strict rule that every controlled position must be cardinally adjacent to a supporting Solid is superseded. Foreground support remains relevant for grounding and some movement, but prepared Background grip can permit controlled two-dimensional movement without immediate Solid adjacency. **Reachability** remains separate: a locally valid position may still be disconnected from the ant's current directed navigation region.
 
-Ground travel, climbing beside cliffs, movement beneath overhangs, corner negotiation and tunnel travel are configurations of this one tile-adjacent navigation model, not separate floor, wall or ceiling movement modes.
+Initial Background behavior targets are:
 
-### 4.4 Tunnels, chambers and supporting geometry
+| Background Material | Horizontal | Upward | Downward | Gravity |
+| --- | --- | --- | --- | --- |
+| Sky | Grounded walking only | No intrinsic climbing | Falling permitted | Applies when unsupported |
+| Unprepared Earth | Grounded walking only | No intrinsic climbing | Falling permitted | Applies when unsupported |
+| Unprepared Stone | Grounded walking only | No intrinsic climbing | Falling permitted | Applies when unsupported |
+| Prepared Grippable Surface | Permitted | Permitted | Permitted | Suppressed while valid grip is maintained |
 
-- Excavating Solid Tiles creates Exposed Spaces. Tunnels are traversable wherever connected Exposed Spaces have qualifying cardinal adjacency and sufficient clearance.
+Horizontal movement on an unprepared Background requires an appropriate walkable surface. Falling downward is not voluntary downward climbing. Exact grounding, walking and gravity algorithms are deferred to movement-capability milestones.
+
+### 4.4 Movement states
+
+- **Grounded:** a suitable floor or structure physically supports the ant. It may walk where permitted, and gravity cannot move it through the floor.
+- **Gripping:** the occupied Background Material supplies completed grip. Subject to clearance, the ant may move in the material's permitted directions and gravity is suppressed while grip remains valid.
+- **Falling:** the ant has neither suitable ground support nor valid grip. Gravity controls vertical motion through physically clear space until it becomes grounded or regains valid grip.
+
+Prepared grip permits left, right, up, down and valid diagonal movement within exposed, clearance-valid space. It never bypasses foreground collision. Navigation connections may be directional: an ant can fall down a smooth shaft without being able to climb back up, while progressively preparing the shaft can create a return route. Do not assume every connection is bidirectional.
+
+### 4.5 Tunnels, chambers and supporting geometry
+
+- Excavating Solid Tiles creates Exposed Spaces but does not automatically create grip. Newly exposed unprepared Background remains subject to its movement and gravity rules.
 - Tile occupancy is not exclusive: multiple ants may occupy the same traversable tile when their continuous positions and collision constraints permit it.
-- In a large chamber, strict cardinal adjacency applies. Exposed Spaces beside the floor, walls or ceiling may be traversable; unsupported central spaces are not.
-- Ants may travel around a chamber perimeter when those locations form a connected, clearance-valid route, but they cannot move freely through unsupported central airspace.
-- A surface gap is not crossable when crossing requires entering unsupported space. The prototype's automatic step-over behaviour is not an exception to this rule.
+- Unprepared chamber space may be walkable where grounded, may be entered by falling, and is not freely climbable merely because a Solid exists nearby.
+- Completed prepared Background can create controlled climbing routes through otherwise non-grippable exposed space, subject to collision and clearance.
+- A surface gap is not voluntarily crossable unless the applicable Background, grounding, grip and directional-connection rules permit it. The prototype's automatic step-over behavior is not an exception.
 
 Objects have separate collision, navigation-support, interaction and pass-through properties. Not every collider or interactable provides navigation adjacency.
 
-| Object type | Initial navigation-support rule |
+| Object type | Initial physical-support rule |
 | --- | --- |
 | Solid earth and rock | Qualifies |
 | Structural walls and platforms | Qualifies |
@@ -116,11 +134,11 @@ Objects have separate collision, navigation-support, interaction and pass-throug
 | Water | Does not qualify |
 | Large constructed obstacles | Explicitly configurable |
 
-### 4.5 Multiple ants and hybrid separation
+### 4.6 Multiple ants and hybrid separation
 
 - Friendly ants attempt local avoidance when space permits.
 - Temporary visual or physical overlap between friendly ants is acceptable when needed to prevent persistent deadlocks.
-- Avoidance must never push an ant into solid or unsupported geometry.
+- Avoidance must never push an ant into blocking terrain or a movement state invalid under the applicable Background, grounding, grip and gravity rules.
 - Crowding may reduce movement efficiency, and route selection may favour less congested alternatives.
 - No ant may remain permanently blocked without bounded recovery or a reported navigation failure.
 - Task urgency, carried loads, danger and fairness may influence yielding.
@@ -128,11 +146,11 @@ Objects have separate collision, navigation-support, interaction and pass-throug
 
 Rigid ant-to-ant collision is not required to serve as the initial traffic-management solution. All autonomous ants use the same terrain movement rules regardless of colony membership.
 
-### 4.6 Enemy colonies and hostile encounters
+### 4.7 Enemy colonies and hostile encounters
 
 Colony relationships affect decisions, not basic terrain traversability. Friendly, neutral and hostile ants use the same tile-adjacent navigation model. On encountering a hostile ant, an ant may engage, retreat, avoid, defend or request assistance according to its aggression, role, assignment and colony orders. Combat-focused ants may deliberately defend chokepoints. Detailed combat behaviour is deferred.
 
-### 4.7 Current prototype transition
+### 4.8 Current prototype transition
 
 The current `AntSurfaceMotor` provides manually tested surface movement, corner transitions and automatic step-over behaviour. It is a prototype baseline, not the final player movement design. Preserve it until tile-adjacent autonomous movement is implemented and validated. Preserve `PlayerMovementInput` for developer testing. Future work should replace or adapt these systems incrementally with regression coverage; existing contour following and automatic step-over do not override the approved navigation rules above.
 
@@ -145,13 +163,13 @@ For the first soil implementation, each excavated soil Solid Tile yields one loo
 When excavation work completes:
 
 1. Remove only the foreground Solid Tile.
-2. Leave its permanent Background Tile unchanged and visible.
+2. Leave its existing Background Tile unchanged and visible.
 3. Produce a transportable resource when the removed material defines one.
 4. Update terrain collision.
-5. Reevaluate navigation data in the affected region.
+5. Reevaluate clearance, movement capability and navigation data in the affected region.
 6. Invalidate or recalculate affected ant routes when required.
 
-Excavation never removes or destroys a Background Tile.
+Excavation never removes or destroys a Background Tile and never automatically makes it grippable. Newly exposed Earth, Stone or another unprepared Background remains non-grippable until a separate preparation job completes.
 
 | Rule | MVP behaviour |
 | --- | --- |
@@ -163,20 +181,35 @@ Excavation never removes or destroys a Background Tile.
 | Deposit | Use one known surface deposit point initially; player-defined zones later. |
 | Failure recovery | If path or dig location becomes invalid, release reservation and retry another valid order. |
 
+### 5.1 Surface Preparation
+
+**Surface Preparation** is an approved future colony job that replaces an exposed, unprepared Background Material with a completed grippable Background Material. It does not remove foreground terrain.
+
+- Work begins only from a physically accessible nearby position after a player designation or colony work decision.
+- Preparation consumes configured resources, such as stone embedded into the Background, and takes time to complete.
+- Partial progress provides no grip. Movement permissions change only after successful completion replaces the authoritative Background Material.
+- A prepared coordinate remains a Background Tile; the layer is replaced, never removed.
+- Collision, movement capability and affected navigation may need updating after completion.
+- Resource quantities, work duration, quality effects and exact work positions remain balancing and implementation decisions.
+
+Vertical routes must be prepared progressively. A worker can stand at an accessible base, prepare the first reachable section, climb only after it completes, then work on the next section from a newly valid nearby position. The system must never require a worker to occupy an inaccessible target merely to prepare it.
+
+Future logistics may add resource reservation, hauling to the work area, work over time and material consumption. These are approved directions, not implemented systems.
+
 ## 6. Ants: individuality, roles and needs
 
-All ants are persistent individuals. A caste defines biological capabilities; attributes describe innate differences; learned skills change through repeated activity; and an assigned job describes the ant’s current responsibility.
+All ants are persistent individuals. A caste may define biological capabilities; attributes describe innate differences; learned skills change through repeated activity; and an assigned job describes the ant’s current responsibility. Every ant can attempt every ordinary colony task at Skill 0. Roles express preferences and work priorities rather than hard eligibility restrictions.
 
 | Category | Initial concept |
 | --- | --- |
 | Individual identity | Unique ID/name, caste, status, assigned job. |
 | Innate attributes | Strength, movement speed and endurance (final list to be tested). |
-| Skills | Excavation, foraging, carrying and combat (combat deferred). |
+| Skills | Excavation, Surface Preparation, Construction, Hauling, Foraging, Combat and Brood Care. |
 | Needs | Health, hunger/food, hydration/water and energy/rest. |
 | Jobs | Excavator, forager and hauler initially; brood-care later. |
 | Selection | Click an ant or use the roster to inspect it and manage its work. |
 
-Autonomous priority: immediate danger → critical personal needs → assigned job → idle behaviour. Ants should automatically eat, drink and rest when supplies are available. Job interruption and resumption must be predictable.
+Autonomous priority: immediate danger → critical personal needs → assigned job → idle behaviour. Ants should automatically eat, drink and rest when supplies are available. Job interruption and resumption must be predictable. Skill may influence efficiency and job selection, but it does not prohibit an ordinary assignment; an unskilled nearby worker may reasonably be preferred over a highly skilled distant worker.
 
 ## 7. Queen transformation, brood and colony progression
 
@@ -184,11 +217,24 @@ The player starts with an ordinary ant rather than a queen. Becoming a queen may
 
 The exact egg-production timings, mating biology, nutrition costs and brood-care systems are open design decisions, not implementation requirements for the first prototype.
 
-## 8. Skills and progression
+## 8. Universal skills and progression
 
-Skills improve by performing relevant actions, not by spending conventional level-up points. Excavation increases through digging, foraging through collecting food, and carrying through transporting loads. Improvements should be noticeable but moderate to avoid extreme productivity gaps.
+Every ant has every ordinary skill, represented from **0 to 100**, and begins at 0. Level 0 never prevents successful ordinary work: inexperience may make work slower, less resource-efficient, less productive or less consistent where appropriate, but it must not create a failure loop that prevents learning.
 
-Example only: a skilled excavator might complete work ~20% faster than a novice. No progression curves or rates are locked yet.
+Skills improve through meaningful successful work rather than conventional level-point spending. Successful excavation improves Excavation; completed Surface Preparation improves Surface Preparation; delivered resources improve Hauling; gathered food improves Foraging; and applicable completed construction improves Construction. Starting and cancelling jobs must not award exploitable experience.
+
+Gains may slow as a skill approaches 100. Higher skill may reduce completion time or waste, or improve productivity, effectiveness or consistency, but each skill uses only effects relevant to its task. Exact gain formulas, success criteria, difficulty modifiers and performance curves remain balancing decisions.
+
+### 8.1 Inactivity decay above 50
+
+- Each skill tracks successful use independently for each ant.
+- Skills at or below 50 never decay through inactivity.
+- Skills above 50 decay slowly while unused and stop at exactly 50.
+- Successful relevant work can raise a decayed skill again.
+- Decay never produces a negative value or reduces a skill below 50.
+- A configurable inactivity grace period should prevent ordinary rest, eating or short task changes from causing decay.
+
+The exact grace period and decay rate are not yet defined. For example, an ant with Excavation 85, Surface Preparation 72, Hauling 43 and Foraging 18 will gradually retain 50 in the two unused high skills, while Hauling and Foraging remain unchanged.
 
 ## 9. Food, water and productivity
 
@@ -220,10 +266,10 @@ Lose/pressure conditions are deliberately light in v1: a failed colony may occur
 | Stage | Deliverable / test |
 | --- | --- |
 | Milestone 1 — Movement prototype baseline | Preserve and finish validating the current manually driven surface-movement prototype as regression evidence; it is not the final player control design. |
-| Milestone 2 — World tiles and autonomous navigation | Build on the sparse 32×32 two-layer chunk data foundation, visualise navigation classification, route one ant to a developer-assigned destination, validate all supported geometry, then update terrain and navigation incrementally. |
+| Milestone 2 — World tiles and autonomous navigation | Build on the sparse 32×32 two-layer chunk foundation, validate physical clearance separately from Background movement capability, create directional connections, then move one ant autonomously. |
 | Selection and task management | Inspect individual ants and support both colony-wide priorities and individual task assignments. |
 | Multi-ant movement | Add hybrid separation, congestion-aware routing and bounded recovery. |
-| Autonomous work | Perform excavation, soil transport, gathering and needs-driven behaviour. |
+| Autonomous work | Perform excavation, Surface Preparation, resource transport, gathering and needs-driven behaviour. |
 | Population and conflict | Scale toward hundreds of simulated ants, then support enemy-colony movement and high-level hostile responses. |
 | Finished slice | Add onboarding, a clear objective, win/lose feedback, save/load and a usability pass. |
 
@@ -238,8 +284,8 @@ Lose/pressure conditions are deliberately light in v1: a failed colony may occur
 
 ## 14. Engineering principles
 
-- Unity 6 + C#; single-player first. Represent permanent Background Tiles separately from optional foreground Solid Tiles.
-- Use one tile-adjacent terrain navigation model for all autonomous ants, with whole-body clearance and authoritative collision.
+- Unity 6 + C#; single-player first. Represent the permanently present, replaceable Background Material separately from optional foreground Solid Tiles.
+- Use one navigation model for all autonomous ants, with authoritative collision, whole-body clearance, Background movement capability, grounding, grip and gravity evaluated as separate concerns.
 - Keep world state (tiles, designated jobs, carried loads, ant stats) independent of visual presentation.
 - Keep local traversability distinct from connectivity and reachability.
 - Update navigation locally after terrain edits where practical; profile only once the core loop works.
@@ -256,11 +302,14 @@ Autonomous movement is approved but not implemented. It must support excavation 
 
 The design separates these conceptual responsibilities. They describe boundaries, not mandatory class names:
 
-- **World Tile Data:** stores resident 32×32 chunks containing a permanent Background Tile layer and optional foreground Solid Tile layer plus their configured properties. Missing chunks remain explicitly unavailable.
+- **World Tile Data:** stores resident 32×32 chunks containing one permanently present but material-replaceable Background Tile per coordinate, plus an optional foreground Solid Tile and their configured properties. Missing chunks remain explicitly unavailable.
 - **Terrain/Excavation System:** removes completed excavatable Solid Tiles, produces configured resources, updates collision and announces affected regions.
+- **Surface Preparation System:** reserves accessible work, consumes configured resources over time, and replaces an exposed Background Material only when preparation completes.
 - **Colony Task System:** decides what work exists and which ants may perform it, using designations, priorities, roles, skills, availability and explicit individual assignments.
 - **Ant Navigation Agent:** selects destinations, requests paths, follows routes and reports invalid or unreachable results.
-- **Shared Navigation Map:** derives Traversable and Reachable Space, connectivity, clearance and relevant obstacles from world tile and object data.
+- **Physical Clearance:** determines whether the full body fits in available, non-blocking space without deciding grip, grounding or reachability.
+- **Movement Capability:** derives voluntary directions, prepared grip, grounding and gravity eligibility from Background and applicable support data.
+- **Shared Navigation Map:** builds directional connections and Reachable Space from clearance, movement capability and relevant obstacles.
 - **Ant Movement Controller:** moves one ant continuously toward route waypoints while keeping the whole body inside valid space.
 - **Local Avoidance:** handles nearby ants, congestion, yielding and hybrid separation without creating invalid movement.
 - **Physics/Collision:** prevents penetration of solid terrain and relevant objects.
@@ -270,16 +319,16 @@ These responsibilities may begin as small cooperating components or data structu
 ### 15.1 Traffic and deadlock rules
 
 - Friendly ants use local avoidance where space permits, but temporary overlap is acceptable to break deadlocks.
-- Avoidance and yielding never move ants through terrain or unsupported space.
+- Avoidance and yielding never move ants through terrain or into a movement state invalid under the applicable Background, grounding, grip and gravity rules.
 - Waiting is valid temporarily, but excessive waiting must trigger bounded recovery such as reversing to a wider area, choosing an alternate route or replanning.
 - Repeated collision attempts are not the primary navigation strategy.
 - Replanning requests must be rate-limited or otherwise bounded to avoid uncontrolled repeated pathfinding.
 - Recovery rules must prevent endless cycles where two ants repeatedly yield to one another.
 - Task urgency, carrying state, danger and fairness may contribute to deterministic yielding decisions.
 
-### 15.2 Dynamic excavation updates
+### 15.2 Dynamic terrain and preparation updates
 
-Removing a foreground Solid Tile exposes its unchanged Background Tile. This can open Traversable Space, connect tunnels, widen a passage and change which Exposed Spaces have qualifying cardinal adjacency. Terrain collision and affected navigation regions must update together, and ants whose routes are affected must reconsider them safely. Runtime navigation therefore cannot rely on a once-baked static map.
+Removing a foreground Solid Tile exposes its unchanged Background Tile. This can open physical space without granting controlled grip. Completing Surface Preparation replaces the authoritative Background Material and can add new voluntary directions or suppress gravity while gripping. Collision, clearance, movement capability and directional connections must update for the affected region, and ants whose routes are affected must reconsider them safely. Runtime navigation therefore cannot rely on a once-baked static map.
 
 ### 15.3 Scalability expectations
 
@@ -294,9 +343,12 @@ Removing a foreground Solid Tile exposes its unchanged Background Tile. This can
 
 ## 16. Open design questions
 
-- Which concrete tile-map data structure and pathfinding algorithm best meet the strict cardinal-support, eight-direction connection and incremental-update rules at the target scale?
+- Which concrete pathfinding representation best supports directional walking, gripping and falling connections with incremental updates at the target scale?
 - How should the approved Background Tile and Solid Tile layers map onto the project's eventual Unity Tilemaps or other runtime data without duplicating authoritative state?
-- What clearance sampling or swept-body test is accurate enough for corners and non-square geometry without becoming too costly?
+- What production clearance margin and swept-body test are accurate enough for corners and non-square geometry without becoming too costly?
+- What Background Material data best represents allowed directions, grip strength and gravity behavior without hardcoding individual materials?
+- What Surface Preparation resource quantities, work duration, quality effects and nearby work-position rules produce useful progression?
+- What skill gain curve, successful-work definition, inactivity grace period and decay rate preserve specialisation without excessive maintenance?
 - Which congestion cost and yielding policy best balances task urgency, carrying status, danger and fairness?
 - Which qualifying constructed objects should provide navigation support in the first playable slice?
 - What failure feedback should be shown to the player when a task destination is invalid or unreachable?
@@ -311,4 +363,4 @@ Removing a foreground Solid Tile exposes its unchanged Background Tile. This can
 
 An idea is not added to the current milestone unless it directly enables its acceptance test or fixes a blocker. New ideas go into the backlog, and the project remains single-player until a finished small game exists.
 
-Immediate implementation sequence: complete any remaining Milestone 1 regression acceptance, then begin Milestone 2.1 by inspecting the current world representation and establishing the smallest two-layer tile model plus navigation visualisation without changing movement behaviour. Do not begin autonomous routing, excavation, queen transformation, reproduction or needs simulation as part of that slice.
+Immediate implementation sequence: preserve remaining Milestone 1 regression acceptance, finish reconciling Milestone 2.2B physical clearance with its support-independent definition, then implement 2.2C Background movement capability and gravity eligibility before directional connections or autonomous movement. Excavation jobs, Surface Preparation logistics, skill systems, queen transformation, reproduction and needs simulation remain later work.

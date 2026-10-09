@@ -6,7 +6,7 @@
 
 **Status:** In progress. The user has confirmed floor movement, vertical wall climbing, and resolution of the previously reported corner-transition deadlock in Unity Play Mode. Ceiling/corner route acceptance is still incomplete. Bounded Auto Step-Over is now implemented for one-tile openings and awaits its first Play Mode acceptance pass.
 
-Milestone 1 is explicitly a prototype and regression baseline, not the final player control design. Milestones 2.1B through 2.1E are complete and verified alongside that prototype; the user confirmed all 11 manual 2.1D checks and all 10 manual 2.1E visual checks. Milestone 2.2A now projects blocking terrain collision from authoritative world data in the dedicated navigation prototype and passes automated validation. Its manual Unity collision check remains pending, so 2.2A is not complete. Autonomous navigation, colony management and individual task assignment have not been implemented.
+Milestone 1 is explicitly a prototype and regression baseline, not the final player control design. Milestones 2.1B through 2.2A are complete and verified alongside that prototype; Milestone 2.2A passed 117/117 automated tests and all 12 manual collision checks. A Milestone 2.2B whole-capsule prototype passes automated validation, but GDD v3.2 now requires physical clearance to be independent of support/grip and the implementation still requires an old `Supported` centre classification. It must be revised before manual acceptance or completion. Autonomous navigation, Background movement capability, Surface Preparation, skills, colony management and individual task assignment have not been implemented.
 
 ## Repository and architecture
 
@@ -67,21 +67,34 @@ Milestone 1 is explicitly a prototype and regression baseline, not the final pla
 - One `TilemapCollider2D` feeds one manually generated `CompositeCollider2D` on a static `Rigidbody2D` using the existing `ClimbableSurface` layer. Adjacent cells merge without per-tile GameObjects or duplicate terrain hits.
 - Explicit cell, chunk and bounded-region refreshes update only requested collision occupancy. `SynchronizeCollisionGeometry` processes pending Tilemap collider changes, regenerates composite geometry and synchronizes transforms before development physics queries.
 - The custom inspector reports authoritative blocking state and projected collision occupancy for the selected debug cell, refreshes a cell or selected region, coordinates the existing controlled Solid mutation, and can toggle collision-outline Gizmos.
-- Unity compilation, the expanded scene/material/collider validator, and all 117/117 Edit Mode tests pass. The 28 new tests use Physics2D queries for presence, absence, mutation and alignment across signed chunk boundaries. Manual graphics-enabled collision verification remains pending, so Milestone 2.2A is not complete.
+- Unity compilation, the expanded scene/material/collider validator, and all 117/117 Edit Mode tests passed. The user subsequently confirmed all 12 manual Unity collision checks, so Milestone 2.2A is complete.
 - This collision projection is development-scene infrastructure only. It does not establish whole-body clearance, connectivity, reachability, pathfinding, autonomous movement, procedural generation or excavation gameplay.
+
+### Milestone 2.2B ant body clearance validation
+
+- `AntClearanceValidator` is a scene-independent, read-only service that checks a complete rotated capsule directly against authoritative movement-blocking Solid cells. It does not read Tilemaps or collider geometry and therefore cannot return a stale result after a successful world-data mutation.
+- `AntCollisionProfile` carries local capsule size, offset, long axis and optional clearance margin. The initial `OrdinaryAnt` profile matches the unchanged movement-scene ant: its prefab-local 1.2×0.6 capsule is scaled by the authored 0.8×0.5 instance scale to an effective horizontal 0.96×0.3-world-unit body with zero offset.
+- Results currently distinguish Clear, Blocked by terrain, Unsupported centre, Unavailable/unknown world data and invalid query/profile. The tested implementation requires an exposed, Supported centre plus a fully available, non-blocking footprint.
+- Capsule-versus-cell testing uses the exact central segment plus radius against candidate 1×1 axis-aligned cells. Rotation and collider offset are applied mathematically, only the footprint's bounded cell range is queried, exact tangency is permitted within a `0.00001`-unit tolerance, and an optional margin provides conservative separation.
+- This support requirement is no longer the approved physical-clearance contract. GDD v3.2 defines clearance as physical fit only, allowing a falling ant to be Clear in non-grippable exposed space; Background grip, grounding, gravity and voluntary directions move to Milestone 2.2C.
+- `AntNavigationPrototype.unity` includes an `Ant Clearance Inspector` with an editable position, orientation and profile, a colour-coded exact capsule outline, a Scene-view position handle, a result label and explicit query button. It creates no gameplay ant, collider or Rigidbody2D.
+- Unity compilation, focused 36/36 clearance tests, the expanded scene validator and the full 153/153 Edit Mode suite pass for the current implementation. Those results remain valid regression evidence but do not prove the revised support-independent requirement. Manual acceptance is deferred until the implementation and tests are reconciled; Milestone 2.2B is not complete.
 
 ## Approved future design, not implemented beyond the data foundation
 
 - Normal play manages ants through selection, inspection, designations, colony priorities and specific task assignments; it does not directly steer them.
-- Every coordinate in a generated chunk contains one permanent Background Tile and may additionally contain one foreground Solid Tile; ungenerated chunks remain unavailable.
-- Excavation removes an excavatable Solid Tile, leaves its Background Tile unchanged, updates collision and reevaluates affected navigation.
-- Background Tiles do not inherently block movement or provide navigation support.
-- Traversable Exposed Spaces require Qualifying Geometry in a cardinal direction, adequate whole-body clearance and applicable obstacle clearance. Reachable Space additionally requires a valid connection to the ant's current navigation region.
-- Eight-direction route connections are allowed, but diagonal corner-cutting and unsupported-air movement are not.
-- Large chamber centres without cardinal support remain unsupported; perimeter routes may be valid.
+- Every coordinate in a generated chunk contains one permanently present Background Tile whose material may be replaced, plus zero or one foreground Solid Tile; ungenerated chunks remain unavailable.
+- Background Materials are the primary authority for voluntary directions, intrinsic grip and gravity behavior. Background existence alone grants no movement permission.
+- Excavation removes an eligible foreground Solid, leaves its Background unchanged, updates affected systems and does not automatically grant grip.
+- Surface Preparation is an approved future job that consumes resources and time from an accessible nearby work position, then replaces an exposed unprepared Background with a grippable material only on completion. Vertical routes are prepared progressively.
+- Physical clearance, Background movement capability and directional navigation connections are separate. Falling through physically clear, non-grippable space may be valid even when upward voluntary movement is not.
+- Prepared grip can permit clearance-valid two-dimensional movement without immediate Solid adjacency. Foreground `BlocksMovement` always remains authoritative, and `SupportsNavigation` stays independent.
+- Navigation connections may be directional; diagonal corner-cutting through blocking geometry remains invalid.
+- Every ant starts every ordinary skill at 0, can perform ordinary tasks without a specialist gate, and improves from successful work on a 0–100 scale. Roles remain preferences and priorities.
+- Independently tracked skills above 50 slowly decay after inactivity and stop at exactly 50; skills at or below 50 do not decay through inactivity.
 - Multiple ants may share a tile and use hybrid separation, local avoidance and bounded recovery rather than universal one-ant-per-tile occupancy.
 - Friendly, neutral and hostile colonies share the same terrain navigation model.
-- The proposed architecture separates world tile data, terrain/excavation changes, colony task decisions, shared navigation data, per-ant route following, continuous movement, local avoidance and authoritative collision.
+- The proposed architecture separates world tile data, terrain/excavation and preparation changes, physical clearance, Background movement capability, directional navigation, colony task decisions, per-ant route following, continuous movement, local avoidance and authoritative collision.
 - The design target allows potentially hundreds of simulated ants, but no DOTS/ECS or other substantial dependency is approved before profiling demonstrates a need.
 
 ## Implemented and Play Mode confirmed
@@ -219,7 +232,15 @@ For the Milestone 2.2A terrain-collision slice:
 - The scene validator passed the single collision-only Tilemap hierarchy, collider-free visual layers, material references and independent flag examples, `ClimbableSurface` assignment, static composite configuration, signed boundary alignment, mutation refresh, Background persistence, classifier isolation and duplicate-hit check.
 - The complete Edit Mode suite passed 117/117: the existing 89 regression cases plus 28 new collision cases.
 - The new cases exercise real Physics2D queries for blocking and non-blocking materials, all four blocking/support flag combinations, add/remove/replace mutations, merged neighbours, immediate explicit synchronization, requested-region isolation, unavailable chunks, repeated-refresh component stability, integer-centred cells and positive/negative X and Y chunk boundaries.
-- Graphics-enabled manual collision verification is still pending; 2.2A therefore remains in progress.
+- The user confirmed all 12 graphics-enabled manual collision checks. Milestone 2.2A is complete.
+
+For the Milestone 2.2B ant-clearance slice:
+
+- Unity compiled the authoritative clearance API, Scene-view inspector and focused tests without C# errors.
+- The focused clearance suite passed 36/36, covering support/occupancy failure reasons, complete-body overlap, four material-flag combinations, horizontal/vertical/intermediate rotation, rotated offset, margin, narrow passages, concave corners, tangency tolerance, all signed chunk boundaries and quadrants, four-chunk footprints, missing target/footprint chunks, live mutations, and scene/physics independence.
+- The scene validator passed the authored ordinary-ant 0.96×0.3 effective profile, Clear test pose, and absence of gameplay physics components on the inspector.
+- The complete Edit Mode suite passed 153/153: all 117 existing regression cases plus 36 new clearance cases. Existing movement regression coverage remains 2/2.
+- GDD v3.2 supersedes the tested requirement that physical Clear needs a Supported centre. The implementation and focused tests must first separate physical fit from Background grip/grounding eligibility; manual Scene-view acceptance follows that revision. Milestone 2.2B remains in progress.
 
 ## Manual Play Mode checklist
 
@@ -256,11 +277,14 @@ For the Milestone 2.2A terrain-collision slice:
 - The current Step-Over path is intentionally straight between parallel supports. Irregular, curved, offset, or routed openings remain unsupported.
 - The follow camera remains unimplemented.
 - World data, material visuals, the classifier and authoritative terrain collision are connected only to the separate developer navigation scene. They are not connected to generation, persistence, pathfinding, autonomous movement, excavation gameplay, or legacy DirtBlocks.
-- The collision projection currently requires an explicit cell, chunk or bounded-region refresh after authoritative Solid mutation; no terrain-change event stream or chunk streaming lifecycle exists yet.
-- Navigation classification still describes local occupancy and cardinal support only. It does not yet validate ant-body or obstacle clearance against the new collider geometry.
-- Milestone 2.2A needs a graphics-enabled manual Unity collision check before it can be marked complete.
+- The collision projection currently requires an explicit cell, chunk or bounded-region refresh after authoritative Solid mutation; no terrain-change event stream or chunk streaming lifecycle exists yet. Clearance itself reads world data directly and does not share that staleness risk.
+- Static clearance currently rejects a physically fitting but unsupported pose. This conflicts with the approved physical-fit-only contract and must be corrected before 2.2B acceptance.
+- Static clearance does not validate Background permissions, grip, grounding, gravity, a swept movement segment, directional movement edge, route connectivity, Reachable Space, dynamic objects or ant-to-ant separation.
+- Mathematical tangency is permitted within a `0.00001`-unit tolerance; future movement integration may use a small positive profile margin to remain conservative relative to Unity Physics2D contact handling.
+- Background Material movement/grip/gravity properties, Surface Preparation, resource consumption, universal 0–100 skills and inactivity decay above 50 are design-approved but not implemented.
+- Milestone 2.2B needs implementation/test reconciliation and then a graphics-enabled manual Scene-view clearance check before it can be marked complete.
 - Autonomous navigation, multi-ant occupancy, and colony simulation remain later milestones.
 
 ## Recommended next implementation step
 
-Open `Assets/AntColony/Scenes/AntNavigationPrototype.unity` in a graphics-enabled Unity Editor and complete the Milestone 2.2A manual collision check. Inspect representative ground, wall, ceiling, tunnel, chamber and signed-boundary cells; enable collision outlines; confirm Background and non-blocking foreground cells have no terrain collision; confirm blocking/non-supporting and blocking/supporting examples do; then use `Toggle Test Solid and Refresh Cell` twice and verify visuals, collision and classification remove and restore together while Background remains. Confirm an appropriate Rigidbody2D/Collider2D probe cannot penetrate blocking terrain and does not collide with non-blocking examples. Do not begin clearance, pathfinding, autonomous movement, excavation gameplay or movement replacement as part of that pass.
+Revise the Milestone 2.2B clearance contract, tests and diagnostics so they report only whether the complete capsule physically fits in available, non-blocking authoritative space. A physically clear pose in Sky or an unprepared shaft must not fail merely because it lacks grip or foreground support. Preserve the tested rotation, offset, margin, mutation and signed-chunk behavior, then repeat automated and manual Scene-view acceptance. Do not begin 2.2C Background movement capability, directional connections, Surface Preparation gameplay, skills, pathfinding or autonomous movement as part of that correction.

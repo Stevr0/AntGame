@@ -4,7 +4,7 @@
 
 This roadmap reflects the repository as inspected on 9 October 2026. Milestone 1 is in progress. The user has confirmed floor and isolated wall movement plus resolution of the reported corner deadlock in Play Mode. Ceiling/corner route acceptance and the newly implemented Auto Step-Over slice still await complete Play Mode acceptance.
 
-`GameDesignDocument.md` version 0.4 is the primary design reference. Milestone 1 records the existing manually driven movement prototype as a regression baseline. The approved future foundation is a two-layer world model—one permanent Background Tile at every coordinate plus an optional foreground Solid Tile—combined with autonomous tile-adjacent navigation and Hybrid Task Management.
+`GameDesignDocument.md` version 3.2 is the primary design reference. Milestone 1 records the existing manually driven movement prototype as a regression baseline. The approved future foundation is a two-layer world model—one permanently present but replaceable Background Material at every coordinate plus an optional foreground Solid Tile—combined with Background-driven movement, directional navigation and Hybrid Task Management.
 
 ## Milestone 1 — Player Ant Movement Prototype
 
@@ -141,9 +141,9 @@ The existing root-level Unity template assets can remain where they are until th
 
 ## Milestone 2 — World Tiles and Autonomous Navigation
 
-**Status:** In progress. Milestones 2.1B through 2.1E are complete and verified, including all 11 manual 2.1D checks and all 10 manual 2.1E visual checks. Milestone 2.2A's authoritative-data-driven terrain collision is implemented and automated validation passes; manual Unity collision acceptance remains pending.
+**Status:** In progress. Milestones 2.1B through 2.2A are complete and verified. Milestone 2.2A passed 117/117 automated tests and all 12 manual Unity collision checks. A 2.2B clearance prototype passes automated tests, but it still couples physical clearance to the superseded foreground-support rule and must be revised before manual acceptance or completion.
 
-**Goal:** Establish the approved two-layer world representation, then prove that one ant can autonomously route and move through Exposed Space that is cardinally adjacent to Qualifying Geometry without entering Unsupported Space or requiring direct movement input.
+**Goal:** Establish the approved two-layer world representation, validate physical body clearance independently, derive Background-based walking/gripping/falling capability, build directional connections, then prove that one ant can move autonomously without direct movement input.
 
 Milestone 2 must retain `AntSurfaceMotor` and `PlayerMovementInput` as prototype and developer-test tools until the replacement movement is validated. Existing corner-following and Auto Step-Over behaviour are not authoritative navigation rules.
 
@@ -157,7 +157,7 @@ Milestone 2 must retain `AntSurfaceMotor` and `PlayerMovementInput` as prototype
 - **2.1D — Navigation visualisation:** Complete. The separate `AntNavigationPrototype` developer scene uses a deterministic eight-chunk fixture and one bounded batched mesh to display the actual classifier's Covered, Supported, Unsupported, Unknown, and Unavailable results. The automated suite passed 61/61 and the user confirmed all 11 manual visual acceptance checks plus unchanged original ant movement.
 - **2.1E — World Tilemap integration:** Complete. Separate Background and foreground Solid Tilemaps project explicitly requested resident chunks from `ChunkedWorldData` through registered material definitions. Explicit cell, chunk, and bounded-region refreshes preserve Background visuals during Solid mutation, diagnose missing visuals safely, align signed cells through an explicit half-cell Grid offset, and add no collision components.
 - The 2.1E Edit Mode suite passed 89/89, including 28 Tilemap projection cases, the expanded scene validator passed, and the user confirmed all 10 manual visual checks.
-- Supported classification remains only terrain eligibility; body clearance, obstacles, connectivity, and Reachable Space are later work.
+- The existing Supported classification remains a useful foreground-adjacency diagnostic, not the complete movement-capability rule; body clearance, Background permissions, grip, grounding, gravity, directional connectivity and Reachable Space are separate work.
 - Preserve Background Tiles when a coordinate is covered by a Solid Tile.
 - Visualise which cardinal Qualifying Geometry makes an Exposed Space navigation-eligible.
 - Keep local traversability distinct from connectivity and Reachable Space.
@@ -166,38 +166,38 @@ Milestone 2 must retain `AntSurfaceMotor` and `PlayerMovementInput` as prototype
 
 **Acceptance:** Every inspected resident coordinate has one Background Tile and no more than one Solid Tile; visualisation consistently distinguishes Covered, Supported, Unsupported, Unknown, and Unavailable cells, rejects diagonal-only or Background-Tile-only support, and changes no ant movement. Supported does not imply clearance, connectivity, or reachability.
 
-### 2.2 — Autonomous Destination Navigation
+### 2.2 — Clearance, Movement Capability and Autonomous Navigation
 
-- **2.2A — Authoritative terrain collision:** Implemented; manual acceptance pending. The dedicated navigation scene has a separate invisible collision Tilemap derived from authoritative Solid Material `BlocksMovement` flags. Background and visual foreground Tilemaps remain collider-free, while `SupportsNavigation` stays independent. One Tilemap collider, static Rigidbody2D and manually refreshed Composite collider merge adjacent blocking cells on `ClimbableSurface` without per-tile GameObjects.
+- **2.2A — Authoritative terrain collision:** Complete. The dedicated navigation scene has a separate invisible collision Tilemap derived from authoritative Solid Material `BlocksMovement` flags. Background and visual foreground Tilemaps remain collider-free, while `SupportsNavigation` stays independent. One Tilemap collider, static Rigidbody2D and manually refreshed Composite collider merge adjacent blocking cells on `ClimbableSurface` without per-tile GameObjects.
 - Explicit cell, chunk and bounded-region collision refreshes process pending Tilemap changes and synchronize Physics2D before validation. The deterministic fixture adds supporting/non-blocking and blocking/non-supporting examples alongside its existing terrain and signed chunk boundaries.
-- Unity compilation and the expanded scene/material/collider validator pass. The full Edit Mode suite passes 117/117, including 28 new Physics2D collision cases. A graphics-enabled manual collision pass is still required before 2.2A is complete.
-- Collision does not yet imply ant-body clearance, route connectivity or reachability. This slice adds no pathfinding, autonomous movement, procedural generation or excavation gameplay.
-- Provide a developer tool to assign one destination to one ant.
-- Calculate a route through connected, clearance-valid navigation space.
-- Follow route waypoints with continuous 2D movement and no direct movement input.
-- Report invalid and unreachable destinations clearly and fail safely.
+- Unity compilation and the expanded scene/material/collider validator passed. The Edit Mode suite passed 117/117, including 28 Physics2D collision cases, and the user confirmed all 12 manual collision checks.
+- **2.2B — Physical ant-body clearance:** In progress. Keep the existing full rotated-capsule geometry, authoritative `BlocksMovement` queries, unavailable-footprint handling and diagnostics, but remove grip/support eligibility from the physical-fit decision. A falling ant may be physically Clear in non-grippable Sky or a smooth shaft. The current implementation and its 36 focused tests require revision because `Clear` presently requires an exposed, Supported centre. Manual acceptance remains pending.
+- **2.2C — Background movement capability and gravity eligibility:** Not started. Define Background Material properties for voluntary directions, completed grip and gravity behavior; evaluate Grounded, Gripping and Falling states without confusing them with physical clearance. Unprepared Background requires suitable ground for walking and provides no intrinsic climbing. Prepared Background permits configured two-dimensional grip after work completes.
+- **2.2D — Directional navigation connections:** Not started. Combine full-body clearance with Background permissions, grounding, grip, falling, missing-world handling and applicable obstacles. Connections may be one-way—for example, falling down an unprepared shaft without a return climb—and must reject invalid diagonal corner cutting.
+- **2.2E — Autonomous destination movement:** Not started. Provide a developer destination tool, route through valid directed connections, follow waypoints continuously without direct input, and report invalid or unreachable destinations safely.
 
-**Acceptance:** One ant reaches valid destinations on connected routes, while invalid or disconnected destinations produce clear feedback without teleportation, free flight or an invalid movement state.
+**Acceptance:** 2.2B reports physical fit independently of grip; 2.2C reports movement/gravity state; 2.2D produces safe directional connections; and 2.2E moves one ant to valid destinations without teleportation, free flight or an invalid movement state.
 
-### 2.3 — Movement and Clearance Validation
+### 2.3 — Integrated Movement Validation
 
 - Validate routes beside ground, vertical walls, ceilings, corners and overhangs.
-- Validate excavated tunnels and large chambers using strict cardinal adjacency.
-- Prevent unsupported-air traversal and diagonal corner-cutting.
+- Validate excavated tunnels, prepared climbing regions, unprepared shafts and large chambers using Background capability, grounding, grip and falling rules.
+- Prevent invalid voluntary movement and diagonal corner-cutting while permitting valid directional falling.
 - Validate every path segment for the full ant-body clearance, not only tile centres.
 - Confirm invalid navigation states stop, recover or report failure safely.
 
-**Acceptance:** The validation course proves the same movement model across all listed geometry and rejects every deliberately unsupported, obstructed or insufficient-clearance route.
+**Acceptance:** The validation course proves the same movement model across all listed geometry, permits intended directional falling, and rejects every invalid voluntary, obstructed or insufficient-clearance route.
 
 ### 2.4 — Dynamic Terrain and Navigation Updates
 
 - Remove excavatable foreground Solid Tiles in a controlled test while keeping their Background Tiles unchanged.
 - Update terrain collision after removal.
-- Reclassify affected navigation regions after excavation or another terrain change.
+- Replace a designated exposed Background Material only after a preparation job completes.
+- Reevaluate clearance, movement capability and directional navigation after excavation, preparation or another terrain change.
 - Update or invalidate routes whose traversability, connectivity or clearance changed.
 - Prefer local, incremental updates over rebuilding the entire map.
 
-**Acceptance:** Controlled excavation removes only the Solid Tile, retains the Background Tile, updates collision and affected navigation data, and causes an impacted ant to replan or report failure without using stale route segments.
+**Acceptance:** Controlled excavation removes only the Solid Tile and retains the Background; completed preparation replaces only the Background Material. Both operations update their affected collision/capability/navigation data and cause an impacted ant to replan or report failure without stale route segments.
 
 ## Subsequent milestones
 
@@ -209,9 +209,9 @@ These milestones are ordered direction, not approved implementation work. Their 
 | 4 — Hybrid task assignment | Support colony-wide designations and priorities plus specific task assignment to an eligible individual. | Not started |
 | 5 — Multiple-ant movement | Allow shared-tile presence, local avoidance, temporary friendly overlap, congestion-aware routing and bounded recovery without invalid displacement. | Not started |
 | 6 — Autonomous worker loop | Select and perform eligible work while responding predictably to urgent needs and task invalidation. | Not started |
-| 7 — Excavation and soil transport | Excavate reachable foreground Solid Tiles, retain Background Tiles, carry configured removed-material resources and update navigation incrementally. | Not started |
+| 7 — Excavation, Surface Preparation and resources | Excavate reachable foreground Solids, retain their Backgrounds, prepare exposed Background Materials progressively from accessible positions, and reserve/haul/consume configured resources. | Not started |
 | 8 — Population and performance | Scale toward potentially hundreds of independently simulated ants using shared navigation data, efficient nearby-ant lookup and controlled update frequencies. | Not started |
 | 9 — Enemy colonies and hostile interactions | Reuse the same terrain navigation for other colonies and add high-level engage, retreat, avoid, defend and assistance responses. | Not started |
-| 10 — Survival, growth and finished slice | Add needs, skill progression, later queen/brood progression, onboarding, objectives, save/load and usability in bounded slices. | Not started |
+| 10 — Skills, survival, growth and finished slice | Add universal 0–100 skill progression with inactivity decay above 50, needs, later queen/brood progression, onboarding, objectives, save/load and usability in bounded slices. | Not started |
 
-No new milestone is complete without implementation and validation evidence. Milestone 2.1B passed 25/25 focused Unity Edit Mode tests and is complete. Milestone 2.1C passed the user-confirmed 50/50 acceptance run and is complete. Milestone 2.1D passed 61/61 plus all 11 manual visual checks and is complete. Milestone 2.1E passed 89/89 plus all 10 manual visual checks and is complete. Milestone 2.2A passes 117/117 and structural validation, but manual Unity collision acceptance is pending. Clearance validation, pathfinding, autonomous navigation, procedural generation, excavation gameplay, persistence, and streaming are not implemented.
+No new milestone is complete without implementation and validation evidence. Milestone 2.1B passed 25/25 focused Unity Edit Mode tests and is complete. Milestone 2.1C passed the user-confirmed 50/50 acceptance run and is complete. Milestone 2.1D passed 61/61 plus all 11 manual visual checks and is complete. Milestone 2.1E passed 89/89 plus all 10 manual visual checks and is complete. Milestone 2.2A passed 117/117 plus all 12 manual collision checks and is complete. The current 2.2B prototype passes 153/153 and structural validation, but it does not yet satisfy the revised support-independent physical-clearance rule and remains in progress. Background movement capability, directional connections, autonomous movement, excavation jobs, Surface Preparation, resources, skills, persistence and streaming are not implemented.

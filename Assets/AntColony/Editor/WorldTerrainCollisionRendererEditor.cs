@@ -57,6 +57,8 @@ namespace AntColony.EditorTools
                         NavigationTestWorldHost.TilemapMutationCell);
                     FindInScene<NavigationDebugRenderer>(collisionRenderer)
                         ?.RefreshOverlay();
+                    FindInScene<AntClearanceDebugRenderer>(collisionRenderer)
+                        ?.RunQuery();
                     SceneView.RepaintAll();
                 }
             }
