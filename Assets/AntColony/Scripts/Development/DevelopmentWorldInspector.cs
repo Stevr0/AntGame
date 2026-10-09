@@ -89,6 +89,10 @@ namespace AntColony.Development
             {
                 TogglePreparedBackground();
             }
+            if (GUILayout.Button("Move Ant to Grip Fixture Top"))
+            {
+                SelectGripFixtureTop();
+            }
             if (GUILayout.Button(backgroundOnlyVisuals
                     ? "Restore Foreground Visuals"
                     : "Isolate Background Visuals"))
@@ -123,6 +127,14 @@ namespace AntColony.Development
             textBuilder.Append("Chunk: ")
                 .Append(WorldTileCoordinates.GetChunkCoordinate(selectedCell))
                 .AppendLine();
+            if (worldHost != null && worldHost.IsWorldDataAvailable)
+            {
+                textBuilder.Append("Grip fixture: ")
+                    .Append(worldHost.GripFixtureBottom)
+                    .Append(" to ")
+                    .Append(worldHost.GripFixtureTop)
+                    .AppendLine();
+            }
 
             Vector3Int tilemapCell =
                 WorldTilemapRenderer.WorldCellToTilemapCell(selectedCell);
@@ -207,8 +219,20 @@ namespace AntColony.Development
             }
 
             builder.Append("Ant position: ").Append(ant.Position).AppendLine();
-            builder.Append("Ant state: ").Append(ant.State)
+            builder.Append("Locomotion: ").Append(ant.LocomotionState).AppendLine();
+            builder.Append("Command: ").Append(ant.State)
                 .Append("   Moving: ").Append(ant.IsMoving)
+                .AppendLine();
+            builder.Append("Ant Background: ")
+                .Append(string.IsNullOrEmpty(ant.BackgroundMaterialId)
+                    ? "Unavailable"
+                    : GetBackgroundName(
+                        worldHost.WorldData,
+                        ant.BackgroundMaterialId))
+                .AppendLine();
+            builder.Append("Grip: ").Append(ant.HasBackgroundGrip)
+                .Append("   Gravity eligible: ")
+                .Append(ant.ShouldApplyGravity)
                 .AppendLine();
             builder.Append("Destination: ")
                 .Append(ant.HasDestination ? ant.Destination.ToString() : "None")
@@ -222,7 +246,23 @@ namespace AntColony.Development
                 worldHost.TogglePreparedBackground(selectedCell)
                     ? $"Background replaced and refreshed at Tilemap cell " +
                         $"{WorldTilemapRenderer.WorldCellToTilemapCell(selectedCell)}."
-                    : "Background toggle requires exposed underground space.";
+                    : "Background toggle requires an exposed resident cell.";
+        }
+
+        private void SelectGripFixtureTop()
+        {
+            if (worldHost == null || !worldHost.IsWorldDataAvailable)
+            {
+                statusMessage = "Grip fixture unavailable: world data is missing.";
+                return;
+            }
+
+            selectedCell = worldHost.GripFixtureTop;
+            worldHost.TryAssignAutonomousDestination(
+                selectedCell,
+                out string movementMessage);
+            statusMessage =
+                $"Grip fixture selected at {selectedCell}. {movementMessage}";
         }
 
         private void ToggleBackgroundIsolation()

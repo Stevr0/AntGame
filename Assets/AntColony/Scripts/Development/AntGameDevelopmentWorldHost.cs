@@ -52,6 +52,12 @@ namespace AntColony.Development
             : string.Empty;
         public AntAutonomousMotor AutonomousAnt => autonomousAnt;
         public AntAutonomousMotor AutonomousAntPrefab => autonomousAntPrefab;
+        public Vector2Int GripFixtureBottom => generatedWorld != null
+            ? generatedWorld.GripFixtureBottom
+            : default;
+        public Vector2Int GripFixtureTop => generatedWorld != null
+            ? generatedWorld.GripFixtureTop
+            : default;
         public int SpawnedAutonomousAntCount =>
             GetComponentsInChildren<AntAutonomousMotor>(true).Length;
 
@@ -147,6 +153,7 @@ namespace AntColony.Development
 
             tilemapRenderer.RefreshCell(worldCell);
             collisionRenderer.RefreshCell(worldCell);
+            autonomousAnt?.NotifyWorldChanged();
             return true;
         }
 
@@ -157,17 +164,14 @@ namespace AntColony.Development
         public bool TogglePreparedBackground(Vector2Int worldCell)
         {
             if (!TryGetCell(worldCell, out WorldTileCellData cell) ||
-                cell.HasSolidTile ||
-                cell.BackgroundMaterialId == skyBackground.StableMaterialId)
+                cell.HasSolidTile)
             {
                 return false;
             }
 
             string replacement = cell.BackgroundMaterialId ==
                 preparedBackground.StableMaterialId
-                    ? worldCell.y <= SampleWorldGenerator.StoneBackgroundMaximumY
-                        ? stoneBackground.StableMaterialId
-                        : earthBackground.StableMaterialId
+                    ? GetUnpreparedBackgroundMaterialId(worldCell)
                     : preparedBackground.StableMaterialId;
             if (WorldData.SetBackgroundMaterial(worldCell, replacement) !=
                 WorldCellMutationResult.Success)
@@ -176,6 +180,7 @@ namespace AntColony.Development
             }
 
             tilemapRenderer.RefreshCell(worldCell);
+            autonomousAnt?.NotifyWorldChanged();
             return true;
         }
 
@@ -243,7 +248,7 @@ namespace AntColony.Development
             return true;
         }
 
-        /// <summary>Resolves and validates a clicked direct-ground destination.</summary>
+        /// <summary>Resolves and validates a clicked direct controlled destination.</summary>
         public bool TryAssignAutonomousDestination(
             Vector2Int selectedCell,
             out string message)
@@ -258,7 +263,7 @@ namespace AntColony.Development
             var validator = new DirectGroundRouteValidator(
                 WorldData,
                 AntCollisionProfile.OrdinaryAnt);
-            DirectGroundRouteResult poseResult = validator.ResolveGroundedPosition(
+            DirectGroundRouteResult poseResult = validator.ResolveControlledPosition(
                 selectedCell,
                 out Vector2 destination);
             if (!poseResult.Succeeded)
@@ -374,6 +379,22 @@ namespace AntColony.Development
                 stoneBackground != null && preparedBackground != null &&
                 soilSolid != null && stoneSolid != null &&
                 tilemapRenderer != null && collisionRenderer != null;
+        }
+
+        private string GetUnpreparedBackgroundMaterialId(Vector2Int worldCell)
+        {
+            int minimumX = minimumChunk.x * WorldTileCoordinates.ChunkSize;
+            int surfaceIndex = worldCell.x - minimumX;
+            if (generatedWorld != null && surfaceIndex >= 0 &&
+                surfaceIndex < generatedWorld.SurfaceHeights.Length &&
+                worldCell.y > generatedWorld.SurfaceHeights[surfaceIndex])
+            {
+                return skyBackground.StableMaterialId;
+            }
+
+            return worldCell.y <= SampleWorldGenerator.StoneBackgroundMaximumY
+                ? stoneBackground.StableMaterialId
+                : earthBackground.StableMaterialId;
         }
 
         private void ShowDestinationMarker(Vector2 position)

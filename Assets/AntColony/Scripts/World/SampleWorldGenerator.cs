@@ -40,18 +40,24 @@ namespace AntColony.World
             ChunkedWorldData worldData,
             Vector2Int minimumChunk,
             Vector2Int sizeInChunks,
-            int[] surfaceHeights)
+            int[] surfaceHeights,
+            Vector2Int gripFixtureBottom,
+            Vector2Int gripFixtureTop)
         {
             WorldData = worldData;
             MinimumChunk = minimumChunk;
             SizeInChunks = sizeInChunks;
             SurfaceHeights = surfaceHeights;
+            GripFixtureBottom = gripFixtureBottom;
+            GripFixtureTop = gripFixtureTop;
         }
 
         public ChunkedWorldData WorldData { get; }
         public Vector2Int MinimumChunk { get; }
         public Vector2Int SizeInChunks { get; }
         public int[] SurfaceHeights { get; }
+        public Vector2Int GripFixtureBottom { get; }
+        public Vector2Int GripFixtureTop { get; }
         public int WidthInCells => SizeInChunks.x * WorldTileCoordinates.ChunkSize;
         public int HeightInCells => SizeInChunks.y * WorldTileCoordinates.ChunkSize;
     }
@@ -67,6 +73,8 @@ namespace AntColony.World
         public static readonly Vector2Int DefaultSizeInChunks = new(4, 4);
         public const int StoneBackgroundMaximumY = -24;
         public const int MainPassageY = -8;
+        public const int GripFixtureX = -12;
+        public const int GripFixtureHeight = 7;
 
         /// <summary>Generates all data first; scene projection is a separate step.</summary>
         public static GeneratedSampleWorld Generate(
@@ -135,11 +143,22 @@ namespace AntColony.World
             }
 
             CarveSampleGeometry(worldData, materials, minimumX, minimumY, width, height);
+            Vector2Int gripFixtureBottom = PrepareSurfaceGripFixture(
+                worldData,
+                materials,
+                seed,
+                minimumX,
+                minimumY,
+                width,
+                height,
+                out Vector2Int gripFixtureTop);
             return new GeneratedSampleWorld(
                 worldData,
                 minimumChunk,
                 sizeInChunks,
-                surfaceHeights);
+                surfaceHeights,
+                gripFixtureBottom,
+                gripFixtureTop);
         }
 
         /// <summary>Convenience overload for the authored four-by-four scene.</summary>
@@ -189,6 +208,56 @@ namespace AntColony.World
                     }
                 }
             }
+        }
+
+        private static Vector2Int PrepareSurfaceGripFixture(
+            ChunkedWorldData worldData,
+            SampleWorldMaterialIds materials,
+            int seed,
+            int minimumX,
+            int minimumY,
+            int width,
+            int height,
+            out Vector2Int top)
+        {
+            int maximumX = minimumX + width - 1;
+            int maximumY = minimumY + height - 1;
+            int bottomY = GetSurfaceHeight(GripFixtureX, seed) + 1;
+            int topY = bottomY + GripFixtureHeight - 1;
+            var bottom = new Vector2Int(GripFixtureX, bottomY);
+            top = new Vector2Int(GripFixtureX, topY);
+
+            // The vertical strip begins in the ant's grounded centre cell. It
+            // therefore demonstrates Grounded -> Gripping without teleporting.
+            for (int y = bottomY; y <= topY; y++)
+            {
+                var cell = new Vector2Int(GripFixtureX, y);
+                if (IsInside(cell, minimumX, minimumY, maximumX, maximumY))
+                {
+                    RequireSuccess(worldData.SetBackgroundMaterial(
+                        cell,
+                        materials.PreparedBackground));
+                }
+            }
+
+            // A small top region provides clear horizontal and diagonal targets
+            // while keeping the vertical strip visually obvious.
+            for (int y = topY - 2; y <= topY; y++)
+            {
+                for (int x = GripFixtureX - 3; x <= GripFixtureX + 3; x++)
+                {
+                    var cell = new Vector2Int(x, y);
+                    if (IsInside(cell, minimumX, minimumY, maximumX, maximumY))
+                    {
+                        RemoveSolidIfPresent(worldData, cell);
+                        RequireSuccess(worldData.SetBackgroundMaterial(
+                            cell,
+                            materials.PreparedBackground));
+                    }
+                }
+            }
+
+            return bottom;
         }
 
         private static void CarveRectangle(

@@ -3,13 +3,14 @@ using UnityEngine;
 
 namespace AntColony.World
 {
-    /// <summary>Explains the outcome of one bounded, straight ground-route query.</summary>
+    /// <summary>Explains the outcome of one bounded, straight controlled-route query.</summary>
     public enum DirectGroundRouteStatus
     {
         Success,
         InvalidRequest,
         RouteTooLong,
-        HeightChangeUnsupported,
+        DirectionNotPermitted,
+        DiagonalCornerBlocked,
         StartBlocked,
         StartUnsupported,
         DestinationBlocked,
@@ -42,34 +43,29 @@ namespace AntColony.World
     }
 
     /// <summary>
-    /// Validates a short, approximately horizontal grounded corridor. This is a
-    /// deliberately small milestone tool, not general pathfinding or a swept
-    /// navigation graph.
+    /// Validates a short direct controlled segment across grounded or prepared
+    /// Background space. This is deliberately not pathfinding or a navigation graph.
     /// </summary>
     public sealed class DirectGroundRouteValidator
     {
         public const float DefaultSampleSpacing = 0.2f;
-        public const float DefaultMaximumHeightDifference = 0.05f;
         public const float DefaultMaximumDistance = 24f;
 
         private readonly ChunkedWorldData worldData;
         private readonly AntCollisionProfile profile;
         private readonly AntMovementCapabilityEvaluator capabilityEvaluator;
         private readonly float sampleSpacing;
-        private readonly float maximumHeightDifference;
         private readonly float maximumDistance;
 
         public DirectGroundRouteValidator(
             ChunkedWorldData worldData,
             AntCollisionProfile profile,
             float sampleSpacing = DefaultSampleSpacing,
-            float maximumHeightDifference = DefaultMaximumHeightDifference,
             float maximumDistance = DefaultMaximumDistance)
         {
             this.worldData = worldData ??
                 throw new ArgumentNullException(nameof(worldData));
-            if (!profile.IsValid || sampleSpacing <= 0f ||
-                maximumHeightDifference < 0f || maximumDistance <= 0f)
+            if (!profile.IsValid || sampleSpacing <= 0f || maximumDistance <= 0f)
             {
                 throw new ArgumentOutOfRangeException(
                     nameof(profile),
@@ -78,7 +74,6 @@ namespace AntColony.World
 
             this.profile = profile;
             this.sampleSpacing = sampleSpacing;
-            this.maximumHeightDifference = maximumHeightDifference;
             this.maximumDistance = maximumDistance;
             capabilityEvaluator = new AntMovementCapabilityEvaluator(worldData);
         }
@@ -111,11 +106,38 @@ namespace AntColony.World
             float halfHeight = profile.Size.y * 0.5f + profile.ClearanceMargin;
             groundedPosition = WorldTileCoordinates.CellToWorldPosition(openCell) +
                 Vector2.down * (0.5f - halfHeight);
-            return ValidatePose(
+            return ValidateControlledPose(
                 groundedPosition,
                 DirectGroundRouteStatus.DestinationBlocked,
                 DirectGroundRouteStatus.DestinationUnsupported,
                 1);
+        }
+
+        /// <summary>
+        /// Resolves a clicked cell to either its grippable centre or a standing
+        /// pose above blocking support. Grip is tried first so vertical fixture
+        /// cells remain directly selectable.
+        /// </summary>
+        public DirectGroundRouteResult ResolveControlledPosition(
+            Vector2Int selectedCell,
+            out Vector2 controlledPosition)
+        {
+            controlledPosition = WorldTileCoordinates.CellToWorldPosition(selectedCell);
+            AntMovementCapabilityResult capability = capabilityEvaluator.Evaluate(
+                controlledPosition,
+                0f,
+                profile);
+            if (capability.Succeeded && capability.IsPhysicallyClear &&
+                capability.HasBackgroundGrip)
+            {
+                return Result(
+                    DirectGroundRouteStatus.Success,
+                    controlledPosition,
+                    selectedCell,
+                    1);
+            }
+
+            return ResolveGroundedPosition(selectedCell, out controlledPosition);
         }
 
         /// <summary>
@@ -134,8 +156,8 @@ namespace AntColony.World
                     0);
             }
 
-            float horizontalDistance = Mathf.Abs(destination.x - start.x);
-            if (horizontalDistance > maximumDistance)
+            float routeDistance = Vector2.Distance(start, destination);
+            if (routeDistance > maximumDistance)
             {
                 return Result(
                     DirectGroundRouteStatus.RouteTooLong,
@@ -144,16 +166,7 @@ namespace AntColony.World
                     0);
             }
 
-            if (Mathf.Abs(destination.y - start.y) > maximumHeightDifference)
-            {
-                return Result(
-                    DirectGroundRouteStatus.HeightChangeUnsupported,
-                    destination,
-                    WorldTileCoordinates.WorldPositionToCell(destination),
-                    0);
-            }
-
-            DirectGroundRouteResult startResult = ValidatePose(
+            DirectGroundRouteResult startResult = ValidateControlledPose(
                 start,
                 DirectGroundRouteStatus.StartBlocked,
                 DirectGroundRouteStatus.StartUnsupported,
@@ -165,7 +178,10 @@ namespace AntColony.World
 
             int segmentCount = Mathf.Max(
                 1,
-                Mathf.CeilToInt(horizontalDistance / sampleSpacing));
+                Mathf.CeilToInt(routeDistance / sampleSpacing));
+            Vector2 previous = start;
+            AntMovementCapabilityResult previousCapability =
+                capabilityEvaluator.Evaluate(start, 0f, profile);
             for (int index = 1; index <= segmentCount; index++)
             {
                 Vector2 sample = Vector2.Lerp(
@@ -173,7 +189,26 @@ namespace AntColony.World
                     destination,
                     index / (float)segmentCount);
                 bool isDestination = index == segmentCount;
-                DirectGroundRouteResult sampleResult = ValidatePose(
+                DirectGroundRouteResult directionResult = ValidateDirection(
+                    previous,
+                    sample,
+                    previousCapability,
+                    index + 1);
+                if (!directionResult.Succeeded)
+                {
+                    return directionResult;
+                }
+
+                DirectGroundRouteResult cornerResult = ValidateDiagonalCorner(
+                    previous,
+                    sample,
+                    index + 1);
+                if (!cornerResult.Succeeded)
+                {
+                    return cornerResult;
+                }
+
+                DirectGroundRouteResult sampleResult = ValidateControlledPose(
                     sample,
                     isDestination
                         ? DirectGroundRouteStatus.DestinationBlocked
@@ -186,6 +221,12 @@ namespace AntColony.World
                 {
                     return sampleResult;
                 }
+
+                previous = sample;
+                previousCapability = capabilityEvaluator.Evaluate(
+                    sample,
+                    0f,
+                    profile);
             }
 
             return Result(
@@ -195,7 +236,7 @@ namespace AntColony.World
                 segmentCount + 1);
         }
 
-        private DirectGroundRouteResult ValidatePose(
+        private DirectGroundRouteResult ValidateControlledPose(
             Vector2 position,
             DirectGroundRouteStatus blockedStatus,
             DirectGroundRouteStatus unsupportedStatus,
@@ -223,13 +264,18 @@ namespace AntColony.World
                     sampleCount);
             }
 
-            Vector2Int supportCell = capability.CentreCell;
-            bool hasCentreSupport = HasCentreGroundSupport(
-                position,
-                out supportCell);
-            if (capability.SuggestedState != AntMovementEligibilityState.Grounded ||
-                !capability.AllowsHorizontalMovement ||
-                !hasCentreSupport)
+            if (capability.SuggestedState != AntMovementEligibilityState.Grounded &&
+                capability.SuggestedState != AntMovementEligibilityState.Gripping)
+            {
+                return Result(
+                    unsupportedStatus,
+                    position,
+                    capability.CentreCell,
+                    sampleCount);
+            }
+
+            if (capability.SuggestedState == AntMovementEligibilityState.Grounded &&
+                !HasCentreGroundSupport(position, out Vector2Int supportCell))
             {
                 return Result(
                     unsupportedStatus,
@@ -243,6 +289,92 @@ namespace AntColony.World
                 position,
                 capability.CentreCell,
                 sampleCount);
+        }
+
+        private DirectGroundRouteResult ValidateDirection(
+            Vector2 start,
+            Vector2 destination,
+            AntMovementCapabilityResult capability,
+            int sampleCount)
+        {
+            Vector2 delta = destination - start;
+            bool horizontal = Mathf.Abs(delta.x) >
+                AntClearanceValidator.GeometryTolerance;
+            bool upward = delta.y > AntClearanceValidator.GeometryTolerance;
+            bool downward = delta.y < -AntClearanceValidator.GeometryTolerance;
+            bool permitted = (!horizontal || capability.AllowsHorizontalMovement) &&
+                (!upward || capability.AllowsUpwardMovement) &&
+                (!downward || capability.AllowsDownwardMovement);
+            return permitted
+                ? Result(
+                    DirectGroundRouteStatus.Success,
+                    destination,
+                    capability.CentreCell,
+                    sampleCount)
+                : Result(
+                    DirectGroundRouteStatus.DirectionNotPermitted,
+                    start,
+                    capability.CentreCell,
+                    sampleCount);
+        }
+
+        private DirectGroundRouteResult ValidateDiagonalCorner(
+            Vector2 start,
+            Vector2 destination,
+            int sampleCount)
+        {
+            Vector2Int startCell = WorldTileCoordinates.WorldPositionToCell(start);
+            Vector2Int destinationCell =
+                WorldTileCoordinates.WorldPositionToCell(destination);
+            if (startCell.x == destinationCell.x || startCell.y == destinationCell.y)
+            {
+                return Result(
+                    DirectGroundRouteStatus.Success,
+                    destination,
+                    destinationCell,
+                    sampleCount);
+            }
+
+            var horizontalNeighbour = new Vector2Int(
+                destinationCell.x,
+                startCell.y);
+            var verticalNeighbour = new Vector2Int(
+                startCell.x,
+                destinationCell.y);
+            bool horizontalExposed =
+                IsExposedAvailable(horizontalNeighbour, out bool horizontalAvailable);
+            bool verticalExposed =
+                IsExposedAvailable(verticalNeighbour, out bool verticalAvailable);
+            if (!horizontalExposed || !verticalExposed)
+            {
+                DirectGroundRouteStatus status =
+                    !horizontalAvailable || !verticalAvailable
+                        ? DirectGroundRouteStatus.UnavailableWorldData
+                        : DirectGroundRouteStatus.DiagonalCornerBlocked;
+                return Result(status, destination, destinationCell, sampleCount);
+            }
+
+            return Result(
+                DirectGroundRouteStatus.Success,
+                destination,
+                destinationCell,
+                sampleCount);
+        }
+
+        private bool IsExposedAvailable(Vector2Int cell, out bool available)
+        {
+            available = worldData.GetCell(cell, out WorldTileCellData data) ==
+                WorldCellQueryResult.Available;
+            if (!available)
+            {
+                return false;
+            }
+
+            return !data.HasSolidTile ||
+                !worldData.TryGetSolidMaterialDefinition(
+                    data.SolidMaterialId,
+                    out SolidTileMaterialDefinition solid) ||
+                !solid.BlocksMovement;
         }
 
         private bool HasCentreGroundSupport(

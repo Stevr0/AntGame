@@ -138,7 +138,8 @@ namespace AntColony.Tests.EditMode
         [Test]
         public void GeneratedGeometry_ContainsPassagesChambersShaftAndPreparedStrip()
         {
-            ChunkedWorldData world = Generate(2203).WorldData;
+            GeneratedSampleWorld generated = Generate(2203);
+            ChunkedWorldData world = generated.WorldData;
             AssertExposed(world, new Vector2Int(0, SampleWorldGenerator.MainPassageY));
             AssertExposed(world, new Vector2Int(-27, -16));
             AssertExposed(world, new Vector2Int(27, -27));
@@ -149,6 +150,24 @@ namespace AntColony.Tests.EditMode
             world.GetCell(preparedCell, out WorldTileCellData data);
             Assert.That(data.BackgroundMaterialId,
                 Is.EqualTo(prepared.StableMaterialId));
+
+            Assert.That(generated.GripFixtureBottom.x,
+                Is.EqualTo(SampleWorldGenerator.GripFixtureX));
+            Assert.That(generated.GripFixtureTop.y -
+                generated.GripFixtureBottom.y + 1,
+                Is.EqualTo(SampleWorldGenerator.GripFixtureHeight));
+            for (int y = generated.GripFixtureBottom.y;
+                y <= generated.GripFixtureTop.y;
+                y++)
+            {
+                var fixtureCell = new Vector2Int(
+                    SampleWorldGenerator.GripFixtureX,
+                    y);
+                AssertExposed(world, fixtureCell);
+                world.GetCell(fixtureCell, out WorldTileCellData fixtureData);
+                Assert.That(fixtureData.BackgroundMaterialId,
+                    Is.EqualTo(prepared.StableMaterialId));
+            }
         }
 
         [Test]

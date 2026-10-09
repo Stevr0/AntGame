@@ -6,10 +6,11 @@ using UnityEngine;
 
 namespace AntColony.Tests.EditMode
 {
-    /// <summary>Focused coverage for the bounded Milestone 2.3A corridor check.</summary>
+    /// <summary>Focused coverage for bounded 2.3A ground and 2.3B grip routes.</summary>
     public sealed class DirectGroundRouteValidatorTests
     {
         private const string BackgroundId = "background.route-test";
+        private const string PreparedId = "background.route-prepared";
         private const string GroundId = "solid.route-ground";
 
         private readonly List<Object> temporaryObjects = new();
@@ -26,6 +27,16 @@ namespace AntColony.Tests.EditMode
             SetField(background, "allowsHorizontalMovement", true);
             SetField(background, "gravityAppliesWhenUnsupported", true);
 
+            BackgroundTileMaterialDefinition prepared =
+                Track(ScriptableObject.CreateInstance<BackgroundTileMaterialDefinition>());
+            SetField(prepared, "stableMaterialId", PreparedId);
+            SetField(prepared, "displayName", "Prepared Route Background");
+            SetField(prepared, "allowsHorizontalMovement", true);
+            SetField(prepared, "allowsUpwardMovement", true);
+            SetField(prepared, "allowsDownwardMovement", true);
+            SetField(prepared, "providesClimbingGrip", true);
+            SetField(prepared, "gravityAppliesWhenUnsupported", false);
+
             SolidTileMaterialDefinition ground =
                 Track(ScriptableObject.CreateInstance<SolidTileMaterialDefinition>());
             SetField(ground, "stableMaterialId", GroundId);
@@ -34,7 +45,7 @@ namespace AntColony.Tests.EditMode
             SetField(ground, "supportsNavigation", true);
 
             var registry = new WorldMaterialRegistry(
-                new[] { background },
+                new[] { background, prepared },
                 new[] { ground });
             world = new ChunkedWorldData(registry, 23);
             Assert.That(
@@ -135,7 +146,7 @@ namespace AntColony.Tests.EditMode
         }
 
         [Test]
-        public void HeightChange_IsRejectedWithoutCornerOrStepLogic()
+        public void UnpreparedVerticalClimb_IsRejectedByDirectionPermission()
         {
             DirectGroundRouteResult result = validator.Validate(
                 new Vector2(0f, 0.65f),
@@ -143,7 +154,59 @@ namespace AntColony.Tests.EditMode
 
             Assert.That(
                 result.Status,
-                Is.EqualTo(DirectGroundRouteStatus.HeightChangeUnsupported));
+                Is.EqualTo(DirectGroundRouteStatus.DirectionNotPermitted));
+        }
+
+        [Test]
+        public void PreparedBackground_AllowsUpDownHorizontalAndDiagonalSegments()
+        {
+            SetPreparedRectangle(-1, 4, 1, 5);
+
+            Assert.That(validator.Validate(
+                new Vector2(0f, 0.65f),
+                new Vector2(0f, 4f)).Succeeded, Is.True);
+            Assert.That(validator.Validate(
+                new Vector2(0f, 4f),
+                new Vector2(0f, 1f)).Succeeded, Is.True);
+            Assert.That(validator.Validate(
+                new Vector2(0f, 2f),
+                new Vector2(3f, 2f)).Succeeded, Is.True);
+            Assert.That(validator.Validate(
+                new Vector2(0f, 1f),
+                new Vector2(3f, 4f)).Succeeded, Is.True);
+        }
+
+        [Test]
+        public void PreparedDiagonal_CannotCutBlockingCorner()
+        {
+            SetPreparedRectangle(0, 3, 1, 4);
+            Assert.That(
+                world.SetSolidMaterial(new Vector2Int(1, 2), GroundId),
+                Is.EqualTo(WorldCellMutationResult.Success));
+
+            DirectGroundRouteResult result = validator.Validate(
+                new Vector2(0f, 1f),
+                new Vector2(3f, 4f));
+
+            Assert.That(result.Succeeded, Is.False);
+            Assert.That(result.Status,
+                Is.EqualTo(DirectGroundRouteStatus.RouteBlocked).Or
+                    .EqualTo(DirectGroundRouteStatus.DiagonalCornerBlocked));
+        }
+
+        [Test]
+        public void ControlledResolver_UsesPreparedCellCentre()
+        {
+            Assert.That(
+                world.SetBackgroundMaterial(new Vector2Int(2, 3), PreparedId),
+                Is.EqualTo(WorldCellMutationResult.Success));
+
+            DirectGroundRouteResult result = validator.ResolveControlledPosition(
+                new Vector2Int(2, 3),
+                out Vector2 position);
+
+            Assert.That(result.Succeeded, Is.True);
+            Assert.That(position, Is.EqualTo(new Vector2(2f, 3f)));
         }
 
         [Test]
@@ -179,6 +242,25 @@ namespace AntColony.Tests.EditMode
                 Assert.That(
                     world.SetSolidMaterial(new Vector2Int(x, 0), GroundId),
                     Is.EqualTo(WorldCellMutationResult.Success));
+            }
+        }
+
+        private void SetPreparedRectangle(
+            int minimumX,
+            int maximumX,
+            int minimumY,
+            int maximumY)
+        {
+            for (int y = minimumY; y <= maximumY; y++)
+            {
+                for (int x = minimumX; x <= maximumX; x++)
+                {
+                    Assert.That(
+                        world.SetBackgroundMaterial(
+                            new Vector2Int(x, y),
+                            PreparedId),
+                        Is.EqualTo(WorldCellMutationResult.Success));
+                }
             }
         }
 

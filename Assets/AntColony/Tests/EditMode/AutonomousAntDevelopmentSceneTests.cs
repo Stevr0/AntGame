@@ -10,7 +10,7 @@ using UnityEngine.TestTools;
 
 namespace AntColony.Tests.EditMode
 {
-    /// <summary>Scene-backed spawn, wiring and mutation checks for Milestone 2.3A.</summary>
+    /// <summary>Scene-backed spawn, wiring and mutation checks for 2.3A/2.3B.</summary>
     public sealed class AutonomousAntDevelopmentSceneTests
     {
         private const string ScenePath =
@@ -79,6 +79,48 @@ namespace AntColony.Tests.EditMode
                 .ToArray();
             Assert.That(componentNames, Does.Not.Contain("PlayerMovementInput"));
             Assert.That(componentNames, Does.Not.Contain("AntSurfaceMotor"));
+        }
+
+        [Test]
+        public void SurfaceGripFixture_IsPreparedAndAcceptsVerticalCommand()
+        {
+            AntGameDevelopmentWorldHost host = OpenHost();
+            Assert.That(host.SpawnOrResetAutonomousAnt(out string spawnMessage),
+                Is.True, spawnMessage);
+
+            Assert.That(host.TryGetCell(
+                host.GripFixtureBottom,
+                out WorldTileCellData bottom), Is.True);
+            Assert.That(host.WorldData.TryGetBackgroundMaterialDefinition(
+                bottom.BackgroundMaterialId,
+                out BackgroundTileMaterialDefinition material), Is.True);
+            Assert.That(material.ProvidesClimbingGrip, Is.True);
+            Assert.That(host.TryAssignAutonomousDestination(
+                host.GripFixtureTop,
+                out string movementMessage), Is.True, movementMessage);
+            Assert.That(host.AutonomousAnt.Destination.y,
+                Is.GreaterThan(host.AutonomousAnt.Position.y));
+        }
+
+        [Test]
+        public void PreparedSurfaceCell_CanRoundTripToSkyForGripMutationTesting()
+        {
+            AntGameDevelopmentWorldHost host = OpenHost();
+            Vector2Int cell = host.GripFixtureTop;
+
+            Assert.That(host.TogglePreparedBackground(cell), Is.True);
+            Assert.That(host.TryGetCell(cell, out WorldTileCellData sky), Is.True);
+            Assert.That(host.WorldData.TryGetBackgroundMaterialDefinition(
+                sky.BackgroundMaterialId,
+                out BackgroundTileMaterialDefinition unprepared), Is.True);
+            Assert.That(unprepared.ProvidesClimbingGrip, Is.False);
+
+            Assert.That(host.TogglePreparedBackground(cell), Is.True);
+            Assert.That(host.TryGetCell(cell, out WorldTileCellData prepared), Is.True);
+            Assert.That(host.WorldData.TryGetBackgroundMaterialDefinition(
+                prepared.BackgroundMaterialId,
+                out BackgroundTileMaterialDefinition restored), Is.True);
+            Assert.That(restored.ProvidesClimbingGrip, Is.True);
         }
 
         [Test]
