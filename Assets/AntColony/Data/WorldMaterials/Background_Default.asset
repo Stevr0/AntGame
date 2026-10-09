@@ -14,4 +14,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: AntColony.World::AntColony.World.BackgroundTileMaterialDefinition
   stableMaterialId: background.default
   displayName: Default Background
-  visualTile: {fileID: 0}
+  visualTile: {fileID: 11400000, guid: 8f44af31966a16a41b42ec2263a8377f, type: 2}

@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: AntColony.World::AntColony.World.SolidTileMaterialDefinition
   stableMaterialId: solid.soil
   displayName: Soil
-  visualTile: {fileID: 0}
+  visualTile: {fileID: 11400000, guid: bbee85076ae841f46b7897a32816614d, type: 2}
   blocksMovement: 1
   supportsNavigation: 1
   isExcavatable: 1

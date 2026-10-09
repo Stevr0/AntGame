@@ -8,9 +8,10 @@ namespace AntColony.NavigationDebug
     /// prototype scene. All terrain is authored through ChunkedWorldData APIs.
     /// </summary>
     [ExecuteAlways]
-    public sealed class NavigationTestWorldHost : MonoBehaviour
+    public sealed class NavigationTestWorldHost : MonoBehaviour, IWorldDataProvider
     {
         public static readonly Vector2Int MutationCell = new Vector2Int(0, 1);
+        public static readonly Vector2Int TilemapMutationCell = Vector2Int.zero;
         public static readonly Vector2Int UnknownSupportCell = new Vector2Int(10, 31);
         public static readonly Vector2Int DiagonalOnlyCell = new Vector2Int(-29, 21);
 
@@ -22,6 +23,7 @@ namespace AntColony.NavigationDebug
         private WorldNavigationClassifier classifier;
 
         public bool IsInitialized => worldData != null && classifier != null;
+        public bool IsWorldDataAvailable => IsInitialized;
         public ChunkedWorldData WorldData => worldData;
         public WorldNavigationClassifier Classifier => classifier;
 
@@ -81,15 +83,30 @@ namespace AntColony.NavigationDebug
         /// </summary>
         public bool ToggleMutationSolid()
         {
+            return ToggleSolidAt(MutationCell);
+        }
+
+        /// <summary>
+        /// Adds or removes the Solid Tile at a requested resident cell. This is a
+        /// development-only mutation seam used to prove that projections refresh
+        /// from world data rather than treating their current visuals as state.
+        /// </summary>
+        public bool ToggleSolidAt(Vector2Int worldCell)
+        {
             if (!IsInitialized)
             {
                 return false;
             }
 
-            worldData.GetCell(MutationCell, out WorldTileCellData cell);
+            if (worldData.GetCell(worldCell, out WorldTileCellData cell) !=
+                WorldCellQueryResult.Available)
+            {
+                return false;
+            }
+
             WorldCellMutationResult result = cell.HasSolidTile
-                ? worldData.RemoveSolidMaterial(MutationCell)
-                : worldData.SetSolidMaterial(MutationCell, solidMaterial.StableMaterialId);
+                ? worldData.RemoveSolidMaterial(worldCell)
+                : worldData.SetSolidMaterial(worldCell, solidMaterial.StableMaterialId);
             return result == WorldCellMutationResult.Success;
         }
 

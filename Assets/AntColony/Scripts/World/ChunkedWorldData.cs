@@ -181,11 +181,23 @@ namespace AntColony.World
         }
 
         /// <summary>
-        /// Resolves the definition registered with this world-data owner. Keeping
-        /// this access internal prevents classifiers from being paired with a
-        /// different material registry than the one that validated cell writes.
+        /// Resolves the Background Material registered with this world. Visual
+        /// projections use this access so they cannot accidentally pair the cell
+        /// IDs with a different material registry.
         /// </summary>
-        internal bool TryGetSolidMaterialDefinition(
+        public bool TryGetBackgroundMaterialDefinition(
+            string materialId,
+            out BackgroundTileMaterialDefinition definition)
+        {
+            return materials.TryGetBackgroundMaterial(materialId, out definition);
+        }
+
+        /// <summary>
+        /// Resolves the Solid Material registered with this world. Classification
+        /// and presentation therefore use the same definitions that validated
+        /// authoritative writes.
+        /// </summary>
+        public bool TryGetSolidMaterialDefinition(
             string materialId,
             out SolidTileMaterialDefinition definition)
         {
