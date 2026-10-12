@@ -186,6 +186,9 @@ namespace AntColony.Development
             textBuilder.Append("Background grip: ")
                 .Append(capability.HasBackgroundGrip)
                 .AppendLine();
+            textBuilder.Append("Background speed: x")
+                .Append(capability.MovementSpeedMultiplier.ToString("0.##"))
+                .AppendLine();
             textBuilder.Append("Eligibility: ")
                 .Append(capability.SuggestedState)
                 .AppendLine();
@@ -234,6 +237,11 @@ namespace AntColony.Development
                 .Append("   Gravity eligible: ")
                 .Append(ant.ShouldApplyGravity)
                 .AppendLine();
+            builder.Append("Movement speed: ")
+                .Append(ant.EffectiveMovementSpeed.ToString("0.##"))
+                .Append(" (base ")
+                .Append(ant.MovementSpeed.ToString("0.##"))
+                .AppendLine(")");
             builder.Append("Destination: ")
                 .Append(ant.HasDestination ? ant.Destination.ToString() : "None")
                 .AppendLine();

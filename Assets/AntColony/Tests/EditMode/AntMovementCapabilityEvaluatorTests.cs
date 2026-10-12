@@ -32,15 +32,16 @@ namespace AntColony.Tests.EditMode
         public void SetUp()
         {
             sky = CreateBackground(SkyId, true, false, false, false, true);
-            earth = CreateBackground(EarthId, true, false, false, false, true);
-            stone = CreateBackground(StoneId, true, false, false, false, true);
+            earth = CreateBackground(EarthId, true, true, true, true, false);
+            stone = CreateBackground(StoneId, true, true, true, true, false);
             prepared = CreateBackground(
                 PreparedId,
                 true,
                 true,
                 true,
                 true,
-                false);
+                false,
+                1.25f);
             ground = CreateSolid(GroundId, true, true);
             blockingOnly = CreateSolid(BlockingOnlyId, true, false);
             supportOnly = CreateSolid(SupportOnlyId, false, true);
@@ -70,19 +71,22 @@ namespace AntColony.Tests.EditMode
         [Test]
         public void SkyProperties_HaveNoGripOrVoluntaryVerticalMovement()
         {
-            AssertUnpreparedProperties(sky);
+            Assert.That(sky.ProvidesClimbingGrip, Is.False);
+            Assert.That(sky.AllowsUpwardMovement, Is.False);
+            Assert.That(sky.AllowsDownwardMovement, Is.False);
+            Assert.That(sky.GravityAppliesWhenUnsupported, Is.True);
         }
 
         [Test]
-        public void UnpreparedEarthProperties_HaveNoGrip()
+        public void NaturalEarthProperties_ProvideNormalSpeedGrip()
         {
-            AssertUnpreparedProperties(earth);
+            AssertNaturalProperties(earth);
         }
 
         [Test]
-        public void UnpreparedStoneProperties_HaveNoGrip()
+        public void NaturalStoneProperties_ProvideNormalSpeedGrip()
         {
-            AssertUnpreparedProperties(stone);
+            AssertNaturalProperties(stone);
         }
 
         [Test]
@@ -93,6 +97,7 @@ namespace AntColony.Tests.EditMode
             Assert.That(prepared.AllowsUpwardMovement, Is.True);
             Assert.That(prepared.AllowsDownwardMovement, Is.True);
             Assert.That(prepared.GravityAppliesWhenUnsupported, Is.False);
+            Assert.That(prepared.MovementSpeedMultiplier, Is.EqualTo(1.25f));
         }
 
         [Test]
@@ -105,8 +110,8 @@ namespace AntColony.Tests.EditMode
             Assert.That(result.SuggestedState, Is.EqualTo(AntMovementEligibilityState.Grounded));
             Assert.That(result.HasGroundSupport, Is.True);
             Assert.That(result.AllowsHorizontalMovement, Is.True);
-            Assert.That(result.AllowsUpwardMovement, Is.False);
-            Assert.That(result.AllowsDownwardMovement, Is.False);
+            Assert.That(result.AllowsUpwardMovement, Is.True);
+            Assert.That(result.AllowsDownwardMovement, Is.True);
             Assert.That(result.ShouldApplyGravity, Is.False);
         }
 
@@ -117,7 +122,7 @@ namespace AntColony.Tests.EditMode
 
             AntMovementCapabilityResult result = Evaluate(Vector2.zero);
 
-            Assert.That(result.SuggestedState, Is.EqualTo(AntMovementEligibilityState.Falling));
+            Assert.That(result.SuggestedState, Is.EqualTo(AntMovementEligibilityState.Gripping));
             Assert.That(result.HasGroundSupport, Is.False);
         }
 
@@ -128,7 +133,7 @@ namespace AntColony.Tests.EditMode
 
             AntMovementCapabilityResult result = Evaluate(Vector2.zero);
 
-            Assert.That(result.SuggestedState, Is.EqualTo(AntMovementEligibilityState.Falling));
+            Assert.That(result.SuggestedState, Is.EqualTo(AntMovementEligibilityState.Gripping));
             Assert.That(result.HasGroundSupport, Is.False);
         }
 
@@ -139,7 +144,7 @@ namespace AntColony.Tests.EditMode
 
             AntMovementCapabilityResult result = Evaluate(new Vector2(0f, 0.65f));
 
-            Assert.That(result.SuggestedState, Is.EqualTo(AntMovementEligibilityState.Falling));
+            Assert.That(result.SuggestedState, Is.EqualTo(AntMovementEligibilityState.Gripping));
             Assert.That(result.HasGroundSupport, Is.False);
         }
 
@@ -150,17 +155,18 @@ namespace AntColony.Tests.EditMode
 
             AntMovementCapabilityResult result = Evaluate(new Vector2(0f, 0.65f));
 
-            Assert.That(result.SuggestedState, Is.EqualTo(AntMovementEligibilityState.Falling));
+            Assert.That(result.SuggestedState, Is.EqualTo(AntMovementEligibilityState.Gripping));
             Assert.That(result.HasGroundSupport, Is.False);
         }
 
         [Test]
-        public void BackgroundTileAlone_DoesNotProduceGrounded()
+        public void NaturalBackgroundTileAlone_ProducesGripButNotGrounded()
         {
             AntMovementCapabilityResult result = Evaluate(new Vector2(0f, 0.65f));
 
-            Assert.That(result.SuggestedState, Is.EqualTo(AntMovementEligibilityState.Falling));
+            Assert.That(result.SuggestedState, Is.EqualTo(AntMovementEligibilityState.Gripping));
             Assert.That(result.HasGroundSupport, Is.False);
+            Assert.That(result.HasBackgroundGrip, Is.True);
         }
 
         [Test]
@@ -178,7 +184,7 @@ namespace AntColony.Tests.EditMode
         }
 
         [Test]
-        public void ClearUnpreparedShaft_ProducesFalling()
+        public void ClearNaturalEarthShaft_ProducesGrip()
         {
             SetSolid(Vector2Int.left, GroundId);
             SetSolid(Vector2Int.right, GroundId);
@@ -186,8 +192,10 @@ namespace AntColony.Tests.EditMode
             AntMovementCapabilityResult result = Evaluate(Vector2.zero);
 
             Assert.That(result.IsPhysicallyClear, Is.True);
-            Assert.That(result.SuggestedState, Is.EqualTo(AntMovementEligibilityState.Falling));
-            Assert.That(result.AllowsHorizontalMovement, Is.False);
+            Assert.That(result.SuggestedState, Is.EqualTo(AntMovementEligibilityState.Gripping));
+            Assert.That(result.AllowsHorizontalMovement, Is.True);
+            Assert.That(result.AllowsUpwardMovement, Is.True);
+            Assert.That(result.AllowsDownwardMovement, Is.True);
         }
 
         [Test]
@@ -203,11 +211,13 @@ namespace AntColony.Tests.EditMode
             Assert.That(result.AllowsUpwardMovement, Is.True);
             Assert.That(result.AllowsDownwardMovement, Is.True);
             Assert.That(result.ShouldApplyGravity, Is.False);
+            Assert.That(result.MovementSpeedMultiplier, Is.EqualTo(1.25f));
         }
 
         [Test]
         public void FallingDownward_IsNotVoluntaryDownwardMovement()
         {
+            SetBackground(Vector2Int.zero, SkyId);
             AntMovementCapabilityResult result = Evaluate(Vector2.zero);
 
             Assert.That(result.ShouldApplyGravity, Is.True);
@@ -240,24 +250,27 @@ namespace AntColony.Tests.EditMode
         }
 
         [Test]
-        public void ReplacingEarthWithPrepared_ImmediatelyGrantsGrip()
+        public void ReplacingEarthWithPrepared_ImmediatelyChangesSpeedBonus()
         {
-            Assert.That(Evaluate(Vector2.zero).HasBackgroundGrip, Is.False);
+            Assert.That(Evaluate(Vector2.zero).HasBackgroundGrip, Is.True);
+            Assert.That(Evaluate(Vector2.zero).MovementSpeedMultiplier, Is.EqualTo(1f));
 
             SetBackground(Vector2Int.zero, PreparedId);
 
             Assert.That(Evaluate(Vector2.zero).HasBackgroundGrip, Is.True);
+            Assert.That(Evaluate(Vector2.zero).MovementSpeedMultiplier, Is.EqualTo(1.25f));
         }
 
         [Test]
-        public void ReplacingPreparedWithEarth_ImmediatelyRemovesGrip()
+        public void ReplacingPreparedWithEarth_PreservesGripAndRemovesSpeedBonus()
         {
             SetBackground(Vector2Int.zero, PreparedId);
             Assert.That(Evaluate(Vector2.zero).HasBackgroundGrip, Is.True);
 
             SetBackground(Vector2Int.zero, EarthId);
 
-            Assert.That(Evaluate(Vector2.zero).HasBackgroundGrip, Is.False);
+            Assert.That(Evaluate(Vector2.zero).HasBackgroundGrip, Is.True);
+            Assert.That(Evaluate(Vector2.zero).MovementSpeedMultiplier, Is.EqualTo(1f));
         }
 
         [Test]
@@ -489,7 +502,8 @@ namespace AntColony.Tests.EditMode
             bool upward,
             bool downward,
             bool grip,
-            bool gravity)
+            bool gravity,
+            float speedMultiplier = 1f)
         {
             BackgroundTileMaterialDefinition definition =
                 CreateDefinition<BackgroundTileMaterialDefinition>(materialId);
@@ -499,6 +513,8 @@ namespace AntColony.Tests.EditMode
             serialized.FindProperty("allowsDownwardMovement").boolValue = downward;
             serialized.FindProperty("providesClimbingGrip").boolValue = grip;
             serialized.FindProperty("gravityAppliesWhenUnsupported").boolValue = gravity;
+            serialized.FindProperty("movementSpeedMultiplier").floatValue =
+                speedMultiplier;
             serialized.ApplyModifiedPropertiesWithoutUndo();
             return definition;
         }
@@ -529,14 +545,15 @@ namespace AntColony.Tests.EditMode
             return definition;
         }
 
-        private static void AssertUnpreparedProperties(
+        private static void AssertNaturalProperties(
             BackgroundTileMaterialDefinition material)
         {
             Assert.That(material.AllowsHorizontalMovement, Is.True);
-            Assert.That(material.AllowsUpwardMovement, Is.False);
-            Assert.That(material.AllowsDownwardMovement, Is.False);
-            Assert.That(material.ProvidesClimbingGrip, Is.False);
-            Assert.That(material.GravityAppliesWhenUnsupported, Is.True);
+            Assert.That(material.AllowsUpwardMovement, Is.True);
+            Assert.That(material.AllowsDownwardMovement, Is.True);
+            Assert.That(material.ProvidesClimbingGrip, Is.True);
+            Assert.That(material.GravityAppliesWhenUnsupported, Is.False);
+            Assert.That(material.MovementSpeedMultiplier, Is.EqualTo(1f));
         }
     }
 }

@@ -227,6 +227,39 @@ namespace AntColony.World
             var bottom = new Vector2Int(GripFixtureX, bottomY);
             top = new Vector2Int(GripFixtureX, topY);
 
+            // Author a short, deterministic Natural Earth floor across the base
+            // of the prepared strip. The procedural surface is intentionally
+            // uneven, so a dedicated flat run makes grounded movement and the
+            // Natural-to-Prepared transition reproducible in Play Mode.
+            for (int x = GripFixtureX - 3; x <= GripFixtureX + 3; x++)
+            {
+                var exposedCell = new Vector2Int(x, bottomY);
+                var supportCell = exposedCell + Vector2Int.down;
+                if (!IsInside(
+                        exposedCell,
+                        minimumX,
+                        minimumY,
+                        maximumX,
+                        maximumY) ||
+                    !IsInside(
+                        supportCell,
+                        minimumX,
+                        minimumY,
+                        maximumX,
+                        maximumY))
+                {
+                    continue;
+                }
+
+                RemoveSolidIfPresent(worldData, exposedCell);
+                RequireSuccess(worldData.SetBackgroundMaterial(
+                    exposedCell,
+                    materials.EarthBackground));
+                RequireSuccess(worldData.SetSolidMaterial(
+                    supportCell,
+                    materials.SoilSolid));
+            }
+
             // The vertical strip begins in the ant's grounded centre cell. It
             // therefore demonstrates Grounded -> Gripping without teleporting.
             for (int y = bottomY; y <= topY; y++)

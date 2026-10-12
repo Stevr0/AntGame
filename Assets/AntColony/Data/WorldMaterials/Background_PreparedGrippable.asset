@@ -20,3 +20,4 @@ MonoBehaviour:
   allowsDownwardMovement: 1
   providesClimbingGrip: 1
   gravityAppliesWhenUnsupported: 0
+  movementSpeedMultiplier: 1.25

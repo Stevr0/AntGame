@@ -95,6 +95,7 @@ namespace AntColony.Tests.EditMode
                 bottom.BackgroundMaterialId,
                 out BackgroundTileMaterialDefinition material), Is.True);
             Assert.That(material.ProvidesClimbingGrip, Is.True);
+            Assert.That(material.MovementSpeedMultiplier, Is.EqualTo(1.25f));
             Assert.That(host.TryAssignAutonomousDestination(
                 host.GripFixtureTop,
                 out string movementMessage), Is.True, movementMessage);

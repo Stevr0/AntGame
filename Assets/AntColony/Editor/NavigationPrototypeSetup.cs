@@ -134,29 +134,32 @@ namespace AntColony.EditorTools
                     false,
                     false,
                     false,
-                    true);
+                    true,
+                    1f);
             BackgroundTileMaterialDefinition earthBackground =
                 GetOrCreateBackgroundMaterial(
                     EarthBackgroundMaterialPath,
                     "background.earth.unprepared",
-                    "Unprepared Earth",
+                    "Natural Earth",
                     earthBackgroundTile,
                     true,
+                    true,
+                    true,
+                    true,
                     false,
-                    false,
-                    false,
-                    true);
+                    1f);
             BackgroundTileMaterialDefinition stoneBackground =
                 GetOrCreateBackgroundMaterial(
                     StoneBackgroundMaterialPath,
                     "background.stone.unprepared",
-                    "Unprepared Stone",
+                    "Natural Stone",
                     stoneBackgroundTile,
                     true,
+                    true,
+                    true,
+                    true,
                     false,
-                    false,
-                    false,
-                    true);
+                    1f);
             BackgroundTileMaterialDefinition preparedBackground =
                 GetOrCreateBackgroundMaterial(
                     PreparedBackgroundMaterialPath,
@@ -167,7 +170,8 @@ namespace AntColony.EditorTools
                     true,
                     true,
                     true,
-                    false);
+                    false,
+                    1.25f);
             SolidTileMaterialDefinition supportOnlyMaterial =
                 GetOrCreateSolidMaterial(
                     SupportOnlyMaterialPath,
@@ -414,9 +418,13 @@ namespace AntColony.EditorTools
                 Require(capabilityRenderer.RunQuery(),
                     "The authored movement-capability query could not run.");
                 Require(capabilityRenderer.LastResult.SuggestedState ==
-                    AntMovementEligibilityState.Falling &&
-                    capabilityRenderer.LastResult.IsPhysicallyClear,
-                    "The unprepared chamber-centre query must be physically Clear and Falling.");
+                    AntMovementEligibilityState.Gripping &&
+                    capabilityRenderer.LastResult.IsPhysicallyClear &&
+                    capabilityRenderer.LastResult.HasBackgroundGrip &&
+                    Mathf.Approximately(
+                        capabilityRenderer.LastResult.MovementSpeedMultiplier,
+                        1f),
+                    "The natural chamber-centre query must be clear, gripping, and normal speed.");
                 Require(capabilityRenderer.GetComponents<Collider2D>().Length == 0 &&
                     capabilityRenderer.GetComponent<Rigidbody2D>() == null,
                     "The capability inspector must not create gameplay physics components.");
@@ -495,8 +503,11 @@ namespace AntColony.EditorTools
                 Require(capabilityRenderer.RunQuery() &&
                     capabilityRenderer.LastResult.SuggestedState ==
                         AntMovementEligibilityState.Gripping &&
-                    capabilityRenderer.LastResult.HasBackgroundGrip,
-                    "Prepared Background must change the test query to Gripping.");
+                    capabilityRenderer.LastResult.HasBackgroundGrip &&
+                    Mathf.Approximately(
+                        capabilityRenderer.LastResult.MovementSpeedMultiplier,
+                        1.25f),
+                    "Prepared Background must provide grip and its speed bonus.");
                 Require(host.TogglePreparedBackground(
                         NavigationTestWorldHost.BackgroundMutationCell),
                     "Could not restore the unprepared test Background.");
@@ -505,8 +516,12 @@ namespace AntColony.EditorTools
                     "Restored Background presentation did not refresh.");
                 Require(capabilityRenderer.RunQuery() &&
                     capabilityRenderer.LastResult.SuggestedState ==
-                        AntMovementEligibilityState.Falling,
-                    "Restoring unprepared Background must restore Falling capability.");
+                        AntMovementEligibilityState.Gripping &&
+                    capabilityRenderer.LastResult.HasBackgroundGrip &&
+                    Mathf.Approximately(
+                        capabilityRenderer.LastResult.MovementSpeedMultiplier,
+                        1f),
+                    "Restoring natural Background must retain grip at normal speed.");
                 RequireClassification(
                     host,
                     NavigationTestWorldHost.MutationCell,
@@ -791,7 +806,8 @@ namespace AntColony.EditorTools
             bool allowsUpward,
             bool allowsDownward,
             bool providesGrip,
-            bool gravityWhenUnsupported)
+            bool gravityWhenUnsupported,
+            float movementSpeedMultiplier)
         {
             BackgroundTileMaterialDefinition definition =
                 AssetDatabase.LoadAssetAtPath<BackgroundTileMaterialDefinition>(assetPath);
@@ -817,6 +833,8 @@ namespace AntColony.EditorTools
                 providesGrip;
             serializedDefinition.FindProperty("gravityAppliesWhenUnsupported").boolValue =
                 gravityWhenUnsupported;
+            serializedDefinition.FindProperty("movementSpeedMultiplier").floatValue =
+                movementSpeedMultiplier;
             serializedDefinition.ApplyModifiedPropertiesWithoutUndo();
             EditorUtility.SetDirty(definition);
             return definition;
@@ -828,22 +846,32 @@ namespace AntColony.EditorTools
             BackgroundTileMaterialDefinition stone,
             BackgroundTileMaterialDefinition prepared)
         {
-            BackgroundTileMaterialDefinition[] unprepared = { sky, earth, stone };
-            foreach (BackgroundTileMaterialDefinition material in unprepared)
+            Require(sky.AllowsHorizontalMovement &&
+                !sky.AllowsUpwardMovement &&
+                !sky.AllowsDownwardMovement &&
+                !sky.ProvidesClimbingGrip &&
+                sky.GravityAppliesWhenUnsupported &&
+                Mathf.Approximately(sky.MovementSpeedMultiplier, 1f),
+                "Sky Background movement flags are incorrect.");
+
+            BackgroundTileMaterialDefinition[] natural = { earth, stone };
+            foreach (BackgroundTileMaterialDefinition material in natural)
             {
                 Require(material.AllowsHorizontalMovement &&
-                    !material.AllowsUpwardMovement &&
-                    !material.AllowsDownwardMovement &&
-                    !material.ProvidesClimbingGrip &&
-                    material.GravityAppliesWhenUnsupported,
-                    $"Background material '{material.name}' has invalid unprepared flags.");
+                    material.AllowsUpwardMovement &&
+                    material.AllowsDownwardMovement &&
+                    material.ProvidesClimbingGrip &&
+                    !material.GravityAppliesWhenUnsupported &&
+                    Mathf.Approximately(material.MovementSpeedMultiplier, 1f),
+                    $"Background material '{material.name}' has invalid natural grip flags.");
             }
 
             Require(prepared.AllowsHorizontalMovement &&
                 prepared.AllowsUpwardMovement &&
                 prepared.AllowsDownwardMovement &&
                 prepared.ProvidesClimbingGrip &&
-                !prepared.GravityAppliesWhenUnsupported,
+                !prepared.GravityAppliesWhenUnsupported &&
+                Mathf.Approximately(prepared.MovementSpeedMultiplier, 1.25f),
                 "Prepared Background movement flags are incorrect.");
         }
 

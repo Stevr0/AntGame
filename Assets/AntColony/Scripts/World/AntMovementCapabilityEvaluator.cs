@@ -40,6 +40,7 @@ namespace AntColony.World
             bool allowsHorizontalMovement,
             bool allowsUpwardMovement,
             bool allowsDownwardMovement,
+            float movementSpeedMultiplier,
             bool shouldApplyGravity)
         {
             Status = status;
@@ -53,6 +54,7 @@ namespace AntColony.World
             AllowsHorizontalMovement = allowsHorizontalMovement;
             AllowsUpwardMovement = allowsUpwardMovement;
             AllowsDownwardMovement = allowsDownwardMovement;
+            MovementSpeedMultiplier = movementSpeedMultiplier;
             ShouldApplyGravity = shouldApplyGravity;
         }
 
@@ -68,6 +70,7 @@ namespace AntColony.World
         public bool AllowsHorizontalMovement { get; }
         public bool AllowsUpwardMovement { get; }
         public bool AllowsDownwardMovement { get; }
+        public float MovementSpeedMultiplier { get; }
         public bool ShouldApplyGravity { get; }
         public bool Succeeded => Status == AntMovementCapabilityStatus.Success;
     }
@@ -182,6 +185,7 @@ namespace AntColony.World
                 allowsHorizontal,
                 allowsUpward,
                 allowsDownward,
+                background.MovementSpeedMultiplier,
                 shouldApplyGravity);
         }
 
@@ -395,6 +399,7 @@ namespace AntColony.World
                 false,
                 false,
                 false,
+                1f,
                 false);
         }
 

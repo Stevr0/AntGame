@@ -184,6 +184,28 @@ namespace AntColony.Development
             return true;
         }
 
+        /// <summary>
+        /// Development-only way to create an explicitly non-grippable exposed
+        /// cell. This keeps fall/recovery fixtures unambiguous now that natural
+        /// Earth and Stone both provide grip.
+        /// </summary>
+        public bool SetNonGrippableBackground(Vector2Int worldCell)
+        {
+            if (!TryGetCell(worldCell, out WorldTileCellData cell) ||
+                cell.HasSolidTile ||
+                WorldData.SetBackgroundMaterial(
+                    worldCell,
+                    skyBackground.StableMaterialId) !=
+                WorldCellMutationResult.Success)
+            {
+                return false;
+            }
+
+            tilemapRenderer.RefreshCell(worldCell);
+            autonomousAnt?.NotifyWorldChanged();
+            return true;
+        }
+
         public bool TryGetCell(Vector2Int worldCell, out WorldTileCellData cell)
         {
             if (!IsWorldDataAvailable)

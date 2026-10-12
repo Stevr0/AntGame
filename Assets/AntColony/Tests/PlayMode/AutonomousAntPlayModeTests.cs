@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using AntColony.Development;
 using AntColony.World;
 using NUnit.Framework;
@@ -71,6 +72,8 @@ namespace AntColony.Tests.PlayMode
             var supportCell = new Vector2Int(
                 antCell.x + direction,
                 antCell.y - 1);
+            var unsupportedCell = supportCell + Vector2Int.up;
+            Assert.That(host.SetNonGrippableBackground(unsupportedCell), Is.True);
             Assert.That(host.ToggleForegroundSolid(supportCell), Is.True);
 
             yield return WaitForTerminalState(host.AutonomousAnt, 4f);
@@ -100,6 +103,10 @@ namespace AntColony.Tests.PlayMode
             Assert.That(host.AutonomousAnt.LocomotionState,
                 Is.EqualTo(AntAutonomousLocomotionState.Gripping));
             Assert.That(body.gravityScale, Is.Zero);
+            Assert.That(host.AutonomousAnt.EffectiveMovementSpeed,
+                Is.EqualTo(host.AutonomousAnt.MovementSpeed * 1.25f)
+                    .Within(0.001f),
+                "Prepared Background should apply the provisional speed bonus.");
 
             var diagonalTarget = host.GripFixtureTop +
                 new Vector2Int(2, -2);
@@ -174,11 +181,11 @@ namespace AntColony.Tests.PlayMode
 
             Vector2Int antCell = WorldTileCoordinates.WorldPositionToCell(
                 host.AutonomousAnt.Position);
-            Assert.That(host.TogglePreparedBackground(antCell), Is.True,
-                "The fixture's bottom cell should return to unprepared Sky.");
+            Assert.That(host.SetNonGrippableBackground(antCell), Is.True);
             var supportCell = antCell + Vector2Int.down;
             float startingY = host.AutonomousAnt.Position.y;
             Assert.That(host.ToggleForegroundSolid(supportCell), Is.True);
+            Assert.That(host.SetNonGrippableBackground(supportCell), Is.True);
             Assert.That(host.AutonomousAnt.LocomotionState,
                 Is.EqualTo(AntAutonomousLocomotionState.Falling));
 
@@ -237,6 +244,8 @@ namespace AntColony.Tests.PlayMode
         {
             Vector2Int antCell = WorldTileCoordinates.WorldPositionToCell(
                 host.AutonomousAnt.Position);
+            string lastMessage = string.Empty;
+            var rejected = new List<string>();
             for (int distance = minimumDistance; distance <= maximumDistance; distance++)
             {
                 foreach (int sign in new[] { 1, -1 })
@@ -244,14 +253,27 @@ namespace AntColony.Tests.PlayMode
                     var candidate = new Vector2Int(
                         antCell.x + sign * distance,
                         antCell.y);
-                    if (host.TryAssignAutonomousDestination(candidate, out _))
+                    if (host.TryAssignAutonomousDestination(
+                        candidate,
+                        out lastMessage))
                     {
                         return candidate;
                     }
+
+                    rejected.Add($"{candidate}: {lastMessage}");
                 }
             }
 
-            Assert.Fail("No direct grounded destination was accepted near the spawn.");
+            Assert.Fail(
+                $"No direct grounded destination was accepted near {antCell}. " +
+                $"Position={host.AutonomousAnt.Position}, " +
+                $"Locomotion={host.AutonomousAnt.LocomotionState}, " +
+                $"Background={host.AutonomousAnt.BackgroundMaterialId}, " +
+                $"H/U/D=" +
+                $"{host.AutonomousAnt.LatestCapability.AllowsHorizontalMovement}/" +
+                $"{host.AutonomousAnt.LatestCapability.AllowsUpwardMovement}/" +
+                $"{host.AutonomousAnt.LatestCapability.AllowsDownwardMovement}. " +
+                string.Join(" | ", rejected));
             return default;
         }
 

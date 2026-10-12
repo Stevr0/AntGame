@@ -13,10 +13,11 @@ MonoBehaviour:
   m_Name: Background_UnpreparedStone
   m_EditorClassIdentifier: AntColony.World::AntColony.World.BackgroundTileMaterialDefinition
   stableMaterialId: background.stone.unprepared
-  displayName: Unprepared Stone
+  displayName: Natural Stone
   visualTile: {fileID: 11400000, guid: c9f6c8409696acb4997db102e261ee14, type: 2}
   allowsHorizontalMovement: 1
-  allowsUpwardMovement: 0
-  allowsDownwardMovement: 0
-  providesClimbingGrip: 0
-  gravityAppliesWhenUnsupported: 1
+  allowsUpwardMovement: 1
+  allowsDownwardMovement: 1
+  providesClimbingGrip: 1
+  gravityAppliesWhenUnsupported: 0
+  movementSpeedMultiplier: 1

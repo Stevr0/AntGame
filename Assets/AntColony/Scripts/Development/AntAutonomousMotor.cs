@@ -52,6 +52,8 @@ namespace AntColony.Development
         public bool HasDestination => hasDestination;
         public bool IsMoving => State == AntAutonomousMovementState.Moving;
         public float MovementSpeed => movementSpeed;
+        public float EffectiveMovementSpeed => movementSpeed *
+            Mathf.Max(0.01f, latestCapability.MovementSpeedMultiplier);
         public float ArrivalTolerance => arrivalTolerance;
         public string BackgroundMaterialId =>
             latestCapability.BackgroundMaterialId ?? string.Empty;
@@ -168,7 +170,7 @@ namespace AntColony.Development
             Vector2 nextPosition = Vector2.MoveTowards(
                 current,
                 destination,
-                movementSpeed * fixedDeltaTime);
+                EffectiveMovementSpeed * fixedDeltaTime);
             if (Vector2.Distance(destination, nextPosition) <= arrivalTolerance)
             {
                 nextPosition = destination;

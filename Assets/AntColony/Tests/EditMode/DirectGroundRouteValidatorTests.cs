@@ -10,6 +10,8 @@ namespace AntColony.Tests.EditMode
     public sealed class DirectGroundRouteValidatorTests
     {
         private const string BackgroundId = "background.route-test";
+        private const string SkyId = "background.route-sky";
+        private const string StoneId = "background.route-stone";
         private const string PreparedId = "background.route-prepared";
         private const string GroundId = "solid.route-ground";
 
@@ -25,7 +27,30 @@ namespace AntColony.Tests.EditMode
             SetField(background, "stableMaterialId", BackgroundId);
             SetField(background, "displayName", "Route Test Background");
             SetField(background, "allowsHorizontalMovement", true);
-            SetField(background, "gravityAppliesWhenUnsupported", true);
+            SetField(background, "allowsUpwardMovement", true);
+            SetField(background, "allowsDownwardMovement", true);
+            SetField(background, "providesClimbingGrip", true);
+            SetField(background, "gravityAppliesWhenUnsupported", false);
+            SetField(background, "movementSpeedMultiplier", 1f);
+
+            BackgroundTileMaterialDefinition sky =
+                Track(ScriptableObject.CreateInstance<BackgroundTileMaterialDefinition>());
+            SetField(sky, "stableMaterialId", SkyId);
+            SetField(sky, "displayName", "Route Test Sky");
+            SetField(sky, "allowsHorizontalMovement", true);
+            SetField(sky, "gravityAppliesWhenUnsupported", true);
+            SetField(sky, "movementSpeedMultiplier", 1f);
+
+            BackgroundTileMaterialDefinition stone =
+                Track(ScriptableObject.CreateInstance<BackgroundTileMaterialDefinition>());
+            SetField(stone, "stableMaterialId", StoneId);
+            SetField(stone, "displayName", "Route Test Stone");
+            SetField(stone, "allowsHorizontalMovement", true);
+            SetField(stone, "allowsUpwardMovement", true);
+            SetField(stone, "allowsDownwardMovement", true);
+            SetField(stone, "providesClimbingGrip", true);
+            SetField(stone, "gravityAppliesWhenUnsupported", false);
+            SetField(stone, "movementSpeedMultiplier", 1f);
 
             BackgroundTileMaterialDefinition prepared =
                 Track(ScriptableObject.CreateInstance<BackgroundTileMaterialDefinition>());
@@ -36,6 +61,7 @@ namespace AntColony.Tests.EditMode
             SetField(prepared, "allowsDownwardMovement", true);
             SetField(prepared, "providesClimbingGrip", true);
             SetField(prepared, "gravityAppliesWhenUnsupported", false);
+            SetField(prepared, "movementSpeedMultiplier", 1.25f);
 
             SolidTileMaterialDefinition ground =
                 Track(ScriptableObject.CreateInstance<SolidTileMaterialDefinition>());
@@ -45,7 +71,7 @@ namespace AntColony.Tests.EditMode
             SetField(ground, "supportsNavigation", true);
 
             var registry = new WorldMaterialRegistry(
-                new[] { background, prepared },
+                new[] { background, sky, stone, prepared },
                 new[] { ground });
             world = new ChunkedWorldData(registry, 23);
             Assert.That(
@@ -105,6 +131,9 @@ namespace AntColony.Tests.EditMode
             Assert.That(
                 world.RemoveSolidMaterial(new Vector2Int(5, 0)),
                 Is.EqualTo(WorldCellMutationResult.Success));
+            Assert.That(
+                world.SetBackgroundMaterial(new Vector2Int(5, 1), SkyId),
+                Is.EqualTo(WorldCellMutationResult.Success));
 
             DirectGroundRouteResult result = validator.ResolveGroundedPosition(
                 new Vector2Int(5, 1),
@@ -135,6 +164,9 @@ namespace AntColony.Tests.EditMode
             Assert.That(
                 world.RemoveSolidMaterial(new Vector2Int(2, 0)),
                 Is.EqualTo(WorldCellMutationResult.Success));
+            Assert.That(
+                world.SetBackgroundMaterial(new Vector2Int(2, 1), SkyId),
+                Is.EqualTo(WorldCellMutationResult.Success));
 
             DirectGroundRouteResult result = validator.Validate(
                 new Vector2(0f, 0.65f),
@@ -146,15 +178,30 @@ namespace AntColony.Tests.EditMode
         }
 
         [Test]
-        public void UnpreparedVerticalClimb_IsRejectedByDirectionPermission()
+        public void NaturalEarth_AllowsVerticalAndDiagonalMovement()
         {
-            DirectGroundRouteResult result = validator.Validate(
-                new Vector2(0f, 0.65f),
-                new Vector2(2f, 1.65f));
+            Assert.That(validator.Validate(
+                new Vector2(0f, 1f),
+                new Vector2(0f, 4f)).Succeeded, Is.True);
+            Assert.That(validator.Validate(
+                new Vector2(0f, 4f),
+                new Vector2(0f, 1f)).Succeeded, Is.True);
+            Assert.That(validator.Validate(
+                new Vector2(0f, 1f),
+                new Vector2(3f, 4f)).Succeeded, Is.True);
+        }
 
-            Assert.That(
-                result.Status,
-                Is.EqualTo(DirectGroundRouteStatus.DirectionNotPermitted));
+        [Test]
+        public void NaturalStone_UsesSameTraversalRules()
+        {
+            SetBackgroundRectangle(StoneId, 0, 3, 1, 4);
+
+            Assert.That(validator.Validate(
+                new Vector2(0f, 1f),
+                new Vector2(3f, 4f)).Succeeded, Is.True);
+            Assert.That(validator.Validate(
+                new Vector2(3f, 4f),
+                new Vector2(0f, 1f)).Succeeded, Is.True);
         }
 
         [Test]
@@ -251,6 +298,21 @@ namespace AntColony.Tests.EditMode
             int minimumY,
             int maximumY)
         {
+            SetBackgroundRectangle(
+                PreparedId,
+                minimumX,
+                maximumX,
+                minimumY,
+                maximumY);
+        }
+
+        private void SetBackgroundRectangle(
+            string materialId,
+            int minimumX,
+            int maximumX,
+            int minimumY,
+            int maximumY)
+        {
             for (int y = minimumY; y <= maximumY; y++)
             {
                 for (int x = minimumX; x <= maximumX; x++)
@@ -258,7 +320,7 @@ namespace AntColony.Tests.EditMode
                     Assert.That(
                         world.SetBackgroundMaterial(
                             new Vector2Int(x, y),
-                            PreparedId),
+                            materialId),
                         Is.EqualTo(WorldCellMutationResult.Success));
                 }
             }

@@ -2,17 +2,17 @@
 
 ## Design-versus-implementation status — 12 October 2026
 
-**Design has changed; Unity implementation has not been changed by this documentation update.** The user reports Milestone 2.3B automated tests passed and all 12 manual Play Mode acceptance checks passed. The old 2.3B implementation uses prepared-background grip and is valid as tested for its old rules, but the newly approved design makes naturally exposed intact backgrounds grippable and preparation speed-only. The new design also specifies starting queen, player-facing direct ant control, resource-backed functional backgrounds, doors/room scoring, brood, needs and shared stores. These are design targets, **not implemented or verified features**. Earlier 2.3B pending-test entries below are snapshots from before the user's later acceptance and must not be read as current status.
+Milestone 2.4A now implements the approved natural-background movement realignment. Exposed Natural Earth and Natural Stone provide full horizontal, vertical and diagonal grip at normal speed. Prepared Background provides the same traversal plus a provisional `1.25` movement-speed multiplier. Sky remains explicitly non-grippable. The other newly approved systems—starting queen, player-facing direct ant control, functional backgrounds, rooms, brood, needs and shared stores—remain design targets, **not implemented or verified features**.
 
-**Next step:** read-only architecture audit and explicit approval of implementation changes. See `Documentation/GameDesignDocument.md` and `Documentation/DevelopmentRoadmap.md` for design and sequencing.
+**Next step:** complete the Milestone 2.4A manual Play Mode checklist below. Do not begin Milestone 2.4B or later gameplay work before that acceptance and separate approval.
 
 ## Current milestone
 
-**Milestone 2.3B — Background Grip and Gravity Movement**
+**Milestone 2.4A — Natural Background Movement Realignment**
 
-**Status:** Implemented; Unity test execution and manual Play Mode acceptance pending. The legacy player-controlled Milestone 1 scene and scripts remain preserved as regression fixtures, including their still-pending ceiling/corner and Auto Step-Over acceptance work.
+**Status:** **Implemented — Pending Manual Acceptance.** Unity compilation, the complete 227/227 Edit Mode suite and all 6/6 physics-backed Play Mode tests pass. Manual Unity Play Mode acceptance has not been claimed.
 
-Milestones 2.1B through 2.2B are complete and verified. Milestone 2.2C Background movement capability and gravity eligibility is implemented and automated, but still needs its separate graphics-enabled manual Scene-view acceptance. The integrated sample world has passed manual Play Mode validation for readability, camera controls, inspection, foreground mutation, prepared-Background replacement and the corrected Background colour round trip. The user confirmed all 11 Milestone 2.3A manual checks after its 221/221 Edit Mode and 3/3 Play Mode runs, so 2.3A is complete. Milestone 2.3B now implements bounded direct grip movement and physical falling; it is not complete until its updated automated suites and manual Play Mode checklist pass.
+Milestones 2.1B through 2.3B retain their previously reported acceptance status. Milestone 2.4A changes only the existing material-driven capability, route-validation, motor-speed and development-fixture seams; it does not add pathfinding, jobs, excavation gameplay, Draft Mode or colony simulation.
 
 ## Repository and architecture
 
@@ -89,11 +89,11 @@ Milestones 2.1B through 2.2B are complete and verified. Milestone 2.2C Backgroun
 
 ### Milestone 2.2C Background movement capability and gravity eligibility
 
-- `BackgroundTileMaterialDefinition` now stores explicit horizontal, upward and downward voluntary movement permissions, intrinsic climbing grip, and whether gravity applies when unsupported.
-- Authored development materials define Sky, Unprepared Earth and Unprepared Stone as grounded-horizontal-only, non-gripping and gravity-eligible. Prepared Grippable Background enables horizontal/up/down movement, supplies intrinsic grip and suppresses gravity while gripping.
+- `BackgroundTileMaterialDefinition` stores explicit horizontal, upward and downward voluntary movement permissions, intrinsic climbing grip, unsupported gravity and a data-driven movement-speed multiplier.
+- Authored development materials define Natural Earth and Natural Stone as full-direction grippable terrain at `1.0x`. Prepared Grippable Background has the same directions and grip at a provisional `1.25x`. Sky is non-grippable and gravity-eligible.
 - `AntMovementCapabilityEvaluator` is a read-only, scene-independent service. It composes the unchanged `AntClearanceValidator`, the centre Background Material and an authoritative ground-contact query into explicit `Grounded`, `Gripping` or `Falling` eligibility plus detailed permissions and failure diagnostics.
 - Ground support uses the full rotated capsule's lowest extent and a `0.02`-world-unit contact tolerance against top faces of registered Solid Materials that both block movement and support navigation. Side walls, ceilings, non-blocking solids and Background Tiles do not become floor support.
-- Grounded unprepared space permits horizontal walking only. Unsupported unprepared space is Falling with gravity eligibility but no voluntary downward movement. Prepared grip enables its configured voluntary directions and suppresses falling without changing physical clearance.
+- Grounded and exposed natural terrain permits its configured directions through normal grip. Falling occurs only where neither valid ground nor a grippable Background exists. Prepared conversion changes speed rather than access and does not change physical clearance.
 - The existing `SetBackgroundMaterial` mutation safely demonstrates Unprepared Earth to Prepared replacement without changing foreground occupancy, creating chunks or introducing Surface Preparation gameplay. `WorldTilemapRenderer.RefreshCell` explicitly refreshes its presentation.
 - `AntNavigationPrototype.unity` includes one `Ant Movement Capability Inspector` at the unsupported chamber centre. It reports Background ID, clearance, ground, grip, direction permissions, gravity and suggested state; its explicit toggle button replaces the selected Background, refreshes the visual cell and requeries.
 - Focused capability tests pass 37/37. The expanded structural scene validator, focused 2/2 legacy movement regression and complete 192/192 Edit Mode suite pass. Graphics-enabled manual Scene-view acceptance remains pending, so Milestone 2.2C is in progress rather than complete.
@@ -128,20 +128,20 @@ Milestones 2.1B through 2.2B are complete and verified. Milestone 2.2C Backgroun
 - `AntAutonomousMotor` now reports physical `Grounded`, `Gripping` and `Falling` separately from command progress (`Idle`, `Moving`, `Arrived`, `Blocked`). Each physics step uses `AntMovementCapabilityEvaluator`; no material ID is hardcoded in the motor.
 - Grounded and Gripping are controlled states: gravity scale is zero and a prevalidated direct command may use `Rigidbody2D.MovePosition`. Falling is mutually exclusive in the same physics step: the command is interrupted, horizontal command velocity is cleared, the authored gravity scale of 4 is restored and Rigidbody2D collision moves the ant until ground or grip is reacquired.
 - Ground contact keeps the existing `0.02`-world-unit capability tolerance. State selection otherwise follows the stable centre Background cell; there is no timer-based hysteresis. Entering Grounded or Gripping clears fall velocity once, preventing boundary oscillation from retaining downward momentum.
-- The bounded direct validator now supports horizontal, vertical and diagonal segments up to 24 units. Samples remain no more than 0.2 units apart. Every sample requires whole-body clearance and either valid Grounded centre support or prepared grip; each interval checks its source Background direction permissions, and simultaneous diagonal cell transitions require both orthogonal neighbours to be resident and unblocked. It still performs no detours, graph search or waypoint planning.
-- The deterministic sample adds a seven-cell prepared vertical strip at X `-12`, beginning in the normal grounded spawn cell, plus a small prepared top region. This makes Grounded-to-Gripping, vertical, horizontal, diagonal, grip-loss, grip-regain and safe falling checks visible without teleporting the ant. The existing unprepared shaft and lower landing terrain remain unchanged.
-- The inspection panel reports ant position, locomotion, command progress, Background ID, grip, gravity eligibility, destination and interruption/rejection reason. A developer button selects and commands the visible grip-fixture top. Foreground and Background toggles notify the motor immediately after authoritative data and projections update.
-- C# compilation of the World, Development, Edit Mode and Play Mode assemblies passes through Unity's generated Roslyn response files. The planned expanded totals are 226 Edit Mode tests and 6 physics-backed Play Mode tests. Unity Test Runner execution is currently blocked before test discovery because the Unity Licensing Client does not initialise, so no new passing test count is claimed. Manual 2.3B Play Mode acceptance is also pending.
+- The bounded direct validator supports horizontal, vertical and diagonal segments up to 24 units. Every sample requires whole-body clearance and either valid Grounded support or material-provided grip; direction flags are checked at every interval, missing chunks fail closed and diagonal cell transitions require both orthogonal neighbours to be resident and unblocked. It still performs no detours, graph search or waypoint planning.
+- The deterministic sample adds a short flat Natural Earth floor across the seven-cell Prepared vertical strip at X `-12`, plus the prepared top region. This exposes Grounded natural movement, natural-to-prepared transition, vertical/diagonal movement, speed comparison, explicit Sky grip loss, recovery and safe falling without teleporting the ant.
+- The inspection panel reports ant position, locomotion, command progress, Background ID, grip, gravity eligibility, base/effective movement speed, destination and interruption/rejection reason. Foreground and Background mutations refresh the relevant projections and notify the motor immediately, which rechecks local state and invalidates an active direct route if necessary.
+- Unity's generated Roslyn response files compile the changed World, Development, Editor and test assemblies. The focused 2.4A Edit Mode groups pass 56/56; the full graphics-enabled Edit Mode suite passes 227/227; all physics-backed Play Mode tests pass 6/6. An earlier full `-nographics` attempt crashed in the existing rendered-pixel test, so the successful full suite was correctly rerun with graphics enabled.
 
 ## Approved design boundaries and future work
 
 - Normal play manages ants through selection, inspection, designations, colony priorities and specific task assignments; it does not directly steer them.
 - Every coordinate in a generated chunk contains one permanently present Background Tile whose material may be replaced, plus zero or one foreground Solid Tile; ungenerated chunks remain unavailable.
-- Background Materials are the primary authority for voluntary directions, intrinsic grip and gravity behavior. Background existence alone grants no movement permission.
-- Excavation removes an eligible foreground Solid, leaves its Background unchanged, updates affected systems and does not automatically grant grip.
-- Surface Preparation is an approved future job that consumes resources and time from an accessible nearby work position, then replaces an exposed unprepared Background with a grippable material only on completion. Vertical routes are prepared progressively.
+- Background Materials are the primary authority for voluntary directions, intrinsic grip, gravity behavior and movement-speed multipliers. Natural Earth/Stone and Prepared terrain grant grip; Background existence alone still grants nothing when the material is Sky or explicitly non-grippable.
+- Excavation removes an eligible foreground Solid, leaves its Background unchanged and must update affected systems. Exposing intact natural Earth or Stone therefore exposes its already-grippable Background; excavation gameplay itself remains unimplemented.
+- Surface Preparation is an approved future resource-consuming job. Its movement benefit is faster travel over an already-traversable Background, not access to climbing.
 - Physical clearance, Background movement capability and directional navigation connections are separate. Falling through physically clear, non-grippable space may be valid even when upward voluntary movement is not.
-- Prepared grip can permit clearance-valid two-dimensional movement without immediate Solid adjacency. Foreground `BlocksMovement` always remains authoritative, and `SupportsNavigation` stays independent.
+- Natural and Prepared grip can permit clearance-valid two-dimensional movement without immediate Solid adjacency. Foreground `BlocksMovement` always remains authoritative, and `SupportsNavigation` stays independent.
 - Navigation connections may be directional; diagonal corner-cutting through blocking geometry remains invalid.
 - Every ant starts every ordinary skill at 0, can perform ordinary tasks without a specialist gate, and improves from successful work on a 0–100 scale. Roles remain preferences and priorities.
 - Independently tracked skills above 50 slowly decay after inactivity and stop at exactly 50; skills at or below 50 do not decay through inactivity.
@@ -304,12 +304,20 @@ For the Milestone 2.2C movement-capability slice:
 - The complete Edit Mode suite passed 192/192, and the existing movement regression fixture passed separately at 2/2.
 - Manual graphics-enabled Scene-view checks remain pending, so Milestone 2.2C is implemented and automated but not complete.
 
+For the Milestone 2.4A natural-background realignment:
+
+- Natural Earth, Natural Stone, Prepared and Sky properties are covered directly, including normal `1.0x` natural speed and provisional `1.25x` Prepared speed.
+- Route tests cover natural horizontal/up/down/diagonal movement, equivalent Stone behavior, blocking foreground, explicit non-grippable space, missing chunks and diagonal corner rejection.
+- Runtime tests cover Grounded, Gripping and Falling transitions, effective Prepared speed, blocker/support invalidation, Sky grip loss, recovery and collision-backed landing.
+- Unity compilation passed. Focused Edit Mode tests passed 56/56, the complete graphics-enabled Edit Mode suite passed 227/227 and Play Mode tests passed 6/6. `git diff --check` is clean.
+- Manual Play Mode acceptance remains pending and is not implied by these automated results.
+
 ### Milestone 2.2C manual Scene-view checklist
 
-1. Open `AntNavigationPrototype.unity`, select `Ant Movement Capability Inspector`, and confirm the default chamber-centre result is physically Clear, ungrounded, non-gripping and Falling.
-2. Click `Toggle Prepared Background, Refresh, and Requery`; confirm the selected cell changes visual, reports the prepared material ID, enables horizontal/up/down movement, reports grip and changes to Gripping with gravity disabled.
-3. Toggle again; confirm the original unprepared visual and Falling result return immediately.
-4. Move the handle to a clearance-valid pose exactly `0.15` units above a floor top; confirm Grounded and horizontal-only voluntary movement.
+1. Open `AntNavigationPrototype.unity`, select `Ant Movement Capability Inspector`, and confirm the default Natural Earth chamber-centre result is physically Clear, ungrounded, Gripping and gravity-ineligible at `1.0x` speed.
+2. Click `Toggle Prepared Background, Refresh, and Requery`; confirm the selected cell changes visual, reports the Prepared material ID, retains horizontal/up/down grip and changes the speed multiplier to the provisional `1.25x`.
+3. Toggle again; confirm the Natural Earth visual, Gripping result and `1.0x` speed return immediately.
+4. Move the handle to a clearance-valid pose exactly `0.15` units above a floor top; confirm Grounded while the natural Background still permits its configured directions.
 5. Place the handle beside a wall and below a ceiling without a floor; confirm neither produces Grounded.
 6. Place the capsule over blocking foreground; confirm `BlockedByTerrain` and no valid movement state.
 7. Move the handle into a missing chunk or across a missing footprint boundary; confirm an explicit unavailable result rather than Falling or Gripping.
@@ -340,18 +348,21 @@ For the Milestone 2.2C movement-capability slice:
 20. Approach the two-tile floor opening and the blocked landing; confirm both stop safely, do not oscillate or retry every frame, and become eligible for a new attempt after input release/change.
 21. Enable `Show Debug Gizmos`; confirm the measured gap endpoints/path match the authored opening and rejection reasons are useful without per-frame Console spam.
 
-### Milestone 2.3B manual grip/gravity checklist
+### Milestone 2.4A manual acceptance checklist
 
-1. Open `AntGameDevelopment.unity`, enter Play Mode and confirm exactly one yellow autonomous ant appears at the base of the green surface fixture near X `-12`.
-2. Confirm the panel separately reports `Grounded` locomotion and an Idle command, with prepared Background grip available and gravity ineligible.
-3. Click `Move Ant to Grip Fixture Top`; confirm the ant moves upward continuously without teleporting, changes to `Gripping`, and does not fall.
-4. Click horizontal and diagonal cells inside the prepared top region; confirm both direct movements complete without clipping. Click nearby unprepared Sky and confirm an unsupported command is rejected.
-5. Click the Solid floor below the vertical strip; confirm the ant voluntarily descends through prepared Background, reaches the standing pose and changes to `Grounded`.
-6. Climb to the top again, select the occupied prepared cell and press `P`; confirm loss of grip produces `Falling`, then entering the prepared cell below changes back to `Gripping` without oscillation.
-7. Regenerate, move onto nearby unprepared flat ground, select the Solid directly beneath the ant and press `F`; confirm support loss cancels any active command, gravity moves the ant down and collision lands it on the lower terrain as `Grounded`.
-8. Start a short ground or grip command, then add a foreground blocker with `F`; confirm the command becomes Blocked before terrain penetration. Confirm removing the blocker permits a new command.
-9. Toggle a prepared cell off and back on with `P`; confirm the green visual, Background ID, grip and allowed movement update together. Confirm a remote or unavailable destination is rejected readably.
-10. Repeat vertical, diagonal, fall and landing transitions while watching locomotion, command status, Background, grip, gravity and reason fields; confirm the Console contains no unexpected errors or warnings.
+No extra Inspector setup is required. Open `Assets/AntColony/Scenes/AntGameDevelopment.unity`, enter Play Mode, use left-click to select/command cells, `P` to toggle Natural/Prepared Background on an exposed selected cell and `F` to toggle foreground Solid occupancy.
+
+1. Confirm exactly one yellow autonomous ant appears near X `-12`, reports `Grounded`, and can traverse the flat Natural Earth floor in both directions.
+2. Command exposed Natural Earth cells above/beside the fixture; confirm upward, downward, horizontal and valid diagonal movement without preparation or teleportation.
+3. Command through an exposed Natural Stone region; confirm the same directions and normal movement speed.
+4. Use the prepared vertical strip/top region; confirm it permits the same directions and the panel reports effective speed `2.5` from base speed `2.0` (`1.25x`, provisional).
+5. Toggle a Natural cell to Prepared with `P`, then traverse across the boundary; confirm movement remains valid and only effective speed/visual/material diagnostics change.
+6. Attempt a diagonal route beside blocking foreground; confirm the ant does not cut the blocked corner or overlap terrain.
+7. Add a foreground blocker with `F` during an active route; confirm the route becomes Blocked before entry. Remove it and confirm a new command can be accepted.
+8. At the explicit Sky/grip-loss fixture, remove valid grip and support; confirm the active command is invalidated, the state becomes `Falling`, gravity moves the Rigidbody2D and no teleport/collision bypass occurs.
+9. Restore or enter a valid Natural/Prepared grippable cell; confirm recovery to `Gripping` (or `Grounded` on the landing) without oscillation.
+10. Toggle Background at runtime while moving; confirm capability, route validity, rendered tile and effective speed update immediately. Confirm a remote/missing-chunk destination is rejected readably.
+11. Repeat Grounded, Natural Earth, Natural Stone, diagonal, Prepared-speed, transition, fall/recovery and blocked-route checks while confirming the Console remains free of relevant errors or warnings.
 
 ## Known limitations and remaining P1 work
 
@@ -367,11 +378,11 @@ For the Milestone 2.2C movement-capability slice:
 - The collision projection currently requires an explicit cell, chunk or bounded-region refresh after authoritative Solid mutation; no terrain-change event stream or chunk streaming lifecycle exists yet. Clearance itself reads world data directly and does not share that staleness risk.
 - Static clearance does not validate Background permissions, grip, grounding, gravity, a swept movement segment, directional movement edge, route connectivity, Reachable Space, dynamic objects or ant-to-ant separation.
 - Mathematical tangency is permitted within a `0.00001`-unit tolerance; future movement integration may use a small positive profile margin to remain conservative relative to Unity Physics2D contact handling.
-- Background Material movement/grip/gravity properties now drive the single 2.3B development ant. General directional connection generation, falling route planning, Surface Preparation jobs, resource consumption, universal 0–100 skills and inactivity decay above 50 are not implemented.
+- Background Material movement/grip/gravity/speed properties now drive the single development ant. General directional connection generation, detours, falling route planning, Surface Preparation jobs, resource consumption, skills and colony work are not implemented.
 - Milestone 2.2C needs graphics-enabled manual Scene-view acceptance before it can be marked complete.
-- The integrated sample-world checklist and Milestone 2.3A's 11-step ant checklist are user-confirmed complete. Milestone 2.3B still needs its expanded grip, transition, mutation, falling, landing and clean-Console Play Mode acceptance.
+- The integrated sample-world and prior 2.3 acceptance remain historical evidence. Milestone 2.4A still needs the current natural-background, speed-transition, mutation, falling, landing and clean-Console checklist above.
 - Full directional navigation, multi-ant occupancy and colony simulation remain later milestones.
 
 ## Recommended next implementation step
 
-Restore Unity licensing, run the expanded Edit/Play Mode suites and complete the Milestone 2.3B `AntGameDevelopment.unity` one-ant grip/gravity checklist. Keep the separate Milestone 2.2C Scene-view acceptance status explicit; do not expand into general directional graphs, pathfinding, Surface Preparation, skills or colony work.
+Complete the Milestone 2.4A `AntGameDevelopment.unity` manual checklist and record the user's acceptance. Keep the separate Milestone 2.2C Scene-view acceptance status explicit; do not begin 2.4B, general pathfinding, Surface Preparation, skills or colony work without separate approval.

@@ -43,7 +43,7 @@ namespace AntColony.World
     }
 
     /// <summary>
-    /// Validates a short direct controlled segment across grounded or prepared
+    /// Validates a short direct controlled segment across grounded or grippable
     /// Background space. This is deliberately not pathfinding or a navigation graph.
     /// </summary>
     public sealed class DirectGroundRouteValidator
@@ -106,22 +106,47 @@ namespace AntColony.World
             float halfHeight = profile.Size.y * 0.5f + profile.ClearanceMargin;
             groundedPosition = WorldTileCoordinates.CellToWorldPosition(openCell) +
                 Vector2.down * (0.5f - halfHeight);
-            return ValidateControlledPose(
+            DirectGroundRouteResult poseResult = ValidateControlledPose(
                 groundedPosition,
                 DirectGroundRouteStatus.DestinationBlocked,
                 DirectGroundRouteStatus.DestinationUnsupported,
                 1);
+            if (!poseResult.Succeeded)
+            {
+                return poseResult;
+            }
+
+            AntMovementCapabilityResult capability = capabilityEvaluator.Evaluate(
+                groundedPosition,
+                0f,
+                profile);
+            return capability.SuggestedState == AntMovementEligibilityState.Grounded &&
+                HasCentreGroundSupport(groundedPosition, out _)
+                    ? poseResult
+                    : Result(
+                        DirectGroundRouteStatus.DestinationUnsupported,
+                        groundedPosition,
+                        capability.CentreCell,
+                        1);
         }
 
         /// <summary>
-        /// Resolves a clicked cell to either its grippable centre or a standing
-        /// pose above blocking support. Grip is tried first so vertical fixture
-        /// cells remain directly selectable.
+        /// Resolves a clicked cell to a standing pose when valid ground is present,
+        /// otherwise to its grippable centre. Ground first keeps ordinary floor
+        /// clicks stable now that natural Backgrounds also provide grip.
         /// </summary>
         public DirectGroundRouteResult ResolveControlledPosition(
             Vector2Int selectedCell,
             out Vector2 controlledPosition)
         {
+            DirectGroundRouteResult grounded = ResolveGroundedPosition(
+                selectedCell,
+                out controlledPosition);
+            if (grounded.Succeeded)
+            {
+                return grounded;
+            }
+
             controlledPosition = WorldTileCoordinates.CellToWorldPosition(selectedCell);
             AntMovementCapabilityResult capability = capabilityEvaluator.Evaluate(
                 controlledPosition,
@@ -137,7 +162,7 @@ namespace AntColony.World
                     1);
             }
 
-            return ResolveGroundedPosition(selectedCell, out controlledPosition);
+            return grounded;
         }
 
         /// <summary>

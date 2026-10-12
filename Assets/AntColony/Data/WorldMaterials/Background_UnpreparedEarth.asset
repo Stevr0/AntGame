@@ -13,10 +13,11 @@ MonoBehaviour:
   m_Name: Background_UnpreparedEarth
   m_EditorClassIdentifier: AntColony.World::AntColony.World.BackgroundTileMaterialDefinition
   stableMaterialId: background.earth.unprepared
-  displayName: Unprepared Earth
+  displayName: Natural Earth
   visualTile: {fileID: 11400000, guid: 00ed2c41d8b5abf4ba2af63eb4e07d7f, type: 2}
   allowsHorizontalMovement: 1
-  allowsUpwardMovement: 0
-  allowsDownwardMovement: 0
-  providesClimbingGrip: 0
-  gravityAppliesWhenUnsupported: 1
+  allowsUpwardMovement: 1
+  allowsDownwardMovement: 1
+  providesClimbingGrip: 1
+  gravityAppliesWhenUnsupported: 0
+  movementSpeedMultiplier: 1
