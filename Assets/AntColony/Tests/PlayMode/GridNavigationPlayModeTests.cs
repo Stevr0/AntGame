@@ -1,5 +1,6 @@
 using System.Collections;
 using AntColony.Development;
+using AntColony.Navigation;
 using AntColony.World;
 using NUnit.Framework;
 using UnityEngine;
@@ -34,6 +35,8 @@ namespace AntColony.Tests.PlayMode
             yield return WaitForState(ant, GridNavigationMotorState.Arrived, 20f);
             Assert.That(Vector2.Distance(ant.Position, destination), Is.LessThan(0.05f));
             Assert.That(ant.GetComponent<Rigidbody2D>().simulated, Is.False);
+            Assert.That(ant.HasArrived, Is.True);
+            Assert.That(ant.HasFailed, Is.False);
         }
 
         [UnityTest]
@@ -93,6 +96,11 @@ namespace AntColony.Tests.PlayMode
 
             host.StartSimultaneousGridRequests();
             Assert.That(host.GridNavigationAnts.Count, Is.EqualTo(3));
+            foreach (GridNavigationMotor item in host.GridNavigationAnts)
+            {
+                Assert.That(item.NavigationWorld,
+                    Is.SameAs(host.NavigationWorldService));
+            }
             Assert.That(host.CancelFirstGridRequest(), Is.True);
             yield return new WaitForFixedUpdate();
             yield return WaitForTerminalStates(host, 40f);
@@ -150,8 +158,35 @@ namespace AntColony.Tests.PlayMode
                 10f);
 
             Assert.That(ant.HasPendingRequest, Is.False);
+            Assert.That(ant.HasFailed, Is.True);
+            Assert.That(ant.FailureReason, Is.Not.Empty);
             Assert.That(ant.RetryCount,
                 Is.LessThanOrEqualTo(ant.MaximumAutomaticRetries));
+        }
+
+        [UnityTest]
+        public IEnumerator ReplacingAndCancellingProductionCommandRejectsStaleWork()
+        {
+            yield return LoadScene();
+            AntGameDevelopmentWorldHost host = FindHost();
+            GridNavigationMotor ant = host.GridNavigationAnt;
+
+            Assert.That(ant.MoveTo(
+                SampleWorldGenerator.GridDirectDestination), Is.True);
+            long firstRequest = ant.PendingRequestId;
+            Assert.That(firstRequest, Is.GreaterThan(0));
+            Assert.That(ant.MoveTo(
+                SampleWorldGenerator.GridDetourDestination), Is.True);
+            long replacementRequest = ant.PendingRequestId;
+            Assert.That(replacementRequest, Is.Not.EqualTo(firstRequest));
+
+            ant.CancelMovement("Test production command cancellation.");
+            Assert.That(ant.State, Is.EqualTo(GridNavigationMotorState.Idle));
+            Assert.That(ant.HasPendingRequest, Is.False);
+            yield return new WaitForFixedUpdate();
+            yield return new WaitForFixedUpdate();
+            Assert.That(ant.State, Is.EqualTo(GridNavigationMotorState.Idle),
+                "Cancelled stale results must not regain control of the ant.");
         }
 
         [UnityTest]
@@ -165,7 +200,7 @@ namespace AntColony.Tests.PlayMode
                 SampleWorldGenerator.GridFallFixture + Vector2Int.left);
             ant.transform.position = body.position;
 
-            Assert.That(ant.RequestDestination(
+            Assert.That(ant.MoveTo(
                 SampleWorldGenerator.GridDirectDestination), Is.True);
             yield return WaitForState(
                 ant,

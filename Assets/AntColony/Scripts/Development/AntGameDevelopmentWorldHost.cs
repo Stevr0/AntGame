@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using AntColony.Navigation;
 using AntColony.World;
 using AntColony.WorldPresentation;
 using UnityEngine;
@@ -9,6 +10,7 @@ namespace AntColony.Development
     /// Coordinates generation and existing projections for the integrated sample
     /// scene. Authoritative terrain remains owned solely by ChunkedWorldData.
     /// </summary>
+    [RequireComponent(typeof(GridNavigationWorldService))]
     public sealed class AntGameDevelopmentWorldHost : MonoBehaviour, IWorldDataProvider
     {
         [Header("Deterministic sample")]
@@ -30,7 +32,11 @@ namespace AntColony.Development
         [SerializeField] private WorldTilemapRenderer tilemapRenderer;
         [SerializeField] private WorldTerrainCollisionRenderer collisionRenderer;
 
-        [Header("First autonomous ant")]
+        [Header("Primary grid ant")]
+        [SerializeField] private GridNavigationWorldService navigationWorldService;
+        [SerializeField] private GridNavigationMotor primaryGridAntPrefab;
+
+        [Header("Legacy 2.4A comparison ant")]
         [SerializeField] private AntAutonomousMotor autonomousAntPrefab;
         [SerializeField] private int preferredSpawnX = -12;
         [SerializeField, Min(0)] private int spawnSearchRadius = 20;
@@ -38,16 +44,12 @@ namespace AntColony.Development
         [SerializeField] private SpriteRenderer destinationMarkerRenderer;
 
         [Header("Grid navigation stress test")]
-        [SerializeField, Min(1)] private int schedulerNodeBudgetPerUpdate = 128;
-        [SerializeField, Min(1)] private int schedulerNodesPerRequestSlice = 8;
         [SerializeField, Range(1, 500)] private int gridStressGroupSize = 100;
         [SerializeField, Range(1, 100)] private int staggeredRequestsPerUpdate = 10;
 
         private GeneratedSampleWorld generatedWorld;
         private AntAutonomousMotor autonomousAnt;
-        private GridNavigationMap gridNavigationMap;
         private GridNavigationMotor gridNavigationAnt;
-        private GridNavigationScheduler gridNavigationScheduler;
         private readonly List<GridNavigationMotor> gridNavigationAnts = new();
         private bool staggeredRequestsActive;
         private int staggeredRequestIndex;
@@ -64,13 +66,16 @@ namespace AntColony.Development
             : string.Empty;
         public AntAutonomousMotor AutonomousAnt => autonomousAnt;
         public GridNavigationMotor GridNavigationAnt => gridNavigationAnt;
-        public GridNavigationMap GridNavigationMap => gridNavigationMap;
+        public GridNavigationWorldService NavigationWorldService =>
+            navigationWorldService;
+        public GridNavigationMap GridNavigationMap => navigationWorldService?.Map;
         public GridNavigationScheduler GridNavigationScheduler =>
-            gridNavigationScheduler;
+            navigationWorldService?.Scheduler;
         public IReadOnlyList<GridNavigationMotor> GridNavigationAnts =>
             gridNavigationAnts;
         public int GridStressGroupSize => gridStressGroupSize;
         public AntAutonomousMotor AutonomousAntPrefab => autonomousAntPrefab;
+        public GridNavigationMotor PrimaryGridAntPrefab => primaryGridAntPrefab;
         public Vector2Int GripFixtureBottom => generatedWorld != null
             ? generatedWorld.GripFixtureBottom
             : default;
@@ -82,6 +87,7 @@ namespace AntColony.Development
 
         private void Awake()
         {
+            navigationWorldService ??= GetComponent<GridNavigationWorldService>();
             RebuildWorld();
         }
 
@@ -111,11 +117,17 @@ namespace AntColony.Development
                 worldSeed,
                 minimumChunk,
                 sizeInChunks);
-            gridNavigationMap = new GridNavigationMap(
-                generatedWorld.WorldData,
-                AntCollisionProfile.OrdinaryAnt);
-            gridNavigationScheduler = new GridNavigationScheduler(
-                gridNavigationMap);
+            navigationWorldService ??= GetComponent<GridNavigationWorldService>();
+            if (navigationWorldService == null ||
+                !navigationWorldService.Initialize(
+                    generatedWorld.WorldData,
+                    AntCollisionProfile.OrdinaryAnt))
+            {
+                Debug.LogError(
+                    "Grid navigation services could not initialise.",
+                    this);
+                return false;
+            }
 
             tilemapRenderer.BindWorldData(WorldData);
             collisionRenderer.BindWorldData(WorldData);
@@ -131,9 +143,6 @@ namespace AntColony.Development
 
         private void Update()
         {
-            gridNavigationScheduler?.ProcessUpdate(
-                schedulerNodeBudgetPerUpdate,
-                schedulerNodesPerRequestSlice);
             ProcessStaggeredRequests();
 
             if (destinationMarkerRenderer == null || autonomousAnt == null ||
@@ -244,7 +253,7 @@ namespace AntColony.Development
             return true;
         }
 
-        /// <summary>Assigns the separate experimental A* grid ant.</summary>
+        /// <summary>Commands the primary production-grid ant.</summary>
         public bool TryAssignGridDestination(
             Vector2Int selectedCell,
             out string message)
@@ -252,15 +261,15 @@ namespace AntColony.Development
             if (gridNavigationAnt == null ||
                 !gridNavigationAnt.gameObject.activeInHierarchy)
             {
-                message = "Grid destination rejected: experimental ant unavailable.";
+                message = "Grid destination rejected: primary ant unavailable.";
                 HideDestinationMarker();
                 return false;
             }
 
-            if (!gridNavigationMap.TryGetAnchor(
+            if (!NavigationWorldService.Map.TryGetAnchor(
                     selectedCell,
                     out GridNavigationAnchor destination) ||
-                !gridNavigationAnt.RequestDestination(selectedCell))
+                !gridNavigationAnt.MoveTo(selectedCell))
             {
                 message = gridNavigationAnt.StatusMessage;
                 HideDestinationMarker();
@@ -273,13 +282,15 @@ namespace AntColony.Development
         }
 
         /// <summary>
-        /// Creates a cyan experimental ant without changing the production 2.4A
-        /// prefab, controller, or authored scene references.
+        /// Creates the reusable primary grid-ant prefab. The legacy 2.4A ant is
+        /// spawned separately and never controls this Rigidbody2D.
         /// </summary>
         public bool SpawnOrResetGridNavigationAnt(out string message)
         {
             if (!TryFindSafeSpawnPosition(out Vector2 spawnPosition, out message) ||
-                gridNavigationMap == null)
+                NavigationWorldService == null ||
+                !NavigationWorldService.IsInitialized ||
+                primaryGridAntPrefab == null)
             {
                 return false;
             }
@@ -289,19 +300,19 @@ namespace AntColony.Development
             if (gridNavigationAnt == null)
             {
                 gridNavigationAnt = CreateGridNavigationAnt(
-                    "Experimental Grid Ant",
+                    "Primary Grid Ant",
                     includeVisual: true);
                 gridNavigationAnts.Add(gridNavigationAnt);
             }
 
             gridNavigationAnt.gameObject.SetActive(true);
-            gridNavigationAnt.Bind(
-                WorldData,
-                gridNavigationMap,
-                gridNavigationScheduler,
+            bool initialized = gridNavigationAnt.InitializeNavigation(
+                NavigationWorldService,
                 spawnCell);
-            message = $"Experimental grid ant spawned at anchor {spawnCell}.";
-            return gridNavigationAnt.State != GridNavigationMotorState.Blocked;
+            message = initialized
+                ? $"Primary grid ant spawned at anchor {spawnCell}."
+                : gridNavigationAnt.StatusMessage;
+            return initialized;
         }
 
         public void SetGridStressGroupSize(int count)
@@ -330,11 +341,7 @@ namespace AntColony.Development
                 GridNavigationMotor ant = CreateGridNavigationAnt(
                     $"Grid Stress Ant {index + 1}",
                     includeVisual: index < 40);
-                ant.Bind(
-                    WorldData,
-                    gridNavigationMap,
-                    gridNavigationScheduler,
-                    spawnCell);
+                ant.InitializeNavigation(NavigationWorldService, spawnCell);
                 gridNavigationAnts.Add(ant);
             }
 
@@ -348,7 +355,7 @@ namespace AntColony.Development
             staggeredRequestsActive = false;
             foreach (GridNavigationMotor ant in gridNavigationAnts)
             {
-                ant?.CancelNavigation("Stress group cleared.");
+                ant?.CancelMovement("Stress group cleared.");
             }
             ClearExtraGridAnts();
         }
@@ -375,7 +382,7 @@ namespace AntColony.Development
                 return false;
             }
 
-            gridNavigationAnts[0].CancelNavigation(
+            gridNavigationAnts[0].CancelMovement(
                 "First stress-ant request cancelled.");
             return true;
         }
@@ -387,7 +394,7 @@ namespace AntColony.Development
                 return;
             }
 
-            gridNavigationAnt.CancelNavigation(
+            gridNavigationAnt.CancelMovement(
                 "Development falling fixture reset.");
             Rigidbody2D body = gridNavigationAnt.GetComponent<Rigidbody2D>();
             Vector2 fixturePosition = WorldTileCoordinates.CellToWorldPosition(
@@ -567,6 +574,8 @@ namespace AntColony.Development
             SolidTileMaterialDefinition stoneSolidDefinition,
             WorldTilemapRenderer visualRenderer,
             WorldTerrainCollisionRenderer terrainCollisionRenderer,
+            GridNavigationWorldService sharedNavigationWorld,
+            GridNavigationMotor gridAntPrefab,
             AntAutonomousMotor antPrefab,
             Transform marker,
             SpriteRenderer markerRenderer)
@@ -582,6 +591,8 @@ namespace AntColony.Development
             stoneSolid = stoneSolidDefinition;
             tilemapRenderer = visualRenderer;
             collisionRenderer = terrainCollisionRenderer;
+            navigationWorldService = sharedNavigationWorld;
+            primaryGridAntPrefab = gridAntPrefab;
             autonomousAntPrefab = antPrefab;
             destinationMarker = marker;
             destinationMarkerRenderer = markerRenderer;
@@ -592,7 +603,8 @@ namespace AntColony.Development
             return skyBackground != null && earthBackground != null &&
                 stoneBackground != null && preparedBackground != null &&
                 soilSolid != null && stoneSolid != null &&
-                tilemapRenderer != null && collisionRenderer != null;
+                tilemapRenderer != null && collisionRenderer != null &&
+                navigationWorldService != null && primaryGridAntPrefab != null;
         }
 
         private string GetUnpreparedBackgroundMaterialId(Vector2Int worldCell)
@@ -613,8 +625,7 @@ namespace AntColony.Development
 
         private void NotifyGridTerrainChanged(Vector2Int worldCell)
         {
-            gridNavigationMap?.InvalidateCell(worldCell);
-            gridNavigationScheduler?.NotifyTerrainInvalidated();
+            navigationWorldService?.NotifyTerrainChanged(worldCell);
             foreach (GridNavigationMotor ant in gridNavigationAnts)
             {
                 ant?.NotifyTerrainChanged();
@@ -625,38 +636,17 @@ namespace AntColony.Development
             string objectName,
             bool includeVisual)
         {
-            var root = new GameObject(objectName);
-            root.transform.SetParent(transform, false);
-            Rigidbody2D body = root.AddComponent<Rigidbody2D>();
-            body.simulated = false;
-            body.freezeRotation = true;
-            body.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
-            CapsuleCollider2D capsule = root.AddComponent<CapsuleCollider2D>();
-            capsule.direction = CapsuleDirection2D.Horizontal;
-            capsule.size = AntCollisionProfile.OrdinaryAnt.Size;
-            // Terrain colliders use ClimbableSurface (layer 8). Excluding
-            // Default prevents grid ants and the 2.4A comparison ant from
-            // physically pushing one another while retaining terrain collision.
-            capsule.excludeLayers = 1 << LayerMask.NameToLayer("Default");
-            GridNavigationMotor ant = root.AddComponent<GridNavigationMotor>();
-
-            if (includeVisual)
+            GridNavigationMotor ant = Instantiate(
+                primaryGridAntPrefab,
+                transform);
+            ant.name = objectName;
+            if (!includeVisual)
             {
-                var visual = new GameObject("Visual");
-                visual.transform.SetParent(root.transform, false);
-                SpriteRenderer renderer = visual.AddComponent<SpriteRenderer>();
-                SpriteRenderer source = autonomousAntPrefab != null
-                    ? autonomousAntPrefab.GetComponentInChildren<SpriteRenderer>()
-                    : null;
-                if (source != null)
+                foreach (SpriteRenderer renderer in
+                    ant.GetComponentsInChildren<SpriteRenderer>())
                 {
-                    renderer.sprite = source.sprite;
-                    renderer.sharedMaterial = source.sharedMaterial;
+                    renderer.enabled = false;
                 }
-
-                renderer.color = new Color32(70, 225, 235, 180);
-                renderer.sortingOrder = 6;
-                visual.transform.localScale = new Vector3(0.8f, 0.5f, 1f);
             }
 
             return ant;
@@ -713,7 +703,7 @@ namespace AntColony.Development
                 : index % 5 == 0
                     ? GridNavigationRequestPriority.Low
                     : GridNavigationRequestPriority.Normal;
-            ant.RequestDestination(destination, priority);
+            ant.MoveTo(destination, priority);
         }
 
         private void ShowDestinationMarker(Vector2 position)

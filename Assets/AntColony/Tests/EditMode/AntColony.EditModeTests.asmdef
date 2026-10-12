@@ -3,6 +3,7 @@
     "rootNamespace": "AntColony.Tests.EditMode",
     "references": [
         "AntColony.World",
+        "AntColony.Navigation",
         "AntColony.NavigationDebug",
         "AntColony.WorldPresentation",
         "AntColony.Development"

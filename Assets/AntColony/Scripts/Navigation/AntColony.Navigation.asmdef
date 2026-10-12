@@ -1,0 +1,16 @@
+{
+    "name": "AntColony.Navigation",
+    "rootNamespace": "AntColony.Navigation",
+    "references": [
+        "AntColony.World"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

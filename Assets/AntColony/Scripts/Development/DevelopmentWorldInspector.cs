@@ -1,4 +1,5 @@
 using System.Text;
+using AntColony.Navigation;
 using AntColony.World;
 using AntColony.WorldPresentation;
 using UnityEngine;
@@ -22,7 +23,7 @@ namespace AntColony.Development
         private readonly StringBuilder textBuilder = new(512);
         private string statusMessage = "Click a world cell to inspect it.";
         private bool backgroundOnlyVisuals;
-        private bool commandExperimentalGridAnt = true;
+        private bool commandPrimaryGridAnt = true;
         private Vector2 panelScrollPosition;
 
         public Vector2Int SelectedCell => selectedCell;
@@ -42,7 +43,7 @@ namespace AntColony.Development
                             : WorldTileCoordinates.WorldPositionToCell(worldPoint);
                     if (worldHost != null)
                     {
-                        if (commandExperimentalGridAnt)
+                        if (commandPrimaryGridAnt)
                         {
                             worldHost.TryAssignGridDestination(
                                 selectedCell,
@@ -90,14 +91,14 @@ namespace AntColony.Development
             GUILayout.Space(8f);
             GUILayout.Label(BuildInspectionText());
             GUILayout.Space(8f);
-            if (GUILayout.Button(commandExperimentalGridAnt
-                    ? "Commanding: GRID POC (click to use 2.4A)"
-                    : "Commanding: 2.4A CONTINUOUS (click to use grid)"))
+            if (GUILayout.Button(commandPrimaryGridAnt
+                    ? "Commanding: PRIMARY GRID (click for legacy 2.4A)"
+                    : "Commanding: LEGACY 2.4A (click for primary grid)"))
             {
-                commandExperimentalGridAnt = !commandExperimentalGridAnt;
-                statusMessage = commandExperimentalGridAnt
-                    ? "World clicks now command the experimental grid ant."
-                    : "World clicks now command the production 2.4A ant.";
+                commandPrimaryGridAnt = !commandPrimaryGridAnt;
+                statusMessage = commandPrimaryGridAnt
+                    ? "World clicks now command the primary grid ant."
+                    : "World clicks now command the legacy 2.4A ant.";
             }
 
             if (GUILayout.Button("Toggle Foreground Solid (F)"))
@@ -326,12 +327,12 @@ namespace AntColony.Development
                 : null;
             if (ant == null || !ant.gameObject.activeInHierarchy)
             {
-                builder.AppendLine("Grid POC ant: unavailable");
+                builder.AppendLine("Primary grid ant: unavailable");
                 return;
             }
 
-            builder.Append("Grid POC position: ").Append(ant.Position).AppendLine();
-            builder.Append("Grid POC state: ").Append(ant.State)
+            builder.Append("Primary grid position: ").Append(ant.Position).AppendLine();
+            builder.Append("Primary grid state: ").Append(ant.State)
                 .Append("   route step ").Append(ant.RouteIndex)
                 .Append('/').Append(ant.Route.Count).AppendLine();
             if (worldHost.GridNavigationMap != null)
@@ -379,7 +380,7 @@ namespace AntColony.Development
                     .AppendLine();
             }
 
-            builder.Append("Grid POC report: ")
+            builder.Append("Primary grid report: ")
                 .Append(ant.StatusMessage).AppendLine();
         }
 
@@ -392,7 +393,7 @@ namespace AntColony.Development
             }
 
             selectedCell = worldHost.GripFixtureTop;
-            if (commandExperimentalGridAnt)
+            if (commandPrimaryGridAnt)
             {
                 worldHost.TryAssignGridDestination(
                     selectedCell,

@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using AntColony.World;
 using UnityEngine;
 
-namespace AntColony.Development
+namespace AntColony.Navigation
 {
     public enum GridNavigationMotorState
     {
@@ -16,8 +16,10 @@ namespace AntColony.Development
     }
 
     /// <summary>
-    /// Follows scheduled grid routes for one ordinary ant. Stable motion is
-    /// kinematic; Rigidbody2D simulation is enabled only while Falling.
+    /// Production movement executor for one ordinary ant. It accepts simple
+    /// destination commands while the shared world service owns terrain data
+    /// and path scheduling. Stable motion is kinematic; Rigidbody2D simulation
+    /// is enabled only while Falling.
     /// </summary>
     [RequireComponent(typeof(Rigidbody2D), typeof(CapsuleCollider2D))]
     public sealed class GridNavigationMotor : MonoBehaviour
@@ -29,6 +31,7 @@ namespace AntColony.Development
 
         private readonly List<GridNavigationAnchor> route = new();
         private Rigidbody2D body;
+        private GridNavigationWorldService navigationWorld;
         private GridNavigationMap map;
         private GridNavigationScheduler scheduler;
         private AntMovementCapabilityEvaluator capability;
@@ -59,18 +62,32 @@ namespace AntColony.Development
         public int MaximumAutomaticRetries => maximumAutomaticRetries;
         public float BaseMovementSpeed => baseMovementSpeed;
         public int NavigationOwnerId => GetInstanceID();
+        public GridNavigationWorldService NavigationWorld => navigationWorld;
+        public bool HasArrived => State == GridNavigationMotorState.Arrived;
+        public bool HasFailed => State == GridNavigationMotorState.Blocked;
+        public bool IsMovementActive =>
+            State == GridNavigationMotorState.WaitingForPath ||
+            State == GridNavigationMotorState.FollowingPath ||
+            State == GridNavigationMotorState.Falling ||
+            State == GridNavigationMotorState.Recovering;
+        public string FailureReason => HasFailed ? StatusMessage : string.Empty;
 
-        public void Bind(
-            ChunkedWorldData worldData,
-            GridNavigationMap sharedMap,
-            GridNavigationScheduler sharedScheduler,
+        /// <summary>
+        /// Connects this ant to the active world's shared navigation authority.
+        /// Spawners call this once after choosing a valid start anchor.
+        /// </summary>
+        public bool InitializeNavigation(
+            GridNavigationWorldService sharedNavigationWorld,
             Vector2Int spawnCell)
         {
             body = GetComponent<Rigidbody2D>();
             CancelPendingRequest("Grid ant rebound.");
-            map = sharedMap;
-            scheduler = sharedScheduler;
-            capability = new AntMovementCapabilityEvaluator(worldData);
+            navigationWorld = sharedNavigationWorld;
+            map = navigationWorld != null ? navigationWorld.Map : null;
+            scheduler = navigationWorld != null ? navigationWorld.Scheduler : null;
+            capability = navigationWorld != null && navigationWorld.WorldData != null
+                ? new AntMovementCapabilityEvaluator(navigationWorld.WorldData)
+                : null;
             route.Clear();
             routeIndex = 0;
             retryCount = 0;
@@ -82,7 +99,7 @@ namespace AntColony.Development
             {
                 State = GridNavigationMotorState.Blocked;
                 StatusMessage = $"Grid spawn anchor {spawnCell} is invalid.";
-                return;
+                return false;
             }
 
             EnterStableTraversal();
@@ -91,13 +108,32 @@ namespace AntColony.Development
             lastValidPosition = spawn.Position;
             State = GridNavigationMotorState.Idle;
             StatusMessage = $"Grid ant is ready at {spawnCell}.";
+            return true;
+        }
+
+        /// <summary>
+        /// Production command boundary for future player orders and colony AI.
+        /// Callers do not need to understand anchors, A* or Rigidbody2D states.
+        /// </summary>
+        public bool MoveTo(
+            Vector2Int destination,
+            GridNavigationRequestPriority priority =
+                GridNavigationRequestPriority.Normal)
+        {
+            return RequestDestination(destination, priority);
+        }
+
+        /// <summary>Cancels movement and prevents stale path delivery.</summary>
+        public void CancelMovement(string reason = "Movement cancelled.")
+        {
+            CancelNavigation(reason);
         }
 
         /// <summary>
         /// Replaces any earlier destination and queues bounded shared path work.
         /// A falling ant remembers the destination and submits after recovery.
         /// </summary>
-        public bool RequestDestination(
+        private bool RequestDestination(
             Vector2Int destination,
             GridNavigationRequestPriority priority =
                 GridNavigationRequestPriority.Normal)
@@ -128,7 +164,7 @@ namespace AntColony.Development
             return QueuePathRequest();
         }
 
-        public void CancelNavigation(string reason = "Navigation cancelled.")
+        private void CancelNavigation(string reason = "Navigation cancelled.")
         {
             CancelPendingRequest(reason);
             route.Clear();
@@ -140,6 +176,11 @@ namespace AntColony.Development
                 State = GridNavigationMotorState.Idle;
             }
             StatusMessage = reason;
+        }
+
+        private void OnDisable()
+        {
+            CancelPendingRequest("Grid ant disabled.");
         }
 
         public void NotifyTerrainChanged()

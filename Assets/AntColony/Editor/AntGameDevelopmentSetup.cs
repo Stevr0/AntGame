@@ -1,6 +1,8 @@
 using System;
 using System.Linq;
+using AntColony.Ants;
 using AntColony.Development;
+using AntColony.Navigation;
 using AntColony.World;
 using AntColony.WorldPresentation;
 using UnityEditor;
@@ -39,6 +41,8 @@ namespace AntColony.EditorTools
             "Assets/AntColony/Art/Placeholder/PlayerAntPrototype.asset";
         private const string AutonomousAntPrefabPath =
             "Assets/AntColony/Prefabs/Ants/AutonomousAnt.prefab";
+        private const string PrimaryGridAntPrefabPath =
+            "Assets/AntColony/Prefabs/Ants/PrimaryGridAnt.prefab";
 
         [MenuItem("Ant Colony/Build Integrated Development World")]
         public static void BuildIntegratedDevelopmentWorld()
@@ -82,7 +86,14 @@ namespace AntColony.EditorTools
             Require(cameraController != null, "Development camera controller is missing.");
             Require(host.AutonomousAntPrefab != null,
                 "Autonomous Ant prefab reference is missing.");
+            Require(host.PrimaryGridAntPrefab != null,
+                "Primary Grid Ant prefab reference is missing.");
+            Require(host.NavigationWorldService != null,
+                "Shared grid navigation service is missing.");
             ValidateAutonomousAntPrefab(host.AutonomousAntPrefab);
+            ValidatePrimaryGridAntPrefab(host.PrimaryGridAntPrefab);
+            Require(FindAll<GridNavigationWorldService>(scene).Length == 1,
+                "The scene must contain exactly one shared navigation service.");
             Require(FindAll<AntAutonomousMotor>(scene).Length == 0,
                 "The autonomous ant must be spawned after world validation, not authored twice.");
             Require(scene.GetRootGameObjects()
@@ -119,6 +130,8 @@ namespace AntColony.EditorTools
             Require(antSprite != null, "Existing development ant Sprite is missing.");
             AntAutonomousMotor autonomousAntPrefab =
                 GetOrCreateAutonomousAntPrefab(antSprite);
+            GridNavigationMotor primaryGridAntPrefab =
+                GetOrCreatePrimaryGridAntPrefab(antSprite);
             GetOrCreateTile(
                 SkyTilePath,
                 whitePixelSprite,
@@ -177,6 +190,8 @@ namespace AntColony.EditorTools
             bootstrap.transform.SetParent(sceneRoot.transform, false);
             AntGameDevelopmentWorldHost host =
                 bootstrap.GetComponent<AntGameDevelopmentWorldHost>();
+            GridNavigationWorldService navigationWorld =
+                bootstrap.GetComponent<GridNavigationWorldService>();
 
             GameObject gridObject = new(
                 "World Grid",
@@ -249,6 +264,8 @@ namespace AntColony.EditorTools
                 stoneSolid,
                 visualRenderer,
                 collisionRenderer,
+                navigationWorld,
+                primaryGridAntPrefab,
                 autonomousAntPrefab,
                 markerObject.transform,
                 markerRenderer);
@@ -333,6 +350,61 @@ namespace AntColony.EditorTools
                         component.GetType().Name != "PlayerMovementInput" &&
                         component.GetType().Name != "AntSurfaceMotor"),
                 "Autonomous Ant must not contain legacy player movement components.");
+        }
+
+        private static GridNavigationMotor GetOrCreatePrimaryGridAntPrefab(
+            Sprite antSprite)
+        {
+            GameObject root = new(
+                "PrimaryGridAnt",
+                typeof(Rigidbody2D),
+                typeof(CapsuleCollider2D),
+                typeof(GridNavigationMotor));
+            GameObject visual = new("Visual", typeof(SpriteRenderer));
+            visual.transform.SetParent(root.transform, false);
+            visual.transform.localScale = new Vector3(0.8f, 0.5f, 1f);
+
+            SpriteRenderer spriteRenderer = visual.GetComponent<SpriteRenderer>();
+            spriteRenderer.sprite = antSprite;
+            spriteRenderer.color = new Color32(70, 225, 235, 180);
+            spriteRenderer.sortingOrder = 6;
+
+            Rigidbody2D body = root.GetComponent<Rigidbody2D>();
+            body.simulated = false;
+            body.gravityScale = 0f;
+            body.interpolation = RigidbodyInterpolation2D.Interpolate;
+            body.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
+            body.constraints = RigidbodyConstraints2D.FreezeRotation;
+
+            CapsuleCollider2D collider = root.GetComponent<CapsuleCollider2D>();
+            collider.direction = CapsuleDirection2D.Horizontal;
+            collider.size = AntCollisionProfile.OrdinaryAnt.Size;
+            collider.excludeLayers = LayerMask.GetMask("Default");
+
+            GameObject saved = PrefabUtility.SaveAsPrefabAsset(
+                root,
+                PrimaryGridAntPrefabPath);
+            UnityEngine.Object.DestroyImmediate(root);
+            Require(saved != null, "Unity could not save the Primary Grid Ant prefab.");
+            return saved.GetComponent<GridNavigationMotor>();
+        }
+
+        private static void ValidatePrimaryGridAntPrefab(GridNavigationMotor prefab)
+        {
+            Rigidbody2D body = prefab.GetComponent<Rigidbody2D>();
+            CapsuleCollider2D collider = prefab.GetComponent<CapsuleCollider2D>();
+            Require(body != null && collider != null,
+                "Primary Grid Ant requires one Rigidbody2D and CapsuleCollider2D.");
+            Require(!body.simulated && body.gravityScale == 0f &&
+                    body.constraints == RigidbodyConstraints2D.FreezeRotation,
+                "Primary Grid Ant must start in stable grid-traversal physics state.");
+            Require(collider.direction == CapsuleDirection2D.Horizontal &&
+                    collider.size == AntCollisionProfile.OrdinaryAnt.Size,
+                "Primary Grid Ant collider must match the ordinary-ant profile.");
+            Require(prefab.GetComponent<PlayerMovementInput>() == null &&
+                    prefab.GetComponent<AntSurfaceMotor>() == null &&
+                    prefab.GetComponent<AntAutonomousMotor>() == null,
+                "Primary Grid Ant must contain only the production grid motor.");
         }
 
         private static WorldTerrainCollisionRenderer CreateCollisionTilemap(

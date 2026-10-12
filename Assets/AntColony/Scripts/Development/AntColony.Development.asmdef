@@ -3,6 +3,7 @@
     "rootNamespace": "AntColony.Development",
     "references": [
         "AntColony.World",
+        "AntColony.Navigation",
         "AntColony.WorldPresentation",
         "Unity.InputSystem"
     ],

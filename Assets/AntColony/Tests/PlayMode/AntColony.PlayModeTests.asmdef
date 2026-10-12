@@ -3,6 +3,7 @@
     "rootNamespace": "AntColony.Tests.PlayMode",
     "references": [
         "AntColony.World",
+        "AntColony.Navigation",
         "AntColony.Development"
     ],
     "includePlatforms": [],

@@ -392,6 +392,7 @@ GameObject:
   m_Component:
   - component: {fileID: 481041761}
   - component: {fileID: 481041760}
+  - component: {fileID: 481041762}
   m_Layer: 0
   m_Name: World Bootstrap
   m_TagString: Untagged
@@ -422,11 +423,27 @@ MonoBehaviour:
   stoneSolid: {fileID: 11400000, guid: fc760d0c6b0d8044e8ccadb2fd2f28ff, type: 2}
   tilemapRenderer: {fileID: 792281259}
   collisionRenderer: {fileID: 466951789}
+  navigationWorldService: {fileID: 481041762}
+  primaryGridAntPrefab: {fileID: 8780482087862192995, guid: 9d1b0a4c6e334f3791bb2fa3ecdf2168, type: 3}
   autonomousAntPrefab: {fileID: 8780482087862192995, guid: 1b98327c58cc4e1428aaefb4a3340693, type: 3}
   preferredSpawnX: -12
   spawnSearchRadius: 20
   destinationMarker: {fileID: 1453429066}
   destinationMarkerRenderer: {fileID: 1453429067}
+--- !u!114 &481041762
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 481041759}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c13c9ff5c9ca4b9ea59e224c633658bd, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: AntColony.Navigation::AntColony.Navigation.GridNavigationWorldService
+  nodeBudgetPerUpdate: 128
+  nodesPerRequestSlice: 8
 --- !u!4 &481041761
 Transform:
   m_ObjectHideFlags: 0
