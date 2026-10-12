@@ -1,5 +1,11 @@
 # Ant Colony Development Roadmap
 
+## Design realignment notice — 12 October 2026
+
+The authoritative design is now the **Authoritative design realignment** section in `Documentation/GameDesignDocument.md`. Existing implementation milestones below are historical and may reflect superseded ordinary-ant-start, AI-only control, or prepared-only climbing assumptions. **Milestone 2.3B has subsequently been manually accepted (12/12 checks) and automated checks were reported passing by the user**; that validation predates the new design and must not be taken as acceptance of the revised natural-background climbing rules.
+
+**Next milestone: documentation-led, read-only design/architecture audit** (no code changes). Inspect all Unity systems, compare each to the new design, classify Keep/Refactor/Replace/Defer, identify migration sequencing and tests affected, and propose a smallest safe vertical slice. Proposed future slices (not authorised): shared ant/player/AI control; natural-grip movement correction; functional tile conversion + physical material logistics; room/door detection; individual needs and Rested; founding queen nursery/brood/first workers; autonomous jobs and persistence. Do not mark an unimplemented design feature complete.
+
 ## Roadmap status
 
 This roadmap reflects the repository as inspected on 9 October 2026. Milestone 1 is in progress. The user has confirmed floor and isolated wall movement plus resolution of the reported corner deadlock in Play Mode. Ceiling/corner route acceptance and the newly implemented Auto Step-Over slice still await complete Play Mode acceptance.
