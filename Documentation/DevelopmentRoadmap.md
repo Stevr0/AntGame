@@ -1,5 +1,7 @@
 # Ant Colony Development Roadmap
 
+**Construction/resource addendum (12 October 2026):** New approved GDD rules require item stacks, slot-only carrying, excavator auto-pickup with safe drop fallback, Material Storage functional tiles, physical resource reservations, and **builder self-supply** before door/background conversion. First architecture audit must evaluate resource ownership, multi-trip supply, cancellation recovery, shared stockpiles and resource conservation. Numerical recipes and stack sizes remain provisional. Do not start implementation without approval.
+
 ## Design realignment notice — 12 October 2026
 
 The authoritative design is now the **Authoritative design realignment** section in `Documentation/GameDesignDocument.md`. Existing implementation milestones below are historical and may reflect superseded ordinary-ant-start, AI-only control, or prepared-only climbing assumptions. **Milestone 2.3B has subsequently been manually accepted (12/12 checks) and automated checks were reported passing by the user**; that validation predates the new design and must not be taken as acceptance of the revised natural-background climbing rules.
