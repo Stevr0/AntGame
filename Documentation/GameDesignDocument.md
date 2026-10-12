@@ -1,6 +1,6 @@
 # ANT COLONY
 
-**Game Design Document | Version 3.5 — job priorities, 12 October 2026**
+**Game Design Document | Version 3.6 — order-based control, 12 October 2026**
 
 Working title • Unity 6 • Single-player • 2D side-view • PC-first prototype
 
@@ -134,6 +134,28 @@ Before another gameplay milestone, perform a **read-only architecture/code-to-de
 ### Acceptance expectations for a future authorised implementation
 
 Demonstrate two or more autonomous ants with different priority matrices choose priority-before-distance; an inaccessible nearest target is skipped; explicit automated order versus direct control; critical needs override ordinary work only when warranted; interrupted excavation/construction progress persists; exclusive job reservations avoid double consumption; a builder personally gathers all materials; other ants continue working during direct control. This documentation change itself does **not** claim those tests passed.
+
+## Approved command-based player control — 12 October 2026
+
+> **APPROVED design; not yet implemented.** This is the authoritative replacement for prior direct WASD gameplay control descriptions, including any earlier approved continuous player-control plans. Existing prototype movement controls remain developer-only regression tools.
+
+### Three control states
+- **Autonomous (default):** ant chooses jobs according to its individual 1–4/Disabled work matrix, colony tasks and personal needs.
+- **Ordered (temporary):** player selects an individual ant and issues an explicit action/job order (such as excavate, haul, build, feed brood). The ant autonomously navigates and executes the commanded task using the same movement, reservation, resource and action systems as ordinary AI. The temporary order takes precedence over normal work priorities; when successfully completed, cancelled or impossible, the ant returns to autonomous job selection. Critical personal survival needs may interrupt work orders according to safe-interruption rules. Player may give specific automated orders without manually steering the ant.
+- **Drafted (persistent tactical mode):** player drafts one or multiple ants to give tactical movement, attack, hold-position, defend-area and retreat orders for threats, defence and raids. Drafted ants do not select ordinary colony work until explicitly undrafted. Draft status persists through individual tactical commands. Hunger, thirst and fatigue still progress with warnings; exact forced-survival intervention during drafting remains unresolved.
+
+### Explicit orders and productivity
+- **Normal gameplay has no continuous WASD direct steering** and no second player-only locomotion implementation. Selecting an ant enables inspection and explicit orders; navigation and execution remain ant-driven.
+- The previously approved manual productivity advantage is now an **explicitly ordered work-task bonus**: a modest work-speed benefit during eligible ordered task execution only, not travel, idle time, or unrelated work. Reissuing an order must not stack bonuses. **Exact percentage, eligible tasks and combination with skill/equipment/room bonuses are TBD**, not settled at 25%.
+- Direct and autonomous combat share the same damage, targeting, weapon, range and cooldown rules. Drafting changes command authority and task selection, not combat statistics.
+- The player can select multiple ants for tactical commands in Draft Mode. Group formation, path congestion, targeting precedence, drafted ant needs intervention, and queueing orders are TBD.
+- The existing player-controlled movement prototype, including `PlayerMovementInput` and surface/corner/step-over tests, is historical developer tooling to preserve until approved migration. It must **not** be treated as evidence that player-facing continuous steering remains in the shipped design.
+
+### Order lifecycle and dependencies
+- Each ordered task must be observable (target, owner, state, reason for failure) and return the ant to autonomy on success/cancel/impossibility. Drafting and undrafting must not duplicate work, items or reservations.
+- Releasing previous reservations and preserving valid partial work must follow the approved job/reservation rules. Exactly when previous autonomous work is paused, released or resumed on issuing a manual order is **TBD**.
+- Exact UI interaction (right-click context menu, command panel, hotkeys), multiplayer selection semantics (not relevant: game is single-player), direct order eligibility when category is Disabled, drafted-ant emergency behaviour, queuing, and pursuit/retreat semantics remain **unapproved details**.
+- Future validation should show autonomous → ordered → autonomous transitions, forced-order safe interruption, drafted status persisting between move/attack actions, undraft restoring work, multiple drafted ant commands, and developer-only movement input not leaking into normal play.
 
 ## 1. Game at a glance
 
