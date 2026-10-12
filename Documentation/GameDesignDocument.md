@@ -1,6 +1,6 @@
 # ANT COLONY
 
-**Game Design Document | Version 3.3 — design realignment, 12 October 2026**
+**Game Design Document | Version 3.4 — resource logistics, 12 October 2026**
 
 Working title • Unity 6 • Single-player • 2D side-view • PC-first prototype
 
@@ -68,6 +68,34 @@ Design intent: Build a small, finishable colony simulation in which individual a
 Before another gameplay milestone, perform a **read-only architecture/code-to-design audit** comparing the present Unity 6 project with this new baseline. Record each affected system as Keep / Refactor / Replace / Defer, identify potentially invalid tests and migration steps, and propose incremental milestones. Preserve the manually validated 2.3B movement baseline as historical evidence; it does **not** verify the new natural-background movement rule. Do not refactor, delete scripts, modify assets or implement this design without approval.
 
 ---
+
+## Approved construction and physical-resource logistics — 12 October 2026
+
+> **Status: approved design only.** This section augments the authoritative design realignment above and supersedes incompatible older MVP logistics assumptions. No Unity code, assets, tests or prefabs are implemented by this documentation update. Follow the pragmatic, explicit, physical-job-and-stockpile style of *RimWorld*, without presuming its exact numerical balancing or architecture.
+
+### Physical materials and inventories
+
+- Excavation produces physical resources. On successful excavation, the excavating ant **automatically picks up** the resulting item or amount **if its available inventory capacity permits**; otherwise the resource **drops physically at a valid recoverable world position**. Neither action can silently destroy or duplicate resources. Placement when the work cell becomes blocked or full must have deterministic safe fallback rules (**TBD**).
+- One inventory slot may hold a **stack of identical compatible items**. Stack maximum per material is **TBD**. Early carrying limits use **slot count only**, not a weight or mass simulation. The existing concept of Hauling skill increasing carrying slots remains a balancing/design constraint to be reconciled with stacks and later saddlebags.
+- Resources retain physical locations and quantities in world drops, ant inventory, storage tiles and delivered construction-site materials. The colony may display aggregated totals, but totals are **derived views**, not teleportable resources.
+- Add **Material Storage Background** as a functional tile. As with other functional storage, one tile grants **one physical storage slot** (a compatible stack). Optional player-configured material filters can restrict accepted resource types. Food and Water Storage remain distinct shared stockpile types. Stored items are physical and require adjacency to deposit/withdraw.
+- If an occupied storage tile is removed or changed, contents become loose, recoverable physical items, consistent with prior design decisions.
+
+### Resource-backed construction and conversion
+
+- Player designation creates a resource-requiring task for doors or functional-background conversions. All such jobs require an accessible adjacent interaction position and use **Construction skill** for work and progression.
+- **The constructing ant must gather and deliver its own required materials.** No separate hauler can satisfy a construction job's material-delivery obligation as its primary workflow; generic hauling to stockpiles is still permitted. The assigned builder obtains usable resources from reachable shared Material Storage, other permitted storage, nearby recoverable drops or its own carried inventory, transports them to the worksite, and then personally performs the construction.
+- For multi-trip jobs, the **same builder** may make multiple supply trips. Once materials are on site, another builder taking over an interrupted/released job may reuse those already-delivered physical materials; material provenance and reservation must stay valid. This is a proposed implementation interpretation of single-builder ownership, **not authorisation for a separate job-specific hauling workforce**.
+- Construction jobs must explicitly represent at least: designation, awaiting materials, gathering/transport, worksite delivery, constructing, completion, pause/interruption, cancellation and inaccessible/invalid states. Exact state names and internal object structure are implementation choices.
+- Reserve **physical quantities** rather than abstract colony totals so two jobs cannot consume the same item. A reservation is not consumption. Materials delivered to a construction site are **consumed only in an accounted transaction** as construction successfully progresses/completes according to later-approved accounting rules.
+- **Cancelling a construction job leaves all unused materials physical and recoverable** in ant inventory, at the worksite, or as loose world items; do not teleport them to former stockpiles. Job cancellation must release any unconsumed resource reservations. Already irreversibly consumed resources are not automatically refunded; stage of consumption is **TBD**.
+- Recover safely from loss of builder, interrupted work, death, inaccessible stores, unloaded chunks, invalidated terrain, full carrying slots and world changes. On ant death, carried items should remain physical and recoverable; exact drop placement policy is **TBD**. A construction job must never silently swallow cargo or duplicate materials.
+
+### First-colony bootstrap and unresolved balancing
+
+- The founding queen must be able to excavate, collect, transport and convert at least three Nursery Background tiles from initially reachable resources without relying on existing workers or prior stockpiles. The queen may build directly from carried materials or recoverable nearby drops. Initial nursery is functional before enclosure and doors.
+- **Unresolved (do not hardcode as approved):** construction recipes and costs, exact materials available at start, stack-size limits, carrying-slot progression and any equipment modifiers, conversion durations, reservation expiry, placement when drop location is invalid, point of material consumption, whether partial construction persists, stockpile filters UI, logistics fallback when missing materials, and performance update cadence.
+- Testing when implementation is separately authorised should cover resource conservation (excavate/pick up/drop/store/withdraw/consume), stacking, one-slot capacity, builder self-supply over multiple trips, reservation contention, cancellation at multiple stages, builder death, tile removal, persistent save/load and nursery bootstrap without stockpiles.
 
 ## 1. Game at a glance
 
