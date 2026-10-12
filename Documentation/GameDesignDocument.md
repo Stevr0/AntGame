@@ -1,10 +1,73 @@
 # ANT COLONY
 
-**Game Design Document  |  Version 3.2**
+**Game Design Document | Version 3.3 — design realignment, 12 October 2026**
 
 Working title • Unity 6 • Single-player • 2D side-view • PC-first prototype
 
 Design intent: Build a small, finishable colony simulation in which individual ants matter. The player directs excavation and assigns work; ants physically perform tasks and develop through experience.
+
+## Authoritative design realignment — 12 October 2026
+
+> **Status: APPROVED DESIGN, NOT IMPLEMENTATION CLAIM.** This section supersedes contradictory design assumptions elsewhere in this document, the roadmap and AGENTS.md. Earlier milestone and testing narratives are retained as historical records. No gameplay code has been changed as part of this design update. Numerical balance and unresolved details remain provisional.
+
+### Vision and control
+
+- Ant Game is a single-player, scrollable/zoomable 2D side-view colony simulation in a procedural, persistent, chunk-loaded destructible world. Players can manage colony-wide assignments **or directly select and control any adult ant**, including the founding queen; other ants remain autonomous.
+- Manual and AI control use the same movement, excavation, hauling, survival and combat rules. Manually performed tasks receive a modest explicit productivity bonus (percentage and eligible actions **TBD**); that bonus must not duplicate rewards or permit impossible actions.
+- Each ant is a persistent individual with stats, skills, equipment, health, energy, hunger and thirst. All ordinary work skills start at 0 and improve through practice, not fixed classes. Roles affect autonomous job priorities, not normal task eligibility. Retain previously approved 0–100 and above-50 skill-decay conventions until explicitly revised.
+- Individual ant death is permanent. The fate of the colony after queen death remains undecided.
+
+### Founding queen, brood and nursery
+
+- The first controllable ant is a **working founding queen**, not an ordinary worker awaiting transformation.
+- Early loop: excavate an accessible chamber; designate/conversion-build at least **three Nursery Background tiles**; explicitly authorise the initial brood of **three larvae**; physically feed them on multiple occasions; surviving brood eventually matures into three individually controllable general-purpose workers.
+- Subsequent reproduction requires **explicit player authorisation**; it is never triggered solely by spare food/space. The queen lays eggs/brood; precise egg→larva→pupa→adult presentation, timing, feeding thresholds, further brood sizes and brood mortality are **TBD**.
+- Each functional Nursery Background tile provides exactly **one brood slot**. A nursery works while unenclosed; enclosing it properly can grant room-quality efficiency bonuses, not extra base capacity. Removing occupied nursery capacity pauses development without silently deleting brood. Need a defined overflow/reassignment policy.
+
+### Authoritative terrain and movement changes
+
+- Preserve the authoritative generated chunk/background/foreground data model. Foreground Solid tiles block physical occupancy as configured; digging removes eligible foreground only and never the permanent Background Tile.
+- **Every exposed, intact natural earth/stone background is intrinsically grippable and traversable**, subject to actual body clearance, collision, valid movement directions and chunk availability. Background preparation is **not** required to climb. Preparing a background improves movement speed (road-versus-gravel analogy); its initial multiplier is **TBD**. Sky or a background material explicitly defined as without grip does not grant grip; falling remains possible without ground or grip.
+- Natural, Prepared and Functional Background materials must support shared ant traversal; function and locomotion are distinct properties. Do not use prepared-only climbing as a gameplay rule. Adapt existing capability evaluators and motors only in a separately approved implementation milestone with regression tests.
+- The world must eventually support procedural generation, durable tile and entity state, and chunk loading/unloading without treating unknown chunks as exposed empty space.
+
+### Functional backgrounds, construction and physical goods
+
+- **Functional Background tiles define colony uses and capacity**, including Nursery, Sleeping, Food Storage, Water Storage, Production and Burial. A functional tile generally grants one matching capacity slot (**1:1**). Food/water stockpile slots may hold a physical item/stack; exact stack limits **TBD**.
+- Player designates conversion of an accessible exposed Background tile; an ant **physically performs a Construction skill job using required resources**. Converting a functional tile later requires a new job and accounted material consumption. Construction improves through doing.
+- Excavated eligible Solid tiles yield **physical haulable resources**; no automatic global inventory credits or resource deletion. Ants transport them to storage/work sites. Interaction requires adjacency and physically present items at storage locations.
+- At need, autonomous ants target the **closest reachable available** relevant tile by path cost, unless a valid player-assigned spot overrides it (e.g. a personal sleeping spot). Avoid simultaneous capacity claims with reservation/occupancy rules.
+- Shared colony Food and Water Storage supplies are accessible to all ants. Each ant has Hunger and Thirst values that decrease over time and are replenished by consuming physical supplies at valid accessible storage. Lack of food eventually decreases health; lack of water blocks skill experience gains. Exact thresholds/rates and the relationship between water shortage and other stats remain **TBD**.
+- Each ant needs access to sleeping accommodation to gain Rested benefits; assigned sleeping spots are supported. Rest gives increased work speed and skill experience, with bonuses gradually wearing off as fatigue returns. Deleting a sleeping tile wakes its occupant; deleting storage tiles detaches contents into loose items; removing nursery support pauses affected brood development.
+
+### Enclosed rooms and scoring
+
+- A **room is a fully enclosed contiguous space**, bounded by blocking terrain/structures, whose every entrance/opening has an installed door. Ants construct doors from physical materials using the Construction skill.
+- Room function is derived from the tile functions **inside it**; mixed-use rooms are allowed. Enclosed, specialised rooms receive RimWorld-inspired room-quality efficiency bonuses based on room scoring (**formula and thresholds TBD**). No door or enclosure is needed for base functionality, including the founding nursery.
+- Functional tile identity controls **what work is possible**; room detection/scoring controls **how efficiently** work occurs. Room quality does not change the 1:1 physical capacity rule. Door passability, enemy interactions, detection of openings, mixed-use scoring and large/chunk-spanning room constraints require design/technical specification.
+
+### Enemies and equipment
+
+- Every adult ant can be manually controlled for combat under the same damage, range and cooldown rules as autonomous ants. Rival colonies, surface and underground enemies, individual equipment (e.g. boots and saddlebags), and deeper terrain materials remain part of the vision but detailed balancing/design are **not yet approved for implementation**.
+
+### Open dependency register (design not yet approved)
+
+1. Exact grippable-background material definitions, speed modifiers, sky/open-air transitions and interaction with the existing 2.3B tests.
+2. Procedural generation topology, streaming boundaries, persistence/versioning and offscreen simulation.
+3. Door placement, opening/enclosure detection, chunk boundaries, automatic door operation and room scoring/specialisation formula.
+4. Physical item/stack and carrying capacity rules; storage overflows, reservations, conversion resource refunds/interruptions.
+5. Construction recipes, time/cost, permitted build positions and tile replacement when occupied.
+6. Larva maturation stages/timing, feeding quantities, egg mechanics, brood care assignment, death/overflow policies and later brood sizes.
+7. Individual Hunger/Thirst/Energy decay rates, Rested bonus/fatigue curve, skill-loss exceptions and assigned-spot fallback behaviour.
+8. Job scheduler priorities, nearest-by-path destination choice, interruption/recovery and direct-control takeover.
+9. Manual productivity bonus scope/value and effect stacking with skills, equipment and room-quality bonuses.
+10. Queen death/colony continuity, ant equipment/inventory, combat and enemy-colony progression.
+
+### Implementation guardrail
+
+Before another gameplay milestone, perform a **read-only architecture/code-to-design audit** comparing the present Unity 6 project with this new baseline. Record each affected system as Keep / Refactor / Replace / Defer, identify potentially invalid tests and migration steps, and propose incremental milestones. Preserve the manually validated 2.3B movement baseline as historical evidence; it does **not** verify the new natural-background movement rule. Do not refactor, delete scripts, modify assets or implement this design without approval.
+
+---
 
 ## 1. Game at a glance
 

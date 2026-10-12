@@ -11,6 +11,12 @@ These instructions apply to the entire repository. They are intended for Codex a
 - If documents disagree with working code or each other, report the discrepancy rather than silently guessing or rewriting the GDD.
 - Do not treat a planned feature as complete without verification in Unity.
 
+## Approved 12 October 2026 design overrides (authoritative)
+
+Read the **Authoritative design realignment** section near the top of `Documentation/GameDesignDocument.md` before any implementation or planning. It supersedes conflicting older AGENTS.md passages and old roadmap/GDD history. Key corrections: a working founding queen starts the game; **normal player-facing direct ant control is required** alongside automation; natural exposed backgrounds are grippable without preparation; preparation boosts travel speed; functional background tiles (nursery, sleeping, food, water, production, burial) require resource-consuming Construction conversion jobs and supply 1:1 capacity; all openings of an enclosed room have doors; mixed-use is allowed, enclosed specialised rooms gain quality bonuses; first authorised brood is three larvae requiring repeated feeding; shared food/water stores, individual depletion, Rested decay and permanent ant deaths are approved. Never describe these as implemented until tested.
+
+**Current authorisation is documentation-only.** Do not implement gameplay, edit Unity assets or change tests based on this design update without a separately approved milestone. The previously accepted 2.3B movement tests remain historical validation, not validation of the revised movement rules. Any contradictory older instruction below is historical and is overridden by this section.
+
 ## Game vision (not an implementation checklist)
 
 - The player begins as an ordinary ant. Becoming a queen is a future progression event whose requirements remain unresolved.

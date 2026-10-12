@@ -1,5 +1,11 @@
 # Ant Colony Current Game State
 
+## Design-versus-implementation status — 12 October 2026
+
+**Design has changed; Unity implementation has not been changed by this documentation update.** The user reports Milestone 2.3B automated tests passed and all 12 manual Play Mode acceptance checks passed. The old 2.3B implementation uses prepared-background grip and is valid as tested for its old rules, but the newly approved design makes naturally exposed intact backgrounds grippable and preparation speed-only. The new design also specifies starting queen, player-facing direct ant control, resource-backed functional backgrounds, doors/room scoring, brood, needs and shared stores. These are design targets, **not implemented or verified features**. Earlier 2.3B pending-test entries below are snapshots from before the user's later acceptance and must not be read as current status.
+
+**Next step:** read-only architecture audit and explicit approval of implementation changes. See `Documentation/GameDesignDocument.md` and `Documentation/DevelopmentRoadmap.md` for design and sequencing.
+
 ## Current milestone
 
 **Milestone 2.3B — Background Grip and Gravity Movement**
