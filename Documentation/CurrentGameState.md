@@ -1,5 +1,18 @@
 # Ant Colony Current Game State
 
+## Latest verified milestone — 2.4A Natural Background Movement Realignment (12 October 2026)
+
+**Status: COMPLETE — manual Unity Play Mode acceptance confirmed by the user.**
+
+The user reports natural Earth and Stone background supports valid horizontal/vertical/diagonal grip at 1.0× movement speed; prepared background grants identical traversal with provisional 1.25× speed; Sky remains non-grippable with physics-driven falling. Movement capability, route validity and speed react to terrain/background changes. Existing developer input, collision and movement architecture remain intact.
+
+**Reported implementation validation:** Unity Roslyn compilation passed; focused Edit Mode 56/56; graphics-enabled full Edit Mode 227/227; physics-backed Play Mode 6/6; navigation/development scene validators and `git diff --check` passed. A previous `-nographics` run crashed in a rendered-pixel test, while graphics-enabled rerun passed. The user subsequently confirmed manual Play Mode tests were good, completing the milestone. This is **user-reported validation**, not independently executed in this documentation-only update.
+
+**Repository synchronisation note:** This GitHub documentation snapshot did not contain the locally implemented 2.4A changes when this record was added. Verify/push the actual Unity source, tests, scenes, assets and updated local documentation before Codex begins 2.4B. Earlier 2.3B and obsolete prepared-only grip statements below are historical, superseded by this accepted milestone.
+
+**Next candidate (not yet implemented):** 2.4B shared multi-segment navigation: graph/path search above existing world-capability/clearance systems, with bounded pathfinding and route following. Keep jobs, construction, inventory and reproduction outside this milestone.
+
+
 ## Design-versus-implementation status — 12 October 2026
 
 **Design has changed; Unity implementation has not been changed by this documentation update.** The user reports Milestone 2.3B automated tests passed and all 12 manual Play Mode acceptance checks passed. The old 2.3B implementation uses prepared-background grip and is valid as tested for its old rules, but the newly approved design makes naturally exposed intact backgrounds grippable and preparation speed-only. The new design also specifies starting queen, player-facing direct ant control, resource-backed functional backgrounds, doors/room scoring, brood, needs and shared stores. These are design targets, **not implemented or verified features**. Earlier 2.3B pending-test entries below are snapshots from before the user's later acceptance and must not be read as current status.
