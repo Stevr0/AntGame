@@ -1,5 +1,18 @@
 # Ant Colony Current Game State
 
+## Latest verified milestone — 2.4A Natural Background Movement Realignment (12 October 2026)
+
+**Status: COMPLETE — manual Unity Play Mode acceptance confirmed by the user.**
+
+The user reports natural Earth and Stone background supports valid horizontal/vertical/diagonal grip at 1.0× movement speed; prepared background grants identical traversal with provisional 1.25× speed; Sky remains non-grippable with physics-driven falling. Movement capability, route validity and speed react to terrain/background changes. Existing developer input, collision and movement architecture remain intact.
+
+**Reported implementation validation:** Unity Roslyn compilation passed; focused Edit Mode 56/56; graphics-enabled full Edit Mode 227/227; physics-backed Play Mode 6/6; navigation/development scene validators and `git diff --check` passed. A previous `-nographics` run crashed in a rendered-pixel test, while graphics-enabled rerun passed. The user subsequently confirmed manual Play Mode tests were good, completing the milestone. This is **user-reported validation**, not independently executed in this documentation-only update.
+
+**Repository synchronisation note:** This GitHub documentation snapshot did not contain the locally implemented 2.4A changes when this record was added. Verify/push the actual Unity source, tests, scenes, assets and updated local documentation before Codex begins 2.4B. Earlier 2.3B and obsolete prepared-only grip statements below are historical, superseded by this accepted milestone.
+
+**Next candidate (not yet implemented):** 2.4B shared multi-segment navigation: graph/path search above existing world-capability/clearance systems, with bounded pathfinding and route following. Keep jobs, construction, inventory and reproduction outside this milestone.
+
+
 ## Design-versus-implementation status — 12 October 2026
 
 Milestone 2.4A now implements the approved natural-background movement realignment. Exposed Natural Earth and Natural Stone provide full horizontal, vertical and diagonal grip at normal speed. Prepared Background provides the same traversal plus a provisional `1.25` movement-speed multiplier. Sky remains explicitly non-grippable. The other newly approved systems—starting queen, player-facing direct ant control, functional backgrounds, rooms, brood, needs and shared stores—remain design targets, **not implemented or verified features**.
