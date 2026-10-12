@@ -2,7 +2,7 @@
 
 ## Latest implemented milestone — 2.4C Grid Navigation Stabilisation and Multi-Ant Readiness (12 October 2026)
 
-**Status: Implemented — Pending Manual Acceptance. Production movement is not replaced.**
+**Status: Complete — manual Unity Play Mode acceptance confirmed by the user. Production integration is authorised separately as Milestone 2.4D.**
 
 Milestone 2.4C turns the accepted grid experiment into a bounded shared navigation service without adding colony simulation. `GridNavigationScheduler` accepts many ant-owned requests against the one shared `GridNavigationMap`, defers allocating each A* frontier until that request receives service, and limits both total node expansions and per-request work per update. The development host currently uses a 128-node total budget and an 8-node request slice. Its deterministic `High, High, Normal, High, Normal, Low` service pattern favours urgent navigation while guaranteeing recurring low-priority service. These priorities are navigation-service hints only; they are not colony job priorities.
 
@@ -47,7 +47,7 @@ No extra Inspector wiring is required.
 12. Confirm the panel reports selected/live agents, pending, processing, delivery, last/total nodes, peak queue, last/maximum scheduler milliseconds, invalidations, submitted, completed and cancelled counts with plausible changes during each action.
 13. Press `Clear Extra Grid Ants`, exit Play Mode and confirm the Console contains no relevant exception, assertion, missing-reference or infinite-retry messages.
 
-Manual acceptance remains outstanding until the user confirms these checks. This milestone does not implement colony jobs, excavation, resources, construction, identity/skills, needs, brood, rooms, Draft Mode, combat, enemy AI, persistence, streaming or networking.
+The user subsequently confirmed the manual Play Mode checks, completing Milestone 2.4C. This milestone does not implement colony jobs, excavation, resources, construction, identity/skills, needs, brood, rooms, Draft Mode, combat, enemy AI, persistence, streaming or networking.
 
 ## Latest implemented milestone — revised 2.4B Grid Navigation Proof of Concept (12 October 2026)
 
@@ -106,15 +106,15 @@ The revised 2.4B proof of concept described above is the only later implementati
 
 Milestone 2.4A now implements the approved natural-background movement realignment. Exposed Natural Earth and Natural Stone provide full horizontal, vertical and diagonal grip at normal speed. Prepared Background provides the same traversal plus a provisional `1.25` movement-speed multiplier. Sky remains explicitly non-grippable. The other newly approved systems—starting queen, player-facing direct ant control, functional backgrounds, rooms, brood, needs and shared stores—remain design targets, **not implemented or verified features**.
 
-**Next step:** complete the 2.4C manual checklist above and record acceptance. Do not begin colony gameplay.
+**Next step:** integrate the accepted grid system as the production-default movement architecture under the separately approved Milestone 2.4D. Do not begin colony gameplay.
 
 ## Current milestone
 
-**Milestone 2.4C — Grid Navigation Stabilisation and Multi-Ant Readiness**
+**Milestone 2.4D — Production Grid Navigation Integration**
 
-**Status:** **Implemented — Pending Manual Acceptance.** Focused new automation passed as recorded above; a fresh combined regression run is blocked by the current Unity Licensing Client failure.
+**Status:** **Authorised for implementation.** Milestone 2.4C is manually accepted; the grid system may now become the default production movement path while legacy continuous systems remain developer-only regression tools.
 
-Milestones through accepted 2.4B retain their previously reported status. Milestone 2.4C changes only grid search scheduling, experimental grid-motor lifecycle, development stress controls and focused tests; it does not replace production movement or add colony simulation.
+Milestones through accepted 2.4C retain their previously reported status. Milestone 2.4D may integrate existing grid navigation as the primary ant movement architecture, but it must not add colony simulation.
 
 ## Repository and architecture
 
@@ -487,4 +487,4 @@ No extra Inspector setup is required. Open `Assets/AntColony/Scenes/AntGameDevel
 
 ## Recommended next implementation step
 
-Complete the exact 2.4C manual checklist and rerun the combined Unity suites when licensing is available. Keep the separate Milestone 2.2C Scene-view acceptance status explicit and do not begin Surface Preparation, skills or colony work without separate approval.
+Complete the authorised Milestone 2.4D production-grid integration and rerun the combined Unity suites when licensing is available. Keep the separate Milestone 2.2C Scene-view acceptance status explicit and do not begin Surface Preparation, skills or colony work without separate approval.
