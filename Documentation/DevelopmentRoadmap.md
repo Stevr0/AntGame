@@ -1,5 +1,12 @@
 # Ant Colony Development Roadmap
 
+## Milestone status — 13 October 2026
+
+**3.1A Ant Selection & Command Integration: COMPLETE.** The user confirmed all 14 manual Play Mode acceptance checks passed. Previously reported automation: focused Edit Mode 6/6, focused Play Mode 4/4, full Edit Mode 258/258 and full Play Mode 18/18. Three selectable ants, independent right-click movement orders, UI click protection, order completion and development-tool separation have been accepted. This is a documentation-only status change; no new tests executed.
+
+**Next proposed milestone — 3.1B Persistent Ant Identity & Attributes:** Introduce stable unique identities and a small, inspectable ant data model separate from GameObjects and navigation. Caste/capability should allow founding queen as a future gameplay setup, but do not implement reproduction, jobs, survival, progression, persistence I/O or combat. Implementation requires a separately approved Codex task.
+
+
 ## Current accepted milestone and experimental next step — 12 October 2026
 
 **Revised 2.4B Grid Navigation Proof of Concept: Complete.** A separate ordinary-ant experiment derives grippable and grounded anchors from authoritative world data, caches whole-body-safe eight-direction edges with diagonal restrictions, searches them with movement-time-weighted deterministic A*, and interpolates smoothly between anchors. Stable traversal excludes the experimental bodies from Physics2D; only Falling enables Rigidbody2D gravity, followed by controlled anchor recovery. Local terrain edits invalidate a bounded cache neighbourhood. Moving agents, local avoidance and enemies are not baked into static terrain navigation. The production 2.4A motor remains intact for comparison. The user confirmed manual Unity Play Mode acceptance after the automated results below.

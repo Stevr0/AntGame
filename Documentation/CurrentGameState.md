@@ -1,8 +1,8 @@
 # Ant Colony Current Game State
 
-## Latest implemented milestone — 3.1A Ant Selection & Command Integration (12 October 2026)
+## Latest accepted milestone — 3.1A Ant Selection & Command Integration (13 October 2026)
 
-**Status: Implemented — Pending Manual Acceptance.** Do not mark complete until the user confirms the Play Mode checklist below.
+**Status: COMPLETE — user confirmed all 14 manual Unity Play Mode acceptance checks passed on 13 October 2026.** The prior reported automated results were focused Edit Mode 6/6, focused Play Mode 4/4, full Edit Mode 258/258, full Play Mode 18/18, plus scene validation. This documentation update did not rerun tests.
 
 `AntGameDevelopment.unity` now enters Play Mode with three player-facing grid ants named `Ant 1`, `Ant 2` and `Ant 3`. The development host chooses three deterministic valid anchors at least three cells apart, instantiates the existing `PrimaryGridAnt.prefab`, gives the ants cyan, pink and green placeholder colours, and connects every motor to the same production `GridNavigationWorldService`. Stress-test ants are stored separately, so spawning or clearing a stress group does not replace the three selectable ants.
 
