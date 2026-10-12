@@ -1,6 +1,10 @@
 # Ant Colony Development Roadmap
 
-## Current accepted milestone and proposed next step — 12 October 2026
+## Current accepted milestone and experimental next step — 12 October 2026
+
+**Revised 2.4B Grid Navigation Proof of Concept: Implemented — Pending Manual Acceptance.** A separate ordinary-ant experiment now derives grippable and grounded anchors from authoritative world data, caches whole-body-safe eight-direction edges with diagonal restrictions, searches them with movement-time-weighted deterministic A*, and interpolates smoothly between anchors. Stable traversal excludes the experimental bodies from Physics2D; only Falling enables Rigidbody2D gravity, followed by controlled anchor recovery. Local terrain edits invalidate a bounded cache neighbourhood. Moving agents, local avoidance and enemies are not baked into static terrain navigation. The production 2.4A motor remains intact for comparison.
+
+Automated evidence: 11/11 focused grid EditMode, 238/238 full EditMode, 3/3 focused grid PlayMode and 9/9 full PlayMode passed. The 500-agent representative batch recorded 645.436 ms for 500 independent uncached A* searches, 24.277 ms to simulate all complete smooth routes, 1.086 ms for 100 Physics2D steps with stable bodies excluded, 1,875,968 retained managed bytes, 250,500 examined nodes and 500/500 correct arrivals. This validates the execution model but also makes path-request budgeting and common-route reuse a prerequisite for a production hundreds-of-ants milestone. Manual Play Mode acceptance remains required; this proof of concept does not replace production movement.
 
 **2.4A Natural Background Movement Realignment: COMPLETE.** User reports Roslyn compilation, focused 56/56 Edit Mode, full graphics-enabled 227/227 Edit Mode, 6/6 physics Play Mode and scene validators passed. User has confirmed the manual Unity Play Mode acceptance. Natural earth/stone grip works without preparation; prepared terrain increases movement speed by provisional 1.25×; sky remains non-grippable. Older milestones remain historical. This status is based on user-reported local work and validation; GitHub may need the associated Unity source/tests pushed.
 
@@ -15,7 +19,7 @@
 
 ## Design realignment notice — 12 October 2026
 
-The authoritative design is the **Authoritative design realignment** section in `Documentation/GameDesignDocument.md`. Existing implementation milestones below may retain historical terminology. Milestone 2.3B was manually accepted under its previous rules; Milestone 2.4A now implements the revised natural-background rules and remains pending its new manual acceptance checklist.
+The authoritative design is the **Authoritative design realignment** section in `Documentation/GameDesignDocument.md`. Existing implementation milestones below may retain historical terminology. Milestone 2.3B was manually accepted under its previous rules; Milestone 2.4A implements the revised natural-background rules and has been manually accepted.
 
 **Next milestone: documentation-led, read-only design/architecture audit** (no code changes). Inspect all Unity systems, compare each to the new design, classify Keep/Refactor/Replace/Defer, identify migration sequencing and tests affected, and propose a smallest safe vertical slice. Proposed future slices (not authorised): shared ant/player/AI control; natural-grip movement correction; functional tile conversion + physical material logistics; room/door detection; individual needs and Rested; founding queen nursery/brood/first workers; autonomous jobs and persistence. Do not mark an unimplemented design feature complete.
 
@@ -160,7 +164,7 @@ The existing root-level Unity template assets can remain where they are until th
 
 ## Milestone 2 — World Tiles and Autonomous Navigation
 
-**Status:** In progress. Milestones through 2.3B retain their recorded automated/manual evidence. Milestone 2.4A is **Implemented — Pending Manual Acceptance** after 227/227 Edit Mode and 6/6 Play Mode tests.
+**Status:** In progress. Milestones through 2.4A retain their recorded automated/manual evidence. Revised Milestone 2.4B is **Implemented — Pending Manual Acceptance** after 238/238 EditMode and 9/9 PlayMode tests.
 
 **Goal:** Establish the approved two-layer world representation, validate physical body clearance independently, derive Background-based walking/gripping/falling capability, build directional connections, then prove that one ant can move autonomously without direct movement input.
 
@@ -215,8 +219,8 @@ Milestone 2 must retain `AntSurfaceMotor` and `PlayerMovementInput` as prototype
 
 ### 2.4 — Dynamic Terrain and Navigation Updates
 
-- **2.4A — Natural Background Movement Realignment:** **Implemented — Pending Manual Acceptance.** Natural Earth and Stone now provide horizontal, vertical and diagonal grip at normal speed. Prepared Background provides identical access plus a data-driven provisional `1.25x` speed multiplier; Sky remains non-grippable. The existing capability evaluator, bounded route validator, autonomous motor, Rigidbody2D collision and Tilemap projections are reused. Runtime foreground/Background mutations re-evaluate locomotion and invalidate affected active direct routes. The deterministic development scene adds a flat Natural Earth floor crossing the Prepared fixture for reproducible ground, climbing, transition and speed checks. Focused Edit Mode tests pass 56/56, the full graphics-enabled Edit Mode suite passes 227/227 and Play Mode tests pass 6/6. Manual Play Mode acceptance is still required.
-- **2.4B and later:** Not started and not authorised by 2.4A. General rerouting, excavation/preparation jobs, chunk streaming and pathfinding remain outside this slice.
+- **2.4A — Natural Background Movement Realignment:** **Complete.** Natural Earth and Stone provide horizontal, vertical and diagonal grip at normal speed. Prepared Background provides identical access plus a data-driven provisional `1.25x` speed multiplier; Sky remains non-grippable. The existing capability evaluator, bounded route validator, autonomous motor, Rigidbody2D collision and Tilemap projections are reused. Runtime foreground/Background mutations re-evaluate locomotion and invalidate affected active direct routes. Focused EditMode tests passed 56/56, the full graphics-enabled EditMode suite passed 227/227, PlayMode tests passed 6/6, and the user confirmed manual acceptance.
+- **2.4B — Grid Navigation Proof of Concept:** **Implemented — Pending Manual Acceptance.** The experiment is separate from production 2.4A and limited to one ordinary-ant profile. Shared cached anchors/connections, whole-body clearance, eight-direction corner rules, travel-time A*, smooth anchor following, local invalidation and physics-only Falling are implemented. Deterministic direct, detour, vertical, prepared-speed, chunk-boundary, blocking, falling and recovery fixtures are covered by focused tests. Automated suites pass as recorded at the top of this roadmap. The benchmark supports low stable-movement/physics overhead but rejects an unbudgeted 500-search frame as production-ready. Keep both systems until manual comparison and a later architecture decision.
 
 - Remove excavatable foreground Solid Tiles in a controlled test while keeping their Background Tiles unchanged.
 - Update terrain collision after removal.
@@ -244,4 +248,4 @@ These milestones are ordered direction, not approved implementation work. Their 
 
 The proposed carrying model remains future work: one initial slot plus one per 20 Hauling skill, capped at five, with one item per slot.
 
-No new milestone is complete without implementation and validation evidence. Milestone 2.4A is therefore not complete until the user confirms its manual Unity checklist, despite passing 227/227 Edit Mode and 6/6 Play Mode tests. General directional navigation, pathfinding, excavation jobs, Surface Preparation, resources, skills, carrying, persistence and streaming are not implemented.
+No new milestone is complete without implementation and validation evidence. Revised Milestone 2.4B therefore remains pending manual acceptance despite passing its automated suites. The grid pathfinding proof of concept exists, but excavation jobs, Surface Preparation, resources, skills, carrying, persistence, streaming, local avoidance and production-scale multi-ant scheduling are not implemented.

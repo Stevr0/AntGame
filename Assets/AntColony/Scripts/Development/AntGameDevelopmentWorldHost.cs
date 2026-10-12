@@ -39,6 +39,8 @@ namespace AntColony.Development
 
         private GeneratedSampleWorld generatedWorld;
         private AntAutonomousMotor autonomousAnt;
+        private GridNavigationMap gridNavigationMap;
+        private GridNavigationMotor gridNavigationAnt;
 
         public bool IsWorldDataAvailable => generatedWorld != null;
         public ChunkedWorldData WorldData => generatedWorld?.WorldData;
@@ -51,6 +53,8 @@ namespace AntColony.Development
             ? soilSolid.StableMaterialId
             : string.Empty;
         public AntAutonomousMotor AutonomousAnt => autonomousAnt;
+        public GridNavigationMotor GridNavigationAnt => gridNavigationAnt;
+        public GridNavigationMap GridNavigationMap => gridNavigationMap;
         public AntAutonomousMotor AutonomousAntPrefab => autonomousAntPrefab;
         public Vector2Int GripFixtureBottom => generatedWorld != null
             ? generatedWorld.GripFixtureBottom
@@ -87,6 +91,9 @@ namespace AntColony.Development
                 worldSeed,
                 minimumChunk,
                 sizeInChunks);
+            gridNavigationMap = new GridNavigationMap(
+                generatedWorld.WorldData,
+                AntCollisionProfile.OrdinaryAnt);
 
             tilemapRenderer.BindWorldData(WorldData);
             collisionRenderer.BindWorldData(WorldData);
@@ -95,6 +102,7 @@ namespace AntColony.Development
             if (Application.isPlaying)
             {
                 SpawnOrResetAutonomousAnt(out _);
+                SpawnOrResetGridNavigationAnt(out _);
             }
             return true;
         }
@@ -154,6 +162,7 @@ namespace AntColony.Development
             tilemapRenderer.RefreshCell(worldCell);
             collisionRenderer.RefreshCell(worldCell);
             autonomousAnt?.NotifyWorldChanged();
+            NotifyGridTerrainChanged(worldCell);
             return true;
         }
 
@@ -181,6 +190,7 @@ namespace AntColony.Development
 
             tilemapRenderer.RefreshCell(worldCell);
             autonomousAnt?.NotifyWorldChanged();
+            NotifyGridTerrainChanged(worldCell);
             return true;
         }
 
@@ -203,7 +213,100 @@ namespace AntColony.Development
 
             tilemapRenderer.RefreshCell(worldCell);
             autonomousAnt?.NotifyWorldChanged();
+            NotifyGridTerrainChanged(worldCell);
             return true;
+        }
+
+        /// <summary>Assigns the separate experimental A* grid ant.</summary>
+        public bool TryAssignGridDestination(
+            Vector2Int selectedCell,
+            out string message)
+        {
+            if (gridNavigationAnt == null ||
+                !gridNavigationAnt.gameObject.activeInHierarchy)
+            {
+                message = "Grid destination rejected: experimental ant unavailable.";
+                HideDestinationMarker();
+                return false;
+            }
+
+            GridPathResult result = gridNavigationAnt.TrySetDestination(selectedCell);
+            if (!result.Succeeded)
+            {
+                message = gridNavigationAnt.StatusMessage;
+                HideDestinationMarker();
+                return false;
+            }
+
+            GridNavigationAnchor destination =
+                result.Anchors[result.Anchors.Count - 1];
+            ShowDestinationMarker(destination.Position);
+            message = gridNavigationAnt.StatusMessage;
+            return true;
+        }
+
+        /// <summary>
+        /// Creates a cyan experimental ant without changing the production 2.4A
+        /// prefab, controller, or authored scene references.
+        /// </summary>
+        public bool SpawnOrResetGridNavigationAnt(out string message)
+        {
+            if (!TryFindSafeSpawnPosition(out Vector2 spawnPosition, out message) ||
+                gridNavigationMap == null)
+            {
+                return false;
+            }
+
+            Vector2Int spawnCell =
+                WorldTileCoordinates.WorldPositionToCell(spawnPosition);
+            if (gridNavigationAnt == null)
+            {
+                var root = new GameObject("Experimental Grid Ant");
+                root.transform.SetParent(transform, false);
+                Rigidbody2D body = root.AddComponent<Rigidbody2D>();
+                body.freezeRotation = true;
+                body.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
+                CapsuleCollider2D capsule = root.AddComponent<CapsuleCollider2D>();
+                capsule.direction = CapsuleDirection2D.Horizontal;
+                capsule.size = AntCollisionProfile.OrdinaryAnt.Size;
+                gridNavigationAnt = root.AddComponent<GridNavigationMotor>();
+
+                var visual = new GameObject("Visual");
+                visual.transform.SetParent(root.transform, false);
+                SpriteRenderer renderer = visual.AddComponent<SpriteRenderer>();
+                SpriteRenderer source = autonomousAntPrefab != null
+                    ? autonomousAntPrefab.GetComponentInChildren<SpriteRenderer>()
+                    : null;
+                if (source != null)
+                {
+                    renderer.sprite = source.sprite;
+                    renderer.sharedMaterial = source.sharedMaterial;
+                }
+
+                renderer.color = new Color32(70, 225, 235, 255);
+                renderer.sortingOrder = 6;
+                visual.transform.localScale = new Vector3(0.8f, 0.5f, 1f);
+            }
+
+            gridNavigationAnt.gameObject.SetActive(true);
+            gridNavigationAnt.Bind(WorldData, gridNavigationMap, spawnCell);
+            if (autonomousAnt != null)
+            {
+                // The two implementations are comparison subjects, not local-
+                // avoidance participants. Keep their colliders from changing
+                // one another's regression behaviour when both are visible.
+                Physics2D.IgnoreCollision(
+                    gridNavigationAnt.GetComponent<Collider2D>(),
+                    autonomousAnt.GetComponent<Collider2D>(),
+                    true);
+            }
+            message = $"Experimental grid ant spawned at anchor {spawnCell}.";
+            return gridNavigationAnt.State != GridNavigationMotorState.Blocked;
+        }
+
+        public void StartGridFallingFixture()
+        {
+            gridNavigationAnt?.BeginFalling();
         }
 
         public bool TryGetCell(Vector2Int worldCell, out WorldTileCellData cell)
@@ -417,6 +520,12 @@ namespace AntColony.Development
             return worldCell.y <= SampleWorldGenerator.StoneBackgroundMaximumY
                 ? stoneBackground.StableMaterialId
                 : earthBackground.StableMaterialId;
+        }
+
+        private void NotifyGridTerrainChanged(Vector2Int worldCell)
+        {
+            gridNavigationMap?.InvalidateCell(worldCell);
+            gridNavigationAnt?.NotifyTerrainChanged();
         }
 
         private void ShowDestinationMarker(Vector2 position)

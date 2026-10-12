@@ -75,6 +75,12 @@ namespace AntColony.World
         public const int MainPassageY = -8;
         public const int GripFixtureX = -12;
         public const int GripFixtureHeight = 7;
+        public static readonly Vector2Int GridDirectDestination = new(-2, MainPassageY);
+        public static readonly Vector2Int GridDetourDestination = new(18, MainPassageY);
+        public static readonly Vector2Int GridChunkBoundaryDestination = new(33, MainPassageY);
+        public static readonly Vector2Int GridBlockingCell = new(10, MainPassageY);
+        public static readonly Vector2Int GridUnreachableDestination = new(12, -16);
+        public static readonly Vector2Int GridFallFixture = new(20, MainPassageY);
 
         /// <summary>Generates all data first; scene projection is a separate step.</summary>
         public static GeneratedSampleWorld Generate(
@@ -152,6 +158,14 @@ namespace AntColony.World
                 width,
                 height,
                 out Vector2Int gripFixtureTop);
+            PrepareGridNavigationFixtures(
+                worldData,
+                materials,
+                gripFixtureBottom,
+                minimumX,
+                minimumY,
+                width,
+                height);
             return new GeneratedSampleWorld(
                 worldData,
                 minimumChunk,
@@ -291,6 +305,62 @@ namespace AntColony.World
             }
 
             return bottom;
+        }
+
+        /// <summary>
+        /// Adds deterministic 2.4B-only terrain cases without changing the
+        /// production motor. All fixtures are ordinary authoritative cell edits.
+        /// </summary>
+        private static void PrepareGridNavigationFixtures(
+            ChunkedWorldData worldData,
+            SampleWorldMaterialIds materials,
+            Vector2Int surfaceFixtureBottom,
+            int minimumX,
+            int minimumY,
+            int width,
+            int height)
+        {
+            int maximumX = minimumX + width - 1;
+            int maximumY = minimumY + height - 1;
+
+            // A three-cell-wide natural shaft joins the surface fixture to the
+            // underground course and permits whole-body vertical traversal.
+            CarveRectangle(
+                worldData,
+                -10,
+                -8,
+                MainPassageY,
+                surfaceFixtureBottom.y);
+
+            // One centre obstruction forces an eight-direction detour through
+            // the existing three-cell-high passage.
+            if (IsInside(
+                    GridBlockingCell,
+                    minimumX,
+                    minimumY,
+                    maximumX,
+                    maximumY))
+            {
+                RequireSuccess(worldData.SetSolidMaterial(
+                    GridBlockingCell,
+                    materials.StoneSolid));
+            }
+
+            // This exposed pocket is deliberately surrounded by solid terrain.
+            RemoveSolidIfPresent(worldData, GridUnreachableDestination);
+            RequireSuccess(worldData.SetBackgroundMaterial(
+                GridUnreachableDestination,
+                materials.EarthBackground));
+
+            // Three non-grippable cells create a short gravity drop onto the
+            // solid immediately below the main passage, where recovery is valid.
+            for (int y = MainPassageY - 1; y <= MainPassageY + 1; y++)
+            {
+                var cell = new Vector2Int(GridFallFixture.x, y);
+                RequireSuccess(worldData.SetBackgroundMaterial(
+                    cell,
+                    materials.SkyBackground));
+            }
         }
 
         private static void CarveRectangle(

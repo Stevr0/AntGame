@@ -22,6 +22,7 @@ namespace AntColony.Development
         private readonly StringBuilder textBuilder = new(512);
         private string statusMessage = "Click a world cell to inspect it.";
         private bool backgroundOnlyVisuals;
+        private bool commandExperimentalGridAnt = true;
         private Vector2 panelScrollPosition;
 
         public Vector2Int SelectedCell => selectedCell;
@@ -41,9 +42,18 @@ namespace AntColony.Development
                             : WorldTileCoordinates.WorldPositionToCell(worldPoint);
                     if (worldHost != null)
                     {
-                        worldHost.TryAssignAutonomousDestination(
-                            selectedCell,
-                            out statusMessage);
+                        if (commandExperimentalGridAnt)
+                        {
+                            worldHost.TryAssignGridDestination(
+                                selectedCell,
+                                out statusMessage);
+                        }
+                        else
+                        {
+                            worldHost.TryAssignAutonomousDestination(
+                                selectedCell,
+                                out statusMessage);
+                        }
                     }
                     else
                     {
@@ -80,6 +90,15 @@ namespace AntColony.Development
             GUILayout.Space(8f);
             GUILayout.Label(BuildInspectionText());
             GUILayout.Space(8f);
+            if (GUILayout.Button(commandExperimentalGridAnt
+                    ? "Commanding: GRID POC (click to use 2.4A)"
+                    : "Commanding: 2.4A CONTINUOUS (click to use grid)"))
+            {
+                commandExperimentalGridAnt = !commandExperimentalGridAnt;
+                statusMessage = commandExperimentalGridAnt
+                    ? "World clicks now command the experimental grid ant."
+                    : "World clicks now command the production 2.4A ant.";
+            }
 
             if (GUILayout.Button("Toggle Foreground Solid (F)"))
             {
@@ -92,6 +111,11 @@ namespace AntColony.Development
             if (GUILayout.Button("Move Ant to Grip Fixture Top"))
             {
                 SelectGripFixtureTop();
+            }
+            if (GUILayout.Button("Start Grid Falling / Recovery Fixture"))
+            {
+                worldHost.StartGridFallingFixture();
+                statusMessage = "Grid ant released to Rigidbody2D gravity.";
             }
             if (GUILayout.Button(backgroundOnlyVisuals
                     ? "Restore Foreground Visuals"
@@ -142,6 +166,7 @@ namespace AntColony.Development
                 .Append(tilemapCell)
                 .AppendLine();
             AppendAutonomousAntDiagnostics(textBuilder);
+            AppendGridAntDiagnostics(textBuilder);
 
             if (worldHost == null ||
                 !worldHost.TryGetCell(selectedCell, out WorldTileCellData cell))
@@ -257,6 +282,36 @@ namespace AntColony.Development
                     : "Background toggle requires an exposed resident cell.";
         }
 
+        private void AppendGridAntDiagnostics(StringBuilder builder)
+        {
+            GridNavigationMotor ant = worldHost != null
+                ? worldHost.GridNavigationAnt
+                : null;
+            if (ant == null || !ant.gameObject.activeInHierarchy)
+            {
+                builder.AppendLine("Grid POC ant: unavailable");
+                return;
+            }
+
+            builder.Append("Grid POC position: ").Append(ant.Position).AppendLine();
+            builder.Append("Grid POC state: ").Append(ant.State)
+                .Append("   route step ").Append(ant.RouteIndex)
+                .Append('/').Append(ant.Route.Count).AppendLine();
+            if (worldHost.GridNavigationMap != null)
+            {
+                builder.Append("Shared grid cache: ")
+                    .Append(worldHost.GridNavigationMap.CachedAnchorCount)
+                    .Append(" anchors, ")
+                    .Append(worldHost.GridNavigationMap.CachedConnectionCount)
+                    .Append(" edges, revision ")
+                    .Append(worldHost.GridNavigationMap.Revision)
+                    .AppendLine();
+            }
+
+            builder.Append("Grid POC report: ")
+                .Append(ant.StatusMessage).AppendLine();
+        }
+
         private void SelectGripFixtureTop()
         {
             if (worldHost == null || !worldHost.IsWorldDataAvailable)
@@ -266,11 +321,21 @@ namespace AntColony.Development
             }
 
             selectedCell = worldHost.GripFixtureTop;
+            if (commandExperimentalGridAnt)
+            {
+                worldHost.TryAssignGridDestination(
+                    selectedCell,
+                    out string movementMessage);
+                statusMessage =
+                    $"Grip fixture selected at {selectedCell}. {movementMessage}";
+                return;
+            }
+
             worldHost.TryAssignAutonomousDestination(
                 selectedCell,
-                out string movementMessage);
+                out string continuousMessage);
             statusMessage =
-                $"Grip fixture selected at {selectedCell}. {movementMessage}";
+                $"Grip fixture selected at {selectedCell}. {continuousMessage}";
         }
 
         private void ToggleBackgroundIsolation()

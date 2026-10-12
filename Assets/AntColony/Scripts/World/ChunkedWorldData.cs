@@ -64,6 +64,8 @@ namespace AntColony.World
         public int WorldSeed { get; }
 
         public int ResidentChunkCount => chunks.Count;
+        public float MaximumBackgroundMovementSpeedMultiplier =>
+            materials.MaximumBackgroundMovementSpeedMultiplier;
 
         public bool ContainsChunk(Vector2Int chunkCoordinate)
         {

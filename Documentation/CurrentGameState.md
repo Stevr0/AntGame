@@ -1,6 +1,46 @@
 # Ant Colony Current Game State
 
-## Latest verified milestone — 2.4A Natural Background Movement Realignment (12 October 2026)
+## Latest implemented milestone — revised 2.4B Grid Navigation Proof of Concept (12 October 2026)
+
+**Status: Implemented — Pending Manual Acceptance. Production movement is not replaced.**
+
+The approved proof of concept adds a separate grid-authoritative traversal path for one ordinary-ant profile. `GridNavigationMap` lazily classifies grounded and Background-grip anchors from `ChunkedWorldData`, caches eight-direction terrain connections, checks the complete ordinary-ant capsule along every edge, and rejects diagonal corner cutting. `GridPathfinder` performs deterministic A* with travel-time costs derived from the Background material speed multipliers. A binary-heap open set keeps searches bounded without scanning the entire open list.
+
+`GridNavigationMotor` smoothly interpolates the cyan experimental ant between the returned anchor poses. Its Rigidbody2D is excluded from simulation during stable grid traversal and is enabled with gravity only in `Falling`; after contact restores Grounded or Gripping capability, the motor disables physics and smoothly recentres on a valid anchor. The map is shared terrain data: moving ants are not stored as obstacles. Successful Solid or Background mutations invalidate a local five-by-five cache neighbourhood and cause the experimental motor to re-evaluate or replan. Local avoidance, congestion and moving-enemy steering remain deliberately deferred.
+
+The existing 2.4A `AntAutonomousMotor`, `DirectGroundRouteValidator`, prefab and tests remain available in the same scene. The inspector defaults clicks to the grid proof of concept and has a button to switch click commands back to the 2.4A continuous ant. The two comparison colliders ignore one another so the experiment cannot change the retained movement regression. The paused continuous-route 2.4B work is recoverable on branch `codex/milestone-2.4b-continuous-snapshot` at commit `28864f9`.
+
+### Automated verification and benchmark
+
+- Focused grid EditMode: 11/11 passed.
+- Full graphics-enabled EditMode: 238/238 passed.
+- Focused grid PlayMode: 3/3 passed, covering smooth non-teleport traversal, prepared vertical travel, Rigidbody2D falling and grid recovery.
+- Full PlayMode: 9/9 passed, including all six retained 2.4A physics regressions.
+- Benchmark method: warm the shared terrain cache, run independent A* requests across a 39-cell representative route, simulate every returned smooth route to completion at a `0.02` fixed step, and time 100 Physics2D steps with the stable grid bodies excluded from simulation. Allocations are the retained managed-heap lower bound after a full collection, not total transient allocation traffic.
+
+| Simulated ants | A* batch | Nodes examined | Complete smooth-route simulation | 100 Physics2D steps | Retained managed bytes | Correct arrivals/failure |
+| ---: | ---: | ---: | ---: | ---: | ---: | --- |
+| 1 | 1.657 ms | 501 | 1.079 ms | 0.938 ms | 0 | 1/1; invalid target rejected |
+| 100 | 123.151 ms | 50,100 | 5.632 ms | 0.273 ms | 241,664 | 100/100; invalid target rejected |
+| 300 | 363.736 ms | 150,300 | 17.218 ms | 0.597 ms | 1,085,440 | 300/300; invalid target rejected |
+| 500 | 645.436 ms | 250,500 | 24.277 ms | 1.086 ms | 1,875,968 | 500/500; invalid target rejected |
+
+The result supports grid-authoritative execution as the simpler per-frame foundation: stable ants require no Rigidbody2D simulation and movement work is a small deterministic interpolation loop. It also exposes the next scaling constraint clearly: 500 uncached searches must not be launched in one frame. A production version needs request budgeting and likely shared flow fields or route/subpath reuse for common destinations before hundreds of ants are enabled. This proof of concept does not claim local avoidance or mass-agent production readiness.
+
+### Exact manual Play Mode acceptance
+
+1. Open `Assets/AntColony/Scenes/AntGameDevelopment.unity`, enter Play Mode, and confirm one amber 2.4A ant plus one cyan `Experimental Grid Ant` appear with no Console errors.
+2. Leave the panel on `Commanding: GRID POC`. Click exposed natural cells along the surface, the natural access shaft near X=-9, and the main passage at `(-2,-8)`. Confirm the cyan ant follows connected anchor-to-anchor motion smoothly and never teleports.
+3. Click the prepared strip between X=-18 and X=-8 at Y=-8, then the prepared fixture top. Confirm travel remains valid in every direction and visibly speeds up over prepared Background.
+4. Command `(18,-8)`. Confirm the route detours around the blocker at `(10,-8)` and does not cut diagonally through its corners. Command `(33,-8)` to cross the positive chunk boundary. Command `(12,-16)` and confirm the enclosed target is rejected without movement.
+5. While the cyan ant is moving, select a remaining route cell and press `F`. Confirm the cache revision changes and the ant replans or reports a bounded failure without entering the new Solid. Remove the Solid and retry. Press `P` on an exposed route cell and confirm the route cost/speed responds after local invalidation.
+6. Click `Start Grid Falling / Recovery Fixture`. Confirm the Rigidbody2D gravity drop occurs, the ant lands, smoothly recentres on a valid anchor, and returns to Idle with physics simulation disabled.
+7. Switch the panel to `Commanding: 2.4A CONTINUOUS`. Repeat a direct ground move, prepared climb, terrain block and falling/recovery check. Confirm the amber ant retains the accepted 2.4A behaviour and neither ant pushes the other.
+8. Exit Play Mode and confirm the Console contains no exceptions, assertion failures or missing-reference messages.
+
+Manual acceptance is the only remaining 2.4B gate. This experiment does not authorize replacing the production motor or adding jobs, inventories, construction, survival, combat, reproduction, networking, local avoidance or enemy movement.
+
+## Accepted baseline — 2.4A Natural Background Movement Realignment (12 October 2026)
 
 **Status: COMPLETE — manual Unity Play Mode acceptance confirmed by the user.**
 
@@ -8,22 +48,22 @@ The user reports natural Earth and Stone background supports valid horizontal/ve
 
 **Reported implementation validation:** Unity Roslyn compilation passed; focused Edit Mode 56/56; graphics-enabled full Edit Mode 227/227; physics-backed Play Mode 6/6; navigation/development scene validators and `git diff --check` passed. A previous `-nographics` run crashed in a rendered-pixel test, while graphics-enabled rerun passed. The user subsequently confirmed manual Play Mode tests were good, completing the milestone. This is **user-reported validation**, not independently executed in this documentation-only update.
 
-**Repository synchronisation note:** This GitHub documentation snapshot did not contain the locally implemented 2.4A changes when this record was added. Verify/push the actual Unity source, tests, scenes, assets and updated local documentation before Codex begins 2.4B. Earlier 2.3B and obsolete prepared-only grip statements below are historical, superseded by this accepted milestone.
+Earlier 2.3B and obsolete prepared-only grip statements below are historical and superseded by this accepted milestone.
 
-**Next candidate (not yet implemented):** 2.4B shared multi-segment navigation: graph/path search above existing world-capability/clearance systems, with bounded pathfinding and route following. Keep jobs, construction, inventory and reproduction outside this milestone.
+The revised 2.4B proof of concept described above is the only later implementation. Keep jobs, construction, inventory and reproduction outside it.
 
 
 ## Design-versus-implementation status — 12 October 2026
 
 Milestone 2.4A now implements the approved natural-background movement realignment. Exposed Natural Earth and Natural Stone provide full horizontal, vertical and diagonal grip at normal speed. Prepared Background provides the same traversal plus a provisional `1.25` movement-speed multiplier. Sky remains explicitly non-grippable. The other newly approved systems—starting queen, player-facing direct ant control, functional backgrounds, rooms, brood, needs and shared stores—remain design targets, **not implemented or verified features**.
 
-**Next step:** complete the Milestone 2.4A manual Play Mode checklist below. Do not begin Milestone 2.4B or later gameplay work before that acceptance and separate approval.
+**Next step:** complete the revised Milestone 2.4B manual comparison above. Do not replace production movement or begin later gameplay work without separate approval.
 
 ## Current milestone
 
 **Milestone 2.4A — Natural Background Movement Realignment**
 
-**Status:** **Implemented — Pending Manual Acceptance.** Unity compilation, the complete 227/227 Edit Mode suite and all 6/6 physics-backed Play Mode tests pass. Manual Unity Play Mode acceptance has not been claimed.
+**Status:** **Complete.** The user confirmed the 2.4A manual Unity Play Mode acceptance after its automated suite passed.
 
 Milestones 2.1B through 2.3B retain their previously reported acceptance status. Milestone 2.4A changes only the existing material-driven capability, route-validation, motor-speed and development-fixture seams; it does not add pathfinding, jobs, excavation gameplay, Draft Mode or colony simulation.
 

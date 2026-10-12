@@ -20,6 +20,27 @@ namespace AntColony.World
             solidMaterials = BuildLookup(solidDefinitions, "solid");
         }
 
+        /// <summary>
+        /// Fastest registered Background multiplier. Pathfinding uses this as an
+        /// admissible heuristic instead of assuming a particular prepared value.
+        /// </summary>
+        public float MaximumBackgroundMovementSpeedMultiplier
+        {
+            get
+            {
+                float maximum = 1f;
+                foreach (BackgroundTileMaterialDefinition definition in
+                    backgroundMaterials.Values)
+                {
+                    maximum = UnityEngine.Mathf.Max(
+                        maximum,
+                        definition.MovementSpeedMultiplier);
+                }
+
+                return maximum;
+            }
+        }
+
         public bool ContainsBackgroundMaterial(string materialId)
         {
             return IsWellFormedMaterialId(materialId) &&
