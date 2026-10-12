@@ -15,6 +15,8 @@ namespace AntColony.Development
     public sealed class DevelopmentWorldInspector : MonoBehaviour
     {
         private const float PanelWidth = 390f;
+        private const float CollapsedPanelWidth = 260f;
+        private const float CollapsedPanelHeight = 42f;
 
         [SerializeField] private AntGameDevelopmentWorldHost worldHost;
         [SerializeField] private Camera worldCamera;
@@ -23,43 +25,37 @@ namespace AntColony.Development
         private readonly StringBuilder textBuilder = new(512);
         private string statusMessage = "Click a world cell to inspect it.";
         private bool backgroundOnlyVisuals;
-        private bool commandPrimaryGridAnt = true;
+        private bool developerToolsExpanded;
         private Vector2 panelScrollPosition;
 
         public Vector2Int SelectedCell => selectedCell;
+        public Rect DeveloperPanelGuiRect => developerToolsExpanded
+            ? new Rect(12f, 12f, PanelWidth - 20f, Screen.height - 24f)
+            : new Rect(12f, 12f, CollapsedPanelWidth, CollapsedPanelHeight);
+
+        private void OnEnable()
+        {
+            UpdateUiBlocker();
+        }
 
         private void Update()
         {
+            UpdateUiBlocker();
             Mouse mouse = Mouse.current;
             if (mouse != null && mouse.leftButton.wasPressedThisFrame)
             {
                 Vector2 screenPoint = mouse.position.ReadValue();
-                if (screenPoint.x > PanelWidth)
+                if (worldHost?.SelectionController == null ||
+                    !worldHost.SelectionController.IsScreenPointBlocked(screenPoint))
                 {
                     Vector3 worldPoint = worldCamera.ScreenToWorldPoint(screenPoint);
                     selectedCell = worldHost != null &&
                         worldHost.TilemapRenderer != null
                             ? worldHost.TilemapRenderer.WorldPositionToWorldCell(worldPoint)
                             : WorldTileCoordinates.WorldPositionToCell(worldPoint);
-                    if (worldHost != null)
-                    {
-                        if (commandPrimaryGridAnt)
-                        {
-                            worldHost.TryAssignGridDestination(
-                                selectedCell,
-                                out statusMessage);
-                        }
-                        else
-                        {
-                            worldHost.TryAssignAutonomousDestination(
-                                selectedCell,
-                                out statusMessage);
-                        }
-                    }
-                    else
-                    {
-                        statusMessage = "Selection updated; world host unavailable.";
-                    }
+                    statusMessage = worldHost != null
+                        ? $"Inspecting world cell {selectedCell}."
+                        : "Selection updated; world host unavailable.";
                 }
             }
 
@@ -81,24 +77,40 @@ namespace AntColony.Development
 
         private void OnGUI()
         {
-            GUILayout.BeginArea(
-                new Rect(12f, 12f, PanelWidth - 20f, Screen.height - 24f),
-                GUI.skin.box);
+            GUILayout.BeginArea(DeveloperPanelGuiRect, GUI.skin.box);
+            if (GUILayout.Button(developerToolsExpanded
+                    ? "Hide Developer Tools"
+                    : "Show Developer Tools"))
+            {
+                developerToolsExpanded = !developerToolsExpanded;
+                UpdateUiBlocker();
+            }
+
+            if (!developerToolsExpanded)
+            {
+                GUILayout.EndArea();
+                return;
+            }
+
             panelScrollPosition = GUILayout.BeginScrollView(panelScrollPosition);
             GUILayout.Label("ANT GAME DEVELOPMENT WORLD");
-            GUILayout.Label("Click terrain to inspect. WASD/arrows pan, wheel zoom,");
+            GUILayout.Label("Left-click selects ants; right-click issues move orders.");
+            GUILayout.Label("WASD/arrows pan, wheel zoom,");
             GUILayout.Label("middle-drag pans, Home resets the camera.");
             GUILayout.Space(8f);
             GUILayout.Label(BuildInspectionText());
             GUILayout.Space(8f);
-            if (GUILayout.Button(commandPrimaryGridAnt
-                    ? "Commanding: PRIMARY GRID (click for legacy 2.4A)"
-                    : "Commanding: LEGACY 2.4A (click for primary grid)"))
+            if (GUILayout.Button("Command Primary Grid Ant to Inspected Cell"))
             {
-                commandPrimaryGridAnt = !commandPrimaryGridAnt;
-                statusMessage = commandPrimaryGridAnt
-                    ? "World clicks now command the primary grid ant."
-                    : "World clicks now command the legacy 2.4A ant.";
+                worldHost.TryAssignGridDestination(
+                    selectedCell,
+                    out statusMessage);
+            }
+            if (GUILayout.Button("Command Legacy 2.4A Ant to Inspected Cell"))
+            {
+                worldHost.TryAssignAutonomousDestination(
+                    selectedCell,
+                    out statusMessage);
             }
 
             if (GUILayout.Button("Toggle Foreground Solid (F)"))
@@ -180,6 +192,13 @@ namespace AntColony.Development
         {
             worldHost = host;
             worldCamera = inspectionCamera;
+            UpdateUiBlocker();
+        }
+
+        private void UpdateUiBlocker()
+        {
+            worldHost?.SelectionController?.SetAdditionalUiBlocker(
+                DeveloperPanelGuiRect);
         }
 
         private string BuildInspectionText()
@@ -350,9 +369,11 @@ namespace AntColony.Development
             {
                 GridNavigationSchedulerDiagnostics diagnostics =
                     worldHost.GridNavigationScheduler.Diagnostics;
-                builder.Append("Grid agents: ")
+                builder.Append("Selectable / stress grid ants: ")
+                    .Append(worldHost.SelectableGridAnts.Count)
+                    .Append(" / ")
                     .Append(worldHost.GridNavigationAnts.Count)
-                    .Append(" / selected ")
+                    .Append("   requested stress size ")
                     .Append(worldHost.GridStressGroupSize)
                     .AppendLine();
                 builder.Append("Scheduler pending/processing/delivery: ")
@@ -393,21 +414,11 @@ namespace AntColony.Development
             }
 
             selectedCell = worldHost.GripFixtureTop;
-            if (commandPrimaryGridAnt)
-            {
-                worldHost.TryAssignGridDestination(
-                    selectedCell,
-                    out string movementMessage);
-                statusMessage =
-                    $"Grip fixture selected at {selectedCell}. {movementMessage}";
-                return;
-            }
-
-            worldHost.TryAssignAutonomousDestination(
+            worldHost.TryAssignGridDestination(
                 selectedCell,
-                out string continuousMessage);
+                out string movementMessage);
             statusMessage =
-                $"Grip fixture selected at {selectedCell}. {continuousMessage}";
+                $"Grip fixture selected at {selectedCell}. {movementMessage}";
         }
 
         private void ToggleBackgroundIsolation()

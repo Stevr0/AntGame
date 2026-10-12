@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using AntColony.Commands;
 using AntColony.Navigation;
 using AntColony.World;
 using AntColony.WorldPresentation;
@@ -10,7 +11,9 @@ namespace AntColony.Development
     /// Coordinates generation and existing projections for the integrated sample
     /// scene. Authoritative terrain remains owned solely by ChunkedWorldData.
     /// </summary>
-    [RequireComponent(typeof(GridNavigationWorldService))]
+    [RequireComponent(
+        typeof(GridNavigationWorldService),
+        typeof(AntSelectionCommandController))]
     public sealed class AntGameDevelopmentWorldHost : MonoBehaviour, IWorldDataProvider
     {
         [Header("Deterministic sample")]
@@ -34,6 +37,7 @@ namespace AntColony.Development
 
         [Header("Primary grid ant")]
         [SerializeField] private GridNavigationWorldService navigationWorldService;
+        [SerializeField] private AntSelectionCommandController selectionController;
         [SerializeField] private GridNavigationMotor primaryGridAntPrefab;
 
         [Header("Legacy 2.4A comparison ant")]
@@ -50,7 +54,8 @@ namespace AntColony.Development
         private GeneratedSampleWorld generatedWorld;
         private AntAutonomousMotor autonomousAnt;
         private GridNavigationMotor gridNavigationAnt;
-        private readonly List<GridNavigationMotor> gridNavigationAnts = new();
+        private readonly List<GridNavigationMotor> selectableGridAnts = new();
+        private readonly List<GridNavigationMotor> gridStressAnts = new();
         private bool staggeredRequestsActive;
         private int staggeredRequestIndex;
 
@@ -68,11 +73,15 @@ namespace AntColony.Development
         public GridNavigationMotor GridNavigationAnt => gridNavigationAnt;
         public GridNavigationWorldService NavigationWorldService =>
             navigationWorldService;
+        public AntSelectionCommandController SelectionController =>
+            selectionController;
         public GridNavigationMap GridNavigationMap => navigationWorldService?.Map;
         public GridNavigationScheduler GridNavigationScheduler =>
             navigationWorldService?.Scheduler;
         public IReadOnlyList<GridNavigationMotor> GridNavigationAnts =>
-            gridNavigationAnts;
+            gridStressAnts;
+        public IReadOnlyList<GridNavigationMotor> SelectableGridAnts =>
+            selectableGridAnts;
         public int GridStressGroupSize => gridStressGroupSize;
         public AntAutonomousMotor AutonomousAntPrefab => autonomousAntPrefab;
         public GridNavigationMotor PrimaryGridAntPrefab => primaryGridAntPrefab;
@@ -88,6 +97,7 @@ namespace AntColony.Development
         private void Awake()
         {
             navigationWorldService ??= GetComponent<GridNavigationWorldService>();
+            selectionController ??= GetComponent<AntSelectionCommandController>();
             RebuildWorld();
         }
 
@@ -105,7 +115,7 @@ namespace AntColony.Development
 
             if (Application.isPlaying)
             {
-                ClearExtraGridAnts();
+                ClearStressGridAnts();
             }
 
             var registry = new WorldMaterialRegistry(
@@ -136,7 +146,7 @@ namespace AntColony.Development
             if (Application.isPlaying)
             {
                 SpawnOrResetAutonomousAnt(out _);
-                SpawnOrResetGridNavigationAnt(out _);
+                SpawnOrResetSelectableGridAnts(out _);
             }
             return true;
         }
@@ -287,32 +297,67 @@ namespace AntColony.Development
         /// </summary>
         public bool SpawnOrResetGridNavigationAnt(out string message)
         {
-            if (!TryFindSafeSpawnPosition(out Vector2 spawnPosition, out message) ||
-                NavigationWorldService == null ||
+            return SpawnOrResetSelectableGridAnts(out message);
+        }
+
+        /// <summary>
+        /// Creates the three deterministic player-facing ants. They share the
+        /// production map and scheduler but retain independent motors and orders.
+        /// </summary>
+        public bool SpawnOrResetSelectableGridAnts(out string message)
+        {
+            message = string.Empty;
+            if (NavigationWorldService == null ||
                 !NavigationWorldService.IsInitialized ||
-                primaryGridAntPrefab == null)
+                primaryGridAntPrefab == null || selectionController == null ||
+                !TryFindSelectableSpawnCells(3, out List<Vector2Int> spawnCells,
+                    out message))
             {
                 return false;
             }
 
-            Vector2Int spawnCell =
-                WorldTileCoordinates.WorldPositionToCell(spawnPosition);
-            if (gridNavigationAnt == null)
+            selectionController.ClearSelectableAnts();
+            while (selectableGridAnts.Count < spawnCells.Count)
             {
-                gridNavigationAnt = CreateGridNavigationAnt(
-                    "Primary Grid Ant",
-                    includeVisual: true);
-                gridNavigationAnts.Add(gridNavigationAnt);
+                int number = selectableGridAnts.Count + 1;
+                selectableGridAnts.Add(CreateGridNavigationAnt(
+                    $"Selectable Grid Ant {number}",
+                    includeVisual: true));
             }
 
-            gridNavigationAnt.gameObject.SetActive(true);
-            bool initialized = gridNavigationAnt.InitializeNavigation(
-                NavigationWorldService,
-                spawnCell);
-            message = initialized
-                ? $"Primary grid ant spawned at anchor {spawnCell}."
-                : gridNavigationAnt.StatusMessage;
-            return initialized;
+            Color32[] colours =
+            {
+                new(70, 225, 235, 255),
+                new(238, 112, 177, 255),
+                new(143, 230, 92, 255)
+            };
+            for (int index = 0; index < spawnCells.Count; index++)
+            {
+                GridNavigationMotor ant = selectableGridAnts[index];
+                ant.gameObject.SetActive(true);
+                if (!ant.InitializeNavigation(
+                        NavigationWorldService,
+                        spawnCells[index]))
+                {
+                    message = ant.StatusMessage;
+                    return false;
+                }
+
+                SelectableGridAnt selectable =
+                    ant.GetComponent<SelectableGridAnt>();
+                if (selectable == null)
+                {
+                    selectable = ant.gameObject.AddComponent<SelectableGridAnt>();
+                }
+                selectable.Configure($"Ant {index + 1}", colours[index]);
+                selectionController.RegisterSelectableAnt(selectable);
+            }
+
+            gridNavigationAnt = selectableGridAnts[0];
+            message =
+                $"Spawned {selectableGridAnts.Count} selectable grid ants at " +
+                $"{string.Join(", ", spawnCells)}.";
+            return true;
         }
 
         public void SetGridStressGroupSize(int count)
@@ -327,62 +372,63 @@ namespace AntColony.Development
         /// </summary>
         public bool SpawnGridStressGroup(out string message)
         {
-            if (!SpawnOrResetGridNavigationAnt(out message) ||
+            if ((selectableGridAnts.Count < 3 &&
+                    !SpawnOrResetSelectableGridAnts(out message)) ||
                 !TryFindSafeSpawnPosition(out Vector2 spawnPosition, out message))
             {
                 return false;
             }
 
-            ClearExtraGridAnts();
+            ClearStressGridAnts();
             Vector2Int spawnCell =
                 WorldTileCoordinates.WorldPositionToCell(spawnPosition);
-            for (int index = 1; index < gridStressGroupSize; index++)
+            for (int index = 0; index < gridStressGroupSize; index++)
             {
                 GridNavigationMotor ant = CreateGridNavigationAnt(
                     $"Grid Stress Ant {index + 1}",
                     includeVisual: index < 40);
                 ant.InitializeNavigation(NavigationWorldService, spawnCell);
-                gridNavigationAnts.Add(ant);
+                gridStressAnts.Add(ant);
             }
 
             message =
-                $"Spawned {gridNavigationAnts.Count} shared-map grid ants.";
+                $"Spawned {gridStressAnts.Count} shared-map stress ants.";
             return true;
         }
 
         public void ClearGridStressGroup()
         {
             staggeredRequestsActive = false;
-            foreach (GridNavigationMotor ant in gridNavigationAnts)
+            foreach (GridNavigationMotor ant in gridStressAnts)
             {
                 ant?.CancelMovement("Stress group cleared.");
             }
-            ClearExtraGridAnts();
+            ClearStressGridAnts();
         }
 
         public void StartSimultaneousGridRequests()
         {
             staggeredRequestsActive = false;
-            for (int index = 0; index < gridNavigationAnts.Count; index++)
+            for (int index = 0; index < gridStressAnts.Count; index++)
             {
-                RequestStressDestination(gridNavigationAnts[index], index);
+                RequestStressDestination(gridStressAnts[index], index);
             }
         }
 
         public void StartStaggeredGridRequests()
         {
             staggeredRequestIndex = 0;
-            staggeredRequestsActive = gridNavigationAnts.Count > 0;
+            staggeredRequestsActive = gridStressAnts.Count > 0;
         }
 
         public bool CancelFirstGridRequest()
         {
-            if (gridNavigationAnts.Count == 0)
+            if (gridStressAnts.Count == 0)
             {
                 return false;
             }
 
-            gridNavigationAnts[0].CancelMovement(
+            gridStressAnts[0].CancelMovement(
                 "First stress-ant request cancelled.");
             return true;
         }
@@ -561,6 +607,63 @@ namespace AntColony.Development
             return false;
         }
 
+        /// <summary>
+        /// Finds three grounded anchors with enough horizontal separation to be
+        /// easy to distinguish and click at the development camera's home zoom.
+        /// </summary>
+        public bool TryFindSelectableSpawnCells(
+            int count,
+            out List<Vector2Int> spawnCells,
+            out string message)
+        {
+            spawnCells = new List<Vector2Int>(count);
+            if (!IsWorldDataAvailable || GridNavigationMap == null || count < 1)
+            {
+                message = "Selectable spawn search requires grid navigation.";
+                return false;
+            }
+
+            int minimumX = minimumChunk.x * WorldTileCoordinates.ChunkSize;
+            int maximumX = minimumX + generatedWorld.WidthInCells - 1;
+            int maximumDistance = Mathf.Max(spawnSearchRadius, count * 4);
+            for (int distance = 0;
+                distance <= maximumDistance && spawnCells.Count < count;
+                distance++)
+            {
+                int candidateCount = distance == 0 ? 1 : 2;
+                for (int candidateIndex = 0;
+                    candidateIndex < candidateCount && spawnCells.Count < count;
+                    candidateIndex++)
+                {
+                    int direction = candidateIndex == 0 ? 1 : -1;
+                    int x = preferredSpawnX + distance * direction;
+                    if (x < minimumX || x > maximumX ||
+                        spawnCells.Exists(cell => Mathf.Abs(cell.x - x) < 3))
+                    {
+                        continue;
+                    }
+
+                    int surfaceY = generatedWorld.SurfaceHeights[x - minimumX];
+                    var candidate = new Vector2Int(x, surfaceY + 1);
+                    if (GridNavigationMap.TryGetAnchor(candidate, out _))
+                    {
+                        spawnCells.Add(candidate);
+                    }
+                }
+            }
+
+            if (spawnCells.Count == count)
+            {
+                message = string.Empty;
+                return true;
+            }
+
+            message =
+                $"Only {spawnCells.Count} of {count} separated selectable " +
+                "grid-ant anchors were available.";
+            return false;
+        }
+
         /// <summary>Used only by the scene authoring utility and focused tests.</summary>
         public void Configure(
             int seed,
@@ -592,6 +695,7 @@ namespace AntColony.Development
             tilemapRenderer = visualRenderer;
             collisionRenderer = terrainCollisionRenderer;
             navigationWorldService = sharedNavigationWorld;
+            selectionController ??= GetComponent<AntSelectionCommandController>();
             primaryGridAntPrefab = gridAntPrefab;
             autonomousAntPrefab = antPrefab;
             destinationMarker = marker;
@@ -626,7 +730,11 @@ namespace AntColony.Development
         private void NotifyGridTerrainChanged(Vector2Int worldCell)
         {
             navigationWorldService?.NotifyTerrainChanged(worldCell);
-            foreach (GridNavigationMotor ant in gridNavigationAnts)
+            foreach (GridNavigationMotor ant in selectableGridAnts)
+            {
+                ant?.NotifyTerrainChanged();
+            }
+            foreach (GridNavigationMotor ant in gridStressAnts)
             {
                 ant?.NotifyTerrainChanged();
             }
@@ -652,15 +760,22 @@ namespace AntColony.Development
             return ant;
         }
 
-        private void ClearExtraGridAnts()
+        private void ClearStressGridAnts()
         {
-            for (int index = gridNavigationAnts.Count - 1; index >= 1; index--)
+            for (int index = gridStressAnts.Count - 1; index >= 0; index--)
             {
-                GridNavigationMotor ant = gridNavigationAnts[index];
-                gridNavigationAnts.RemoveAt(index);
+                GridNavigationMotor ant = gridStressAnts[index];
+                gridStressAnts.RemoveAt(index);
                 if (ant != null)
                 {
-                    Destroy(ant.gameObject);
+                    if (Application.isPlaying)
+                    {
+                        Destroy(ant.gameObject);
+                    }
+                    else
+                    {
+                        DestroyImmediate(ant.gameObject);
+                    }
                 }
             }
         }
@@ -673,18 +788,18 @@ namespace AntColony.Development
             }
 
             int end = Mathf.Min(
-                gridNavigationAnts.Count,
+                gridStressAnts.Count,
                 staggeredRequestIndex + staggeredRequestsPerUpdate);
             while (staggeredRequestIndex < end)
             {
                 RequestStressDestination(
-                    gridNavigationAnts[staggeredRequestIndex],
+                    gridStressAnts[staggeredRequestIndex],
                     staggeredRequestIndex);
                 staggeredRequestIndex++;
             }
 
             staggeredRequestsActive =
-                staggeredRequestIndex < gridNavigationAnts.Count;
+                staggeredRequestIndex < gridStressAnts.Count;
         }
 
         private void RequestStressDestination(

@@ -1,5 +1,47 @@
 # Ant Colony Current Game State
 
+## Latest implemented milestone — 3.1A Ant Selection & Command Integration (12 October 2026)
+
+**Status: Implemented — Pending Manual Acceptance.** Do not mark complete until the user confirms the Play Mode checklist below.
+
+`AntGameDevelopment.unity` now enters Play Mode with three player-facing grid ants named `Ant 1`, `Ant 2` and `Ant 3`. The development host chooses three deterministic valid anchors at least three cells apart, instantiates the existing `PrimaryGridAnt.prefab`, gives the ants cyan, pink and green placeholder colours, and connects every motor to the same production `GridNavigationWorldService`. Stress-test ants are stored separately, so spawning or clearing a stress group does not replace the three selectable ants.
+
+`AntColony.Commands` is a small runtime assembly with two focused components. `SelectableGridAnt` adds a yellow selection ring and translates terminal `GridNavigationMotor` results into a temporary order outcome; it does not pathfind or move transforms. `AntSelectionCommandController` tracks one selected ant, converts camera-correct mouse positions into selection or destination cells, validates destination anchors through the shared map, and calls the existing `MoveTo`/`CancelMovement` API. Selecting, deselecting or switching ants never cancels an active order. Completed, failed and cancelled orders return to the player-facing `Autonomous / Idle` state while retaining the last destination/outcome for inspection.
+
+Controls are now player-facing: left-click an ant to select it, left-click empty world space to deselect, and right-click a traversable destination to order only the selected ant. The compact top-right panel reports the selected ant, control state, order state, destination and failure reason, and provides a selected-order cancellation button. Its rectangle and the development panel rectangle block world input. The old development interface is collapsed behind `Show Developer Tools` at the top left; terrain inspection, `F`/`P`, legacy comparison, falling fixture, background isolation, world regeneration and 1/100/300/500 stress controls remain available without covering the ordinary command view. Existing WASD/arrow pan, middle-drag, wheel zoom and Home reset are unchanged.
+
+### 3.1A automated verification
+
+- Unity compiled `AntColony.Commands`, Navigation, Development, Editor tooling, and both test assemblies without errors. The integrated-scene structural validator passed with exactly one shared navigation service and one selection controller.
+- Focused 3.1A Edit Mode: **6/6 passed**. Coverage includes three distinct shared-service ants, selection, deselection, switching while ordered, selection indicator ownership, independent/replaced requests, selected-only cancellation, invalid destination rejection, UI input blocking, and camera pan/zoom selection accuracy.
+- Focused 3.1A Play Mode: **4/4 passed**. Coverage includes automatic three-ant spawn, moving selection indicator, arrival/completion, independent simultaneous orders, selected-only cancellation, and unreachable-order failure returning to Autonomous/Idle with a reason.
+- Complete Edit Mode: **258/258 passed**.
+- Complete Play Mode: **18/18 passed**, including all production grid-navigation and retained continuous 2.4A regressions.
+- `git diff --check` passes after reverting Unity's unrelated automatic `Physics2DSettings.asset` serialization migration. No environment-blocked suite remains in this verification pass.
+
+Known limitations are deliberate for 3.1A: selection is single-ant only; placeholder visuals are runtime-only; temporary move orders are not saved; completed/failed ants have no autonomous colony work to choose and therefore remain safely idle; local avoidance, traffic ownership, persistent identity, attributes, needs, work priorities, jobs, inventories, Draft Mode and combat are not implemented.
+
+### Exact 3.1A manual Unity Play Mode acceptance
+
+No Inspector setup is required.
+
+1. Open `Assets/AntColony/Scenes/AntGameDevelopment.unity`, clear the Console and enter Play Mode. Confirm three grid ants appear automatically, visibly separated and coloured cyan, pink and green. The amber legacy comparison ant may also appear.
+2. Confirm the small `ANT SELECTION & MOVE ORDER` panel is readable at the top right and the large development panel is hidden behind `Show Developer Tools` at the top left.
+3. Left-click each coloured ant in turn. Confirm the panel names `Ant 1`, `Ant 2` or `Ant 3`, exactly one yellow selection ring appears, and the ring follows a moving ant.
+4. Left-click exposed empty world space. Confirm the selection and ring clear without stopping any ant that already has a move order.
+5. Select one ant and right-click a nearby exposed natural-background cell. Confirm only that ant moves smoothly through production grid anchors and the panel reports `Ordered`, its navigation status and destination.
+6. While the first ant is moving, select a second ant and right-click a different valid destination. Then do the same with the third ant. Confirm all three retain independent destinations and can move concurrently through the one shared scheduler.
+7. While multiple ants are moving, select one and right-click another valid cell. Confirm only that ant replaces its previous order; the other two continue toward their existing destinations.
+8. Allow an ordered ant to arrive. Confirm the panel reports completion and `Autonomous / Idle`, the ant stays selected, and no fake follow-up job begins.
+9. Select a moving ant and press `Cancel Selected Move Order`. Confirm only that ant returns to idle and other ants keep moving.
+10. Right-click a covered/invalid cell and then the enclosed unreachable destination near `(12,-16)`. Confirm immediate invalid anchors are rejected without replacing a valid order, while an unreachable valid anchor eventually reports failure and returns the ant to idle without infinite retries.
+11. Click buttons and blank areas inside both UI panels. Confirm no ant is selected/deselected and no movement order is issued through the UI.
+12. Pan with WASD/arrows and middle-drag, zoom with the wheel, and use Home. At several zoom levels, confirm the ant under the pointer is selected and right-click destinations match the intended world cell.
+13. Expand `Show Developer Tools`. Confirm `F`/`P`, terrain inspection, legacy comparison and the falling fixture remain usable. Spawn a 100-ant simultaneous/staggered stress group and clear it; confirm the three coloured selectable ants remain present and individually commandable.
+14. Exit Play Mode and confirm the Console contains no relevant exceptions, assertions, missing references, stale-order delivery or infinite-retry messages.
+
+Manual acceptance remains outstanding until the user confirms these checks.
+
 ## Latest implemented milestone — 2.4D Production Grid Navigation Integration (12 October 2026)
 
 **Status: Implemented — Pending Manual Acceptance.**
@@ -10,7 +52,7 @@ Runtime navigation is separated into `AntColony.Navigation`. `GridNavigationWorl
 
 The public movement-command boundary is intentionally small: `InitializeNavigation(service, spawnCell)`, `MoveTo(destination, priority)`, `CancelMovement(reason)`, `State`, `IsMovementActive`, `HasArrived`, `HasFailed`, `FailureReason` and `StatusMessage`. Destination replacement and cancellation continue to invalidate earlier scheduler request IDs; terrain revisions prevent stale results; failures and arrivals remain stable terminal states; Falling stores and resumes a valid destination with bounded retries. Callers do not need to know about A*, anchors or Rigidbody2D transitions.
 
-`AntGameDevelopment.unity` now authors exactly one shared navigation service and assigns `PrimaryGridAnt.prefab` as its default cyan ant. World clicks default to `Commanding: PRIMARY GRID`. The amber `AutonomousAnt.prefab`, `AntAutonomousMotor`, `DirectGroundRouteValidator`, `AntSurfaceMotor`, `PlayerMovementInput`, prototype scenes and continuous regression tests remain developer-only comparison tooling. They do not attach to or issue competing commands for the primary grid ant. The existing stress controls still instantiate the same production prefab and share the same map and scheduler.
+`AntGameDevelopment.unity` authors exactly one shared navigation service and assigns `PrimaryGridAnt.prefab` as the reusable grid-ant prefab. Milestone 3.1A now places its player-facing selection and right-click command layer above this API. The amber `AutonomousAnt.prefab`, `AntAutonomousMotor`, `DirectGroundRouteValidator`, `AntSurfaceMotor`, `PlayerMovementInput`, prototype scenes and continuous regression tests remain developer-only comparison tooling. They do not attach to or issue competing commands for selectable grid ants.
 
 ### 2.4D automated verification and performance status
 
@@ -18,7 +60,7 @@ The public movement-command boundary is intentionally small: `InitializeNavigati
 - Unity Bee response-file Roslyn compilation passed for the World plus new Navigation sources, Development, EditMode-test, PlayMode-test and Editor assemblies. This verifies C# compilation but is not a Unity test-run result.
 - New focused tests cover primary-prefab composition, absence of legacy/input motors, exactly one shared service, idempotent same-world initialisation, inspector-independent commands, shared service references across ants, stable arrival/failure reporting and stale-command cancellation.
 - `git diff --check` passes, and the scene/prefab retain their existing asset references and GUID-based script linkage.
-- A focused Edit Mode attempt, full Edit Mode attempt and full Play Mode attempt all failed before test discovery because Unity could not initialise or retain its Licensing Client connection and crashed in Mono's editor REST-service thread. No new Unity suite result is claimed.
+- The previous Licensing Client blocker cleared during 3.1A verification. Focused 2.4D Edit Mode passed 3/3 before 3.1A; the final complete suites pass 258/258 Edit Mode and 18/18 Play Mode, including retained grid and continuous movement regressions.
 - The required 1/100/300/500 benchmark rerun is therefore blocked by the same Unity failure. The accepted 2.4C baseline remains 12.993/18.937/72.932/187.776 ms total batch time, 2.044/17.971/69.704/171.911 ms accumulated scheduler work, and 2.044/1.267/1.890/3.197 ms maximum scheduler update respectively, with all requests successful. Production integration moves that same scheduler update from the development host into the one shared world service and adds no new per-ant polling system. These are baseline comparison figures, not fresh 2.4D measurements or a production frame-rate claim.
 
 Known limitations remain unchanged: the scheduler is main-thread only; searches and returned routes allocate managed memory; only the ordinary-ant traversal profile is instantiated; friendly overlap is allowed; and route-result caching, flow fields, hierarchical navigation, local avoidance and traffic ownership are not implemented.
@@ -41,7 +83,7 @@ No extra Inspector setup is required.
 12. Switch to `Commanding: LEGACY 2.4A` and repeat a direct surface, prepared climb and falling comparison. Confirm only the amber ant responds and the primary grid ant is not controlled by the legacy system.
 13. Exit Play Mode and confirm the Console contains no relevant exceptions, assertions, missing scripts, stale-result messages or infinite-retry behaviour.
 
-Manual acceptance remains outstanding until the user confirms these checks. Milestone 2.4D adds no ant identity, skills, needs, colony jobs, excavation, hauling, construction, brood, rooms, Draft Mode, combat, enemies, persistence, streaming or networking.
+This pre-3.1A checklist's old click-command wording is superseded by the player-facing controls above. Manual acceptance remains outstanding unless separately confirmed by the user. Milestone 2.4D adds no ant identity, skills, needs, colony jobs, excavation, hauling, construction, brood, rooms, Draft Mode, combat, enemies, persistence, streaming or networking.
 
 ## Latest implemented milestone — 2.4C Grid Navigation Stabilisation and Multi-Ant Readiness (12 October 2026)
 
@@ -149,15 +191,15 @@ The revised 2.4B proof of concept described above is the only later implementati
 
 Milestone 2.4A now implements the approved natural-background movement realignment. Exposed Natural Earth and Natural Stone provide full horizontal, vertical and diagonal grip at normal speed. Prepared Background provides the same traversal plus a provisional `1.25` movement-speed multiplier. Sky remains explicitly non-grippable. The other newly approved systems—starting queen, player-facing direct ant control, functional backgrounds, rooms, brood, needs and shared stores—remain design targets, **not implemented or verified features**.
 
-**Next step:** complete the exact 2.4D manual checklist and rerun the Unity suites/benchmarks when licensing is stable. Do not begin colony gameplay.
+**Next step:** complete the exact 3.1A three-ant manual checklist above. Automated suites are no longer licensing-blocked. Do not begin attributes, inspection data, colony jobs or Draft Mode without a separately approved milestone.
 
 ## Current milestone
 
-**Milestone 2.4D — Production Grid Navigation Integration**
+**Milestone 3.1A — Ant Selection & Command Integration**
 
-**Status:** **Implemented — Pending Manual Acceptance.** Grid navigation is the default reusable movement architecture; legacy continuous systems remain developer-only regression tools.
+**Status:** **Implemented — Pending Manual Acceptance.** Three ants use the default grid architecture through a reusable single-selection and temporary move-order layer; legacy continuous systems remain developer-only regression tools.
 
-Milestones through accepted 2.4C retain their previously reported status. Milestone 2.4D may integrate existing grid navigation as the primary ant movement architecture, but it must not add colony simulation.
+Milestones through accepted 2.4C retain their previously reported status. Milestone 2.4D remains implemented pending its separately recorded manual acceptance. 3.1A adds no colony simulation.
 
 ## Repository and architecture
 
@@ -530,4 +572,4 @@ No extra Inspector setup is required. Open `Assets/AntColony/Scenes/AntGameDevel
 
 ## Recommended next implementation step
 
-Complete the exact 2.4D manual checklist and rerun the combined Unity suites/benchmarks when licensing is available. Keep the separate Milestone 2.2C Scene-view acceptance status explicit and do not begin Surface Preparation, skills or colony work without separate approval.
+Complete the exact 3.1A manual checklist and wait for user acceptance. Keep the separate 2.4D and 2.2C manual statuses explicit; do not begin attributes, priority matrices, autonomous jobs, Surface Preparation, skills, Draft Mode or other colony work without separate approval.

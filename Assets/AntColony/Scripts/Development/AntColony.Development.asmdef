@@ -4,6 +4,7 @@
     "references": [
         "AntColony.World",
         "AntColony.Navigation",
+        "AntColony.Commands",
         "AntColony.WorldPresentation",
         "Unity.InputSystem"
     ],

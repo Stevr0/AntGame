@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using AntColony.Ants;
+using AntColony.Commands;
 using AntColony.Development;
 using AntColony.Navigation;
 using AntColony.World;
@@ -78,12 +79,16 @@ namespace AntColony.EditorTools
             DevelopmentWorldInspector inspector = FindOne<DevelopmentWorldInspector>(scene);
             DevelopmentCameraController cameraController =
                 FindOne<DevelopmentCameraController>(scene);
+            AntSelectionCommandController selectionController =
+                FindOne<AntSelectionCommandController>(scene);
 
             Require(host != null, "Development world host is missing.");
             Require(visualRenderer != null, "World Tilemap renderer is missing.");
             Require(collisionRenderer != null, "Terrain collision renderer is missing.");
             Require(inspector != null, "Development inspector is missing.");
             Require(cameraController != null, "Development camera controller is missing.");
+            Require(selectionController != null,
+                "Ant selection and command controller is missing.");
             Require(host.AutonomousAntPrefab != null,
                 "Autonomous Ant prefab reference is missing.");
             Require(host.PrimaryGridAntPrefab != null,
@@ -186,12 +191,16 @@ namespace AntColony.EditorTools
 
             GameObject bootstrap = new(
                 "World Bootstrap",
+                typeof(GridNavigationWorldService),
+                typeof(AntSelectionCommandController),
                 typeof(AntGameDevelopmentWorldHost));
             bootstrap.transform.SetParent(sceneRoot.transform, false);
             AntGameDevelopmentWorldHost host =
                 bootstrap.GetComponent<AntGameDevelopmentWorldHost>();
             GridNavigationWorldService navigationWorld =
                 bootstrap.GetComponent<GridNavigationWorldService>();
+            AntSelectionCommandController selectionController =
+                bootstrap.GetComponent<AntSelectionCommandController>();
 
             GameObject gridObject = new(
                 "World Grid",
@@ -233,6 +242,7 @@ namespace AntColony.EditorTools
             worldCamera.orthographicSize = 30f;
             worldCamera.clearFlags = CameraClearFlags.SolidColor;
             worldCamera.backgroundColor = new Color32(36, 52, 66, 255);
+            selectionController.Configure(worldCamera, navigationWorld);
 
             GameObject inspectionObject = new(
                 "Development Inspection UI",
