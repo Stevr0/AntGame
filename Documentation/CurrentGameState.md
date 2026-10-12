@@ -1,8 +1,57 @@
 # Ant Colony Current Game State
 
-## Latest implemented milestone — revised 2.4B Grid Navigation Proof of Concept (12 October 2026)
+## Latest implemented milestone — 2.4C Grid Navigation Stabilisation and Multi-Ant Readiness (12 October 2026)
 
 **Status: Implemented — Pending Manual Acceptance. Production movement is not replaced.**
+
+Milestone 2.4C turns the accepted grid experiment into a bounded shared navigation service without adding colony simulation. `GridNavigationScheduler` accepts many ant-owned requests against the one shared `GridNavigationMap`, defers allocating each A* frontier until that request receives service, and limits both total node expansions and per-request work per update. The development host currently uses a 128-node total budget and an 8-node request slice. Its deterministic `High, High, Normal, High, Normal, Low` service pattern favours urgent navigation while guaranteeing recurring low-priority service. These priorities are navigation-service hints only; they are not colony job priorities.
+
+`GridPathSearch` is now resumable. It retains its deterministic heap, costs and predecessor data between scheduler updates, detects terrain-revision changes, and reports success, unreachable, search-limit or terrain-changed outcomes. The scheduler additionally reports cancellation, reuses an identical outstanding owner request, cancels a replaced destination, and checks request ID, owner, destination and map revision before delivery. Terrain remains shared cached authority; agents are never inserted into terrain navigation.
+
+`GridNavigationMotor` now exposes `Idle`, `WaitingForPath`, `FollowingPath`, `Arrived`, `Blocked`, `Falling` and `Recovering`. Invalidation cancels stale work, stops at the last valid position, smoothly recentres to a valid anchor and submits a bounded retry when appropriate. Falling cancels controlled traversal, enables existing Rigidbody2D gravity, requires stable grounded contact or grip before recovery, recentres smoothly, and resumes the stored valid destination. The default automatic retry limit is two; unreachable or search-limit results become stable `Blocked` outcomes instead of infinite replanning.
+
+The `AntGameDevelopment` host can create development-only groups of 1, 100, 300 or 500 experimental ants, issue simultaneous or staggered requests, cancel one ant independently, mutate terrain, clear the group and inspect live scheduler statistics. All experimental ants share the map and scheduler. Friendly grid ants exclude the Default agent layer from contact response, so temporary overlap cannot create traffic deadlocks; the Terrain layer still supplies physics contact while Falling. Only the first 40 stress ants receive debug visuals. The accepted amber 2.4A ant remains available unchanged for comparison.
+
+### 2.4C automated verification and repeatable measurements
+
+- Unity Bee response-file Roslyn compilation passed for `AntColony.World`, `AntColony.Development`, `AntColony.EditModeTests` and `AntColony.PlayModeTests`.
+- Focused scheduler EditMode: **11/11 passed**, covering budgets, yielding/resumption, fair priority, duplicate suppression, destination replacement, queued/active cancellation, terrain revision safety, search limits, unreachable results and the four benchmark sizes.
+- Focused PlayMode evidence: shared-scheduler three-ant independence/cancellation **1/1 passed**; active-route terrain mutation/replan **1/1 passed**; falling interruption/stored-destination recovery **1/1 passed**. The previously accepted 2.4B focused 3/3 and full 9/9 PlayMode baselines remain unchanged.
+- A combined focused PlayMode run initially passed four tests and timed out only on the long mutation fixture; that test passed after its test-only bound was raised from 20 to 35 seconds. Subsequent combined-suite retries could not start because Unity lost its Licensing Client connection and crashed in the editor REST-service Mono thread. No combined post-fix or full-suite result is claimed.
+- The benchmark warms shared terrain classification separately, submits deterministic requests, advances the scheduler with the production-development limits (128 total nodes and 8 nodes per request/update), retains returned routes for the managed-memory lower bound, and times 100 Physics2D steps with stable grid bodies disabled. `scheduler ms` is accumulated path-service work; `batch ms` also contains request/result test-harness work. Travel figures are path-cost-derived individual traversal times at the ordinary-ant speed, not wall-clock stress-scene completion times.
+
+| Ants | Batch completion | Scheduler work | Maximum update | Average / worst latency | Total nodes / updates | Peak queue | Predicted average / worst travel | Physics2D, 100 steps | Retained bytes | Results |
+| ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |
+| 1 | 12.993 ms | 2.044 ms | 2.044 ms | 1 / 1 updates | 51 / 1 | 1 | 16.057 / 16.057 s | 1.431 ms | 0 | 1 success, 0 failures |
+| 100 | 18.937 ms | 17.971 ms | 1.267 ms | 35.580 / 44 updates | 5,100 / 44 | 100 | 16.057 / 16.057 s | 0.223 ms | 217,088 | 100 successes, 0 failures |
+| 300 | 72.932 ms | 69.704 ms | 1.890 ms | 106.137 / 132 updates | 15,300 / 132 | 300 | 16.057 / 16.057 s | 0.756 ms | 692,224 | 300 successes, 0 failures |
+| 500 | 187.776 ms | 171.911 ms | 3.197 ms | 176.614 / 219 updates | 25,500 / 219 | 500 | 16.057 / 16.057 s | 1.143 ms | 1,118,208 | 500 successes, 0 failures |
+
+All four runs recorded zero cache invalidations because mutation behaviour is measured separately. Cold cache warm-up varied from 7.839–8.455 ms except for one 70.016 ms one-ant startup outlier. These synthetic editor measurements demonstrate bounded work and correctness, not a production frame-rate guarantee. Request/result objects, per-search collections and route results still allocate managed memory; the scheduler is main-thread only; no route-result cache, flow field, hierarchical pathfinding, local avoidance or traffic ownership has been added.
+
+### Exact 2.4C manual Unity Play Mode acceptance
+
+No extra Inspector wiring is required.
+
+1. Open `Assets/AntColony/Scenes/AntGameDevelopment.unity`, clear the Console, enter Play Mode and confirm the amber 2.4A ant and cyan experimental grid ant appear without errors.
+2. Select `Commanding: 2.4A CONTINUOUS`, issue the accepted direct surface, prepared climb and falling/recovery checks, and confirm the regression ant still behaves as in 2.4A.
+3. Select `Commanding: GRID POC`, click valid direct, detour, vertical, prepared and chunk-boundary destinations, and confirm the single grid ant moves smoothly and arrives without teleporting.
+4. Choose group size `100`, press `Spawn Selected Grid Group`, then `Start Simultaneous Requests`. Confirm pending work decreases across many updates rather than all searches executing in one frame; inspect `Nodes last update` and confirm it never exceeds 128.
+5. Confirm the group continues moving independently and reaches its deterministic destinations. Temporary friendly overlap is expected and must not deadlock routes.
+6. While requests are pending, click a different valid destination for the primary grid ant or start a different deterministic batch. Confirm the old request is cancelled/replaced and no stale route later takes control.
+7. Press `Cancel First Grid Request`. Confirm only the first experimental ant stops or changes state while other ants continue and complete.
+8. Issue the enclosed `(12,-16)` target to the primary grid ant. Confirm it reaches stable `Blocked` and does not oscillate or retry forever.
+9. Start a moving group, point at a route cell and press `F` to add/remove blocking Solid terrain. Confirm invalidation count increases, stale requests are cancelled, affected ants replan or fail clearly, and unaffected navigation remains stable. `P` may be used to toggle prepared Background and verify local speed-cost invalidation.
+10. Press `Start Grid Falling / Recovery Fixture`. Confirm controlled traversal suspends, Rigidbody2D gravity drops the ant, stable contact is acquired, the ant recentres smoothly and a stored valid destination resumes without teleporting or oscillation.
+11. Repeat steps 4–5 with `300` and `500`, then use `Start Staggered Requests`. Confirm both request modes finish without crashes; wait for pending/processing/delivery counts to reach zero before changing group size.
+12. Confirm the panel reports selected/live agents, pending, processing, delivery, last/total nodes, peak queue, last/maximum scheduler milliseconds, invalidations, submitted, completed and cancelled counts with plausible changes during each action.
+13. Press `Clear Extra Grid Ants`, exit Play Mode and confirm the Console contains no relevant exception, assertion, missing-reference or infinite-retry messages.
+
+Manual acceptance remains outstanding until the user confirms these checks. This milestone does not implement colony jobs, excavation, resources, construction, identity/skills, needs, brood, rooms, Draft Mode, combat, enemy AI, persistence, streaming or networking.
+
+## Latest implemented milestone — revised 2.4B Grid Navigation Proof of Concept (12 October 2026)
+
+**Status: Complete — manual Unity Play Mode acceptance confirmed by the user. Production movement is not replaced.**
 
 The approved proof of concept adds a separate grid-authoritative traversal path for one ordinary-ant profile. `GridNavigationMap` lazily classifies grounded and Background-grip anchors from `ChunkedWorldData`, caches eight-direction terrain connections, checks the complete ordinary-ant capsule along every edge, and rejects diagonal corner cutting. `GridPathfinder` performs deterministic A* with travel-time costs derived from the Background material speed multipliers. A binary-heap open set keeps searches bounded without scanning the entire open list.
 
@@ -38,7 +87,7 @@ The result supports grid-authoritative execution as the simpler per-frame founda
 7. Switch the panel to `Commanding: 2.4A CONTINUOUS`. Repeat a direct ground move, prepared climb, terrain block and falling/recovery check. Confirm the amber ant retains the accepted 2.4A behaviour and neither ant pushes the other.
 8. Exit Play Mode and confirm the Console contains no exceptions, assertion failures or missing-reference messages.
 
-Manual acceptance is the only remaining 2.4B gate. This experiment does not authorize replacing the production motor or adding jobs, inventories, construction, survival, combat, reproduction, networking, local avoidance or enemy movement.
+The user subsequently confirmed the manual comparison and stress-fixture behaviour, completing 2.4B. This acceptance does not authorize replacing the production motor or adding jobs, inventories, construction, survival, combat, reproduction, networking, local avoidance or enemy movement.
 
 ## Accepted baseline — 2.4A Natural Background Movement Realignment (12 October 2026)
 
@@ -57,15 +106,15 @@ The revised 2.4B proof of concept described above is the only later implementati
 
 Milestone 2.4A now implements the approved natural-background movement realignment. Exposed Natural Earth and Natural Stone provide full horizontal, vertical and diagonal grip at normal speed. Prepared Background provides the same traversal plus a provisional `1.25` movement-speed multiplier. Sky remains explicitly non-grippable. The other newly approved systems—starting queen, player-facing direct ant control, functional backgrounds, rooms, brood, needs and shared stores—remain design targets, **not implemented or verified features**.
 
-**Next step:** complete the revised Milestone 2.4B manual comparison above. Do not replace production movement or begin later gameplay work without separate approval.
+**Next step:** complete the 2.4C manual checklist above and record acceptance. Do not begin colony gameplay.
 
 ## Current milestone
 
-**Milestone 2.4A — Natural Background Movement Realignment**
+**Milestone 2.4C — Grid Navigation Stabilisation and Multi-Ant Readiness**
 
-**Status:** **Complete.** The user confirmed the 2.4A manual Unity Play Mode acceptance after its automated suite passed.
+**Status:** **Implemented — Pending Manual Acceptance.** Focused new automation passed as recorded above; a fresh combined regression run is blocked by the current Unity Licensing Client failure.
 
-Milestones 2.1B through 2.3B retain their previously reported acceptance status. Milestone 2.4A changes only the existing material-driven capability, route-validation, motor-speed and development-fixture seams; it does not add pathfinding, jobs, excavation gameplay, Draft Mode or colony simulation.
+Milestones through accepted 2.4B retain their previously reported status. Milestone 2.4C changes only grid search scheduling, experimental grid-motor lifecycle, development stress controls and focused tests; it does not replace production movement or add colony simulation.
 
 ## Repository and architecture
 
@@ -438,4 +487,4 @@ No extra Inspector setup is required. Open `Assets/AntColony/Scenes/AntGameDevel
 
 ## Recommended next implementation step
 
-Complete the Milestone 2.4A `AntGameDevelopment.unity` manual checklist and record the user's acceptance. Keep the separate Milestone 2.2C Scene-view acceptance status explicit; do not begin 2.4B, general pathfinding, Surface Preparation, skills or colony work without separate approval.
+Complete the exact 2.4C manual checklist and rerun the combined Unity suites when licensing is available. Keep the separate Milestone 2.2C Scene-view acceptance status explicit and do not begin Surface Preparation, skills or colony work without separate approval.

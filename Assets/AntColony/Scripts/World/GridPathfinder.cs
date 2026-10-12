@@ -10,7 +10,8 @@ namespace AntColony.World
         StartInvalid,
         DestinationInvalid,
         Unreachable,
-        SearchLimitReached
+        SearchLimitReached,
+        TerrainChanged
     }
 
     public sealed class GridPathResult
@@ -34,41 +35,73 @@ namespace AntColony.World
         public bool Succeeded => Status == GridPathStatus.Success;
     }
 
-    /// <summary>Deterministic A* over the shared terrain-only navigation map.</summary>
-    public sealed class GridPathfinder
+    /// <summary>
+    /// One resumable deterministic A* search. Keeping the frontier here lets the
+    /// scheduler bound node expansions without restarting work every update.
+    /// </summary>
+    public sealed class GridPathSearch
     {
         private readonly GridNavigationMap map;
+        private readonly Vector2Int start;
+        private readonly Vector2Int destination;
+        private readonly int mapRevision;
+        private readonly int maximumExaminedNodes;
+        private readonly List<OpenNode> open = new();
+        private readonly Dictionary<Vector2Int, float> costs = new();
+        private readonly Dictionary<Vector2Int, Vector2Int> previous = new();
+        private readonly HashSet<Vector2Int> closed = new();
         private readonly List<GridNavigationConnection> neighbours = new(8);
 
-        public GridPathfinder(GridNavigationMap map)
-        {
-            this.map = map ?? throw new ArgumentNullException(nameof(map));
-        }
-
-        public GridPathResult FindPath(
+        internal GridPathSearch(
+            GridNavigationMap map,
             Vector2Int start,
             Vector2Int destination,
-            int maximumExaminedNodes = 8192)
+            int maximumExaminedNodes)
         {
+            this.map = map;
+            this.start = start;
+            this.destination = destination;
+            this.maximumExaminedNodes = Mathf.Max(1, maximumExaminedNodes);
+            mapRevision = map.Revision;
+
             if (!map.TryGetAnchor(start, out _))
             {
-                return Failure(GridPathStatus.StartInvalid, 0);
+                Complete(GridPathStatus.StartInvalid);
+                return;
             }
 
             if (!map.TryGetAnchor(destination, out _))
             {
-                return Failure(GridPathStatus.DestinationInvalid, 0);
+                Complete(GridPathStatus.DestinationInvalid);
+                return;
             }
 
-            var open = new List<OpenNode>();
-            var costs = new Dictionary<Vector2Int, float>();
-            var previous = new Dictionary<Vector2Int, Vector2Int>();
-            var closed = new HashSet<Vector2Int>();
             costs[start] = 0f;
-            Push(open, new OpenNode(start, Heuristic(start, destination), 0f));
-            int examined = 0;
+            Push(open, new OpenNode(start, Heuristic(start), 0f));
+        }
 
-            while (open.Count > 0)
+        public bool IsComplete => Result != null;
+        public GridPathResult Result { get; private set; }
+        public int ExaminedNodeCount { get; private set; }
+        public int MapRevision => mapRevision;
+
+        /// <summary>Expands no more than the requested number of A* nodes.</summary>
+        public int Advance(int maximumNodeExpansions)
+        {
+            if (IsComplete || maximumNodeExpansions <= 0)
+            {
+                return 0;
+            }
+
+            if (map.Revision != mapRevision)
+            {
+                Complete(GridPathStatus.TerrainChanged);
+                return 0;
+            }
+
+            int expandedThisCall = 0;
+            while (!IsComplete && open.Count > 0 &&
+                expandedThisCall < maximumNodeExpansions)
             {
                 OpenNode current = Pop(open);
                 if (!closed.Add(current.Cell))
@@ -76,15 +109,18 @@ namespace AntColony.World
                     continue;
                 }
 
-                examined++;
+                ExaminedNodeCount++;
+                expandedThisCall++;
                 if (current.Cell == destination)
                 {
-                    return BuildResult(start, destination, previous, costs[destination], examined);
+                    BuildSuccessResult();
+                    break;
                 }
 
-                if (examined >= maximumExaminedNodes)
+                if (ExaminedNodeCount >= maximumExaminedNodes)
                 {
-                    return Failure(GridPathStatus.SearchLimitReached, examined);
+                    Complete(GridPathStatus.SearchLimitReached);
+                    break;
                 }
 
                 map.GetConnections(current.Cell, neighbours);
@@ -97,7 +133,8 @@ namespace AntColony.World
                     }
 
                     float candidate = costs[current.Cell] + edge.TravelTime;
-                    if (costs.TryGetValue(next, out float existing) && candidate >= existing)
+                    if (costs.TryGetValue(next, out float existing) &&
+                        candidate >= existing)
                     {
                         continue;
                     }
@@ -106,20 +143,20 @@ namespace AntColony.World
                     previous[next] = current.Cell;
                     Push(open, new OpenNode(
                         next,
-                        candidate + Heuristic(next, destination),
+                        candidate + Heuristic(next),
                         candidate));
                 }
             }
 
-            return Failure(GridPathStatus.Unreachable, examined);
+            if (!IsComplete && open.Count == 0)
+            {
+                Complete(GridPathStatus.Unreachable);
+            }
+
+            return expandedThisCall;
         }
 
-        private GridPathResult BuildResult(
-            Vector2Int start,
-            Vector2Int destination,
-            Dictionary<Vector2Int, Vector2Int> previous,
-            float cost,
-            int examined)
+        private void BuildSuccessResult()
         {
             var cells = new List<Vector2Int> { destination };
             while (cells[cells.Count - 1] != start)
@@ -131,14 +168,32 @@ namespace AntColony.World
             var anchors = new List<GridNavigationAnchor>(cells.Count);
             foreach (Vector2Int cell in cells)
             {
-                map.TryGetAnchor(cell, out GridNavigationAnchor anchor);
+                if (!map.TryGetAnchor(cell, out GridNavigationAnchor anchor))
+                {
+                    Complete(GridPathStatus.TerrainChanged);
+                    return;
+                }
+
                 anchors.Add(anchor);
             }
 
-            return new GridPathResult(GridPathStatus.Success, anchors, cost, examined);
+            Result = new GridPathResult(
+                GridPathStatus.Success,
+                anchors,
+                costs[destination],
+                ExaminedNodeCount);
         }
 
-        private float Heuristic(Vector2Int cell, Vector2Int destination)
+        private void Complete(GridPathStatus status)
+        {
+            Result = new GridPathResult(
+                status,
+                null,
+                0f,
+                ExaminedNodeCount);
+        }
+
+        private float Heuristic(Vector2Int cell)
         {
             return Vector2.Distance(cell, destination) /
                 Mathf.Max(0.01f, map.MaximumSpeedMultiplier);
@@ -209,17 +264,14 @@ namespace AntColony.World
             }
 
             int cost = first.Cost.CompareTo(second.Cost);
-            return cost != 0 ? cost : Compare(first.Cell, second.Cell);
-        }
+            if (cost != 0)
+            {
+                return cost;
+            }
 
-        private static int Compare(Vector2Int first, Vector2Int second)
-        {
-            int y = first.y.CompareTo(second.y);
-            return y != 0 ? y : first.x.CompareTo(second.x);
+            int y = first.Cell.y.CompareTo(second.Cell.y);
+            return y != 0 ? y : first.Cell.x.CompareTo(second.Cell.x);
         }
-
-        private static GridPathResult Failure(GridPathStatus status, int examined) =>
-            new(status, null, 0f, examined);
 
         private readonly struct OpenNode
         {
@@ -233,6 +285,50 @@ namespace AntColony.World
             public Vector2Int Cell { get; }
             public float EstimatedTotal { get; }
             public float Cost { get; }
+        }
+    }
+
+    /// <summary>Creates synchronous or resumable searches over one shared map.</summary>
+    public sealed class GridPathfinder
+    {
+        private readonly GridNavigationMap map;
+
+        public GridPathfinder(GridNavigationMap map)
+        {
+            this.map = map ?? throw new ArgumentNullException(nameof(map));
+        }
+
+        public GridPathSearch BeginSearch(
+            Vector2Int start,
+            Vector2Int destination,
+            int maximumExaminedNodes = 8192)
+        {
+            return new GridPathSearch(
+                map,
+                start,
+                destination,
+                maximumExaminedNodes);
+        }
+
+        /// <summary>
+        /// Compatibility helper for deterministic tests and editor tools. Runtime
+        /// ants use the bounded scheduler instead.
+        /// </summary>
+        public GridPathResult FindPath(
+            Vector2Int start,
+            Vector2Int destination,
+            int maximumExaminedNodes = 8192)
+        {
+            GridPathSearch search = BeginSearch(
+                start,
+                destination,
+                maximumExaminedNodes);
+            while (!search.IsComplete)
+            {
+                search.Advance(maximumExaminedNodes);
+            }
+
+            return search.Result;
         }
     }
 }

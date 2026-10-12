@@ -21,6 +21,10 @@ namespace AntColony.Tests.PlayMode
             Assert.That(host.TryAssignGridDestination(
                 SampleWorldGenerator.GridDirectDestination,
                 out string message), Is.True, message);
+            yield return WaitForState(
+                ant,
+                GridNavigationMotorState.FollowingPath,
+                5f);
             Vector2 destination = ant.Route[ant.Route.Count - 1].Position;
             yield return new WaitForFixedUpdate();
 
@@ -42,6 +46,10 @@ namespace AntColony.Tests.PlayMode
             Assert.That(host.TryAssignGridDestination(
                 host.GripFixtureTop,
                 out string message), Is.True, message);
+            yield return WaitForState(
+                ant,
+                GridNavigationMotorState.FollowingPath,
+                5f);
             Assert.That(ant.Route.Count, Is.GreaterThan(2));
             yield return WaitForState(ant, GridNavigationMotorState.Arrived, 20f);
 
@@ -74,6 +82,110 @@ namespace AntColony.Tests.PlayMode
             Assert.That(body.gravityScale, Is.Zero);
         }
 
+        [UnityTest]
+        public IEnumerator MultipleAntsShareSchedulerAndKeepIndependentRequests()
+        {
+            yield return LoadScene();
+            AntGameDevelopmentWorldHost host = FindHost();
+            host.SetGridStressGroupSize(3);
+            Assert.That(host.SpawnGridStressGroup(out string message),
+                Is.True, message);
+
+            host.StartSimultaneousGridRequests();
+            Assert.That(host.GridNavigationAnts.Count, Is.EqualTo(3));
+            Assert.That(host.CancelFirstGridRequest(), Is.True);
+            yield return new WaitForFixedUpdate();
+            yield return WaitForTerminalStates(host, 40f);
+
+            Assert.That(host.GridNavigationAnts[0].State,
+                Is.EqualTo(GridNavigationMotorState.Idle));
+            Assert.That(host.GridNavigationAnts[1].State,
+                Is.EqualTo(GridNavigationMotorState.Arrived));
+            Assert.That(host.GridNavigationAnts[2].State,
+                Is.EqualTo(GridNavigationMotorState.Arrived));
+            Assert.That(host.GridNavigationScheduler.Diagnostics.TotalSubmitted,
+                Is.GreaterThanOrEqualTo(3));
+        }
+
+        [UnityTest]
+        public IEnumerator TerrainMutationReplansActiveGridRoute()
+        {
+            yield return LoadScene();
+            AntGameDevelopmentWorldHost host = FindHost();
+            GridNavigationMotor ant = host.GridNavigationAnt;
+            Assert.That(host.TryAssignGridDestination(
+                SampleWorldGenerator.GridDetourDestination,
+                out string message), Is.True, message);
+            yield return WaitForState(
+                ant,
+                GridNavigationMotorState.FollowingPath,
+                5f);
+
+            Vector2Int mutation = new(4, SampleWorldGenerator.MainPassageY);
+            Assert.That(host.ToggleForegroundSolid(mutation), Is.True);
+            yield return WaitForState(
+                ant,
+                GridNavigationMotorState.Arrived,
+                35f);
+
+            Assert.That(host.GridNavigationScheduler.Diagnostics.CacheInvalidations,
+                Is.GreaterThanOrEqualTo(1));
+            Assert.That(ant.RetryCount,
+                Is.LessThanOrEqualTo(ant.MaximumAutomaticRetries));
+        }
+
+        [UnityTest]
+        public IEnumerator UnreachableDestinationReachesStableBlockedState()
+        {
+            yield return LoadScene();
+            AntGameDevelopmentWorldHost host = FindHost();
+            GridNavigationMotor ant = host.GridNavigationAnt;
+
+            Assert.That(host.TryAssignGridDestination(
+                SampleWorldGenerator.GridUnreachableDestination,
+                out string message), Is.True, message);
+            yield return WaitForState(
+                ant,
+                GridNavigationMotorState.Blocked,
+                10f);
+
+            Assert.That(ant.HasPendingRequest, Is.False);
+            Assert.That(ant.RetryCount,
+                Is.LessThanOrEqualTo(ant.MaximumAutomaticRetries));
+        }
+
+        [UnityTest]
+        public IEnumerator FallingInterruptsThenResumesStoredDestination()
+        {
+            yield return LoadScene();
+            AntGameDevelopmentWorldHost host = FindHost();
+            GridNavigationMotor ant = host.GridNavigationAnt;
+            Rigidbody2D body = ant.GetComponent<Rigidbody2D>();
+            body.position = WorldTileCoordinates.CellToWorldPosition(
+                SampleWorldGenerator.GridFallFixture + Vector2Int.left);
+            ant.transform.position = body.position;
+
+            Assert.That(ant.RequestDestination(
+                SampleWorldGenerator.GridDirectDestination), Is.True);
+            yield return WaitForState(
+                ant,
+                GridNavigationMotorState.FollowingPath,
+                5f);
+            body.position = WorldTileCoordinates.CellToWorldPosition(
+                SampleWorldGenerator.GridFallFixture);
+            ant.transform.position = body.position;
+            ant.BeginFalling("Test interruption.");
+            yield return WaitForState(
+                ant,
+                GridNavigationMotorState.Arrived,
+                20f);
+
+            Assert.That(body.simulated, Is.False);
+            Assert.That(ant.HasPendingRequest, Is.False);
+            Assert.That(ant.RetryCount,
+                Is.LessThanOrEqualTo(ant.MaximumAutomaticRetries));
+        }
+
         private static IEnumerator LoadScene()
         {
             SceneManager.LoadScene("AntGameDevelopment", LoadSceneMode.Single);
@@ -102,6 +214,37 @@ namespace AntColony.Tests.PlayMode
             }
 
             Assert.That(ant.State, Is.EqualTo(expected), ant.StatusMessage);
+        }
+
+        private static IEnumerator WaitForTerminalStates(
+            AntGameDevelopmentWorldHost host,
+            float timeout)
+        {
+            float end = Time.realtimeSinceStartup + timeout;
+            while (Time.realtimeSinceStartup < end)
+            {
+                bool complete = true;
+                foreach (GridNavigationMotor ant in host.GridNavigationAnts)
+                {
+                    if (ant.State == GridNavigationMotorState.WaitingForPath ||
+                        ant.State == GridNavigationMotorState.FollowingPath ||
+                        ant.State == GridNavigationMotorState.Recovering ||
+                        ant.State == GridNavigationMotorState.Falling)
+                    {
+                        complete = false;
+                        break;
+                    }
+                }
+
+                if (complete)
+                {
+                    yield break;
+                }
+
+                yield return new WaitForFixedUpdate();
+            }
+
+            Assert.Fail("Grid stress ants did not reach terminal states in time.");
         }
     }
 }

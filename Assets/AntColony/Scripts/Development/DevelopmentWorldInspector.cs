@@ -117,6 +117,43 @@ namespace AntColony.Development
                 worldHost.StartGridFallingFixture();
                 statusMessage = "Grid ant released to Rigidbody2D gravity.";
             }
+            GUILayout.Space(6f);
+            GUILayout.Label("GRID SCHEDULER STRESS GROUP");
+            GUILayout.BeginHorizontal();
+            foreach (int count in new[] { 1, 100, 300, 500 })
+            {
+                if (GUILayout.Button(count.ToString()))
+                {
+                    worldHost.SetGridStressGroupSize(count);
+                    statusMessage = $"Stress group size set to {count}.";
+                }
+            }
+            GUILayout.EndHorizontal();
+            if (GUILayout.Button("Spawn Selected Grid Group"))
+            {
+                worldHost.SpawnGridStressGroup(out statusMessage);
+            }
+            if (GUILayout.Button("Clear Extra Grid Ants"))
+            {
+                worldHost.ClearGridStressGroup();
+                statusMessage = "Extra grid stress ants cleared.";
+            }
+            if (GUILayout.Button("Start Simultaneous Requests"))
+            {
+                worldHost.StartSimultaneousGridRequests();
+                statusMessage = "All grid route requests queued together.";
+            }
+            if (GUILayout.Button("Start Staggered Requests"))
+            {
+                worldHost.StartStaggeredGridRequests();
+                statusMessage = "Grid route requests are being staggered.";
+            }
+            if (GUILayout.Button("Cancel First Grid Request"))
+            {
+                statusMessage = worldHost.CancelFirstGridRequest()
+                    ? "First grid-ant request cancelled."
+                    : "No grid-ant request was available to cancel.";
+            }
             if (GUILayout.Button(backgroundOnlyVisuals
                     ? "Restore Foreground Visuals"
                     : "Isolate Background Visuals"))
@@ -305,6 +342,40 @@ namespace AntColony.Development
                     .Append(worldHost.GridNavigationMap.CachedConnectionCount)
                     .Append(" edges, revision ")
                     .Append(worldHost.GridNavigationMap.Revision)
+                    .AppendLine();
+            }
+
+            if (worldHost.GridNavigationScheduler != null)
+            {
+                GridNavigationSchedulerDiagnostics diagnostics =
+                    worldHost.GridNavigationScheduler.Diagnostics;
+                builder.Append("Grid agents: ")
+                    .Append(worldHost.GridNavigationAnts.Count)
+                    .Append(" / selected ")
+                    .Append(worldHost.GridStressGroupSize)
+                    .AppendLine();
+                builder.Append("Scheduler pending/processing/delivery: ")
+                    .Append(diagnostics.Pending).Append(" / ")
+                    .Append(diagnostics.Processing).Append(" / ")
+                    .Append(diagnostics.CompletedWaitingDelivery)
+                    .AppendLine();
+                builder.Append("Nodes last/total: ")
+                    .Append(diagnostics.NodesExpandedLastUpdate).Append(" / ")
+                    .Append(diagnostics.TotalNodesExpanded)
+                    .Append("   peak queue ")
+                    .Append(diagnostics.PeakQueueLength)
+                    .AppendLine();
+                builder.Append("Scheduler ms last/max: ")
+                    .Append(diagnostics.LastUpdateMilliseconds.ToString("0.###"))
+                    .Append(" / ")
+                    .Append(diagnostics.MaximumUpdateMilliseconds.ToString("0.###"))
+                    .Append("   invalidations ")
+                    .Append(diagnostics.CacheInvalidations)
+                    .AppendLine();
+                builder.Append("Requests submitted/completed/cancelled: ")
+                    .Append(diagnostics.TotalSubmitted).Append(" / ")
+                    .Append(diagnostics.TotalCompleted).Append(" / ")
+                    .Append(diagnostics.TotalCancelled)
                     .AppendLine();
             }
 
