@@ -1,6 +1,6 @@
 # ANT COLONY
 
-**Game Design Document | Version 3.4 — resource logistics, 12 October 2026**
+**Game Design Document | Version 3.5 — job priorities, 12 October 2026**
 
 Working title • Unity 6 • Single-player • 2D side-view • PC-first prototype
 
@@ -96,6 +96,44 @@ Before another gameplay milestone, perform a **read-only architecture/code-to-de
 - The founding queen must be able to excavate, collect, transport and convert at least three Nursery Background tiles from initially reachable resources without relying on existing workers or prior stockpiles. The queen may build directly from carried materials or recoverable nearby drops. Initial nursery is functional before enclosure and doors.
 - **Unresolved (do not hardcode as approved):** construction recipes and costs, exact materials available at start, stack-size limits, carrying-slot progression and any equipment modifiers, conversion durations, reservation expiry, placement when drop location is invalid, point of material consumption, whether partial construction persists, stockpile filters UI, logistics fallback when missing materials, and performance update cadence.
 - Testing when implementation is separately authorised should cover resource conservation (excavate/pick up/drop/store/withdraw/consume), stacking, one-slot capacity, builder self-supply over multiple trips, reservation contention, cancellation at multiple stages, builder death, tile removal, persistent save/load and nursery bootstrap without stockpiles.
+
+## Approved job and priority system — 12 October 2026
+
+> **Status: approved design; not implemented or verified.** This section extends the authoritative design realignment and construction/resource logistics above. Contradictory older AI-only or fixed-role descriptions are superseded.
+
+### Work settings, roles and decisions
+
+- Every adult ant has an individual **work priority matrix**, with each ordinary work type assigned priority **1 (highest), 2, 3, 4 (lowest), or Disabled**. Disabled means do not autonomously select that work type; it does not erase skills or forbid direct/manual commands. Exact list of categories and restrictions is **TBD**.
+- Colony-wide designations and task demand coexist with ant-specific priority matrices. Roles are preferences/default configurations, **not rigid classes or prohibitions**. All ants can develop skills through doing. Skills improve effectiveness but **do not automatically overrule explicit player-set priorities**.
+- An idle available ant first filters feasible, accessible, unreserved, enabled work. It chooses the **highest-priority work category with available valid jobs**, then the **closest reachable available job** within that category, using actual viable path cost rather than straight-line distance. Deterministic tie-breaking, job ageing/fairness, unreachable retry throttling and route cache invalidation remain **TBD**.
+- The player can both **directly control an adult ant** and issue a **specific automated job order** to that ant without steering it. In direct control, the ant stops selecting autonomous jobs; the rest of the colony keeps operating. Direct/manual tasks use the same physical actions and resource rules as AI, with the separately agreed modest manual productivity bonus (**numeric value and applicability TBD**).
+- Work matrices and player orders are durable individual/colony state for eventual saving. Specific order precedence, cancellation, persistence across takeover, and whether Disabled work can be explicitly ordered are **TBD** and must not be invented during coding.
+
+### Personal needs and emergencies
+
+- **Critical survival overrides ordinary work** (and may interrupt player-issued autonomous jobs). Ordinary hunger/thirst/fatigue needs wait for a **safe work interruption**, preventing constant task switching. Exact danger priorities, thresholds, starvation damage, dehydration/skill blockade, emergency cancellation and direct-player-control safety semantics are **TBD**.
+- If a need cannot be satisfied because supplies or a destination are missing, ants must indicate the reason rather than spin in an impossible request loop. Existing approved shared food/water storage, individual gauges, sleeping spot, gradual Rested buff decay and survival effects remain authoritative.
+
+### Job execution, ownership and recovery
+
+- Job claims/reservations prevent two workers from consuming the same materials, taking the same exclusive destination, or working on an exclusive tile simultaneously. Job completion, failure, loss of access, death, changed tile state, assignment changes and manual takeover must release or transfer reservations without duplication.
+- **Valid partial job progress persists across safe interruption or handoff** so a later eligible ant can continue rather than restart; the definition of valid/invalid progress and expiry remains **TBD**.
+- Preserve the approved **builder self-supply** rule: the constructing ant personally gathers and delivers its required physical materials before performing Construction, including multiple trips. Autonomous material haulers may replenish stockpiles, but do not fulfil a builder's job-specific delivery obligation.
+- For initial implementation, prefer event-driven/controlled-rate decisions over every-ant/every-frame global job scans. Proposed components or job-state names are architectural candidates, **not approved class names**.
+
+### Open dependencies — do not silently choose defaults
+
+1. Final job categories, per-ant defaults, global work demand/order priority and Disabled/manual-order interaction.
+2. Forced automated-order preemption, queueing, cancellation and return to prior work when manually controlled.
+3. Need thresholds, critical emergency precedence (combat/danger versus hunger/thirst/rest), safe interruption definition and noninterruptible stages.
+4. Path-cost comparison across chunks, tie-breakers, reservation timeouts, inaccessible job reporting and contention/fairness.
+5. What progress persists for digging, construction, crafting, brood care and hauling; how resources are handled during handoff.
+6. Rest/work-speed and skill-XP multipliers, stacking with manual bonus, and impact of zero water on XP.
+7. Save/load of work matrices, jobs, current actions and reservation recovery.
+
+### Acceptance expectations for a future authorised implementation
+
+Demonstrate two or more autonomous ants with different priority matrices choose priority-before-distance; an inaccessible nearest target is skipped; explicit automated order versus direct control; critical needs override ordinary work only when warranted; interrupted excavation/construction progress persists; exclusive job reservations avoid double consumption; a builder personally gathers all materials; other ants continue working during direct control. This documentation change itself does **not** claim those tests passed.
 
 ## 1. Game at a glance
 
