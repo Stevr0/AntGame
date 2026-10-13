@@ -1,8 +1,8 @@
 # Ant Colony Current Game State
 
-## Current milestone — 3.3B Real Excavation Designations & Physical Material Output (13 October 2026)
+## Latest accepted milestone — 3.3B Real Excavation Designations & Physical Material Output (13 October 2026)
 
-**Status: Implemented — Pending Manual Acceptance.** Milestone 3.3A is complete: the user confirmed its 22-step Play Mode checklist before authorising this milestone.
+**Status: COMPLETE — the user confirmed all 26 manual Unity Play Mode checks on 13 October 2026.** Previously reported focused Edit Mode 14/14, focused Play Mode 3/3, full graphics-enabled Edit Mode 406/406 and full Play Mode 40/40 passed. These suites were not rerun during this documentation-only update. Milestone 3.3A was also accepted.
 
 The player-facing **Excavate** mode blocks ordinary selection and movement input while active. Left-click or a bounded drag marks only resource-bearing, excavatable foreground Solid cells by authoritative world coordinate. Each accepted designation creates one Excavation job in the existing `ColonyJobRegistry`; duplicate active cells are rejected, cancellation makes the job terminal, and inaccessible work remains pending for controlled retry rather than disappearing. Yellow `X` feedback denotes pending work and orange `A` feedback denotes active work.
 
