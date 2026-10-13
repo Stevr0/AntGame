@@ -1,8 +1,8 @@
 # Ant Colony Current Game State
 
-## Latest implemented milestone — 3.2B Physical Food, Water & Rest Interactions (13 October 2026)
+## Latest accepted milestone — 3.2B Physical Food, Water & Rest Interactions (13 October 2026)
 
-**Status: Implemented — Pending Manual Acceptance.** The Unity project now connects the accepted functional Background, physical-resource, needs, selection and production grid-navigation foundations. Manual Play Mode acceptance has not been claimed.
+**Status: COMPLETE — all 20 manual Unity Play Mode checks confirmed by the user on 13 October 2026.** Previously reported focused Edit Mode 25/25, focused Play Mode 5/5, complete graphics-enabled Edit Mode 340/340 and complete Play Mode 26/26 passed. This documentation-only acceptance update does not rerun tests. The Unity project connects functional Background, physical-resource, needs, selection and production grid-navigation foundations.
 
 Food Storage, Water Storage and Sleeping are authored `BackgroundTileMaterialDefinition` functions with exactly one slot each. They replace the function/material of an existing Background cell, remain fully grippable and traversable at normal `1.0x` speed, and are inaccessible while covered by a foreground Solid. Their amber, blue and purple Tilemap visuals are projections of authoritative world data; they do not create room zones or per-tile GameObjects.
 
