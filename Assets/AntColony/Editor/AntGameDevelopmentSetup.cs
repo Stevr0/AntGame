@@ -30,6 +30,12 @@ namespace AntColony.EditorTools
             "Assets/AntColony/Art/WorldTiles/Background_UnpreparedStone.asset";
         private const string PreparedTilePath =
             "Assets/AntColony/Art/WorldTiles/Background_PreparedGrippable.asset";
+        private const string FoodStorageTilePath =
+            "Assets/AntColony/Art/WorldTiles/Background_FoodStorage.asset";
+        private const string WaterStorageTilePath =
+            "Assets/AntColony/Art/WorldTiles/Background_WaterStorage.asset";
+        private const string SleepingTilePath =
+            "Assets/AntColony/Art/WorldTiles/Background_Sleeping.asset";
         private const string SoilTilePath =
             "Assets/AntColony/Art/WorldTiles/Solid_Soil.asset";
         private const string StoneTilePath =
@@ -157,6 +163,12 @@ namespace AntColony.EditorTools
                 whitePixelSprite,
                 new Color32(100, 139, 98, 255),
                 Tile.ColliderType.None);
+            GetOrCreateTile(FoodStorageTilePath, whitePixelSprite,
+                new Color32(195, 137, 44, 255), Tile.ColliderType.None);
+            GetOrCreateTile(WaterStorageTilePath, whitePixelSprite,
+                new Color32(40, 170, 231, 255), Tile.ColliderType.None);
+            GetOrCreateTile(SleepingTilePath, whitePixelSprite,
+                new Color32(167, 101, 211, 255), Tile.ColliderType.None);
             GetOrCreateTile(
                 SoilTilePath,
                 whitePixelSprite,
@@ -182,6 +194,12 @@ namespace AntColony.EditorTools
                 LoadBackground("Background_UnpreparedStone");
             BackgroundTileMaterialDefinition prepared =
                 LoadBackground("Background_PreparedGrippable");
+            BackgroundTileMaterialDefinition foodStorage =
+                LoadBackground("Background_FoodStorage");
+            BackgroundTileMaterialDefinition waterStorage =
+                LoadBackground("Background_WaterStorage");
+            BackgroundTileMaterialDefinition sleeping =
+                LoadBackground("Background_Sleeping");
             SolidTileMaterialDefinition soil = LoadSolid("Solid_Soil");
 
             Scene scene = EditorSceneManager.NewScene(
@@ -278,7 +296,10 @@ namespace AntColony.EditorTools
                 primaryGridAntPrefab,
                 autonomousAntPrefab,
                 markerObject.transform,
-                markerRenderer);
+                markerRenderer,
+                foodStorage,
+                waterStorage,
+                sleeping);
 
             EditorSceneManager.MarkSceneDirty(scene);
             Require(EditorSceneManager.SaveScene(scene, ScenePath),
@@ -524,6 +545,9 @@ namespace AntColony.EditorTools
                 StoneBackgroundTilePath,
                 new Color32(67, 76, 86, 255));
             ValidateTileColour(PreparedTilePath, new Color32(100, 139, 98, 255));
+            ValidateTileColour(FoodStorageTilePath, new Color32(195, 137, 44, 255));
+            ValidateTileColour(WaterStorageTilePath, new Color32(40, 170, 231, 255));
+            ValidateTileColour(SleepingTilePath, new Color32(167, 101, 211, 255));
             ValidateTileColour(SoilTilePath, new Color32(152, 99, 66, 255));
             ValidateTileColour(StoneTilePath, new Color32(115, 126, 137, 255));
         }

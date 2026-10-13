@@ -19,6 +19,10 @@ namespace AntColony.Commands
         private const double DebugExperienceAmount = 100d;
         private const double DebugMaximumExperienceAmount = 50000d;
         private const double DebugInactivityStepHours = 24d;
+        private const double DebugNeedsTimeStepHours = 1d;
+        private const double DebugRestStepHours = 8d;
+        private const double DebugFatigueStep = 25d;
+        private const double InteractionSimulationHoursPerSecond = 1d;
 
         private static readonly string[] SkillDisplayNames =
             BuildSkillDisplayNames();
@@ -31,14 +35,19 @@ namespace AntColony.Commands
         private bool hasAdditionalBlockedGuiRect;
         private string interactionMessage = "Left-click an ant to select it.";
         private bool skillDebugExpanded;
+        private bool needsDebugExpanded;
         private int selectedDebugSkillIndex;
-        private double skillSimulationHours;
+        private double simulationHours;
+        private SurvivalInteractionWorld interactionWorld;
+        private Vector2Int selectedInteractionTarget;
+        private bool hasSelectedInteractionTarget;
         private Vector2 playerPanelScrollPosition;
 
         public IReadOnlyList<SelectableGridAnt> SelectableAnts => selectableAnts;
         public SelectableGridAnt SelectedAnt { get; private set; }
         public string InteractionMessage => interactionMessage;
-        public double SkillSimulationHours => skillSimulationHours;
+        public double SimulationHours => simulationHours;
+        public double SkillSimulationHours => simulationHours;
         public Rect PlayerPanelGuiRect => new(
             Mathf.Max(12f, Screen.width - PlayerPanelWidth - 12f),
             12f,
@@ -47,14 +56,25 @@ namespace AntColony.Commands
                 Mathf.Max(100f, Screen.height - 24f),
                 SelectedAnt == null
                     ? 112f
-                    : skillDebugExpanded ? 720f : 510f));
+                    : skillDebugExpanded || needsDebugExpanded ? 920f : 650f));
 
         public void Configure(
             Camera commandCamera,
-            GridNavigationWorldService sharedNavigationWorld)
+            GridNavigationWorldService sharedNavigationWorld,
+            SurvivalInteractionWorld sharedInteractionWorld = null)
         {
             worldCamera = commandCamera;
             navigationWorld = sharedNavigationWorld;
+            interactionWorld = sharedInteractionWorld;
+        }
+
+        public void BindInteractionWorld(SurvivalInteractionWorld sharedInteractionWorld)
+        {
+            interactionWorld = sharedInteractionWorld;
+            foreach (SelectableGridAnt ant in selectableAnts)
+            {
+                ant?.BindInteractionWorld(sharedInteractionWorld);
+            }
         }
 
         public void ClearSelectableAnts()
@@ -68,6 +88,7 @@ namespace AntColony.Commands
             if (ant != null && !selectableAnts.Contains(ant))
             {
                 selectableAnts.Add(ant);
+                ant.BindInteractionWorld(interactionWorld);
             }
         }
 
@@ -185,6 +206,45 @@ namespace AntColony.Commands
             return true;
         }
 
+        public bool TryIssueInteractionOrder(
+            SurvivalInteractionKind kind,
+            Vector2Int targetCell)
+        {
+            hasSelectedInteractionTarget = true;
+            selectedInteractionTarget = targetCell;
+            if (SelectedAnt == null)
+            {
+                interactionMessage = "Interaction ignored: select an ant first.";
+                return false;
+            }
+            if (!SelectedAnt.IssueInteractionOrder(kind, targetCell))
+            {
+                interactionMessage = SelectedAnt.FailureReason;
+                return false;
+            }
+
+            interactionMessage =
+                $"{SelectedAnt.DisplayName} ordered to {kind} at {targetCell}.";
+            return true;
+        }
+
+        public bool TryIssueContextOrder(Vector2Int cell)
+        {
+            if (interactionWorld != null &&
+                interactionWorld.TryGetFunction(cell, out BackgroundFunction function))
+            {
+                SurvivalInteractionKind kind = function switch
+                {
+                    BackgroundFunction.FoodStorage => SurvivalInteractionKind.Eat,
+                    BackgroundFunction.WaterStorage => SurvivalInteractionKind.Drink,
+                    _ => SurvivalInteractionKind.Rest
+                };
+                return TryIssueInteractionOrder(kind, cell);
+            }
+
+            return TryIssueMoveOrder(cell);
+        }
+
         public bool CancelSelectedOrder()
         {
             if (SelectedAnt == null || !SelectedAnt.HasActiveOrder)
@@ -221,7 +281,7 @@ namespace AntColony.Commands
                 skill,
                 baseExperience,
                 multiplier,
-                skillSimulationHours,
+                simulationHours,
                 out result,
                 out message);
             interactionMessage = succeeded
@@ -241,17 +301,41 @@ namespace AntColony.Commands
             double elapsedHours,
             out string message)
         {
+            return TryAdvanceSimulationTime(elapsedHours, out message);
+        }
+
+        /// <summary>
+        /// Advances the shared development clock. Needs use elapsed time while
+        /// skill decay receives the resulting absolute time, matching each API's
+        /// deterministic contract without adding a frame-driven global scan.
+        /// </summary>
+        public bool TryAdvanceSimulationTime(
+            double elapsedHours,
+            out string message)
+        {
             if (!AntSkillProgressionSettings.IsFinite(elapsedHours) ||
                 elapsedHours < 0d ||
                 !AntSkillProgressionSettings.IsFinite(
-                    skillSimulationHours + elapsedHours))
+                    simulationHours + elapsedHours))
             {
-                message = "Inactivity time must be finite and non-negative.";
+                message = "Simulation time must be finite and non-negative.";
                 interactionMessage = message;
                 return false;
             }
 
-            double newTime = skillSimulationHours + elapsedHours;
+            double newTime = simulationHours + elapsedHours;
+            foreach (SelectableGridAnt ant in selectableAnts)
+            {
+                if (ant?.Record != null &&
+                    ant.Record.LifecycleStatus == AntLifecycleStatus.Active &&
+                    !ant.Record.Needs.HasDepletedHealth &&
+                    !ant.Record.TryAdvanceNeeds(elapsedHours, out message))
+                {
+                    interactionMessage = message;
+                    return false;
+                }
+            }
+
             foreach (SelectableGridAnt ant in selectableAnts)
             {
                 if (ant?.Record != null &&
@@ -263,9 +347,72 @@ namespace AntColony.Commands
                 }
             }
 
-            skillSimulationHours = newTime;
+            simulationHours = newTime;
             message =
-                $"Developer Only: simulation time is {skillSimulationHours:0.##}h.";
+                $"Developer Only: simulation time is {simulationHours:0.##}h.";
+            interactionMessage = message;
+            return true;
+        }
+
+        /// <summary>Runs a controlled rest interval on the selected record.</summary>
+        public bool TryRestSelectedAnt(double elapsedHours, out string message)
+        {
+            if (SelectedAnt?.Record == null)
+            {
+                message = "Select a bound ant before simulating rest.";
+                interactionMessage = message;
+                return false;
+            }
+
+            bool succeeded = SelectedAnt.Record.TryRest(elapsedHours, out message);
+            interactionMessage = succeeded
+                ? $"Developer Only: {SelectedAnt.DisplayName} rested for " +
+                    $"{elapsedHours:0.##}h."
+                : message;
+            message = interactionMessage;
+            return succeeded;
+        }
+
+        /// <summary>Sets bounded authoritative needs for deterministic testing.</summary>
+        public bool TrySetSelectedNeedsForDevelopment(
+            double health,
+            double hunger,
+            double thirst,
+            double fatigue,
+            out string message)
+        {
+            if (SelectedAnt?.Record == null)
+            {
+                message = "Select a bound ant before changing needs.";
+                interactionMessage = message;
+                return false;
+            }
+
+            bool succeeded = SelectedAnt.Record.TrySetNeedsForDevelopment(
+                health,
+                hunger,
+                thirst,
+                fatigue,
+                out message);
+            interactionMessage = succeeded
+                ? $"Developer Only: updated {SelectedAnt.DisplayName}'s needs."
+                : message;
+            message = interactionMessage;
+            return succeeded;
+        }
+
+        /// <summary>Restores the selected record's deterministic starting needs.</summary>
+        public bool ResetSelectedNeeds(out string message)
+        {
+            if (SelectedAnt?.Record == null)
+            {
+                message = "Select a bound ant before resetting needs.";
+                interactionMessage = message;
+                return false;
+            }
+
+            SelectedAnt.Record.ResetNeeds();
+            message = $"Developer Only: reset {SelectedAnt.DisplayName}'s needs.";
             interactionMessage = message;
             return true;
         }
@@ -279,23 +426,30 @@ namespace AntColony.Commands
                 return false;
             }
 
-            SelectedAnt.Record.ResetSkills(skillSimulationHours);
+            SelectedAnt.Record.ResetSkills(simulationHours);
             message = $"Developer Only: reset {SelectedAnt.DisplayName}'s skills.";
             interactionMessage = message;
             return true;
         }
 
         /// <summary>Called when the development world creates fresh records.</summary>
+        public void ResetSimulationDebugClock()
+        {
+            simulationHours = 0d;
+        }
+
+        /// <summary>Compatibility name retained for the accepted 3.1C API.</summary>
         public void ResetSkillDebugClock()
         {
-            skillSimulationHours = 0d;
+            ResetSimulationDebugClock();
         }
 
         private void Update()
         {
             foreach (SelectableGridAnt ant in selectableAnts)
             {
-                ant?.RefreshOrderStatus();
+                ant?.RefreshOrderStatus(
+                    Time.deltaTime * InteractionSimulationHoursPerSecond);
             }
 
             Mouse mouse = Mouse.current;
@@ -316,7 +470,7 @@ namespace AntColony.Commands
                 Vector3 worldPoint = worldCamera.ScreenToWorldPoint(screenPoint);
                 Vector2Int cell =
                     WorldTileCoordinates.WorldPositionToCell(worldPoint);
-                TryIssueMoveOrder(cell);
+                TryIssueContextOrder(cell);
             }
         }
 
@@ -325,7 +479,7 @@ namespace AntColony.Commands
             GUILayout.BeginArea(PlayerPanelGuiRect, GUI.skin.box);
             playerPanelScrollPosition = GUILayout.BeginScrollView(
                 playerPanelScrollPosition);
-            GUILayout.Label("ANT SELECTION & MOVE ORDER");
+            GUILayout.Label("ANT SELECTION & SURVIVAL ORDERS");
             if (SelectedAnt == null)
             {
                 GUILayout.Label("Selected ant: None");
@@ -344,25 +498,179 @@ namespace AntColony.Commands
                     $"END {record?.Attributes.Endurance.ToString() ?? "-"}");
                 GUILayout.Label(
                     $"Lifecycle: {record?.LifecycleStatus.ToString() ?? "Unbound"}");
+                DrawNeedsInspection(record);
                 DrawSkillInspection(record);
                 GUILayout.Label($"Control: {SelectedAnt.ControlState}");
                 GUILayout.Label($"Order: {SelectedAnt.OrderStatus}");
+                GUILayout.Label(
+                    $"Interaction: {SelectedAnt.InteractionOrder?.Kind.ToString() ?? "None"}");
+                GUILayout.Label(
+                    $"Interaction target: {SelectedAnt.InteractionOrder?.TargetCell.ToString() ?? "None"}");
                 GUILayout.Label(
                     $"Destination: {(SelectedAnt.HasDestination ? SelectedAnt.Destination.ToString() : "None")}");
                 GUILayout.Label(
                     $"Failure: {(string.IsNullOrEmpty(SelectedAnt.FailureReason) ? "None" : SelectedAnt.FailureReason)}");
                 GUI.enabled = SelectedAnt.HasActiveOrder;
-                if (GUILayout.Button("Cancel Selected Move Order"))
+                if (GUILayout.Button("Cancel Selected Order"))
                 {
                     CancelSelectedOrder();
                 }
                 GUI.enabled = true;
+                DrawNeedsDebugControls();
                 DrawSkillDebugControls();
             }
+
+            DrawResourceDiagnostics();
 
             GUILayout.Label(interactionMessage);
             GUILayout.EndScrollView();
             GUILayout.EndArea();
+        }
+
+        private void DrawResourceDiagnostics()
+        {
+            GUILayout.Space(4f);
+            GUILayout.Label("DEVELOPER ONLY — PHYSICAL STORAGE");
+            if (!hasSelectedInteractionTarget || interactionWorld == null)
+            {
+                GUILayout.Label("Selected storage tile: None");
+                if (interactionWorld != null)
+                {
+                    foreach (SurvivalStorageSlot fixture in interactionWorld.StorageSlots)
+                    {
+                        GUILayout.Label(
+                            $"{fixture.Kind} {fixture.Cell}: {fixture.Quantity} " +
+                            $"({fixture.AvailableQuantity} available)");
+                    }
+                }
+                return;
+            }
+
+            GUILayout.Label($"Selected storage tile: {selectedInteractionTarget}");
+            if (interactionWorld.TryGetStorage(
+                    selectedInteractionTarget, out SurvivalStorageSlot slot))
+            {
+                GUILayout.Label($"Resource: {slot.ResourceTypeId} ({slot.Kind})");
+                GUILayout.Label(
+                    $"Quantity: {slot.Quantity}  Reserved: {slot.ReservedQuantity}  " +
+                    $"Available: {slot.AvailableQuantity}");
+                return;
+            }
+
+            string sleeper = interactionWorld.GetSleepingReservation(
+                selectedInteractionTarget);
+            GUILayout.Label(string.IsNullOrEmpty(sleeper)
+                ? "Sleeping slot: Available"
+                : $"Sleeping slot reserved by: {sleeper}");
+        }
+
+        private void DrawNeedsInspection(AntRecord record)
+        {
+            GUILayout.Space(4f);
+            GUILayout.Label("NEEDS & SURVIVAL");
+            if (record == null)
+            {
+                GUILayout.Label("Unbound");
+                return;
+            }
+
+            AntNeedsState needs = record.Needs;
+            GUILayout.Label($"Health: {needs.Health:0.##} / 100");
+            GUILayout.Label($"Hunger satisfaction: {needs.Hunger:0.##} / 100");
+            GUILayout.Label($"Thirst satisfaction: {needs.Thirst:0.##} / 100");
+            GUILayout.Label($"Fatigue: {needs.Fatigue:0.##} / 100");
+            GUILayout.Label(
+                $"Rested work speed: {needs.WorkSpeedMultiplier:0.###}x");
+            GUILayout.Label(
+                $"Rested skill XP: {needs.SkillExperienceMultiplier:0.###}x");
+            if (needs.HasDepletedHealth)
+            {
+                GUILayout.Label("WARNING: Health depleted; survival is paused.");
+            }
+            else if (needs.IsStarving)
+            {
+                GUILayout.Label("WARNING: Critical Hunger; Health is decreasing.");
+            }
+
+            if (needs.IsDehydrated)
+            {
+                GUILayout.Label("WARNING: Critical Thirst; skill XP is blocked.");
+            }
+
+            GUILayout.Space(4f);
+        }
+
+        private void DrawNeedsDebugControls()
+        {
+            if (GUILayout.Button(needsDebugExpanded
+                    ? "Hide Developer Only Needs Tools"
+                    : "Show Developer Only Needs Tools"))
+            {
+                needsDebugExpanded = !needsDebugExpanded;
+            }
+
+            if (!needsDebugExpanded || SelectedAnt?.Record == null)
+            {
+                return;
+            }
+
+            AntNeedsState needs = SelectedAnt.Record.Needs;
+            GUILayout.Label("DEVELOPER ONLY — NEEDS TESTING");
+            GUILayout.Label($"Simulation time: {simulationHours:0.##}h");
+            if (GUILayout.Button("Advance 1h Simulation Time"))
+            {
+                TryAdvanceSimulationTime(DebugNeedsTimeStepHours, out _);
+            }
+            if (GUILayout.Button("Refill Hunger"))
+            {
+                SetSelectedNeeds(needs.Health, 100d, needs.Thirst, needs.Fatigue);
+            }
+            if (GUILayout.Button("Refill Thirst"))
+            {
+                SetSelectedNeeds(needs.Health, needs.Hunger, 100d, needs.Fatigue);
+            }
+            if (GUILayout.Button("Restore Health"))
+            {
+                SetSelectedNeeds(100d, needs.Hunger, needs.Thirst, needs.Fatigue);
+            }
+            if (GUILayout.Button("Add 25 Fatigue"))
+            {
+                SetSelectedNeeds(
+                    needs.Health,
+                    needs.Hunger,
+                    needs.Thirst,
+                    System.Math.Min(100d, needs.Fatigue + DebugFatigueStep));
+            }
+            if (GUILayout.Button("Simulate 8h Rest"))
+            {
+                TryRestSelectedAnt(DebugRestStepHours, out _);
+            }
+            if (GUILayout.Button("Set Critical Hunger (0)"))
+            {
+                SetSelectedNeeds(needs.Health, 0d, needs.Thirst, needs.Fatigue);
+            }
+            if (GUILayout.Button("Set Critical Thirst (0)"))
+            {
+                SetSelectedNeeds(needs.Health, needs.Hunger, 0d, needs.Fatigue);
+            }
+            if (GUILayout.Button("Reset Selected Ant Needs"))
+            {
+                ResetSelectedNeeds(out _);
+            }
+        }
+
+        private void SetSelectedNeeds(
+            double health,
+            double hunger,
+            double thirst,
+            double fatigue)
+        {
+            TrySetSelectedNeedsForDevelopment(
+                health,
+                hunger,
+                thirst,
+                fatigue,
+                out _);
         }
 
         private void DrawSkillInspection(AntRecord record)
@@ -403,7 +711,7 @@ namespace AntColony.Commands
             }
 
             GUILayout.Label("DEVELOPER ONLY — SKILL TESTING");
-            GUILayout.Label($"Simulation time: {skillSimulationHours:0.##}h");
+            GUILayout.Label($"Simulation time: {simulationHours:0.##}h");
             selectedDebugSkillIndex = GUILayout.SelectionGrid(
                 selectedDebugSkillIndex,
                 SkillDisplayNames,

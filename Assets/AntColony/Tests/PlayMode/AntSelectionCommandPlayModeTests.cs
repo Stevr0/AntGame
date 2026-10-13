@@ -94,6 +94,35 @@ namespace AntColony.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator DeveloperNeedsControls_BlockAndRestoreXpWithoutBreakingMovement()
+        {
+            yield return LoadScene();
+            AntGameDevelopmentWorldHost host = FindHost();
+            AntSelectionCommandController controller = host.SelectionController;
+            SelectableGridAnt pip = controller.SelectableAnts[1];
+            SelectableGridAnt tala = controller.SelectableAnts[2];
+            controller.Select(pip);
+            Assert.That(controller.TrySetSelectedNeedsForDevelopment(
+                100d, 100d, 0d, 20d, out _), Is.True);
+            Assert.That(controller.TryAwardSelectedSkillExperience(
+                AntSkillId.Foraging, 100d, 1d,
+                out AntSkillExperienceResult blocked, out _), Is.True);
+            Assert.That(blocked.AwardedExperience, Is.Zero);
+
+            Assert.That(controller.TrySetSelectedNeedsForDevelopment(
+                100d, 100d, 100d, 20d, out _), Is.True);
+            Assert.That(controller.TryAwardSelectedSkillExperience(
+                AntSkillId.Foraging, 100d, 1d,
+                out AntSkillExperienceResult restored, out _), Is.True);
+            Assert.That(restored.AwardedExperience, Is.EqualTo(100d));
+            Assert.That(tala.Record.Needs.Thirst, Is.EqualTo(100d));
+            Assert.That(controller.TryIssueMoveOrder(
+                SampleWorldGenerator.GridDirectDestination), Is.True);
+            yield return new WaitForFixedUpdate();
+            Assert.That(pip.HasActiveOrder, Is.True);
+        }
+
+        [UnityTest]
         public IEnumerator SelectionIndicatorFollowsMovingAntAndArrivalCompletesOrder()
         {
             yield return LoadScene();

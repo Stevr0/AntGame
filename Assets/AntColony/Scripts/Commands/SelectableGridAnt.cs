@@ -1,5 +1,6 @@
 using AntColony.Ants;
 using AntColony.Navigation;
+using AntColony.World;
 using UnityEngine;
 
 namespace AntColony.Commands
@@ -27,6 +28,8 @@ namespace AntColony.Commands
         private Vector2Int destination;
         private string orderOutcome = "No movement order.";
         private string failureReason = string.Empty;
+        private SurvivalInteractionWorld interactionWorld;
+        private SurvivalInteractionOrder interactionOrder;
 
         public string DisplayName => Record?.DisplayName ?? "Unbound Ant";
         public AntRecord Record => entityBinding?.Record;
@@ -37,6 +40,7 @@ namespace AntColony.Commands
         public Vector2Int Destination => destination;
         public string FailureReason => failureReason;
         public string OrderOutcome => orderOutcome;
+        public SurvivalInteractionOrder InteractionOrder => interactionOrder;
         public LineRenderer SelectionIndicator => selectionIndicator;
         public string ControlState => hasActiveOrder
             ? "Ordered"
@@ -49,6 +53,13 @@ namespace AntColony.Commands
                 if (!hasActiveOrder)
                 {
                     return orderOutcome;
+                }
+
+                if (interactionOrder != null && interactionOrder.IsActive)
+                {
+                    return interactionOrder.Phase == SurvivalInteractionPhase.Travelling
+                        ? $"Travelling to {interactionOrder.Kind}"
+                        : interactionOrder.Status;
                 }
 
                 return motor.State switch
@@ -82,6 +93,11 @@ namespace AntColony.Commands
             }
         }
 
+        private void OnDisable()
+        {
+            interactionOrder?.Cancel("Interaction cancelled because the ant was disabled.");
+        }
+
         /// <summary>Applies the temporary name, colour and selection indicator.</summary>
         public void Configure(Color placeholderColour)
         {
@@ -95,6 +111,13 @@ namespace AntColony.Commands
 
             EnsureSelectionIndicator();
             SetSelected(false);
+        }
+
+        public void BindInteractionWorld(SurvivalInteractionWorld world)
+        {
+            interactionOrder?.Cancel("Interaction world was replaced.");
+            interactionWorld = world;
+            interactionOrder = null;
         }
 
         public void SetSelected(bool selected)
@@ -121,6 +144,7 @@ namespace AntColony.Commands
         public bool IssueMoveOrder(Vector2Int requestedDestination)
         {
             CacheComponents();
+            interactionOrder?.Cancel("Interaction replaced by a movement order.");
             if (Record == null)
             {
                 failureReason = "Movement order rejected: ant identity is not bound.";
@@ -151,6 +175,47 @@ namespace AntColony.Commands
             return true;
         }
 
+        public bool IssueInteractionOrder(
+            SurvivalInteractionKind kind,
+            Vector2Int targetCell)
+        {
+            CacheComponents();
+            interactionOrder?.Cancel("Interaction replaced by a new order.");
+            motor.CancelMovement("Interaction order is choosing an approach.");
+            Vector2Int startCell = WorldTileCoordinates.WorldPositionToCell(motor.Position);
+            if (!SurvivalInteractionOrder.TryCreate(
+                    interactionWorld,
+                    motor.NavigationWorld?.Map,
+                    Record,
+                    kind,
+                    startCell,
+                    targetCell,
+                    out interactionOrder,
+                    out string error))
+            {
+                failureReason = error;
+                orderOutcome = "Interaction rejected";
+                hasActiveOrder = false;
+                return false;
+            }
+
+            if (!motor.MoveTo(interactionOrder.ApproachCell))
+            {
+                interactionOrder.Cancel(motor.StatusMessage);
+                failureReason = motor.StatusMessage;
+                orderOutcome = "Interaction rejected";
+                hasActiveOrder = false;
+                return false;
+            }
+
+            destination = interactionOrder.ApproachCell;
+            hasDestination = true;
+            hasActiveOrder = true;
+            failureReason = string.Empty;
+            orderOutcome = "Interaction active";
+            return true;
+        }
+
         public void RecordRejectedOrder(Vector2Int rejectedDestination, string reason)
         {
             failureReason = reason;
@@ -160,6 +225,7 @@ namespace AntColony.Commands
         public void CancelOrder(string reason = "Movement order cancelled.")
         {
             CacheComponents();
+            interactionOrder?.Cancel(reason);
             motor.CancelMovement(reason);
             hasActiveOrder = false;
             orderOutcome = "Cancelled; returned to Autonomous / Idle";
@@ -170,7 +236,7 @@ namespace AntColony.Commands
         /// Converts terminal motor states into the temporary player-order
         /// lifecycle without changing or duplicating pathfinding state.
         /// </summary>
-        public void RefreshOrderStatus()
+        public void RefreshOrderStatus(double elapsedSimulationHours = 0d)
         {
             if (!hasActiveOrder || motor == null)
             {
@@ -185,18 +251,38 @@ namespace AntColony.Commands
 
             if (motor.HasArrived)
             {
-                hasActiveOrder = false;
-                orderOutcome = "Completed; returned to Autonomous / Idle";
-                failureReason = string.Empty;
+                if (interactionOrder != null && interactionOrder.IsActive)
+                {
+                    if (interactionOrder.Phase == SurvivalInteractionPhase.Travelling)
+                    {
+                        Vector2Int current = WorldTileCoordinates.WorldPositionToCell(motor.Position);
+                        interactionOrder.TryBeginInteraction(current);
+                    }
+                    interactionOrder.Advance(elapsedSimulationHours);
+                    if (!interactionOrder.IsActive)
+                    {
+                        hasActiveOrder = false;
+                        orderOutcome = interactionOrder.Status;
+                        failureReason = interactionOrder.FailureReason;
+                    }
+                }
+                else
+                {
+                    hasActiveOrder = false;
+                    orderOutcome = "Completed; returned to Autonomous / Idle";
+                    failureReason = string.Empty;
+                }
             }
             else if (motor.HasFailed)
             {
+                interactionOrder?.Cancel(motor.FailureReason);
                 hasActiveOrder = false;
                 orderOutcome = "Failed; returned to Autonomous / Idle";
                 failureReason = motor.FailureReason;
             }
             else if (motor.State == GridNavigationMotorState.Idle)
             {
+                interactionOrder?.Cancel("Navigation stopped before interaction.");
                 hasActiveOrder = false;
                 orderOutcome = "Cancelled; returned to Autonomous / Idle";
             }

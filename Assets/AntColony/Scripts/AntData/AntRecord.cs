@@ -76,6 +76,7 @@ namespace AntColony.Ants
                 caste,
                 attributes,
                 AntSkillProgressionSettings.Provisional,
+                AntNeedsSimulationSettings.Provisional,
                 startingSimulationHours: 0d)
         {
         }
@@ -87,6 +88,27 @@ namespace AntColony.Ants
             AntCaste caste,
             AntAttributes attributes,
             AntSkillProgressionSettings skillSettings,
+            double startingSimulationHours)
+            : this(
+                id,
+                displayName,
+                colonyId,
+                caste,
+                attributes,
+                skillSettings,
+                AntNeedsSimulationSettings.Provisional,
+                startingSimulationHours)
+        {
+        }
+
+        public AntRecord(
+            AntId id,
+            string displayName,
+            ColonyId colonyId,
+            AntCaste caste,
+            AntAttributes attributes,
+            AntSkillProgressionSettings skillSettings,
+            AntNeedsSimulationSettings needsSettings,
             double startingSimulationHours)
         {
             if (!id.IsValid)
@@ -111,6 +133,7 @@ namespace AntColony.Ants
             Attributes = attributes;
             LifecycleStatus = AntLifecycleStatus.Active;
             Skills = new AntSkillSet(skillSettings, startingSimulationHours);
+            Needs = new AntNeedsState(needsSettings);
         }
 
         public AntId Id { get; }
@@ -119,6 +142,7 @@ namespace AntColony.Ants
         public AntCaste Caste { get; }
         public AntAttributes Attributes { get; }
         public AntSkillSet Skills { get; private set; }
+        public AntNeedsState Needs { get; }
         public AntLifecycleStatus LifecycleStatus { get; private set; }
         public bool CanAcceptMovementOrders => LifecycleStatus == AntLifecycleStatus.Active;
 
@@ -159,10 +183,29 @@ namespace AntColony.Ants
                 return false;
             }
 
+            // Validate the caller's modifier before needs change its effective
+            // value. This preserves the 3.1C rejection rules even when dry.
+            if (!AntSkillProgressionSettings.IsFinite(experienceMultiplier) ||
+                experienceMultiplier < 0d)
+            {
+                result = default;
+                error = "The skill experience multiplier must be finite and non-negative.";
+                return false;
+            }
+
+            double needsMultiplier = Needs.IsDehydrated
+                ? 0d
+                : Needs.SkillExperienceMultiplier;
+            double effectiveMultiplier = experienceMultiplier * needsMultiplier;
+            if (!AntSkillProgressionSettings.IsFinite(effectiveMultiplier))
+            {
+                effectiveMultiplier = double.MaxValue;
+            }
+
             return Skills.TryAwardExperience(
                 skill,
                 baseExperience,
-                experienceMultiplier,
+                effectiveMultiplier,
                 simulationHours,
                 out result,
                 out error);
@@ -187,6 +230,98 @@ namespace AntColony.Ants
         public void ResetSkills(double simulationHours = 0d)
         {
             Skills = new AntSkillSet(Skills.Settings, simulationHours);
+        }
+
+        /// <summary>
+        /// Advances ordinary awake survival simulation. Inactive, deceased, and
+        /// zero-health ants retain their data but cannot keep progressing normally.
+        /// </summary>
+        public bool TryAdvanceNeeds(double elapsedHours, out string error)
+        {
+            if (LifecycleStatus != AntLifecycleStatus.Active)
+            {
+                error = "Only active ants continue ordinary needs simulation.";
+                return false;
+            }
+
+            if (Needs.HasDepletedHealth)
+            {
+                error = "Health is depleted; normal survival simulation is paused.";
+                return false;
+            }
+
+            return Needs.TryAdvanceAwake(elapsedHours, out error);
+        }
+
+        /// <summary>Development/future-rest boundary; no sleeping job is implied.</summary>
+        public bool TryRest(double elapsedHours, out string error)
+        {
+            if (LifecycleStatus != AntLifecycleStatus.Active ||
+                Needs.HasDepletedHealth)
+            {
+                error = "Only active ants with Health remaining can rest.";
+                return false;
+            }
+
+            return Needs.TryRest(elapsedHours, out error);
+        }
+
+        public bool TryEat(double hungerRestored, out string error)
+        {
+            if (!CanReceiveSurvivalInteraction(out error))
+            {
+                return false;
+            }
+
+            return Needs.TryRestoreHunger(hungerRestored, out error);
+        }
+
+        public bool TryDrink(double thirstRestored, out string error)
+        {
+            if (!CanReceiveSurvivalInteraction(out error))
+            {
+                return false;
+            }
+
+            return Needs.TryRestoreThirst(thirstRestored, out error);
+        }
+
+        private bool CanReceiveSurvivalInteraction(out string error)
+        {
+            if (LifecycleStatus != AntLifecycleStatus.Active ||
+                Needs.HasDepletedHealth)
+            {
+                error = "Only active ants with Health remaining can use survival interactions.";
+                return false;
+            }
+
+            error = string.Empty;
+            return true;
+        }
+
+        /// <summary>
+        /// Development-only controlled state setup. Real consumption, damage, and
+        /// recovery systems will use narrower gameplay APIs in later milestones.
+        /// </summary>
+        public bool TrySetNeedsForDevelopment(
+            double health,
+            double hunger,
+            double thirst,
+            double fatigue,
+            out string error)
+        {
+            return Needs.TrySetForDevelopment(
+                health,
+                hunger,
+                thirst,
+                fatigue,
+                out error);
+        }
+
+        /// <summary>Restores deterministic development starting values.</summary>
+        public void ResetNeeds()
+        {
+            Needs.Reset();
         }
     }
 }

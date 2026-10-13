@@ -171,6 +171,50 @@ namespace AntColony.Tests.EditMode
         }
 
         [Test]
+        public void SelectionAndVisualRespawn_PreserveIndependentNeeds()
+        {
+            AntGameDevelopmentWorldHost host = OpenHostWithSelectableAnts();
+            AntSelectionCommandController controller = host.SelectionController;
+            SelectableGridAnt mara = controller.SelectableAnts[0];
+            SelectableGridAnt pip = controller.SelectableAnts[1];
+            AntRecord maraRecord = mara.Record;
+            controller.Select(mara);
+            Assert.That(controller.TrySetSelectedNeedsForDevelopment(
+                90d, 40d, 70d, 60d, out _), Is.True);
+
+            controller.Select(pip);
+            Assert.That(pip.Record.Needs.Hunger, Is.EqualTo(100d));
+            controller.Select(mara);
+            Assert.That(host.SpawnOrResetSelectableGridAnts(out string message),
+                Is.True, message);
+
+            SelectableGridAnt rebound = host.SelectionController.SelectableAnts[0];
+            Assert.That(rebound.Record, Is.SameAs(maraRecord));
+            Assert.That(rebound.Record.Needs.Hunger, Is.EqualTo(40d));
+            Assert.That(rebound.Record.Needs.Thirst, Is.EqualTo(70d));
+        }
+
+        [Test]
+        public void DevelopmentWorldReset_RestoresDeterministicNeeds()
+        {
+            AntGameDevelopmentWorldHost host = OpenHostWithSelectableAnts();
+            AntSelectionCommandController controller = host.SelectionController;
+            controller.Select(controller.SelectableAnts[0]);
+            Assert.That(controller.TrySetSelectedNeedsForDevelopment(
+                50d, 0d, 0d, 100d, out _), Is.True);
+
+            Assert.That(host.RebuildWorld(), Is.True);
+            Assert.That(host.SpawnOrResetSelectableGridAnts(out string message),
+                Is.True, message);
+
+            Assert.That(host.SelectionController.SelectableAnts.All(ant =>
+                ant.Record.Needs.Health == 100d &&
+                ant.Record.Needs.Hunger == 100d &&
+                ant.Record.Needs.Thirst == 100d &&
+                ant.Record.Needs.Fatigue == 20d), Is.True);
+        }
+
+        [Test]
         public void Selection_SwitchesAndEmptySpaceDeselectsWithoutStoppingOrders()
         {
             AntGameDevelopmentWorldHost host = OpenHostWithSelectableAnts();

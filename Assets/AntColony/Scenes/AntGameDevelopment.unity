@@ -936,6 +936,9 @@ MonoBehaviour:
   earthBackground: {fileID: 11400000, guid: 53fdcf4b9cb242142839315dc88b8598, type: 2}
   stoneBackground: {fileID: 11400000, guid: cf6a3d5d0d9f6524888e7b740a8cef05, type: 2}
   preparedBackground: {fileID: 11400000, guid: d01bd2a164fe63f40a9b5e3637cad621, type: 2}
+  foodStorageBackground: {fileID: 11400000, guid: f1111111111111111111111111111111, type: 2}
+  waterStorageBackground: {fileID: 11400000, guid: f2222222222222222222222222222222, type: 2}
+  sleepingBackground: {fileID: 11400000, guid: f3333333333333333333333333333333, type: 2}
   soilSolid: {fileID: 11400000, guid: 068633e94a474d23aea71fa912e8e239, type: 2}
   stoneSolid: {fileID: 11400000, guid: fc760d0c6b0d8044e8ccadb2fd2f28ff, type: 2}
   tilemapRenderer: {fileID: 142205777}
