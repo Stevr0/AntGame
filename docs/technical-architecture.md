@@ -76,6 +76,8 @@ One `GridNavigationWorldService` owns the shared navigation map and bounded sche
 
 `AntGameDevelopmentWorldHost` assembles the deterministic integrated test world. It is a focused authored coordinator, not a global production manager. Developer controls and diagnostics expose authoritative state for acceptance checks.
 
+`AntSelectionCommandController` owns the shared IMGUI toolbar state and central pointer hit test. It draws Ant, Needs, Skills, Jobs and Resources. The existing `DevelopmentWorldInspector` draws World or Debug into the same calculated panel rectangle, never a second side panel. Exactly one category can be expanded; every expansion is internally scrollable and bounded to the current Game view. `DevelopmentCameraController` consults the same hit test for wheel and middle-drag input, while keyboard camera controls remain independent.
+
 ## Scene flow
 
 | Scene | Purpose | Status |
@@ -93,6 +95,7 @@ There is no finished menu-to-game flow, Bootstrap scene, save selection, or prod
 - Play Mode tests cover scene wiring and end-to-end interaction slices.
 - Structural validators inspect authored scenes and prefabs.
 - Manual checklists cover visuals, input, timing, diagnostics, and behaviors that automation does not observe.
+- Focused development-UI tests cover exclusive category state, collapse/hide behavior, resolution bounds and shared pointer blocking before the complete regressions run.
 
 Compilation, automated tests, and manual acceptance are recorded separately. A successful build never implies Unity Play Mode acceptance.
 

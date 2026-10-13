@@ -1,5 +1,13 @@
 # Ant Colony Development Roadmap
 
+## Development UI reorganisation — 13 October 2026
+
+**Implemented and automated; manual visual confirmation pending. Not Milestone 3.4A.** The two independent side panels were replaced by a compact top IMGUI toolbar with mutually exclusive Ant, Needs, Skills, Jobs, Resources, World and Debug categories. One bounded scrollable panel is possible at a time; Hide All leaves only a small reopen control. Existing simulation controls and diagnostics were regrouped without changing their gameplay APIs.
+
+Focused verification passed **8/8 Edit Mode** and **2/2 Play Mode**. Complete regression verification passed **455/455 graphics-enabled Edit Mode** and **47/47 Play Mode**. The exact 24-step manual interface checklist is in `CurrentGameState.md`.
+
+Milestone 3.3D remains **Implemented — Pending Manual Acceptance**. Use the reorganised interface to complete its existing 30-point checklist. Do not begin 3.4A or infer approval for new gameplay.
+
 ## 3.3D implementation status — 13 October 2026
 
 **3.3D Material Storage & Autonomous Hauling: Implemented — Pending Manual Acceptance.** Milestone 3.3C is COMPLETE: the user confirmed all 26 manual Unity checks, and its previously reported 26/26 focused Edit, 5/5 focused Play, 432/432 full Edit and 42/42 full Play evidence remains accepted.

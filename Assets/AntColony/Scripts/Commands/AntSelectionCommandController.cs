@@ -13,6 +13,19 @@ namespace AntColony.Commands
         Excavate
     }
 
+    /// <summary>Mutually exclusive sections in the development toolbar.</summary>
+    public enum DevelopmentUiCategory
+    {
+        None,
+        Ant,
+        Needs,
+        Skills,
+        Jobs,
+        Resources,
+        World,
+        Debug
+    }
+
     /// <summary>
     /// Player-facing single-ant selection and temporary move-order input. The
     /// controller owns neither terrain navigation nor ant movement execution.
@@ -20,7 +33,10 @@ namespace AntColony.Commands
     [DisallowMultipleComponent]
     public sealed class AntSelectionCommandController : MonoBehaviour
     {
-        private const float PlayerPanelWidth = 330f;
+        private const float DevelopmentUiMargin = 8f;
+        private const float DevelopmentToolbarHeight = 32f;
+        private const float DevelopmentSummaryHeight = 26f;
+        private const float DevelopmentPanelMaximumWidth = 760f;
         private const float MinimumClickRadiusPixels = 16f;
         private const double DebugExperienceAmount = 100d;
         private const double DebugMaximumExperienceAmount = 50000d;
@@ -38,6 +54,16 @@ namespace AntColony.Commands
 
         private static readonly string[] SkillDisplayNames =
             BuildSkillDisplayNames();
+        private static readonly DevelopmentUiCategory[] DevelopmentToolbarCategories =
+        {
+            DevelopmentUiCategory.Ant,
+            DevelopmentUiCategory.Needs,
+            DevelopmentUiCategory.Skills,
+            DevelopmentUiCategory.Jobs,
+            DevelopmentUiCategory.Resources,
+            DevelopmentUiCategory.World,
+            DevelopmentUiCategory.Debug
+        };
 
         [SerializeField] private Camera worldCamera;
         [SerializeField] private GridNavigationWorldService navigationWorld;
@@ -52,21 +78,17 @@ namespace AntColony.Commands
         private Rect additionalBlockedGuiRect;
         private bool hasAdditionalBlockedGuiRect;
         private string interactionMessage = "Left-click an ant to select it.";
-        private bool skillDebugExpanded;
-        private bool needsDebugExpanded;
         private int selectedDebugSkillIndex;
         private double simulationHours;
         private SurvivalInteractionWorld interactionWorld;
         private Vector2Int selectedInteractionTarget;
         private bool hasSelectedInteractionTarget;
-        private Vector2 playerPanelScrollPosition;
         private double nextAutonomousEvaluationTime;
         private double autonomousClockAccumulator;
         private int autonomousEvaluationIndex;
         private ColonyJobRegistry colonyJobs;
         private double nextWorkEvaluationTime;
         private int workEvaluationIndex;
-        private bool colonyJobsDebugExpanded;
         private int selectedWorkCategoryIndex;
         private int nextDevelopmentJobNumber = 1;
         private int nextDevelopmentDropNumber = 1;
@@ -76,9 +98,11 @@ namespace AntColony.Commands
         private WorldMaterialDropRegistry materialDrops;
         private MaterialStorageWorld materialStorage;
         private readonly Dictionary<ColonyJobId, MaterialHaulingPlan> haulingPlans = new();
-        private bool haulingDebugExpanded;
         private Vector2Int dragStartCell;
         private bool excavationDragActive;
+        private bool developmentUiVisible = true;
+        private DevelopmentUiCategory expandedDevelopmentCategory;
+        private Vector2 developmentPanelScrollPosition;
 
         public IReadOnlyList<SelectableGridAnt> SelectableAnts => selectableAnts;
         public SelectableGridAnt SelectedAnt { get; private set; }
@@ -93,18 +117,56 @@ namespace AntColony.Commands
         public WorldMaterialDropRegistry MaterialDrops => materialDrops;
         public MaterialStorageWorld MaterialStorage => materialStorage;
         public WorldDesignationMode DesignationMode { get; private set; }
-        public Rect DesignationToolbarGuiRect => new(12f, 12f, 220f, 82f);
-        public Rect PlayerPanelGuiRect => new(
-            Mathf.Max(12f, Screen.width - PlayerPanelWidth - 12f),
-            12f,
-            PlayerPanelWidth,
-            Mathf.Min(
-                Mathf.Max(100f, Screen.height - 24f),
-                SelectedAnt == null
-                    ? 112f
-                    : skillDebugExpanded || needsDebugExpanded ||
-                      colonyJobsDebugExpanded || haulingDebugExpanded
-                        ? 920f : 700f));
+        public bool DevelopmentUiVisible => developmentUiVisible;
+        public DevelopmentUiCategory ExpandedDevelopmentCategory =>
+            expandedDevelopmentCategory;
+        public Rect DevelopmentToolbarGuiRect => CalculateToolbarRect(
+            Screen.width, Screen.height);
+        public Rect DevelopmentSummaryGuiRect => CalculateSummaryRect(
+            Screen.width, Screen.height);
+        public Rect DevelopmentPanelGuiRect => CalculatePanelRect(
+            Screen.width, Screen.height);
+        public Rect DevelopmentReopenGuiRect => new(
+            DevelopmentUiMargin, DevelopmentUiMargin, 84f, 30f);
+        // Compatibility aliases retained for older tests and callers.
+        public Rect DesignationToolbarGuiRect => DevelopmentToolbarGuiRect;
+        public Rect PlayerPanelGuiRect => DevelopmentSummaryGuiRect;
+
+        public static Rect CalculateToolbarRect(int screenWidth, int screenHeight) =>
+            new(DevelopmentUiMargin, DevelopmentUiMargin,
+                Mathf.Max(1f, screenWidth - DevelopmentUiMargin * 2f),
+                DevelopmentToolbarHeight);
+
+        public static Rect CalculateSummaryRect(int screenWidth, int screenHeight) =>
+            new(DevelopmentUiMargin,
+                DevelopmentUiMargin + DevelopmentToolbarHeight + 2f,
+                Mathf.Max(1f, screenWidth - DevelopmentUiMargin * 2f),
+                DevelopmentSummaryHeight);
+
+        public static Rect CalculatePanelRect(int screenWidth, int screenHeight)
+        {
+            float top = DevelopmentUiMargin + DevelopmentToolbarHeight +
+                DevelopmentSummaryHeight + 6f;
+            float width = Mathf.Min(DevelopmentPanelMaximumWidth,
+                Mathf.Max(1f, screenWidth - DevelopmentUiMargin * 2f));
+            return new Rect(Mathf.Max(0f, (screenWidth - width) * 0.5f), top,
+                width, Mathf.Max(1f, screenHeight - top - DevelopmentUiMargin));
+        }
+
+        public void SetDevelopmentUiVisible(bool visible)
+        {
+            developmentUiVisible = visible;
+            if (!visible) expandedDevelopmentCategory = DevelopmentUiCategory.None;
+        }
+
+        public void ToggleDevelopmentCategory(DevelopmentUiCategory category)
+        {
+            if (category == DevelopmentUiCategory.None) return;
+            developmentUiVisible = true;
+            expandedDevelopmentCategory = expandedDevelopmentCategory == category
+                ? DevelopmentUiCategory.None : category;
+            developmentPanelScrollPosition = Vector2.zero;
+        }
 
         public void Configure(
             Camera commandCamera,
@@ -332,8 +394,21 @@ namespace AntColony.Commands
         public bool IsScreenPointBlocked(Vector2 screenPoint)
         {
             Vector2 guiPoint = new(screenPoint.x, Screen.height - screenPoint.y);
-            return PlayerPanelGuiRect.Contains(guiPoint) ||
-                DesignationToolbarGuiRect.Contains(guiPoint) ||
+            return IsGuiPointBlocked(guiPoint);
+        }
+
+        /// <summary>
+        /// Central UI hit test shared by commands, excavation, inspection and
+        /// camera mouse input. Hidden UI blocks only its small reopen control.
+        /// </summary>
+        public bool IsGuiPointBlocked(Vector2 guiPoint)
+        {
+            if (!developmentUiVisible)
+                return DevelopmentReopenGuiRect.Contains(guiPoint);
+            return DevelopmentToolbarGuiRect.Contains(guiPoint) ||
+                DevelopmentSummaryGuiRect.Contains(guiPoint) ||
+                expandedDevelopmentCategory != DevelopmentUiCategory.None &&
+                    DevelopmentPanelGuiRect.Contains(guiPoint) ||
                 (hasAdditionalBlockedGuiRect &&
                     additionalBlockedGuiRect.Contains(guiPoint));
         }
@@ -843,6 +918,8 @@ namespace AntColony.Commands
                 if (mouse.leftButton.wasReleasedThisFrame && excavationDragActive)
                 {
                     excavationDragActive = false;
+                    if (IsScreenPointBlocked(screenPoint) || worldCamera == null)
+                        return;
                     Vector2Int end = WorldTileCoordinates.WorldPositionToCell(
                         worldCamera.ScreenToWorldPoint(screenPoint));
                     DesignateExcavationArea(dragStartCell, end, out _);
@@ -1407,94 +1484,131 @@ namespace AntColony.Commands
 
         private void OnGUI()
         {
-            GUILayout.BeginArea(DesignationToolbarGuiRect, GUI.skin.box);
-            GUILayout.Label($"DESIGNATION: {DesignationMode}");
-            if (GUILayout.Button(DesignationMode == WorldDesignationMode.Excavate
-                    ? "Exit Excavate (Esc)" : "Excavate"))
-                SetDesignationMode(DesignationMode == WorldDesignationMode.Excavate
-                    ? WorldDesignationMode.None : WorldDesignationMode.Excavate);
-            GUILayout.Label("Left-click or drag; selection/orders are blocked.");
-            GUILayout.EndArea();
-
-            GUILayout.BeginArea(PlayerPanelGuiRect, GUI.skin.box);
-            playerPanelScrollPosition = GUILayout.BeginScrollView(
-                playerPanelScrollPosition);
-            GUILayout.Label("ANT SELECTION, SURVIVAL & COLONY WORK");
-            if (GUILayout.Button(AutonomousSurvivalEnabled
-                    ? "Disable Developer Only Autonomous Survival"
-                    : "Enable Developer Only Autonomous Survival"))
+            if (!developmentUiVisible)
             {
-                SetAutonomousSurvivalEnabled(!AutonomousSurvivalEnabled);
-            }
-            GUILayout.Label(AutonomousSurvivalEnabled
-                ? "Autonomous clock: 1 simulation hour / real second"
-                : "Autonomous survival is disabled.");
-            if (GUILayout.Button(AutonomousColonyWorkEnabled
-                    ? "Disable Developer Only Autonomous Colony Work"
-                    : "Enable Developer Only Autonomous Colony Work"))
-            {
-                SetAutonomousColonyWorkEnabled(!AutonomousColonyWorkEnabled);
-            }
-            if (GUILayout.Button(AutonomousHaulingEnabled
-                    ? "Disable Developer Only Autonomous Hauling"
-                    : "Enable Developer Only Autonomous Hauling"))
-                SetAutonomousHaulingEnabled(!AutonomousHaulingEnabled);
-            if (SelectedAnt == null)
-            {
-                GUILayout.Label("Selected ant: None");
-                GUILayout.Label("Left-click an ant. Right-click sends it to terrain.");
-            }
-            else
-            {
-                AntRecord record = SelectedAnt.Record;
-                GUILayout.Label($"Selected ant: {SelectedAnt.DisplayName}");
-                GUILayout.Label($"Ant ID: {record?.Id.ToString() ?? "Unbound"}");
-                GUILayout.Label($"Colony: {record?.ColonyId.ToString() ?? "Unbound"}");
-                GUILayout.Label($"Caste: {record?.Caste.ToString() ?? "Unbound"}");
-                GUILayout.Label(
-                    $"Attributes: STR {record?.Attributes.Strength.ToString() ?? "-"}  " +
-                    $"AGI {record?.Attributes.Agility.ToString() ?? "-"}  " +
-                    $"END {record?.Attributes.Endurance.ToString() ?? "-"}");
-                GUILayout.Label(
-                    $"Lifecycle: {record?.LifecycleStatus.ToString() ?? "Unbound"}");
-                DrawNeedsInspection(record);
-                DrawSkillInspection(record);
-                DrawInventoryInspection(record);
-                GUILayout.Label($"Control: {SelectedAnt.ControlState}");
-                GUILayout.Label($"Order: {SelectedAnt.OrderStatus}");
-                GUILayout.Label(
-                    $"Interaction: {SelectedAnt.InteractionOrder?.Kind.ToString() ?? "None"}");
-                GUILayout.Label(
-                    $"Interaction target: {SelectedAnt.InteractionOrder?.TargetCell.ToString() ?? "None"}");
-                GUILayout.Label(
-                    $"Colony job: {SelectedAnt.ActiveColonyJob?.Id.ToString() ?? "None"}");
-                GUILayout.Label(
-                    $"Destination: {(SelectedAnt.HasDestination ? SelectedAnt.Destination.ToString() : "None")}");
-                GUILayout.Label(
-                    $"Failure: {(string.IsNullOrEmpty(SelectedAnt.FailureReason) ? "None" : SelectedAnt.FailureReason)}");
-                DrawAutonomousSurvivalInspection(SelectedAnt);
-                DrawAutonomousWorkInspection(SelectedAnt);
-                GUI.enabled = SelectedAnt.HasActiveOrder;
-                if (GUILayout.Button("Cancel Selected Order"))
-                {
-                    CancelSelectedOrder();
-                }
-                GUI.enabled = true;
-                DrawNeedsDebugControls();
-                DrawSkillDebugControls();
-                DrawInventoryDebugControls();
-                DrawColonyJobsDebugControls();
+                GUILayout.BeginArea(DevelopmentReopenGuiRect, GUI.skin.box);
+                if (GUILayout.Button("Show UI")) SetDevelopmentUiVisible(true);
+                GUILayout.EndArea();
+                return;
             }
 
-            DrawResourceDiagnostics();
-            DrawColonyJobDiagnostics();
-            DrawExcavationDiagnostics();
-            DrawMaterialHaulingDiagnostics();
-
-            GUILayout.Label(interactionMessage);
-            GUILayout.EndScrollView();
-            GUILayout.EndArea();
+            DrawDevelopmentToolbar();
+            DrawSelectedAntSummary();
+            if (expandedDevelopmentCategory != DevelopmentUiCategory.None &&
+                expandedDevelopmentCategory != DevelopmentUiCategory.World &&
+                expandedDevelopmentCategory != DevelopmentUiCategory.Debug)
+            {
+                GUILayout.BeginArea(DevelopmentPanelGuiRect, GUI.skin.box);
+                developmentPanelScrollPosition = GUILayout.BeginScrollView(
+                    developmentPanelScrollPosition);
+                DrawSelectedDevelopmentCategory();
+                GUILayout.Space(6f);
+                GUILayout.Label(interactionMessage);
+                GUILayout.EndScrollView();
+                GUILayout.EndArea();
+            }
             DrawExcavationWorldOverlay();
+        }
+
+        private void DrawDevelopmentToolbar()
+        {
+            GUILayout.BeginArea(DevelopmentToolbarGuiRect, GUI.skin.box);
+            GUILayout.BeginHorizontal();
+            if (GUILayout.Button("Hide All", GUILayout.Width(72f)))
+                SetDevelopmentUiVisible(false);
+            foreach (DevelopmentUiCategory category in DevelopmentToolbarCategories)
+            {
+                string label = expandedDevelopmentCategory == category
+                    ? $"▼ {category}" : category.ToString();
+                if (GUILayout.Button(label)) ToggleDevelopmentCategory(category);
+            }
+            GUILayout.EndHorizontal();
+            GUILayout.EndArea();
+        }
+
+        private void DrawSelectedAntSummary()
+        {
+            GUILayout.BeginArea(DevelopmentSummaryGuiRect, GUI.skin.box);
+            if (SelectedAnt == null)
+                GUILayout.Label("Selected ant: None — left-click an ant; right-click terrain for a context order.");
+            else
+                GUILayout.Label(
+                    $"{SelectedAnt.DisplayName} | {SelectedAnt.Record?.Caste} | " +
+                    $"{SelectedAnt.ControlState} | {SelectedAnt.OrderStatus} | " +
+                    $"Inventory {SelectedAnt.Record?.Inventory.TotalQuantity ?? 0}");
+            GUILayout.EndArea();
+        }
+
+        private void DrawSelectedDevelopmentCategory()
+        {
+            AntRecord record = SelectedAnt?.Record;
+            switch (expandedDevelopmentCategory)
+            {
+                case DevelopmentUiCategory.Ant:
+                    GUILayout.Label("ANT");
+                    if (SelectedAnt == null)
+                    {
+                        GUILayout.Label("Select an ant to inspect or command it.");
+                        return;
+                    }
+                    GUILayout.Label($"Name / ID: {SelectedAnt.DisplayName} / {record.Id}");
+                    GUILayout.Label($"Colony / caste: {record.ColonyId} / {record.Caste}");
+                    GUILayout.Label($"Attributes: STR {record.Attributes.Strength}  " +
+                        $"AGI {record.Attributes.Agility}  END {record.Attributes.Endurance}");
+                    GUILayout.Label($"Lifecycle: {record.LifecycleStatus}");
+                    GUILayout.Label($"Control: {SelectedAnt.ControlState}");
+                    GUILayout.Label($"Order: {SelectedAnt.OrderStatus}");
+                    string destination = SelectedAnt.HasDestination
+                        ? SelectedAnt.Destination.ToString() : "None";
+                    GUILayout.Label($"Destination: {destination}");
+                    string failure = string.IsNullOrEmpty(SelectedAnt.FailureReason)
+                        ? "None" : SelectedAnt.FailureReason;
+                    GUILayout.Label($"Failure: {failure}");
+                    GUI.enabled = SelectedAnt.HasActiveOrder;
+                    if (GUILayout.Button("Cancel Selected Order")) CancelSelectedOrder();
+                    GUI.enabled = true;
+                    break;
+                case DevelopmentUiCategory.Needs:
+                    GUILayout.Label("NEEDS");
+                    if (GUILayout.Button(AutonomousSurvivalEnabled
+                            ? "Disable Autonomous Survival"
+                            : "Enable Autonomous Survival"))
+                        SetAutonomousSurvivalEnabled(!AutonomousSurvivalEnabled);
+                    GUILayout.Label(AutonomousSurvivalEnabled
+                        ? "Autonomous clock: 1 simulation hour / real second"
+                        : "Autonomous survival is disabled.");
+                    DrawNeedsInspection(record);
+                    if (SelectedAnt != null) DrawAutonomousSurvivalInspection(SelectedAnt);
+                    DrawNeedsDebugControls();
+                    break;
+                case DevelopmentUiCategory.Skills:
+                    GUILayout.Label("SKILLS");
+                    DrawSkillInspection(record);
+                    DrawSkillDebugControls();
+                    break;
+                case DevelopmentUiCategory.Jobs:
+                    GUILayout.Label("JOBS");
+                    if (GUILayout.Button(AutonomousColonyWorkEnabled
+                            ? "Disable Autonomous Colony Work"
+                            : "Enable Autonomous Colony Work"))
+                        SetAutonomousColonyWorkEnabled(!AutonomousColonyWorkEnabled);
+                    if (SelectedAnt != null) DrawAutonomousWorkInspection(SelectedAnt);
+                    DrawColonyJobsDebugControls();
+                    DrawColonyJobDiagnostics();
+                    break;
+                case DevelopmentUiCategory.Resources:
+                    GUILayout.Label("RESOURCES");
+                    if (GUILayout.Button(AutonomousHaulingEnabled
+                            ? "Disable Autonomous Hauling"
+                            : "Enable Autonomous Hauling"))
+                        SetAutonomousHaulingEnabled(!AutonomousHaulingEnabled);
+                    DrawInventoryInspection(record);
+                    DrawInventoryDebugControls();
+                    DrawResourceDiagnostics();
+                    DrawExcavationDiagnostics();
+                    DrawMaterialHaulingDiagnostics();
+                    break;
+            }
         }
 
         private void DrawExcavationWorldOverlay()
@@ -1675,11 +1789,11 @@ namespace AntColony.Commands
 
         private void DrawColonyJobsDebugControls()
         {
-            if (GUILayout.Button(colonyJobsDebugExpanded
-                    ? "Hide Developer Only Colony Jobs"
-                    : "Show Developer Only Colony Jobs"))
-                colonyJobsDebugExpanded = !colonyJobsDebugExpanded;
-            if (!colonyJobsDebugExpanded || SelectedAnt?.Record == null) return;
+            if (SelectedAnt?.Record == null)
+            {
+                GUILayout.Label("Select an ant to edit individual work priorities.");
+                return;
+            }
 
             GUILayout.Label("DEVELOPER ONLY — COLONY JOBS");
             foreach (AntWorkCategoryDefinition definition in AntWorkCategoryCatalog.All)
@@ -1774,12 +1888,6 @@ namespace AntColony.Commands
 
         private void DrawMaterialHaulingDiagnostics()
         {
-            if (GUILayout.Button(haulingDebugExpanded
-                    ? "Hide Developer Only Material Hauling"
-                    : "Show Developer Only Material Hauling"))
-                haulingDebugExpanded = !haulingDebugExpanded;
-            if (!haulingDebugExpanded) return;
-
             GUILayout.Space(4f);
             GUILayout.Label("DEVELOPER ONLY — MATERIAL STORAGE & HAULING");
             GUILayout.Label($"Autonomous hauling: {(AutonomousHaulingEnabled ? "Enabled" : "Disabled")}");
@@ -1911,15 +2019,9 @@ namespace AntColony.Commands
 
         private void DrawNeedsDebugControls()
         {
-            if (GUILayout.Button(needsDebugExpanded
-                    ? "Hide Developer Only Needs Tools"
-                    : "Show Developer Only Needs Tools"))
+            if (SelectedAnt?.Record == null)
             {
-                needsDebugExpanded = !needsDebugExpanded;
-            }
-
-            if (!needsDebugExpanded || SelectedAnt?.Record == null)
-            {
+                GUILayout.Label("Select an ant to use needs testing controls.");
                 return;
             }
 
@@ -2007,15 +2109,9 @@ namespace AntColony.Commands
 
         private void DrawSkillDebugControls()
         {
-            if (GUILayout.Button(skillDebugExpanded
-                    ? "Hide Developer Only Skill Tools"
-                    : "Show Developer Only Skill Tools"))
+            if (SelectedAnt?.Record == null)
             {
-                skillDebugExpanded = !skillDebugExpanded;
-            }
-
-            if (!skillDebugExpanded)
-            {
+                GUILayout.Label("Select an ant to use skill testing controls.");
                 return;
             }
 

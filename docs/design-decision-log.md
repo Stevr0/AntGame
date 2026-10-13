@@ -29,6 +29,7 @@ This log summarises approved decisions. It does not approve unresolved details o
 | 13 Oct 2026 | Use a provisional Soil/Stone stack maximum of 10 for 3.3C | Stacking and partial transfer can be tested without claiming final material balance |
 | 13 Oct 2026 | Keep 3.3D storage physical and cell-owned | Each Material Storage Background tile owns one filtered stack and reservation rather than contributing to a global wallet |
 | 13 Oct 2026 | Award 5 provisional Hauling XP per committed stored unit | Travel, reservation, pickup and cancellation cannot farm XP; Rested and hydration rules still apply |
+| 13 Oct 2026 | Reorganise development IMGUI into one mutually exclusive top toolbar | Existing controls remain in place without overlapping side panels or a UI Toolkit migration; one shared hit test blocks world and camera mouse input over UI |
 
 ## Open decisions
 

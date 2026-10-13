@@ -35,6 +35,8 @@ The integrated `AntGameDevelopment.unity` scene is a deterministic development e
 - physical one-slot Material Storage tiles with Soil, Stone and general filters;
 - developer diagnostics and deterministic fixtures.
 
+Development controls are grouped in one compact top IMGUI toolbar. Ant, Needs, Skills, Jobs, Resources, World and Debug share a single bounded scrollable expansion area, so panels cannot overlap. Hide All leaves a small reopen control, and the centralized UI hit test prevents panel interaction from issuing world commands.
+
 Milestones through 3.3C are accepted. Milestone 3.3D implements physical Material Storage and autonomous loose-drop/self-deposit hauling with full automated verification, while its 30-step manual Play Mode checklist remains pending. Construction, brood, room quality, combat, persistence, and a finished onboarding flow are not implemented.
 
 ## Scope boundaries

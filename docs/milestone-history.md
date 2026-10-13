@@ -4,6 +4,16 @@ This history records the strongest confirmed evidence without implying that late
 
 ## 13 October 2026
 
+### Development UI reorganisation (non-milestone pass)
+
+**Implemented and automated; manual visual confirmation pending.** Existing IMGUI controls were regrouped into a compact top toolbar with Ant, Needs, Skills, Jobs, Resources, World and Debug. A single bounded scrollable panel prevents overlap; Hide All leaves a reopen button; shared input blocking protects world commands and camera mouse controls. No gameplay or 3.4A work was introduced, and 3.3D remains pending manual acceptance.
+
+- Focused Edit Mode: 8/8 passed.
+- Focused Play Mode: 2/2 passed.
+- Complete graphics-enabled Edit Mode: 455/455 passed.
+- Complete Play Mode: 47/47 passed.
+- Manual UI checklist: 24 steps pending.
+
 ### 3.3D — Material Storage and Autonomous Hauling
 
 **Implemented — Pending Manual Acceptance.** Pre-authored functional Background tiles own one physical storage slot each with Soil/Stone/general filters. Existing colony jobs, priorities, inventory and grid navigation drive reserved loose-drop delivery and owner-only self-deposit. Cancellation preserves the material at its current physical owner; completed delivery awards 5 base Hauling XP per unit.

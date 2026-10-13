@@ -1,4 +1,5 @@
 using System.Text;
+using AntColony.Commands;
 using AntColony.Navigation;
 using AntColony.World;
 using AntColony.WorldPresentation;
@@ -14,10 +15,6 @@ namespace AntColony.Development
     /// </summary>
     public sealed class DevelopmentWorldInspector : MonoBehaviour
     {
-        private const float PanelWidth = 390f;
-        private const float CollapsedPanelWidth = 260f;
-        private const float CollapsedPanelHeight = 42f;
-
         [SerializeField] private AntGameDevelopmentWorldHost worldHost;
         [SerializeField] private Camera worldCamera;
         [SerializeField] private Vector2Int selectedCell = new(-13, -8);
@@ -25,13 +22,24 @@ namespace AntColony.Development
         private readonly StringBuilder textBuilder = new(512);
         private string statusMessage = "Click a world cell to inspect it.";
         private bool backgroundOnlyVisuals;
-        private bool developerToolsExpanded;
         private Vector2 panelScrollPosition;
+        private DevelopmentUiCategory lastDrawnCategory;
+        private static readonly int[] StressGroupSizes = { 1, 100, 300, 500 };
 
         public Vector2Int SelectedCell => selectedCell;
-        public Rect DeveloperPanelGuiRect => developerToolsExpanded
-            ? new Rect(12f, 12f, PanelWidth - 20f, Screen.height - 24f)
-            : new Rect(12f, 12f, CollapsedPanelWidth, CollapsedPanelHeight);
+        public Rect DeveloperPanelGuiRect
+        {
+            get
+            {
+                AntSelectionCommandController controller =
+                    worldHost?.SelectionController;
+                bool ownsPanel = controller != null &&
+                    controller.DevelopmentUiVisible &&
+                    controller.ExpandedDevelopmentCategory is
+                        DevelopmentUiCategory.World or DevelopmentUiCategory.Debug;
+                return ownsPanel ? controller.DevelopmentPanelGuiRect : default;
+            }
+        }
 
         private void OnEnable()
         {
@@ -77,29 +85,43 @@ namespace AntColony.Development
 
         private void OnGUI()
         {
-            GUILayout.BeginArea(DeveloperPanelGuiRect, GUI.skin.box);
-            if (GUILayout.Button(developerToolsExpanded
-                    ? "Hide Developer Tools"
-                    : "Show Developer Tools"))
-            {
-                developerToolsExpanded = !developerToolsExpanded;
-                UpdateUiBlocker();
-            }
-
-            if (!developerToolsExpanded)
-            {
-                GUILayout.EndArea();
+            AntSelectionCommandController controller = worldHost?.SelectionController;
+            if (controller == null || !controller.DevelopmentUiVisible ||
+                controller.ExpandedDevelopmentCategory is not
+                    (DevelopmentUiCategory.World or DevelopmentUiCategory.Debug))
                 return;
+
+            // Each category opens at its top rather than inheriting the other
+            // category's diagnostic scroll position.
+            if (lastDrawnCategory != controller.ExpandedDevelopmentCategory)
+            {
+                panelScrollPosition = Vector2.zero;
+                lastDrawnCategory = controller.ExpandedDevelopmentCategory;
             }
 
+            GUILayout.BeginArea(DeveloperPanelGuiRect, GUI.skin.box);
             panelScrollPosition = GUILayout.BeginScrollView(panelScrollPosition);
-            GUILayout.Label("ANT GAME DEVELOPMENT WORLD");
-            GUILayout.Label("Left-click selects ants; right-click issues move orders.");
-            GUILayout.Label("WASD/arrows pan, wheel zoom,");
-            GUILayout.Label("middle-drag pans, Home resets the camera.");
+            if (controller.ExpandedDevelopmentCategory == DevelopmentUiCategory.World)
+                DrawWorldControls(controller);
+            else
+                DrawDebugControls();
             GUILayout.Space(8f);
-            GUILayout.Label(BuildInspectionText());
-            GUILayout.Space(8f);
+            GUILayout.Label(statusMessage);
+            GUILayout.EndScrollView();
+            GUILayout.EndArea();
+        }
+
+        private void DrawWorldControls(AntSelectionCommandController controller)
+        {
+            GUILayout.Label("WORLD");
+            GUILayout.Label($"Inspected cell: {selectedCell}");
+            GUILayout.Label("Left-click inspects/selects; right-click issues context orders.");
+            if (GUILayout.Button(controller.DesignationMode ==
+                    WorldDesignationMode.Excavate
+                    ? "Exit Excavate Mode (Esc)" : "Enter Excavate Mode"))
+                controller.SetDesignationMode(controller.DesignationMode ==
+                    WorldDesignationMode.Excavate
+                        ? WorldDesignationMode.None : WorldDesignationMode.Excavate);
             if (GUILayout.Button("Command Primary Grid Ant to Inspected Cell"))
             {
                 worldHost.TryAssignGridDestination(
@@ -130,10 +152,27 @@ namespace AntColony.Development
                 worldHost.StartGridFallingFixture();
                 statusMessage = "Grid ant released to Rigidbody2D gravity.";
             }
+            if (GUILayout.Button(backgroundOnlyVisuals
+                    ? "Restore Foreground Visuals"
+                    : "Isolate Background Visuals"))
+                ToggleBackgroundIsolation();
+            if (GUILayout.Button("Regenerate Seeded World"))
+            {
+                statusMessage = worldHost.RebuildWorld()
+                    ? "World regenerated from the configured seed."
+                    : "World regeneration failed; inspect the Console.";
+            }
+        }
+
+        private void DrawDebugControls()
+        {
+            GUILayout.Label("DEBUG");
+            GUILayout.Label("WASD/arrows pan, wheel zoom, middle-drag pans, Home resets.");
+            GUILayout.Label(BuildInspectionText());
             GUILayout.Space(6f);
             GUILayout.Label("GRID SCHEDULER STRESS GROUP");
             GUILayout.BeginHorizontal();
-            foreach (int count in new[] { 1, 100, 300, 500 })
+            foreach (int count in StressGroupSizes)
             {
                 if (GUILayout.Button(count.ToString()))
                 {
@@ -167,23 +206,6 @@ namespace AntColony.Development
                     ? "First grid-ant request cancelled."
                     : "No grid-ant request was available to cancel.";
             }
-            if (GUILayout.Button(backgroundOnlyVisuals
-                    ? "Restore Foreground Visuals"
-                    : "Isolate Background Visuals"))
-            {
-                ToggleBackgroundIsolation();
-            }
-            if (GUILayout.Button("Regenerate Seeded World"))
-            {
-                statusMessage = worldHost.RebuildWorld()
-                    ? "World regenerated from the configured seed."
-                    : "World regeneration failed; inspect the Console.";
-            }
-
-            GUILayout.Space(8f);
-            GUILayout.Label(statusMessage);
-            GUILayout.EndScrollView();
-            GUILayout.EndArea();
         }
 
         public void Configure(
@@ -197,8 +219,10 @@ namespace AntColony.Development
 
         private void UpdateUiBlocker()
         {
-            worldHost?.SelectionController?.SetAdditionalUiBlocker(
-                DeveloperPanelGuiRect);
+            // The command controller owns the shared toolbar and panel bounds.
+            // Clear the legacy secondary blocker so hiding the toolbar restores
+            // the full Game view except for the small Show UI button.
+            worldHost?.SelectionController?.SetAdditionalUiBlocker(default);
         }
 
         private string BuildInspectionText()

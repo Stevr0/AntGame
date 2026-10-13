@@ -4,9 +4,9 @@ This page is a concise navigation view of the authoritative `Documentation/Devel
 
 ## Immediate boundary
 
-**Next action:** complete the exact 30-step milestone 3.3D manual Play Mode checklist in `Assets/AntColony/Scenes/AntGameDevelopment.unity` and wait for user acceptance.
+**Next action:** manually confirm the 24-step development-toolbar checklist, then use the reorganised interface to complete the existing 30-step milestone 3.3D Play Mode checklist in `Assets/AntColony/Scenes/AntGameDevelopment.unity`.
 
-Do not begin construction, Surface Preparation, or another milestone without separate approval.
+The UI reorganisation is implemented with 8/8 focused Edit, 2/2 focused Play, 455/455 full Edit and 47/47 full Play passing. It is not Milestone 3.4A and changes no simulation behavior. Do not begin construction, Surface Preparation, 3.4A or another milestone without separate approval.
 
 ## Current milestone state
 

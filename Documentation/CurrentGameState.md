@@ -1,5 +1,58 @@
 # Ant Colony Current Game State
 
+## Development UI reorganisation pass (13 October 2026)
+
+**Status: Implemented and automated — manual visual confirmation pending. This is not Milestone 3.4A. Milestone 3.3D remains Implemented — Pending Manual Acceptance.**
+
+The integrated development scene now uses one compact IMGUI toolbar across the top of the Game view. Its mutually exclusive categories are **Ant, Needs, Skills, Jobs, Resources, World and Debug**. Selecting an open category collapses it; selecting another replaces it, so expanded panels cannot overlap each other. `Hide All` removes the toolbar, summary, expanded panel and excavation overlays, leaving only a small `Show UI` button.
+
+Existing controls were preserved and regrouped:
+
+- **Ant:** identity, colony, caste, attributes, lifecycle, control/order state, destination/failure and order cancellation.
+- **Needs:** needs readout, autonomous-survival toggle/state and all needs/time/rest test controls.
+- **Skills:** complete skill readout, XP/multiplier/maximum tests, inactivity and reset.
+- **Jobs:** autonomous-work toggle/state, every per-ant priority, synthetic job creation/reset/cancellation and registry diagnostics.
+- **Resources:** personal inventory, pickup/drop test tools, food/water/rest storage diagnostics, excavation/drop diagnostics, Material Storage filters/reservations, autonomous hauling and hauling reset.
+- **World:** Excavate mode, inspected-cell movement commands, foreground/Prepared mutations, grip/falling fixtures, renderer isolation and seeded-world reset.
+- **Debug:** authoritative cell/navigation/rendering readout and all navigation scheduler stress controls.
+
+All expanded content uses the same resolution-bounded panel and an internal scroll view. A compact selected-ant summary remains below the toolbar. The central hit test blocks toolbar, summary, active panel and hidden-state reopen button from selection, movement, context orders, pickup and excavation input. Releasing an excavation drag over UI cancels the designation. Mouse wheel and middle-drag over UI no longer zoom or pan the world camera; camera controls remain unchanged outside UI.
+
+### Development UI automated verification
+
+- Focused Edit Mode layout/state/input tests: **8/8 passed**.
+- Focused Play Mode scene/input tests: **2/2 passed**.
+- Complete graphics-enabled Edit Mode: **455/455 passed**.
+- Complete Play Mode: **47/47 passed**.
+- Static layout checks cover 320×200, 1024×768, **1920×1080** and 2560×1080 bounds.
+
+### Development UI manual Play Mode checklist
+
+1. Open `Assets/AntColony/Scenes/AntGameDevelopment.unity` at 1920×1080 and enter Play Mode.
+2. Confirm one compact horizontal toolbar appears across the top with Ant, Needs, Skills, Jobs, Resources, World and Debug.
+3. Select an ant and confirm the compact summary shows its name, caste, control state, order and carried quantity.
+4. Open **Ant** and confirm identity, colony, caste, attributes, lifecycle, order, destination, failure and cancellation remain available.
+5. Open **Needs** and confirm needs/status diagnostics, autonomous-survival toggle, time advancement, refill, fatigue, rest, critical-needs and reset controls work.
+6. Open **Skills** and confirm all skills plus XP multiplier, maximum, inactivity and reset tests remain available.
+7. Open **Jobs** and confirm autonomous work, per-ant priorities, synthetic reachable/unreachable jobs, reset, cancellation and registry diagnostics remain available.
+8. Open **Resources** and confirm inventory add/fill/drop/remove/reset, physical survival storage, excavation drops, Material Storage filters, hauling toggle/status and hauling reset remain available.
+9. Open **World** and confirm Excavate mode can be entered/exited without losing the other world controls.
+10. In **World**, confirm primary/legacy movement commands, foreground mutation, Prepared mutation, grip target and falling/recovery fixture work.
+11. In **World**, confirm background isolation/restoration and seeded-world regeneration work.
+12. Open **Debug** and confirm the full cell, ant, navigation and rendering readout is visible and scrollable.
+13. In **Debug**, confirm stress sizes 1/100/300/500, spawn, clear, simultaneous, staggered and cancel-first-request controls remain available.
+14. Switch repeatedly between categories and confirm only one expanded panel is visible at a time and no panels overlap.
+15. Click the currently open category and confirm its panel collapses completely.
+16. Resize the Game view through narrow, wide and 1920×1080 layouts; confirm the toolbar/panel remain inside the view and long content scrolls.
+17. Click **Hide All** and confirm the toolbar, selected-ant summary, expanded panel and diagnostic overlays disappear, leaving only `Show UI`.
+18. Click `Show UI` and confirm the toolbar returns with no category unexpectedly expanded.
+19. Click buttons, category tabs and scrollbars and confirm no ant selection, move, pickup or context order is issued.
+20. Enter Excavate mode, click/drag/release over the toolbar and panels, and confirm no designation is created beneath UI.
+21. Scroll or middle-drag inside a panel and confirm it does not zoom or pan the world camera.
+22. Move outside UI and confirm left/right-click commands, excavation dragging, WASD/arrow pan, mouse-wheel zoom, middle-drag pan and Home reset still work.
+23. Confirm the improved Resources/Jobs/World panels still support every item in the existing 3.3D 30-point acceptance checklist.
+24. Confirm the Unity Console contains no relevant errors or warnings.
+
 ## Current implemented milestone — 3.3D Material Storage & Autonomous Hauling (13 October 2026)
 
 **Status: Implemented — Pending Manual Acceptance.** Milestone 3.3C is accepted. Milestone 3.3D adds traversable/grippable Material Storage Background tiles, one authoritative physical stack slot per tile, Soil/Stone/general filters, incoming-capacity reservations and autonomous delivery of loose or already-carried building material. It does not add construction, conversion, crafting, global resource balances or storage for food/water.

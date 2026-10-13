@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
+using AntColony.Commands;
 
 namespace AntColony.Development
 {
@@ -22,6 +23,7 @@ namespace AntColony.Development
         private Vector2 previousMousePosition;
         private float targetOrthographicSize;
         private float zoomVelocity;
+        private AntSelectionCommandController selectionController;
 
         public float TargetOrthographicSize => targetOrthographicSize;
         public float MinimumOrthographicSize => minimumOrthographicSize;
@@ -34,6 +36,8 @@ namespace AntColony.Development
                 controlledCamera.orthographicSize,
                 minimumOrthographicSize,
                 maximumOrthographicSize);
+            selectionController = FindFirstObjectByType<
+                AntSelectionCommandController>();
         }
 
         private void OnValidate()
@@ -86,6 +90,17 @@ namespace AntColony.Development
                 return;
             }
 
+            Vector2 mousePosition = mouse.position.ReadValue();
+            if (selectionController != null &&
+                selectionController.IsScreenPointBlocked(mousePosition))
+            {
+                // Scrolling a panel or dragging its scrollbar must not also move
+                // the world camera. Keyboard pan and Home remain available.
+                previousMousePosition = mousePosition;
+                AdvanceZoom(Time.unscaledDeltaTime);
+                return;
+            }
+
             float scroll = mouse.scroll.ReadValue().y;
             if (!Mathf.Approximately(scroll, 0f))
             {
@@ -94,7 +109,6 @@ namespace AntColony.Development
 
             AdvanceZoom(Time.unscaledDeltaTime);
 
-            Vector2 mousePosition = mouse.position.ReadValue();
             if (mouse.middleButton.isPressed)
             {
                 Vector2 delta = mousePosition - previousMousePosition;
