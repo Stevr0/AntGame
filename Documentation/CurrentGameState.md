@@ -2,7 +2,7 @@
 
 ## Latest implemented milestone — 3.1B Persistent Ant Identity & Attributes (13 October 2026)
 
-**Status: Implemented — Pending Manual Acceptance.** Automated suites pass, but the Unity Editor checklist below has not been user-confirmed.
+**Status: COMPLETE — all 12 manual Unity Play Mode checks confirmed by the user on 13 October 2026.** Previously reported focused Edit Mode 16/16, focused Play Mode 5/5, complete Edit Mode 268/268 and complete Play Mode 19/19 passed. No tests were rerun during this documentation update.
 
 `AntColony.Ants` is a focused runtime assembly containing plain C# identity data with no MonoBehaviours, navigation or visual state. `AntId` and `ColonyId` wrap stable text values suitable for future serialization without using Unity instance IDs or GameObject names. `AntRecord` is the one model used by both `Queen` and `Worker`; caste currently changes no movement, carrying or other statistics. `AntRegistry` owns one colony's records, rejects duplicate Ant IDs and rejects records whose Colony ID does not match the registry.
 
