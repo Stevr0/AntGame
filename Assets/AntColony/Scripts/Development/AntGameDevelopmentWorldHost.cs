@@ -272,10 +272,10 @@ namespace AntColony.Development
         {
             // World regeneration is the explicit development reset boundary.
             // Visual-only rebinding through SpawnOrResetSelectableGridAnts keeps
-            // the existing registry and therefore preserves skill data.
+            // the existing registry and therefore preserves skill and needs data.
             antRegistry = null;
             antBindingRegistry = null;
-            selectionController?.ResetSkillDebugClock();
+            selectionController?.ResetSimulationDebugClock();
         }
 
         /// <summary>Commands the primary production-grid ant.</summary>
