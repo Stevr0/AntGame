@@ -145,6 +145,111 @@ namespace AntColony.Tests.EditMode
         }
 
         [Test]
+        public void FullInventoryTravelsToCompatibleStorageThenResumesConstruction()
+        {
+            AntGameDevelopmentWorldHost host = OpenHost();
+            AntRecord ant = CreateRecord("unload-storage");
+            ant.Inventory.TryAdd("material.stone", 3, 10, false, out _, out _);
+            ConstructionJobOrder order = CreateOrder(host, ant, Site,
+                BackgroundFunction.Sleeping);
+
+            Assert.That(order.Phase, Is.EqualTo(ConstructionOrderPhase.UnloadingInventory));
+            Assert.That(order.Job.ReservationOwner, Is.EqualTo(ant.Id));
+            Assert.That(order.TryArrive(order.InitialApproachCell,
+                out Vector2Int sourceApproach), Is.True);
+            Assert.That(order.Phase, Is.EqualTo(ConstructionOrderPhase.TravellingToSource));
+            Assert.That(ant.Inventory.TotalQuantity, Is.Zero);
+            Assert.That(host.MaterialStorage.TryGet(
+                AntGameDevelopmentWorldHost.StoneMaterialStorageFixture,
+                out MaterialStorageSlot stored), Is.True);
+            Assert.That(stored.Quantity, Is.EqualTo(3));
+            Assert.That(sourceApproach, Is.Not.EqualTo(default(Vector2Int)));
+        }
+
+        [Test]
+        public void FullOrUnreachableStorageFallsBackToRecoverableGroundDrop()
+        {
+            AntGameDevelopmentWorldHost host = OpenHost();
+            FillStorage(host, AntGameDevelopmentWorldHost.StoneMaterialStorageFixture,
+                "material.stone", 10, "fill-stone");
+            AntRecord ant = CreateRecord("unload-ground");
+            ant.Inventory.TryAdd("material.stone", 2, 10, false, out _, out _);
+            Vector2Int start = new(-10, SampleWorldGenerator.MainPassageY);
+
+            ConstructionJobOrder order = CreateOrder(host, ant, Site,
+                BackgroundFunction.Sleeping);
+
+            Assert.That(order.Phase, Is.EqualTo(ConstructionOrderPhase.TravellingToSource));
+            Assert.That(ant.Inventory.TotalQuantity, Is.Zero);
+            Assert.That(host.MaterialDrops.TryFindAtCell(start,
+                out WorldMaterialDrop drop), Is.True);
+            Assert.That(drop.Material, Is.EqualTo(ExcavatedMaterialType.Stone));
+            Assert.That(drop.Quantity, Is.EqualTo(2));
+        }
+
+        [Test]
+        public void InventoryRecoveryKeepsTaskMaterialAndHandlesPartialStacks()
+        {
+            AntGameDevelopmentWorldHost host = OpenHost();
+            AntRecord ant = CreateRecord("partial-unload");
+            ant.TryAwardSkillExperience(AntSkillId.Hauling, 50000d, 1d,
+                0d, out _, out _);
+            ant.Inventory.TryAdd("material.stone", 31, 10, false, out _, out _);
+            ant.Inventory.TryAdd("material.soil", 2, 10, false, out _, out _);
+            Assert.That(InventoryCapacityRecoveryOperation.TryCreate(ant.Inventory,
+                host.MaterialStorage, host.MaterialDrops, host.GridNavigationMap,
+                ant.Id.Value, "partial-test", "material.stone", 10, 10,
+                new Vector2Int(-10, SampleWorldGenerator.MainPassageY),
+                out InventoryCapacityRecoveryOperation recovery,
+                out string error), Is.True, error);
+
+            Assert.That(recovery.TryArrive(recovery.ApproachCell, out _,
+                out bool ready, out error), Is.True, error);
+            Assert.That(ready, Is.True);
+            Assert.That(ant.Inventory.OccupiedSlots.Where(slot =>
+                slot.ResourceTypeId == "material.stone").Sum(slot => slot.Quantity),
+                Is.EqualTo(31));
+            Assert.That(ant.Inventory.OccupiedSlots.Any(slot =>
+                slot.ResourceTypeId == "material.soil"), Is.False);
+        }
+
+        [Test]
+        public void CancellingOrInterruptingUnloadReleasesReservationWithoutDuplication()
+        {
+            AntGameDevelopmentWorldHost host = OpenHost();
+            AntRecord ant = CreateRecord("cancel-unload");
+            ant.Inventory.TryAdd("material.stone", 4, 10, false, out _, out _);
+            int before = CountAllMaterial(host, ant);
+            ConstructionJobOrder order = CreateOrder(host, ant, Site,
+                BackgroundFunction.Sleeping);
+
+            order.Cancel("critical survival interruption");
+
+            Assert.That(order.Phase, Is.EqualTo(ConstructionOrderPhase.Cancelled));
+            Assert.That(order.Job.Status, Is.EqualTo(ColonyJobStatus.Paused));
+            Assert.That(ant.Inventory.TotalQuantity, Is.EqualTo(4));
+            Assert.That(CountAllMaterial(host, ant), Is.EqualTo(before));
+            Assert.That(host.MaterialStorage.Slots.All(slot =>
+                slot.ReservationOwnerId != ant.Id.Value), Is.True);
+        }
+
+        [Test]
+        public void UnsupportedUnloadUsesBoundedRetriesAndNeverDiscardsMaterial()
+        {
+            AntGameDevelopmentWorldHost host = OpenHost();
+            AntRecord ant = CreateRecord("bounded-unload");
+            ant.Inventory.TryAdd("resource.future", 1, 10, false, out _, out _);
+
+            Assert.That(InventoryCapacityRecoveryOperation.TryCreate(ant.Inventory,
+                host.MaterialStorage, host.MaterialDrops, host.GridNavigationMap,
+                ant.Id.Value, "bounded-test", "material.soil", 10, 1,
+                new Vector2Int(-10, SampleWorldGenerator.MainPassageY),
+                out _, out string error), Is.False);
+            Assert.That(error, Does.Contain("bounded attempts"));
+            Assert.That(ant.Inventory.TotalQuantity, Is.EqualTo(1));
+        }
+
+        [Test]
         public void MultiTripUsesSameBuilderAndPreservesStagedMaterial()
         {
             AntGameDevelopmentWorldHost host = OpenHost();
@@ -343,6 +448,26 @@ namespace AntColony.Tests.EditMode
         private static AntRecord CreateRecord(string id) => new(
             new AntId(id), "Test Builder", new ColonyId("test-colony"),
             AntCaste.Worker, new AntAttributes(5, 5, 5));
+
+        private static void FillStorage(AntGameDevelopmentWorldHost host,
+            Vector2Int cell, string resourceTypeId, int quantity, string owner)
+        {
+            Assert.That(host.MaterialStorage.TryReserveIncoming(cell,
+                resourceTypeId, 10, owner, quantity, out int reserved,
+                out string error), Is.True, error);
+            Assert.That(host.MaterialStorage.TryCommitReservedDeposit(cell,
+                resourceTypeId, 10, owner, reserved, () => true, out error),
+                Is.True, error);
+        }
+
+        private static int CountAllMaterial(AntGameDevelopmentWorldHost host,
+            AntRecord ant)
+        {
+            int total = ant.Inventory.TotalQuantity;
+            total += host.MaterialStorage.Slots.Sum(slot => slot.Quantity);
+            total += host.MaterialDrops.Drops.Sum(drop => drop.Quantity);
+            return total;
+        }
 
         private static AntGameDevelopmentWorldHost OpenHost()
         {

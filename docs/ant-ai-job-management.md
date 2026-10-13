@@ -24,9 +24,10 @@ Milestones through 3.3D are accepted, and 3.4A extends that foundation with phys
 - Actual A* travel cost selects the closest reachable compatible storage with deterministic ties. Disabled Hauling blocks dynamic claims; critical survival and explicit player orders interrupt safely.
 - The development scene exposes deterministic job, excavation and loose-drop fixtures plus priority, inventory, cancellation, reset, and diagnostic controls.
 - Background Conversion designations create real Construction jobs. The exclusive builder uses inventory first, otherwise reserves reachable storage/drop material, stages it at the site, performs timed work and commits the Background transaction.
+- A construction builder with no usable inventory capacity temporarily unloads unnecessary cargo through a reusable recovery operation: closest reachable reserved storage first, validated recoverable current-anchor drop second, then automatic resumption of the same job. Critical survival and player orders may interrupt this state safely.
 - Construction interruption preserves progress, carried material and staged material. Cancellation releases reservations and exposes staged material as a recoverable drop.
 
-Milestones through 3.3D and the UI pass are manually accepted. Milestone 3.4A is **Implemented — Pending Manual Acceptance** with 14/14 focused Edit, 3/3 focused Play, 469/469 full Edit and 50/50 full Play passing.
+Milestones through 3.3D and the UI pass are manually accepted. Milestone 3.4A is **Implemented — Pending Manual Acceptance** with 19/19 focused Edit, 4/4 focused Play, 474/474 full Edit and 51/51 full Play passing after the inventory-capacity recovery correction.
 
 ## Future decision flow
 

@@ -80,6 +80,14 @@ Before another gameplay milestone, perform a **read-only architecture/code-to-de
 - Resources retain physical locations and quantities in world drops, ant inventory, storage tiles and delivered construction-site materials. The colony may display aggregated totals, but totals are **derived views**, not teleportable resources.
 - Add **Material Storage Background** as a functional tile. As with other functional storage, one tile grants **one physical storage slot** (a compatible stack). Optional player-configured material filters can restrict accepted resource types. Food and Water Storage remain distinct shared stockpile types. Stored items are physical and require adjacency to deposit/withdraw.
 - If an occupied storage tile is removed or changed, contents become loose, recoverable physical items, consistent with prior design decisions.
+- When an ant requires inventory capacity for its current task, it automatically unloads **unnecessary** carried material. It retains material required by the current task, reserves and physically travels to the closest reachable compatible storage with capacity, deposits only enough to free the required capacity, then resumes the original task. If no compatible reachable storage is available, it places the unnecessary material at a valid nearby recoverable world-drop position. Bounded retries apply when neither transfer is currently possible. Player orders and critical survival may interrupt this recovery without duplicating or deleting resources.
+- Task-reserved material and material already staged at a worksite are not eligible for automatic unloading. Partial stacks and mixed-resource inventories follow the same physical reservation and conservation rules.
+
+### Loose-resource clutter
+
+- Loose resources are allowed and must never block ordinary excavation, construction or movement solely because storage is unavailable. World drops remain traversable.
+- Future loose-resource concentration may apply a movement-speed penalty, and loose resources inside an enclosed room may reduce cleanliness or room quality. Stored materials do not count as loose-resource clutter.
+- These future penalties are incentives for organised hauling and storage, not hard progression restrictions. Concentration thresholds, movement penalties, cleanliness values and room-quality deductions remain **provisional/TBD** and are not part of Milestone 3.4A.
 
 ### Resource-backed construction and conversion
 
@@ -94,7 +102,7 @@ Before another gameplay milestone, perform a **read-only architecture/code-to-de
 ### First-colony bootstrap and unresolved balancing
 
 - The founding queen must be able to excavate, collect, transport and convert at least three Nursery Background tiles from initially reachable resources without relying on existing workers or prior stockpiles. The queen may build directly from carried materials or recoverable nearby drops. Initial nursery is functional before enclosure and doors.
-- **Unresolved (do not hardcode as approved):** construction recipes and costs, exact materials available at start, stack-size limits, carrying-slot progression and any equipment modifiers, conversion durations, reservation expiry, placement when drop location is invalid, point of material consumption, whether partial construction persists, stockpile filters UI, logistics fallback when missing materials, and performance update cadence.
+- **Unresolved (do not hardcode as approved):** construction recipes and costs, exact materials available at start, stack-size limits, carrying-slot progression and any equipment modifiers, conversion durations, reservation expiry, exact nearby placement choice when every candidate drop location is invalid, point of material consumption, whether partial construction persists, stockpile filters UI, clutter thresholds/penalties and performance update cadence.
 - Testing when implementation is separately authorised should cover resource conservation (excavate/pick up/drop/store/withdraw/consume), stacking, one-slot capacity, builder self-supply over multiple trips, reservation contention, cancellation at multiple stages, builder death, tile removal, persistent save/load and nursery bootstrap without stockpiles.
 
 ## Approved job and priority system — 12 October 2026

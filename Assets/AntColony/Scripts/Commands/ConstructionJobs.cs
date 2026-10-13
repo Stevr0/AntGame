@@ -394,12 +394,233 @@ namespace AntColony.Commands
 
     public enum ConstructionOrderPhase
     {
+        UnloadingInventory,
         TravellingToSource,
         TravellingToSite,
         Working,
         Completed,
         Cancelled,
         Failed
+    }
+
+    public enum InventoryCapacityRecoveryPhase
+    {
+        TravellingToStorage,
+        Completed,
+        Cancelled,
+        Failed
+    }
+
+    /// <summary>
+    /// Reusable, task-owned operation which frees inventory space without losing
+    /// physical resources. The caller names the resource its current task needs;
+    /// that resource is never selected for unloading.
+    /// </summary>
+    public sealed class InventoryCapacityRecoveryOperation
+    {
+        public const int MaximumRecoveryAttempts = 8;
+        private readonly AntInventory inventory;
+        private readonly MaterialStorageWorld storage;
+        private readonly WorldMaterialDropRegistry drops;
+        private readonly GridNavigationMap map;
+        private readonly string ownerId;
+        private readonly string operationKey;
+        private readonly string protectedResourceTypeId;
+        private readonly int protectedMaximumStack;
+        private readonly int requiredCapacity;
+        private Vector2Int storageCell;
+        private string unloadResourceTypeId = string.Empty;
+        private int unloadMaximumStack;
+        private int unloadQuantity;
+
+        private InventoryCapacityRecoveryOperation(AntInventory inventory,
+            MaterialStorageWorld storage, WorldMaterialDropRegistry drops,
+            GridNavigationMap map, string ownerId, string operationKey,
+            string protectedResourceTypeId,
+            int protectedMaximumStack, int requiredCapacity)
+        {
+            this.inventory = inventory; this.storage = storage; this.drops = drops;
+            this.map = map; this.ownerId = ownerId; this.operationKey = operationKey;
+            this.protectedResourceTypeId = protectedResourceTypeId;
+            this.protectedMaximumStack = protectedMaximumStack;
+            this.requiredCapacity = requiredCapacity;
+        }
+
+        public InventoryCapacityRecoveryPhase Phase { get; private set; }
+        public Vector2Int ApproachCell { get; private set; }
+        public int Attempts { get; private set; }
+        public string Status { get; private set; } = string.Empty;
+        public string FailureReason { get; private set; } = string.Empty;
+        public bool IsActive => Phase == InventoryCapacityRecoveryPhase.TravellingToStorage;
+
+        public static bool TryCreate(AntInventory inventory,
+            MaterialStorageWorld storage, WorldMaterialDropRegistry drops,
+            GridNavigationMap map, string ownerId, string operationKey,
+            string protectedResourceTypeId,
+            int protectedMaximumStack, int requiredCapacity, Vector2Int start,
+            out InventoryCapacityRecoveryOperation operation, out string error)
+        {
+            operation = null;
+            if (inventory == null || storage == null || drops == null || map == null ||
+                string.IsNullOrWhiteSpace(ownerId) || string.IsNullOrWhiteSpace(operationKey) ||
+                string.IsNullOrWhiteSpace(protectedResourceTypeId) ||
+                protectedMaximumStack <= 0 || requiredCapacity <= 0)
+            {
+                error = "Inventory recovery requires a task owner and physical material authorities.";
+                return false;
+            }
+            operation = new InventoryCapacityRecoveryOperation(inventory, storage,
+                drops, map, ownerId, operationKey, protectedResourceTypeId,
+                protectedMaximumStack, requiredCapacity);
+            if (operation.TryPlanNextStep(start, out error)) return true;
+            operation = null;
+            return false;
+        }
+
+        public bool TryArrive(Vector2Int currentCell, out Vector2Int nextApproach,
+            out bool capacityReady, out string error)
+        {
+            nextApproach = default; capacityReady = false;
+            if (Phase != InventoryCapacityRecoveryPhase.TravellingToStorage ||
+                !SurvivalInteractionOrder.IsValidAdjacentInteractionAnchor(
+                    map, currentCell, storageCell))
+            {
+                error = "The reserved inventory-unload destination is no longer reachable.";
+                Fail(error); return false;
+            }
+            if (!storage.TryCommitReservedDeposit(storageCell,
+                    unloadResourceTypeId, unloadMaximumStack, ownerId, unloadQuantity,
+                    () => inventory.TryRemoveResource(unloadResourceTypeId,
+                        unloadQuantity, unloadMaximumStack, out _), out error))
+            {
+                Fail(error); return false;
+            }
+            if (HasRequiredCapacity())
+            {
+                Phase = InventoryCapacityRecoveryPhase.Completed;
+                Status = "Freed inventory capacity; resuming the original task.";
+                capacityReady = true; error = string.Empty; return true;
+            }
+            if (!TryPlanNextStep(currentCell, out error)) return false;
+            if (Phase == InventoryCapacityRecoveryPhase.Completed)
+            { capacityReady = true; return true; }
+            nextApproach = ApproachCell;
+            return true;
+        }
+
+        public void Cancel(string reason)
+        {
+            if (Phase == InventoryCapacityRecoveryPhase.TravellingToStorage)
+                storage.ReleaseIncoming(storageCell, ownerId);
+            Phase = InventoryCapacityRecoveryPhase.Cancelled;
+            FailureReason = reason ?? string.Empty;
+            Status = "Inventory unload interrupted; all uncommitted material remains carried.";
+        }
+
+        private bool TryPlanNextStep(Vector2Int start, out string error)
+        {
+            while (Attempts < MaximumRecoveryAttempts)
+            {
+                if (HasRequiredCapacity())
+                {
+                    Phase = InventoryCapacityRecoveryPhase.Completed;
+                    Status = "Required inventory capacity is available.";
+                    error = string.Empty; return true;
+                }
+                Attempts++;
+                if (!TryChooseUnnecessaryStack(out AntInventorySlot fallbackStack))
+                {
+                    error = "No unnecessary carried material can be unloaded for this task.";
+                    Fail(error); return false;
+                }
+                if (TryReserveClosestStorage(start, out error)) return true;
+
+                // Storage is preferred. Only when none is reachable and compatible
+                // do we use the same validated, conserving transaction as manual drops.
+                int slotIndex = FindSlotIndex(fallbackStack.ResourceTypeId,
+                    fallbackStack.MaximumStack);
+                string dropKey = $"task-unload.{operationKey}.{Attempts:D2}";
+                if (slotIndex >= 0 && MaterialDropTransaction.TryDrop(inventory,
+                        slotIndex, fallbackStack.Quantity, start, map, drops, dropKey,
+                        out _, out error))
+                {
+                    Status = $"Dropped {fallbackStack.Quantity} unnecessary material unit(s) safely.";
+                    continue;
+                }
+            }
+            error = $"Inventory recovery stopped after {MaximumRecoveryAttempts} bounded attempts.";
+            Fail(error); return false;
+        }
+
+        private bool TryReserveClosestStorage(Vector2Int start, out string error)
+        {
+            float bestCost = float.PositiveInfinity;
+            MaterialStorageSlot best = null;
+            AntInventorySlot bestStack = null;
+            Vector2Int bestApproach = default;
+            foreach (AntInventorySlot stack in inventory.OccupiedSlots)
+            {
+                if (stack.ResourceTypeId == protectedResourceTypeId &&
+                    stack.MaximumStack == protectedMaximumStack) continue;
+                foreach (MaterialStorageSlot candidate in storage.Slots)
+                {
+                    int capacity = storage.GetAvailableCapacity(candidate.Cell,
+                        stack.ResourceTypeId, stack.MaximumStack);
+                    if (capacity <= 0 || !SurvivalInteractionOrder.TryMeasureApproach(
+                            map, start, candidate.Cell, out Vector2Int approach,
+                            out float cost, out _) || cost >= bestCost) continue;
+                    best = candidate; bestStack = stack;
+                    bestCost = cost; bestApproach = approach;
+                }
+            }
+            if (best == null || bestStack == null)
+            { error = "No reachable compatible Material Storage has capacity."; return false; }
+            if (!storage.TryReserveIncoming(best.Cell, bestStack.ResourceTypeId,
+                    bestStack.MaximumStack, ownerId, bestStack.Quantity,
+                    out unloadQuantity, out error)) return false;
+            storageCell = best.Cell; ApproachCell = bestApproach;
+            unloadResourceTypeId = bestStack.ResourceTypeId;
+            unloadMaximumStack = bestStack.MaximumStack;
+            Phase = InventoryCapacityRecoveryPhase.TravellingToStorage;
+            Status = $"Travelling to unload {unloadQuantity} unnecessary material unit(s).";
+            return true;
+        }
+
+        private bool TryChooseUnnecessaryStack(out AntInventorySlot selected)
+        {
+            selected = null;
+            foreach (AntInventorySlot candidate in inventory.OccupiedSlots)
+            {
+                if (candidate.ResourceTypeId == protectedResourceTypeId &&
+                    candidate.MaximumStack == protectedMaximumStack) continue;
+                if (selected == null || candidate.Quantity < selected.Quantity)
+                    selected = candidate;
+            }
+            return selected != null;
+        }
+
+        private int FindSlotIndex(string resourceTypeId, int maximumStack)
+        {
+            for (int index = 0; index < inventory.OccupiedSlots.Count; index++)
+            {
+                AntInventorySlot slot = inventory.OccupiedSlots[index];
+                if (slot.ResourceTypeId == resourceTypeId &&
+                    slot.MaximumStack == maximumStack) return index;
+            }
+            return -1;
+        }
+
+        private bool HasRequiredCapacity() => inventory.GetAvailableCapacity(
+            protectedResourceTypeId, protectedMaximumStack) >= requiredCapacity;
+
+        private void Fail(string reason)
+        {
+            if (Phase == InventoryCapacityRecoveryPhase.TravellingToStorage)
+                storage.ReleaseIncoming(storageCell, ownerId);
+            Phase = InventoryCapacityRecoveryPhase.Failed;
+            FailureReason = reason ?? string.Empty;
+            Status = "Inventory recovery could not safely free capacity.";
+        }
     }
 
     public sealed class ConstructionJobSettings
@@ -432,6 +653,7 @@ namespace AntColony.Commands
         private Vector2Int sourceApproach;
         private int tripQuantity;
         private int maximumStack = MaterialResourceCatalog.ProvisionalMaximumStack;
+        private InventoryCapacityRecoveryOperation inventoryRecovery;
 
         private ConstructionJobOrder(ColonyJobRegistry jobs, GridNavigationMap map,
             WorldMaterialDropRegistry drops, MaterialStorageWorld storage,
@@ -450,13 +672,18 @@ namespace AntColony.Commands
         public Vector2Int SiteApproachCell { get; }
         public Vector2Int CurrentSourceCell => sourceCell;
         public int TripQuantity => tripQuantity;
+        public InventoryCapacityRecoveryOperation InventoryRecovery => inventoryRecovery;
         public ConstructionOrderPhase Phase { get; private set; }
         public string Status { get; private set; } = string.Empty;
         public string FailureReason { get; private set; } = string.Empty;
-        public bool IsActive => Phase is ConstructionOrderPhase.TravellingToSource or
+        public bool IsActive => Phase is ConstructionOrderPhase.UnloadingInventory or
+            ConstructionOrderPhase.TravellingToSource or
             ConstructionOrderPhase.TravellingToSite or ConstructionOrderPhase.Working;
         public Vector2Int InitialApproachCell => Phase ==
-            ConstructionOrderPhase.TravellingToSource ? sourceApproach : SiteApproachCell;
+            ConstructionOrderPhase.UnloadingInventory
+                ? inventoryRecovery.ApproachCell
+                : Phase == ConstructionOrderPhase.TravellingToSource
+                    ? sourceApproach : SiteApproachCell;
 
         public static bool TryCreate(ColonyJobRegistry jobs, GridNavigationMap map,
             WorldMaterialDropRegistry drops, MaterialStorageWorld storage,
@@ -511,6 +738,18 @@ namespace AntColony.Commands
         public bool TryArrive(Vector2Int currentCell, out Vector2Int nextApproach)
         {
             nextApproach = default;
+            if (Phase == ConstructionOrderPhase.UnloadingInventory)
+            {
+                if (!inventoryRecovery.TryArrive(currentCell, out nextApproach,
+                        out bool capacityReady, out string recoveryError))
+                { Fail(recoveryError); return false; }
+                if (!capacityReady) return true;
+                inventoryRecovery = null;
+                if (!TryReserveNextSource(currentCell, out string recoveryReserveError))
+                { Fail(recoveryReserveError); return false; }
+                nextApproach = sourceApproach;
+                return true;
+            }
             if (Phase == ConstructionOrderPhase.TravellingToSource)
             {
                 if (!SurvivalInteractionOrder.IsValidAdjacentInteractionAnchor(
@@ -619,10 +858,27 @@ namespace AntColony.Commands
             int capacity = ant.Inventory.GetAvailableCapacity(
                 designation.Recipe.ResourceTypeId,
                 MaterialResourceCatalog.ProvisionalMaximumStack);
-            if (missing <= 0 || capacity <= 0)
+            if (missing <= 0)
             {
-                error = "The builder has no inventory capacity for the missing material.";
+                error = "The construction site already has its required material.";
                 return false;
+            }
+            if (capacity <= 0)
+            {
+                if (!InventoryCapacityRecoveryOperation.TryCreate(ant.Inventory,
+                        storage, drops, map, ant.Id.Value,
+                        designation.Job.Id.Value,
+                        designation.Recipe.ResourceTypeId,
+                        MaterialResourceCatalog.ProvisionalMaximumStack, 1, start,
+                        out inventoryRecovery, out error)) return false;
+                if (inventoryRecovery.Phase == InventoryCapacityRecoveryPhase.Completed)
+                {
+                    inventoryRecovery = null;
+                    return TryReserveNextSource(start, out error);
+                }
+                Phase = ConstructionOrderPhase.UnloadingInventory;
+                Status = inventoryRecovery.Status;
+                return true;
             }
 
             float bestCost = float.PositiveInfinity;
@@ -708,6 +964,7 @@ namespace AntColony.Commands
 
         private void ReleaseSourceReservation()
         {
+            inventoryRecovery?.Cancel("Construction inventory recovery stopped.");
             if (sourceKind == ConstructionMaterialSourceKind.Storage)
                 storage.ReleaseWithdrawal(sourceCell, ant.Id.Value);
             else if (sourceKind == ConstructionMaterialSourceKind.Drop)

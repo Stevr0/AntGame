@@ -17,16 +17,18 @@ The player can select Prepared, Nursery, Sleeping, Food Storage, Water Storage o
 | Water Storage Background | 1 Stone | 4 simulation hours |
 | Material Storage Background | 1 Soil | 4 simulation hours |
 
-The reserved builder first uses compatible existing inventory, otherwise reserves the closest reachable compatible quantity from Material Storage or a loose drop. It physically travels to the source, commits the pickup into its own inventory, travels adjacent to the worksite and transfers material into a cell-owned `ConstructionSite`. The same builder repeats this process when a recipe needs more than one inventory trip. Separate haulers cannot consume a builder reservation. Reservations never consume material.
+The reserved builder first uses compatible existing inventory, otherwise reserves the closest reachable compatible quantity from Material Storage or a loose drop. If its slots are full of material that the construction job does not need, the reusable `InventoryCapacityRecoveryOperation` retains recipe material, reserves the closest reachable compatible storage capacity by actual path cost, physically travels there and deposits only enough to free a usable slot. If no such storage is reachable, it transactionally drops the unnecessary stack at its current valid anchor. The order then resumes supply automatically. Recovery is bounded, safely interruptible and preserves job ownership, construction progress, reservations and exact physical quantities.
+
+Loose drops remain valid, recoverable and traversable; no storage shortage can hard-block construction merely by requiring this fallback. Approved future clutter concentration and enclosed-room cleanliness/quality penalties are documented in the GDD, but this correction does not change movement cost, navigation classification or room scoring.
 
 Construction starts only after all required material is staged. Construction skill and Rested modify committed work progress, while Construction XP is awarded only for that accepted progress. Interruptions release source/job reservations while retaining progress, carried inventory and staged site material. Cancelling a designation converts staged material into a recoverable loose drop at the worksite. Completion revalidates source Background, foreground exposure, occupancy, delivered material and ownership; it then changes only the Background, consumes the exact staged quantity once, creates the functional tile's one-slot capacity, refreshes presentation and invalidates shared navigation. Failed or repeated commits consume nothing.
 
 ### 3.4A automated verification
 
-- Focused Edit Mode construction suite: **14/14 passed**.
-- Focused Play Mode construction suite: **3/3 passed**.
-- Complete graphics-enabled Edit Mode suite: **469/469 passed**.
-- Complete Play Mode suite: **50/50 passed**.
+- Focused Edit Mode construction suite: **19/19 passed** after the inventory-capacity correction.
+- Focused Play Mode construction suite: **4/4 passed**.
+- Complete graphics-enabled Edit Mode suite: **474/474 passed**.
+- Complete Play Mode suite: **51/51 passed**.
 - Runtime, Editor, Edit-test and Play-test assemblies also compile cleanly through Unity's generated Roslyn response files.
 
 ### Exact 3.4A manual Unity Play Mode acceptance
@@ -52,8 +54,8 @@ Construction starts only after all required material is staged. Construction ski
 17. Confirm the required physical resources are consumed exactly once.
 18. Confirm foreground Solid occupancy is unchanged by successful conversion.
 19. Confirm new Food, Water, Sleeping and Material Storage tiles expose one correct empty capacity; Nursery remains capacity-only with brood deferred.
-20. Cancel before pickup, during transport and after staging; confirm reservations release and material remains recoverable.
-21. Interrupt with a player order and critical survival, then confirm valid progress/material can resume.
+20. Fill a builder's inventory with unnecessary material; confirm it retains recipe material, unloads only enough at the closest reachable compatible storage, and resumes construction.
+21. Repeat with storage full or unreachable; confirm a traversable recoverable ground drop is created, then test player/critical-survival interruption and cancellation without loss or duplication.
 22. Remove available supplies and confirm the Construction job remains pending without consumption.
 23. Attempt conversion of occupied Food/Water/Material Storage or a reserved sleeping tile and confirm safe rejection.
 24. Confirm completed conversion refreshes the Tilemap and navigation without moving or trapping ants.
@@ -66,7 +68,7 @@ Construction starts only after all required material is staged. Construction ski
 
 ### 3.4A known limitations
 
-Recipes, four-hour duration and skill scaling are provisional. The authored recipes currently cost one unit, while the generic order supports multi-trip quantities and has automated coverage. Nursery supplies one capacity unit but brood behavior is deliberately absent. Construction sites are plain authoritative data rather than GameObjects; cancelled staged material becomes a loose drop. There is no demolition, relocation, crafting, room detection, door logic, production, save/load or chunk streaming.
+Recipes, four-hour duration and skill scaling are provisional. The authored recipes currently cost one unit, while the generic order supports multi-trip quantities and has automated coverage. Inventory recovery currently chooses a current-anchor ground drop after bounded storage failure; broader nearby placement policy remains future work. Loose-resource clutter has no implemented penalties yet. Nursery supplies one capacity unit but brood behavior is deliberately absent. Construction sites are plain authoritative data rather than GameObjects; cancelled staged material becomes a loose drop. There is no demolition, relocation, crafting, room detection, door logic, production, save/load or chunk streaming.
 
 ## Latest accepted status — 13 October 2026
 

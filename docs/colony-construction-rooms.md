@@ -26,6 +26,10 @@ Milestone 3.4A can construct Prepared, Nursery, Sleeping, Food Storage, Water St
 
 The selected conversion becomes a Construction job in the shared registry. Its reserved builder uses compatible carried material first, otherwise reserves the closest reachable compatible Material Storage or loose drop, collects into personal inventory, stages the material at the site and repeats if necessary. Timed work uses Construction skill and Rested modifiers. Completion consumes staged material exactly once and changes only the Background. Interruption preserves progress and physical ownership; designation cancellation exposes staged material as a recoverable loose drop.
 
+If the builder lacks inventory capacity, it retains material needed by this construction job and unloads unnecessary stacks. It first reserves the closest reachable compatible Material Storage and travels there before depositing only enough to free capacity. With no reachable capacity, it creates a validated recoverable drop at its current anchor. The same construction order then resumes. Bounded failure and interruption release only pending reservations; they do not erase cargo, staged material, progress or job ownership.
+
+Loose drops remain traversable and cannot by themselves prevent ordinary progression. Future clutter concentration may slow movement and loose resources may reduce cleanliness or quality in enclosed rooms, while stored material is excluded. Those thresholds and penalties are provisional and are not implemented in 3.4A.
+
 Current provisional recipes cost one Soil for Prepared, Nursery, Sleeping, Food Storage or Material Storage, and one Stone for Water Storage. Base duration is four simulation hours.
 
 ## Rooms and doors

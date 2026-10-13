@@ -4,7 +4,9 @@
 
 **Implemented — Pending Manual Acceptance (13 October 2026).** The accepted shared job registry, priority matrix, grid navigation, ant inventory, world drops and Material Storage now drive real Construction jobs. A designated exposed Background is supplied personally by its reserved builder, staged physically at the site, worked over time with Construction skill and Rested modifiers, then committed through an accounted Background-only transaction. Prepared, Nursery, Sleeping, Food Storage, Water Storage and Material Storage conversions use provisional one-unit Soil/Stone recipes and four-hour base durations.
 
-Focused verification passed **14/14 Edit Mode** and **3/3 Play Mode**. Complete regression verification passed **469/469 graphics-enabled Edit Mode** and **50/50 Play Mode**. The exact 30-step manual checklist is in `CurrentGameState.md`. Do not mark 3.4A complete until the user confirms it. Doors, rooms, brood, production, crafting, demolition and reproduction were not started.
+**Inventory-capacity recovery correction:** a builder whose slots are full now retains construction material and unloads unnecessary stacks through a reusable task-owned operation. It physically deposits at the closest reachable compatible reserved storage, falls back to a conserving traversable world drop when storage is unavailable, and resumes the same construction job. Recovery uses bounded attempts and safe interruption without changing construction progress or ownership. Approved future loose-resource clutter penalties remain design-only; navigation costs and room scoring are unchanged.
+
+Focused verification passed **19/19 Edit Mode** and **4/4 Play Mode** after the inventory-capacity correction. Complete regression verification passed **474/474 graphics-enabled Edit Mode** and **51/51 Play Mode**. The exact 30-step manual checklist is in `CurrentGameState.md`. Do not mark 3.4A complete until the user confirms it. Doors, rooms, brood, production, crafting, demolition and reproduction were not started.
 
 ## Accepted milestones and next development scope — 13 October 2026
 
