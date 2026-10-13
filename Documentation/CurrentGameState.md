@@ -1,5 +1,10 @@
 # Ant Colony Current Game State
 
+## Latest milestone status — 3.2C Autonomous Survival Behaviour (13 October 2026)
+
+**COMPLETE — user confirmed all 20 manual Unity Play Mode checks passed.** Reported focused Edit Mode 24/24, focused Play Mode 6/6, and full graphics-enabled Edit Mode 364/364 and Play Mode 32/32 were successful. Full suites ran before a final diagnostic-only cleanup; the focused 24/24 Edit Mode suite passed again afterward. These results are user/Codex-reported and were not rerun by this documentation update. Autonomous Eat/Drink/Rest, critical-need interruption only with a reachable target, retry backoff, and shared survival reservations are accepted. **Colony job scheduling is not implemented.** Older dated status notes below are historical and must not override this latest accepted status.
+
+
 ## Latest accepted milestone — 3.1C Individual Skills & Learn-by-Doing Foundation (13 October 2026)
 
 **Status: COMPLETE — all 18 manual Unity Play Mode checks confirmed by the user on 13 October 2026.** Previously reported focused Edit Mode 40/40, focused Play Mode 6/6, full graphics-enabled Edit Mode 292/292 and full Play Mode 20/20 passed. These tests were not rerun for this documentation-only status update.
