@@ -1,5 +1,12 @@
 # Ant Colony Development Roadmap
 
+## Latest accepted milestone and next proposed scope — 13 October 2026
+
+**3.2C Autonomous Survival Behaviour: COMPLETE.** User confirmed all 20 manual Play Mode acceptance checks. Previously reported focused 24/24 Edit Mode, 6/6 Play Mode and full 364/364 Edit Mode, 32/32 Play Mode passed, with the focused Edit Mode suite rerun after final diagnostic cleanup. No new test execution in this documentation-only change.
+
+**Next proposed milestone 3.3A — Colony Job Designation & Priority Foundation:** Introduce per-ant work matrices (1 highest through 4 lowest, plus Disabled), simple synthetic colony jobs, priority-before-nearest-reachable assignment, exclusive claims, partial progress, and safe survival/player-order arbitration. Keep physical excavation, construction, material hauling, brood and Draft Mode excluded. Must be separately approved before coding.
+
+
 ## Milestone status — 13 October 2026
 
 **3.3A Colony Job Designation & Priority Foundation: Implemented — Pending Manual Acceptance.** Each `AntRecord` owns stable Excavation, Surface Preparation, Construction, Hauling, Foraging, Production, Combat and Brood Care priorities using 1–4 or Disabled. A shared plain-C# registry owns synthetic designation identity, status, exclusive reservation and persistent progress. Selection uses highest enabled priority before actual shared-A* travel cost, deterministic ties, a 32-candidate-per-priority bound and 2/4/8-second retry backoff.
