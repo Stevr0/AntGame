@@ -1,0 +1,47 @@
+:root {
+  --ant-earth: #6f4e37;
+  --ant-leaf: #3f7d4a;
+  --ant-amber: #c58b27;
+}
+
+.md-header {
+  background: linear-gradient(110deg, #2f5f38, #65442f);
+}
+
+.md-typeset h1,
+.md-typeset h2 {
+  font-weight: 700;
+}
+
+.md-typeset .status-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  gap: 0.8rem;
+  margin: 1rem 0;
+}
+
+.md-typeset .status-card {
+  border: 1px solid color-mix(in srgb, var(--ant-leaf) 45%, transparent);
+  border-radius: 0.6rem;
+  padding: 0.9rem 1rem;
+  background: color-mix(in srgb, var(--ant-leaf) 8%, transparent);
+}
+
+.md-typeset .status-card strong {
+  color: var(--ant-leaf);
+  display: block;
+  font-size: 1.05rem;
+  margin-bottom: 0.25rem;
+}
+
+.md-typeset table:not([class]) th {
+  background: color-mix(in srgb, var(--ant-earth) 14%, transparent);
+}
+
+.screenshot-slot {
+  border: 2px dashed color-mix(in srgb, var(--ant-amber) 55%, transparent);
+  border-radius: 0.6rem;
+  padding: 1.2rem;
+  text-align: center;
+  color: var(--md-default-fg-color--light);
+}
