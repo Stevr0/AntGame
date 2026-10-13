@@ -1,5 +1,63 @@
 # Ant Colony Current Game State
 
+## Latest implemented milestone — 3.1C Individual Skills & Learn-by-Doing Foundation (13 October 2026)
+
+**Status: Implemented — Pending Manual Acceptance.** Automated Edit Mode and Play Mode suites pass. The 18-step Unity checklist below has not been user-confirmed.
+
+Every authoritative `AntRecord` now owns one `AntSkillSet`; skills are not stored on visuals or separate MonoBehaviours. The shared static catalog defines the seven GDD-approved ordinary skills with stable serialization IDs: Excavation (`excavation`), Surface Preparation (`surface_preparation`), Construction (`construction`), Hauling (`hauling`), Foraging (`foraging`), Combat (`combat`) and Brood Care (`brood_care`). Queen and Worker use the same model, every skill starts at level 0, and ordinary skills have no caste restriction.
+
+`AntRecord.TryAwardSkillExperience` is the explicit learn-by-doing boundary for a future successful activity completion. It receives the skill, base XP, effective multiplier and absolute simulation time, then reports requested XP, actual awarded XP and level changes. Negative or non-finite XP and multipliers are rejected; `0x` is valid and awards nothing; awards at the cap are safe; and deceased ants reject progression. Starting, attempting or cancelling work does not call this API. Hydration, Rested and ordered-work systems remain absent—the multiplier is only a future-facing input, and the ordered-work speed bonus is not treated as XP.
+
+### Provisional 3.1C progression and decay balance
+
+These numerical values are explicit development placeholders, not final GDD balance:
+
+- Levels range from **0–100**.
+- XP required to advance from level `L` is `100 + 5L`.
+- Total XP at level `L` is `100L + 2.5L(L-1)`; level 100 therefore caps at 34,750 total XP.
+- XP and level calculations use deterministic `double` arithmetic and do not depend on frame rate.
+- Each skill has an independent last-practised time. A valid successful-use event, including a valid event whose effective multiplier is zero, updates only that skill's practice time.
+- Inactivity uses explicit absolute simulation hours. After a provisional **24-hour grace period**, an exact skill value above 50 loses **0.25 levels per inactive hour** and stops at exactly 50. Levels and progress at or below 50 do not decay.
+- One large elapsed-time step and equivalent smaller monotonic steps produce the same result within normal floating-point tolerance.
+- No skill has an `Update` method. The development controller advances the clock explicitly and batches the seven-skill calculation across the three authoritative records. Definitions are constructed once and shared.
+
+The selected-ant panel lists every skill, current level and XP progress toward the next level, or `MAX` at level 100. `Show Developer Only Skill Tools` opens a clearly labelled collapsible section with a skill selector; 100 XP buttons for `1.0x`, `1.5x` and `0x`; a 50,000 XP maximum-level test; a 24-hour inactivity step; and a selected-ant skill reset. Advancing inactivity applies to all living development records even when they are not selected or visible. Rebuilding the development world is the explicit clean-reset boundary; merely changing selection or rebinding visuals preserves skill ownership and progress.
+
+### 3.1C automated verification
+
+- Unity imported and compiled the updated Ants, Commands, Development, Edit Mode test and Play Mode test assemblies.
+- Focused skill/identity/selection Edit Mode: **40/40 passed**, including **21 dedicated skill tests**. Coverage includes all seven stable IDs, zero starts, shared Queen/Worker model, independent progression, validation, deterministic curve calculations, cap handling, modifiers, decay/grace/floor behavior, practice clocks, elapsed-time equivalence, independent ants, lifecycle rejection, visual rebinding and deterministic world reset.
+- Focused selection/skill-debug Play Mode: **6/6 passed**, including independent modified XP, zero-multiplier behavior and unchanged movement commands.
+- Complete graphics-enabled Edit Mode: **292/292 passed**.
+- Complete Play Mode: **20/20 passed**, including all production grid-navigation and retained continuous 2.4A regressions.
+- One initial focused run compiled successfully but reported 39/40 because Unity's bundled NUnit version did not support `Has.Count` for `IReadOnlyList`; the assertion was rewritten without weakening coverage and the focused rerun passed 40/40.
+- Manual Scene/Game-view acceptance remains pending user confirmation.
+
+### Exact 3.1C manual Unity Play Mode acceptance
+
+No Inspector setup is required.
+
+1. Open `Assets/AntColony/Scenes/AntGameDevelopment.unity`, clear the Console and enter Play Mode. Confirm Mara, Pip and Tala retain their accepted IDs, castes and attributes.
+2. Select each ant and confirm the top-right panel lists Excavation, Surface Preparation, Construction, Hauling, Foraging, Combat and Brood Care.
+3. Confirm every skill initially reports level 0 and `0 / 100 XP`.
+4. Select Mara, open `Show Developer Only Skill Tools`, choose Excavation and press `Award 100 XP (1.0x)`. Confirm Mara reaches Excavation level 1 and Pip/Tala remain unchanged.
+5. Select Pip, choose Construction and award 100 XP at 1.0x. Confirm only Pip's Construction changes.
+6. Select Tala, choose Hauling and award 100 XP at 1.0x. Confirm only Tala's Hauling changes.
+7. Award another 100 XP to a level-1 skill. Confirm progress uses the displayed 105-XP next-level requirement.
+8. Reset one selected ant, award 100 XP at 1.0x and confirm the level increases from 0 to 1.
+9. Press `Award 50,000 XP (Maximum Test)`. Confirm the selected skill stops at level 100 and displays `MAX`; repeat once and confirm it remains safe at 100.
+10. Reset the selected ant, award 100 XP at 1.0x, then reset and award 100 XP at 1.5x. Confirm the messages report 100 and 150 actual XP respectively.
+11. Reset, press `Test 100 XP (0x — No Gain)` and confirm the selected skill remains level 0 with zero XP.
+12. Raise a selected skill above 50 with the maximum test. Press `Advance 24h Inactivity` once and confirm the grace period prevents decay; press it again and confirm the skill begins decaying.
+13. Continue advancing 24-hour steps and confirm the skill stops at level 50 rather than crossing below it. Confirm skills never raised above 50 remain unchanged.
+14. Switch repeatedly among Mara, Pip and Tala. Confirm their existing skill progress remains attached to the correct identities.
+15. Issue valid right-click movement orders before and after using the skill tools. Confirm selection, independent destinations and `GridNavigationMotor` movement remain functional.
+16. Exit and re-enter Play Mode. Confirm all three deterministic development records return with every skill at level 0 and simulation time 0h.
+17. Expand and collapse both the skill tools and the main `Show Developer Tools` panel. Confirm collapsing either panel does not change skill data or movement.
+18. Confirm the Unity Console contains no relevant errors, assertions, missing references or warnings.
+
+Known limitations are deliberate: 3.1C supplies progression data and test controls only. There are no real work-completion events, skill effects, jobs, work priorities, excavation/construction/hauling gameplay, inventory slots, hydration, Rested state, needs, combat statistics, brood, reproduction, save/load, Draft Mode or multiplayer. The next milestone must be separately approved after manual acceptance.
+
 ## Latest implemented milestone — 3.1B Persistent Ant Identity & Attributes (13 October 2026)
 
 **Status: COMPLETE — all 12 manual Unity Play Mode checks confirmed by the user on 13 October 2026.** Previously reported focused Edit Mode 16/16, focused Play Mode 5/5, complete Edit Mode 268/268 and complete Play Mode 19/19 passed. No tests were rerun during this documentation update.
@@ -19,7 +77,7 @@ The compact top-right selection panel now shows Ant ID, name, colony, caste, Str
 - Focused selection/identity Play Mode: **5/5 passed**.
 - Complete graphics-enabled Edit Mode: **268/268 passed**. A preceding `-nographics` attempt reached the retained rendered-pixel test and crashed while creating a RenderTexture; the graphics-enabled rerun passed completely.
 - Complete Play Mode: **19/19 passed**, including all production grid-navigation and retained continuous 2.4A regressions. Separate confirmation runs also passed selection/identity 5/5, grid navigation 8/8 and autonomous movement 6/6.
-- Manual Scene/Game-view acceptance was not performed and remains pending user confirmation.
+- Manual Scene/Game-view acceptance was subsequently confirmed by the user on 13 October 2026; 3.1B is complete.
 
 ### Exact 3.1B manual Unity Play Mode acceptance
 
@@ -40,7 +98,7 @@ No Inspector setup is required.
 
 This checklist does not expose a player-facing death control. Deceased-order rejection is automated-test coverage only; actual death gameplay and presentation remain excluded.
 
-Known limitations are deliberate: the registry is in-memory only; save/load and chunk streaming are absent; records contain no skills, needs, health depletion, jobs, work priorities, inventory, equipment, brood, reproduction, ageing or combat; lifecycle transitions have no gameplay cause; and this fixture does not define the finished starting population. The approved future game begins with one working founding queen.
+At the 3.1B checkpoint, the registry was in-memory only and records did not yet contain skills. Milestone 3.1C now adds skill data only; save/load, needs, jobs, work priorities, inventory, equipment, brood, reproduction, ageing and combat remain absent. Lifecycle transitions still have no gameplay cause, and the fixture does not define the finished starting population. The approved future game begins with one working founding queen.
 
 ## Latest accepted milestone — 3.1A Ant Selection & Command Integration (13 October 2026)
 
@@ -233,15 +291,15 @@ The revised 2.4B proof of concept described above is the only later implementati
 
 Milestone 2.4A now implements the approved natural-background movement realignment. Exposed Natural Earth and Natural Stone provide full horizontal, vertical and diagonal grip at normal speed. Prepared Background provides the same traversal plus a provisional `1.25` movement-speed multiplier. Sky remains explicitly non-grippable. The other newly approved systems—starting queen, player-facing direct ant control, functional backgrounds, rooms, brood, needs and shared stores—remain design targets, **not implemented or verified features**.
 
-**Next step:** complete the exact 3.1B manual checklist at the top of this document. Do not begin colony jobs, needs, inventory, progression, reproduction, Draft Mode or another later milestone without separate approval.
+**Next step:** complete the exact 3.1C manual checklist at the top of this document. Do not begin colony jobs, needs, inventory, skill effects, reproduction, Draft Mode or another later milestone without separate approval.
 
 ## Current milestone
 
-**Milestone 3.1B — Persistent Ant Identity & Attributes**
+**Milestone 3.1C — Individual Skills & Learn-by-Doing Foundation**
 
-**Status:** **Implemented — Pending Manual Acceptance.** Three ants use authoritative plain-C# records through focused runtime bindings while retaining the accepted grid selection and movement architecture; legacy continuous systems remain developer-only regression tools.
+**Status:** **Implemented — Pending Manual Acceptance.** Three ants own independent authoritative skill sets while retaining the accepted identity, selection and grid-movement architecture; legacy continuous systems remain developer-only regression tools.
 
-Milestones through accepted 3.1A retain their previously reported status. Milestone 2.4D remains implemented pending its separately recorded manual acceptance. 3.1B adds identity data but no colony jobs or other simulation.
+Milestones through accepted 3.1B retain their previously reported status. Milestone 2.4D remains implemented pending its separately recorded manual acceptance. 3.1C adds learn-by-doing data and deterministic decay but no colony jobs or other simulation.
 
 ## Repository and architecture
 
@@ -614,4 +672,4 @@ No extra Inspector setup is required. Open `Assets/AntColony/Scenes/AntGameDevel
 
 ## Recommended next implementation step
 
-Complete the exact 3.1A manual checklist and wait for user acceptance. Keep the separate 2.4D and 2.2C manual statuses explicit; do not begin attributes, priority matrices, autonomous jobs, Surface Preparation, skills, Draft Mode or other colony work without separate approval.
+Complete the exact 3.1C manual checklist and wait for user acceptance. Keep the separate 2.4D and 2.2C manual statuses explicit; do not begin skill effects, priority matrices, autonomous jobs, Surface Preparation gameplay, Draft Mode or other colony work without separate approval.

@@ -15,8 +15,13 @@ namespace AntColony.Commands
     public sealed class AntSelectionCommandController : MonoBehaviour
     {
         private const float PlayerPanelWidth = 330f;
-        private const float PlayerPanelHeight = 292f;
         private const float MinimumClickRadiusPixels = 16f;
+        private const double DebugExperienceAmount = 100d;
+        private const double DebugMaximumExperienceAmount = 50000d;
+        private const double DebugInactivityStepHours = 24d;
+
+        private static readonly string[] SkillDisplayNames =
+            BuildSkillDisplayNames();
 
         [SerializeField] private Camera worldCamera;
         [SerializeField] private GridNavigationWorldService navigationWorld;
@@ -25,15 +30,24 @@ namespace AntColony.Commands
         private Rect additionalBlockedGuiRect;
         private bool hasAdditionalBlockedGuiRect;
         private string interactionMessage = "Left-click an ant to select it.";
+        private bool skillDebugExpanded;
+        private int selectedDebugSkillIndex;
+        private double skillSimulationHours;
+        private Vector2 playerPanelScrollPosition;
 
         public IReadOnlyList<SelectableGridAnt> SelectableAnts => selectableAnts;
         public SelectableGridAnt SelectedAnt { get; private set; }
         public string InteractionMessage => interactionMessage;
+        public double SkillSimulationHours => skillSimulationHours;
         public Rect PlayerPanelGuiRect => new(
             Mathf.Max(12f, Screen.width - PlayerPanelWidth - 12f),
             12f,
             PlayerPanelWidth,
-            PlayerPanelHeight);
+            Mathf.Min(
+                Mathf.Max(100f, Screen.height - 24f),
+                SelectedAnt == null
+                    ? 112f
+                    : skillDebugExpanded ? 720f : 510f));
 
         public void Configure(
             Camera commandCamera,
@@ -184,6 +198,99 @@ namespace AntColony.Commands
             return true;
         }
 
+        /// <summary>
+        /// Development boundary for a successful skill-use event. Future gameplay
+        /// systems should call the AntRecord API from their own completion logic.
+        /// </summary>
+        public bool TryAwardSelectedSkillExperience(
+            AntSkillId skill,
+            double baseExperience,
+            double multiplier,
+            out AntSkillExperienceResult result,
+            out string message)
+        {
+            result = default;
+            if (SelectedAnt?.Record == null)
+            {
+                message = "Select a bound ant before awarding skill experience.";
+                interactionMessage = message;
+                return false;
+            }
+
+            bool succeeded = SelectedAnt.Record.TryAwardSkillExperience(
+                skill,
+                baseExperience,
+                multiplier,
+                skillSimulationHours,
+                out result,
+                out message);
+            interactionMessage = succeeded
+                ? $"Developer Only: awarded {result.AwardedExperience:0.##} " +
+                    $"{AntSkillCatalog.Get(skill).DisplayName} XP to " +
+                    $"{SelectedAnt.DisplayName}; level {result.PreviousLevel} -> " +
+                    $"{result.CurrentLevel}."
+                : message;
+            return succeeded;
+        }
+
+        /// <summary>
+        /// Advances the one development clock and batches decay across records.
+        /// No skill owns an Update method or depends on selection for simulation.
+        /// </summary>
+        public bool TryAdvanceSkillInactivity(
+            double elapsedHours,
+            out string message)
+        {
+            if (!AntSkillProgressionSettings.IsFinite(elapsedHours) ||
+                elapsedHours < 0d ||
+                !AntSkillProgressionSettings.IsFinite(
+                    skillSimulationHours + elapsedHours))
+            {
+                message = "Inactivity time must be finite and non-negative.";
+                interactionMessage = message;
+                return false;
+            }
+
+            double newTime = skillSimulationHours + elapsedHours;
+            foreach (SelectableGridAnt ant in selectableAnts)
+            {
+                if (ant?.Record != null &&
+                    ant.Record.LifecycleStatus != AntLifecycleStatus.Deceased &&
+                    !ant.Record.TryAdvanceSkillDecay(newTime, out message))
+                {
+                    interactionMessage = message;
+                    return false;
+                }
+            }
+
+            skillSimulationHours = newTime;
+            message =
+                $"Developer Only: simulation time is {skillSimulationHours:0.##}h.";
+            interactionMessage = message;
+            return true;
+        }
+
+        public bool ResetSelectedSkillData(out string message)
+        {
+            if (SelectedAnt?.Record == null)
+            {
+                message = "Select a bound ant before resetting skill data.";
+                interactionMessage = message;
+                return false;
+            }
+
+            SelectedAnt.Record.ResetSkills(skillSimulationHours);
+            message = $"Developer Only: reset {SelectedAnt.DisplayName}'s skills.";
+            interactionMessage = message;
+            return true;
+        }
+
+        /// <summary>Called when the development world creates fresh records.</summary>
+        public void ResetSkillDebugClock()
+        {
+            skillSimulationHours = 0d;
+        }
+
         private void Update()
         {
             foreach (SelectableGridAnt ant in selectableAnts)
@@ -216,6 +323,8 @@ namespace AntColony.Commands
         private void OnGUI()
         {
             GUILayout.BeginArea(PlayerPanelGuiRect, GUI.skin.box);
+            playerPanelScrollPosition = GUILayout.BeginScrollView(
+                playerPanelScrollPosition);
             GUILayout.Label("ANT SELECTION & MOVE ORDER");
             if (SelectedAnt == null)
             {
@@ -235,6 +344,7 @@ namespace AntColony.Commands
                     $"END {record?.Attributes.Endurance.ToString() ?? "-"}");
                 GUILayout.Label(
                     $"Lifecycle: {record?.LifecycleStatus.ToString() ?? "Unbound"}");
+                DrawSkillInspection(record);
                 GUILayout.Label($"Control: {SelectedAnt.ControlState}");
                 GUILayout.Label($"Order: {SelectedAnt.OrderStatus}");
                 GUILayout.Label(
@@ -247,10 +357,113 @@ namespace AntColony.Commands
                     CancelSelectedOrder();
                 }
                 GUI.enabled = true;
+                DrawSkillDebugControls();
             }
 
             GUILayout.Label(interactionMessage);
+            GUILayout.EndScrollView();
             GUILayout.EndArea();
+        }
+
+        private void DrawSkillInspection(AntRecord record)
+        {
+            GUILayout.Space(4f);
+            GUILayout.Label("SKILLS");
+            if (record == null)
+            {
+                GUILayout.Label("Unbound");
+                return;
+            }
+
+            foreach (AntSkillState skill in record.Skills.All)
+            {
+                string progress = skill.IsMaximumLevel
+                    ? "MAX"
+                    : $"{skill.ExperienceIntoLevel:0.##} / " +
+                        $"{skill.ExperienceForNextLevel:0.##} XP";
+                GUILayout.Label(
+                    $"{skill.Definition.DisplayName}: Lv {skill.Level} ({progress})");
+            }
+
+            GUILayout.Space(4f);
+        }
+
+        private void DrawSkillDebugControls()
+        {
+            if (GUILayout.Button(skillDebugExpanded
+                    ? "Hide Developer Only Skill Tools"
+                    : "Show Developer Only Skill Tools"))
+            {
+                skillDebugExpanded = !skillDebugExpanded;
+            }
+
+            if (!skillDebugExpanded)
+            {
+                return;
+            }
+
+            GUILayout.Label("DEVELOPER ONLY — SKILL TESTING");
+            GUILayout.Label($"Simulation time: {skillSimulationHours:0.##}h");
+            selectedDebugSkillIndex = GUILayout.SelectionGrid(
+                selectedDebugSkillIndex,
+                SkillDisplayNames,
+                2);
+            AntSkillId skill = AntSkillCatalog.All[selectedDebugSkillIndex].Id;
+            if (GUILayout.Button("Award 100 XP (1.0x)"))
+            {
+                TryAwardSelectedSkillExperience(
+                    skill,
+                    DebugExperienceAmount,
+                    1d,
+                    out _,
+                    out _);
+            }
+            if (GUILayout.Button("Award 100 XP (1.5x)"))
+            {
+                TryAwardSelectedSkillExperience(
+                    skill,
+                    DebugExperienceAmount,
+                    1.5d,
+                    out _,
+                    out _);
+            }
+            if (GUILayout.Button("Test 100 XP (0x — No Gain)"))
+            {
+                TryAwardSelectedSkillExperience(
+                    skill,
+                    DebugExperienceAmount,
+                    0d,
+                    out _,
+                    out _);
+            }
+            if (GUILayout.Button("Award 50,000 XP (Maximum Test)"))
+            {
+                TryAwardSelectedSkillExperience(
+                    skill,
+                    DebugMaximumExperienceAmount,
+                    1d,
+                    out _,
+                    out _);
+            }
+            if (GUILayout.Button("Advance 24h Inactivity"))
+            {
+                TryAdvanceSkillInactivity(DebugInactivityStepHours, out _);
+            }
+            if (GUILayout.Button("Reset Selected Ant Skills"))
+            {
+                ResetSelectedSkillData(out _);
+            }
+        }
+
+        private static string[] BuildSkillDisplayNames()
+        {
+            var names = new string[AntSkillCatalog.All.Count];
+            for (int index = 0; index < names.Length; index++)
+            {
+                names[index] = AntSkillCatalog.All[index].DisplayName;
+            }
+
+            return names;
         }
 
         private SelectableGridAnt FindClosestScreenAnt(Vector2 screenPoint)

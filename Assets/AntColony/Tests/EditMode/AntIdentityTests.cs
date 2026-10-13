@@ -105,6 +105,16 @@ namespace AntColony.Tests.EditMode
             AntRecord record = CreateRecord(
                 new AntId("ant-001"), colony, AntCaste.Worker);
             Assert.That(records.TryRegister(record, out _), Is.True);
+            Assert.That(record.TryAwardSkillExperience(
+                AntSkillId.Excavation,
+                250d,
+                1d,
+                0d,
+                out _,
+                out _), Is.True);
+            double retainedSkillExperience = record.Skills
+                .Get(AntSkillId.Excavation)
+                .TotalExperience;
 
             GameObject firstObject = new("First Visual");
             AntEntityBinding first = firstObject.AddComponent<AntEntityBinding>();
@@ -130,6 +140,8 @@ namespace AntColony.Tests.EditMode
             replacement.Configure(record.Id.Value);
             Assert.That(replacement.Bind(records, visuals, out _), Is.True);
             Assert.That(replacement.Record, Is.SameAs(retained));
+            Assert.That(replacement.Record.Skills.Get(AntSkillId.Excavation)
+                .TotalExperience, Is.EqualTo(retainedSkillExperience));
             UnityEngine.Object.DestroyImmediate(replacementObject);
         }
 

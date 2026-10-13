@@ -146,6 +146,7 @@ namespace AntColony.Development
             tilemapRenderer.BindWorldData(WorldData);
             collisionRenderer.BindWorldData(WorldData);
             RefreshAllChunks();
+            ResetDevelopmentAntRecords();
 
             if (Application.isPlaying)
             {
@@ -265,6 +266,16 @@ namespace AntColony.Development
             autonomousAnt?.NotifyWorldChanged();
             NotifyGridTerrainChanged(worldCell);
             return true;
+        }
+
+        private void ResetDevelopmentAntRecords()
+        {
+            // World regeneration is the explicit development reset boundary.
+            // Visual-only rebinding through SpawnOrResetSelectableGridAnts keeps
+            // the existing registry and therefore preserves skill data.
+            antRegistry = null;
+            antBindingRegistry = null;
+            selectionController?.ResetSkillDebugClock();
         }
 
         /// <summary>Commands the primary production-grid ant.</summary>

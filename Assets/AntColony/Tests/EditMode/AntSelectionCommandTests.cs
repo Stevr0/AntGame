@@ -95,6 +95,82 @@ namespace AntColony.Tests.EditMode
         }
 
         [Test]
+        public void DevelopmentAnts_StartWithIndependentZeroSkillSets()
+        {
+            AntGameDevelopmentWorldHost host = OpenHostWithSelectableAnts();
+            AntSelectionCommandController controller = host.SelectionController;
+            SelectableGridAnt mara = controller.SelectableAnts[0];
+            SelectableGridAnt pip = controller.SelectableAnts[1];
+            SelectableGridAnt tala = controller.SelectableAnts[2];
+
+            Assert.That(controller.SelectableAnts.All(ant =>
+                ant.Record.Skills.All.All(skill => skill.Level == 0)), Is.True);
+
+            controller.Select(mara);
+            Assert.That(controller.TryAwardSelectedSkillExperience(
+                AntSkillId.Excavation, 250d, 1d, out _, out _), Is.True);
+            controller.Select(pip);
+            Assert.That(controller.TryAwardSelectedSkillExperience(
+                AntSkillId.Construction, 350d, 1d, out _, out _), Is.True);
+            controller.Select(tala);
+            Assert.That(controller.TryAwardSelectedSkillExperience(
+                AntSkillId.Hauling, 450d, 1d, out _, out _), Is.True);
+
+            Assert.That(mara.Record.Skills.Get(AntSkillId.Excavation).Level,
+                Is.GreaterThan(0));
+            Assert.That(mara.Record.Skills.Get(AntSkillId.Construction).Level,
+                Is.Zero);
+            Assert.That(pip.Record.Skills.Get(AntSkillId.Construction).Level,
+                Is.GreaterThan(0));
+            Assert.That(tala.Record.Skills.Get(AntSkillId.Hauling).Level,
+                Is.GreaterThan(0));
+        }
+
+        [Test]
+        public void SelectionAndVisualRespawn_PreserveSkillOwnership()
+        {
+            AntGameDevelopmentWorldHost host = OpenHostWithSelectableAnts();
+            AntSelectionCommandController controller = host.SelectionController;
+            SelectableGridAnt mara = controller.SelectableAnts[0];
+            AntRecord record = mara.Record;
+            controller.Select(mara);
+            Assert.That(controller.TryAwardSelectedSkillExperience(
+                AntSkillId.Excavation, 500d, 1d, out _, out _), Is.True);
+            double experience = record.Skills.Get(AntSkillId.Excavation)
+                .TotalExperience;
+
+            controller.Select(controller.SelectableAnts[1]);
+            controller.Select(mara);
+            Assert.That(mara.Record, Is.SameAs(record));
+            Assert.That(host.SpawnOrResetSelectableGridAnts(out string message),
+                Is.True, message);
+
+            SelectableGridAnt rebound = host.SelectionController.SelectableAnts[0];
+            Assert.That(rebound.Record, Is.SameAs(record));
+            Assert.That(rebound.Record.Skills.Get(AntSkillId.Excavation)
+                .TotalExperience, Is.EqualTo(experience));
+        }
+
+        [Test]
+        public void DevelopmentWorldReset_RestoresCleanDeterministicSkills()
+        {
+            AntGameDevelopmentWorldHost host = OpenHostWithSelectableAnts();
+            AntSelectionCommandController controller = host.SelectionController;
+            controller.Select(controller.SelectableAnts[0]);
+            Assert.That(controller.TryAwardSelectedSkillExperience(
+                AntSkillId.Excavation, 50000d, 1d, out _, out _), Is.True);
+            Assert.That(controller.TryAdvanceSkillInactivity(48d, out _), Is.True);
+
+            Assert.That(host.RebuildWorld(), Is.True);
+            Assert.That(host.SpawnOrResetSelectableGridAnts(out string message),
+                Is.True, message);
+
+            Assert.That(host.SelectionController.SkillSimulationHours, Is.Zero);
+            Assert.That(host.SelectionController.SelectableAnts.All(ant =>
+                ant.Record.Skills.All.All(skill => skill.Level == 0)), Is.True);
+        }
+
+        [Test]
         public void Selection_SwitchesAndEmptySpaceDeselectsWithoutStoppingOrders()
         {
             AntGameDevelopmentWorldHost host = OpenHostWithSelectableAnts();

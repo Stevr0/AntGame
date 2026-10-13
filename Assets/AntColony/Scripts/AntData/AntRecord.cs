@@ -69,6 +69,25 @@ namespace AntColony.Ants
             ColonyId colonyId,
             AntCaste caste,
             AntAttributes attributes)
+            : this(
+                id,
+                displayName,
+                colonyId,
+                caste,
+                attributes,
+                AntSkillProgressionSettings.Provisional,
+                startingSimulationHours: 0d)
+        {
+        }
+
+        public AntRecord(
+            AntId id,
+            string displayName,
+            ColonyId colonyId,
+            AntCaste caste,
+            AntAttributes attributes,
+            AntSkillProgressionSettings skillSettings,
+            double startingSimulationHours)
         {
             if (!id.IsValid)
             {
@@ -91,6 +110,7 @@ namespace AntColony.Ants
             Caste = caste;
             Attributes = attributes;
             LifecycleStatus = AntLifecycleStatus.Active;
+            Skills = new AntSkillSet(skillSettings, startingSimulationHours);
         }
 
         public AntId Id { get; }
@@ -98,6 +118,7 @@ namespace AntColony.Ants
         public ColonyId ColonyId { get; }
         public AntCaste Caste { get; }
         public AntAttributes Attributes { get; }
+        public AntSkillSet Skills { get; private set; }
         public AntLifecycleStatus LifecycleStatus { get; private set; }
         public bool CanAcceptMovementOrders => LifecycleStatus == AntLifecycleStatus.Active;
 
@@ -117,6 +138,55 @@ namespace AntColony.Ants
             {
                 LifecycleStatus = AntLifecycleStatus.Inactive;
             }
+        }
+
+        /// <summary>
+        /// Records experience from one successful, approved progression event.
+        /// Attempted or cancelled work should not call this method.
+        /// </summary>
+        public bool TryAwardSkillExperience(
+            AntSkillId skill,
+            double baseExperience,
+            double experienceMultiplier,
+            double simulationHours,
+            out AntSkillExperienceResult result,
+            out string error)
+        {
+            if (LifecycleStatus == AntLifecycleStatus.Deceased)
+            {
+                result = default;
+                error = "Deceased ants cannot gain skill experience.";
+                return false;
+            }
+
+            return Skills.TryAwardExperience(
+                skill,
+                baseExperience,
+                experienceMultiplier,
+                simulationHours,
+                out result,
+                out error);
+        }
+
+        /// <summary>
+        /// Applies deterministic inactivity decay at an absolute simulation time.
+        /// No Update loop is required; a future central clock can call this in batches.
+        /// </summary>
+        public bool TryAdvanceSkillDecay(double simulationHours, out string error)
+        {
+            if (LifecycleStatus == AntLifecycleStatus.Deceased)
+            {
+                error = "Deceased ants do not continue skill decay.";
+                return false;
+            }
+
+            return Skills.TryAdvanceDecay(simulationHours, out error);
+        }
+
+        /// <summary>Development/test reset; it does not replace identity data.</summary>
+        public void ResetSkills(double simulationHours = 0d)
+        {
+            Skills = new AntSkillSet(Skills.Settings, simulationHours);
         }
     }
 }

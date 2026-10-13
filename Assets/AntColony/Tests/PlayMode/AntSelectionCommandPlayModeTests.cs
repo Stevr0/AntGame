@@ -62,6 +62,38 @@ namespace AntColony.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator DeveloperSkillControls_PreserveIndependentRecordsAndMovement()
+        {
+            yield return LoadScene();
+            AntGameDevelopmentWorldHost host = FindHost();
+            AntSelectionCommandController controller = host.SelectionController;
+            SelectableGridAnt mara = controller.SelectableAnts[0];
+            SelectableGridAnt pip = controller.SelectableAnts[1];
+
+            controller.Select(mara);
+            Assert.That(controller.TryAwardSelectedSkillExperience(
+                AntSkillId.Excavation,
+                250d,
+                1.5d,
+                out AntSkillExperienceResult result,
+                out _), Is.True);
+            Assert.That(result.AwardedExperience, Is.EqualTo(375d));
+            Assert.That(pip.Record.Skills.Get(AntSkillId.Excavation).Level,
+                Is.Zero);
+
+            controller.Select(pip);
+            Assert.That(controller.TryAwardSelectedSkillExperience(
+                AntSkillId.Construction, 100d, 0d, out result, out _), Is.True);
+            Assert.That(result.AwardedExperience, Is.Zero);
+            Assert.That(controller.TryIssueMoveOrder(
+                SampleWorldGenerator.GridDirectDestination), Is.True);
+            yield return new WaitForFixedUpdate();
+            Assert.That(pip.HasActiveOrder, Is.True);
+            Assert.That(mara.Record.Skills.Get(AntSkillId.Excavation).Level,
+                Is.GreaterThan(0));
+        }
+
+        [UnityTest]
         public IEnumerator SelectionIndicatorFollowsMovingAntAndArrivalCompletesOrder()
         {
             yield return LoadScene();
