@@ -1,8 +1,8 @@
 # Ant Colony Current Game State
 
-## Latest implemented milestone — 3.1C Individual Skills & Learn-by-Doing Foundation (13 October 2026)
+## Latest accepted milestone — 3.1C Individual Skills & Learn-by-Doing Foundation (13 October 2026)
 
-**Status: Implemented — Pending Manual Acceptance.** Automated Edit Mode and Play Mode suites pass. The 18-step Unity checklist below has not been user-confirmed.
+**Status: COMPLETE — all 18 manual Unity Play Mode checks confirmed by the user on 13 October 2026.** Previously reported focused Edit Mode 40/40, focused Play Mode 6/6, full graphics-enabled Edit Mode 292/292 and full Play Mode 20/20 passed. These tests were not rerun for this documentation-only status update.
 
 Every authoritative `AntRecord` now owns one `AntSkillSet`; skills are not stored on visuals or separate MonoBehaviours. The shared static catalog defines the seven GDD-approved ordinary skills with stable serialization IDs: Excavation (`excavation`), Surface Preparation (`surface_preparation`), Construction (`construction`), Hauling (`hauling`), Foraging (`foraging`), Combat (`combat`) and Brood Care (`brood_care`). Queen and Worker use the same model, every skill starts at level 0, and ordinary skills have no caste restriction.
 
