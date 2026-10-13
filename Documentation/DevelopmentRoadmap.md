@@ -1,5 +1,12 @@
 # Ant Colony Development Roadmap
 
+## Latest accepted milestone and next proposed scope — 13 October 2026
+
+**3.2C Autonomous Survival Behaviour: COMPLETE.** User confirmed all 20 manual Play Mode acceptance checks. Previously reported focused 24/24 Edit Mode, 6/6 Play Mode and full 364/364 Edit Mode, 32/32 Play Mode passed, with the focused Edit Mode suite rerun after final diagnostic cleanup. No new test execution in this documentation-only change.
+
+**Next proposed milestone 3.3A — Colony Job Designation & Priority Foundation:** Introduce per-ant work matrices (1 highest through 4 lowest, plus Disabled), simple synthetic colony jobs, priority-before-nearest-reachable assignment, exclusive claims, partial progress, and safe survival/player-order arbitration. Keep physical excavation, construction, material hauling, brood and Draft Mode excluded. Must be separately approved before coding.
+
+
 ## Milestone status — 13 October 2026
 
 **Next proposed milestone — 3.2A Individual Needs & Survival Foundation.** Add authoritative individual Hunger, Thirst, Health, Fatigue and Rested-effect calculations using deterministic simulation-time inputs, development-only consumable/refill/sleep controls and inspection. Integrate thirst-zero skill XP blocking through the existing XP multiplier boundary. Implement no physical food/water storage, sleep tiles, autonomous needs jobs, resource transactions, combat or death gameplay. Numeric depletion rates, damage thresholds and Rested multipliers remain provisional. Begin only after separately approved Codex scope.
