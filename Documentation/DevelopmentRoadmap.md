@@ -2,7 +2,11 @@
 
 ## Milestone status — 13 October 2026
 
-**3.1C Individual Skills & Learn-by-Doing Foundation: Implemented — Pending Manual Acceptance.** Each authoritative ant record owns all seven stable GDD skills from level 0–100. Successful future activities can explicitly award base XP through a validated multiplier boundary; a deterministic provisional curve handles level progress and safe maximum capping. Independently tracked inactivity uses explicit simulation hours, a provisional 24-hour grace period and 0.25 levels/hour decay above 50, with an exact floor of 50. The selected-ant panel displays every skill and contains collapsible Developer Only XP, multiplier, maximum, decay and reset controls. No actual jobs, work effects, needs, inventory or save/load were added.
+**Next proposed milestone — 3.2A Individual Needs & Survival Foundation.** Add authoritative individual Hunger, Thirst, Health, Fatigue and Rested-effect calculations using deterministic simulation-time inputs, development-only consumable/refill/sleep controls and inspection. Integrate thirst-zero skill XP blocking through the existing XP multiplier boundary. Implement no physical food/water storage, sleep tiles, autonomous needs jobs, resource transactions, combat or death gameplay. Numeric depletion rates, damage thresholds and Rested multipliers remain provisional. Begin only after separately approved Codex scope.
+
+
+
+**3.1C Individual Skills & Learn-by-Doing Foundation: COMPLETE (all 18 manual Play Mode checks accepted on 13 October 2026).** Each authoritative ant record owns all seven stable GDD skills from level 0–100. Successful future activities can explicitly award base XP through a validated multiplier boundary; a deterministic provisional curve handles level progress and safe maximum capping. Independently tracked inactivity uses explicit simulation hours, a provisional 24-hour grace period and 0.25 levels/hour decay above 50, with an exact floor of 50. The selected-ant panel displays every skill and contains collapsible Developer Only XP, multiplier, maximum, decay and reset controls. No actual jobs, work effects, needs, inventory or save/load were added.
 
 Provisional curve: XP from level `L` to `L+1` is `100 + 5L`; cumulative XP at level `L` is `100L + 2.5L(L-1)`, capped at 34,750 XP for level 100. Automated evidence: focused Edit Mode **40/40 passed**, focused Play Mode **6/6 passed**, complete Edit Mode **292/292 passed**, and complete Play Mode **20/20 passed**. Manual Unity Play Mode acceptance remains outstanding.
 
