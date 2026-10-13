@@ -2,6 +2,11 @@
 
 ## Milestone status — 13 October 2026
 
+**Next proposed milestone — 3.2A Individual Needs & Survival Foundation.** Add authoritative individual Hunger, Thirst, Health, Fatigue and Rested-effect calculations using deterministic simulation-time inputs, development-only consumable/refill/sleep controls and inspection. Integrate thirst-zero skill XP blocking through the existing XP multiplier boundary. Implement no physical food/water storage, sleep tiles, autonomous needs jobs, resource transactions, combat or death gameplay. Numeric depletion rates, damage thresholds and Rested multipliers remain provisional. Begin only after separately approved Codex scope.
+
+
+
+**3.1C Individual Skills & Learn-by-Doing Foundation: COMPLETE (all 18 manual Play Mode checks accepted on 13 October 2026).** Each authoritative ant record owns all seven stable GDD skills from level 0–100. Successful future activities can explicitly award base XP through a validated multiplier boundary; a deterministic provisional curve handles level progress and safe maximum capping. Independently tracked inactivity uses explicit simulation hours, a provisional 24-hour grace period and 0.25 levels/hour decay above 50, with an exact floor of 50. The selected-ant panel displays every skill and contains collapsible Developer Only XP, multiplier, maximum, decay and reset controls. No actual jobs, work effects, needs, inventory or save/load were added.
 **Next proposed milestone — 3.2C Autonomous Survival Behaviour:** Give active idle ants autonomous need-based Eat, Drink and Rest decision-making using existing physical survival interaction orders and grid navigation. Add deterministic priority/threshold rules, controlled evaluation cadence, shortest reachable available destination, safe player-order precedence and failure backoff. Do not introduce colony job scheduling, work priorities, resources gathering, construction, combat, sleep assignments or reproduction. Thresholds and evaluation intervals are provisional pending approval. No implementation is authorised by this documentation change.
 
 

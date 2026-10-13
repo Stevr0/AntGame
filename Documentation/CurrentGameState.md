@@ -1,5 +1,8 @@
 # Ant Colony Current Game State
 
+## Latest accepted milestone — 3.1C Individual Skills & Learn-by-Doing Foundation (13 October 2026)
+
+**Status: COMPLETE — all 18 manual Unity Play Mode checks confirmed by the user on 13 October 2026.** Previously reported focused Edit Mode 40/40, focused Play Mode 6/6, full graphics-enabled Edit Mode 292/292 and full Play Mode 20/20 passed. These tests were not rerun for this documentation-only status update.
 ## Latest accepted milestone — 3.2B Physical Food, Water & Rest Interactions (13 October 2026)
 
 **Status: COMPLETE — all 20 manual Unity Play Mode checks confirmed by the user on 13 October 2026.** Previously reported focused Edit Mode 25/25, focused Play Mode 5/5, complete graphics-enabled Edit Mode 340/340 and complete Play Mode 26/26 passed. This documentation-only acceptance update does not rerun tests. The Unity project connects functional Background, physical-resource, needs, selection and production grid-navigation foundations.
