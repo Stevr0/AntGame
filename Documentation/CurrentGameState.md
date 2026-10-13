@@ -1,8 +1,8 @@
 # Ant Colony Current Game State
 
-## Latest implemented milestone — 3.3A Colony Job Designation & Priority Foundation (13 October 2026)
+## Latest accepted milestone — 3.3A Colony Job Designation & Priority Foundation (13 October 2026)
 
-**Status: Implemented — Pending Manual Acceptance.** Milestone 3.2C Autonomous Survival Behaviour is **complete**; acceptance is recorded through the approved transition to 3.3A. Existing identity, selection, explicit orders, physical survival and shared navigation behavior remains intact.
+**Status: COMPLETE — user confirmed all 22 manual Play Mode checks on 13 October 2026.** Previously reported focused Edit Mode 28/28, focused Play Mode 5/5, full graphics-enabled Edit Mode 392/392, full Play Mode 37/37 passed. No tests were rerun during this documentation update. Milestone 3.2C is also complete; Existing identity, selection, explicit orders, physical survival and shared navigation behavior remains intact.
 
 Every authoritative `AntRecord` owns an independent `AntWorkPrioritySet`. The stable provisional categories are Excavation, Surface Preparation, Construction, Hauling, Foraging, Production, Combat and Brood Care. Each value is Highest (1), High (2), Normal (3), Low (4) or Disabled; development ants start at Normal. Queen and Worker use the same matrix. Skills never change priority rank, and level zero does not prohibit ordinary work. Production currently has no approved matching skill and therefore earns no synthetic skill XP.
 
