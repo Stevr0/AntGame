@@ -4,25 +4,35 @@ This history records the strongest confirmed evidence without implying that late
 
 ## 13 October 2026
 
+### 3.4A — Functional Background Conversion and Construction Jobs
+
+**Implemented — Pending Manual Acceptance.** Player click/drag conversion designations create real Construction jobs in the shared registry. The reserved builder uses inventory first, otherwise reserves and physically collects reachable storage/drop material, stages it at the site, performs timed skill/Rested-modified work and commits an exact-once Background-only transaction. Cancellation preserves carried material and exposes staged material as a recoverable drop. Prepared, Nursery, Sleeping, Food Storage, Water Storage and Material Storage recipes are provisional; doors, rooms, brood and production were not added.
+
+- Focused Edit Mode: 14/14 passed.
+- Focused Play Mode: 3/3 passed.
+- Complete graphics-enabled Edit Mode: 469/469 passed.
+- Complete Play Mode: 50/50 passed.
+- Manual Play Mode checklist: 30 steps pending.
+
 ### Development UI reorganisation (non-milestone pass)
 
-**Implemented and automated; manual visual confirmation pending.** Existing IMGUI controls were regrouped into a compact top toolbar with Ant, Needs, Skills, Jobs, Resources, World and Debug. A single bounded scrollable panel prevents overlap; Hide All leaves a reopen button; shared input blocking protects world commands and camera mouse controls. No gameplay or 3.4A work was introduced, and 3.3D remains pending manual acceptance.
+**Complete — all 24 manual checks accepted.** Existing IMGUI controls were regrouped into a compact top toolbar with Ant, Needs, Skills, Jobs, Resources, World and Debug. A single bounded scrollable panel prevents overlap; Hide All leaves a reopen button; shared input blocking protects world commands and camera mouse controls.
 
 - Focused Edit Mode: 8/8 passed.
 - Focused Play Mode: 2/2 passed.
 - Complete graphics-enabled Edit Mode: 455/455 passed.
 - Complete Play Mode: 47/47 passed.
-- Manual UI checklist: 24 steps pending.
+- Manual UI checklist: all 24 checks accepted.
 
 ### 3.3D — Material Storage and Autonomous Hauling
 
-**Implemented — Pending Manual Acceptance.** Pre-authored functional Background tiles own one physical storage slot each with Soil/Stone/general filters. Existing colony jobs, priorities, inventory and grid navigation drive reserved loose-drop delivery and owner-only self-deposit. Cancellation preserves the material at its current physical owner; completed delivery awards 5 base Hauling XP per unit.
+**Complete — all 30 manual checks accepted.** Pre-authored functional Background tiles own one physical storage slot each with Soil/Stone/general filters. Existing colony jobs, priorities, inventory and grid navigation drive reserved loose-drop delivery and owner-only self-deposit. Cancellation preserves the material at its current physical owner; completed delivery awards 5 base Hauling XP per unit.
 
 - Focused Edit Mode: 15/15 passed.
 - Focused Play Mode: 3/3 passed.
 - Complete graphics-enabled Edit Mode: 447/447 passed.
 - Complete Play Mode: 45/45 passed.
-- Manual Play Mode checklist: 30 steps pending.
+- Manual Play Mode checklist: all 30 checks accepted.
 
 ### 3.3C — Ant Inventory, Automatic Excavation Pickup and Physical Material Handling
 

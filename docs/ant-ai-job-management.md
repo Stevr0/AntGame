@@ -8,7 +8,7 @@ Ants may also receive temporary explicit orders. Critical survival may interrupt
 
 ## Current implementation
 
-Milestones through 3.3C are accepted, and 3.3D extends that foundation with physical storage and autonomous hauling:
+Milestones through 3.3D are accepted, and 3.4A extends that foundation with physical Background construction:
 
 - Every ant record owns independent priorities for Excavation, Surface Preparation, Construction, Hauling, Foraging, Production, Combat, and Brood Care.
 - `ColonyJobRegistry` owns synthetic job identity, target, status, reservation, progress, and failure state outside GameObjects.
@@ -23,8 +23,10 @@ Milestones through 3.3C are accepted, and 3.3D extends that foundation with phys
 - Autonomous Hauling jobs reserve loose source quantity and compatible Material Storage capacity, then use the same motor to visit valid adjacent source and destination anchors. Already-carried Soil/Stone creates an owner-only self-deposit task.
 - Actual A* travel cost selects the closest reachable compatible storage with deterministic ties. Disabled Hauling blocks dynamic claims; critical survival and explicit player orders interrupt safely.
 - The development scene exposes deterministic job, excavation and loose-drop fixtures plus priority, inventory, cancellation, reset, and diagnostic controls.
+- Background Conversion designations create real Construction jobs. The exclusive builder uses inventory first, otherwise reserves reachable storage/drop material, stages it at the site, performs timed work and commits the Background transaction.
+- Construction interruption preserves progress, carried material and staged material. Cancellation releases reservations and exposes staged material as a recoverable drop.
 
-Milestones through 3.3C are accepted. Milestone 3.3D is **Implemented — Pending Manual Acceptance** with 15/15 focused Edit, 3/3 focused Play, 447/447 full Edit and 45/45 full Play passing.
+Milestones through 3.3D and the UI pass are manually accepted. Milestone 3.4A is **Implemented — Pending Manual Acceptance** with 14/14 focused Edit, 3/3 focused Play, 469/469 full Edit and 50/50 full Play passing.
 
 ## Future decision flow
 
@@ -54,4 +56,4 @@ flowchart TD
 
 ## Not implemented
 
-Excavation, personal inventory, explicit pickup, Material Storage and autonomous Soil/Stone hauling are now real. Surface Preparation, construction, gathering, production, combat, brood care, forced-work orders, Draft Mode, group tactics, local avoidance, persistence, and production-scale indexing require later milestones.
+Excavation, personal inventory, explicit pickup, Material Storage, autonomous Soil/Stone hauling and functional Background construction are now real. Gathering, production, combat, brood care, forced-work orders, Draft Mode, group tactics, local avoidance, persistence, rooms and production-scale indexing require later milestones.

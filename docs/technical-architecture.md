@@ -24,6 +24,7 @@ flowchart TB
     JR[ColonyJobRegistry]
     DR[Excavation designations, transactions and world drops]
     MS[MaterialStorageWorld]
+    CS[Construction designations, sites and transactions]
   end
 
   subgraph Rules[Rules and shared services]
@@ -50,6 +51,7 @@ flowchart TB
   JR --> CTRL
   DR --> CTRL
   MS --> CTRL
+  CS --> CTRL
   WD --> DR --> TILE
   HOST --> Data
   HOST --> Rules
@@ -70,7 +72,9 @@ One `GridNavigationWorldService` owns the shared navigation map and bounded sche
 
 ### Commands and interactions
 
-`AntColony.Commands` handles selection, designation input, context orders, visual bindings, physical survival, synthetic work, real excavation, explicit material pickup/drop and autonomous hauling. Location-owned supplies remain in `SurvivalInteractionWorld`; job identity, ownership and progress remain in `ColonyJobRegistry`; `ExcavationDesignationRegistry` is a typed view over those same jobs rather than a second queue. Source reservations remain in the world-drop registry, destination reservations remain in `MaterialStorageWorld`, and carried stacks remain on the ant record. Job, pickup and hauling travel reuse the shared map and motor instead of owning navigation.
+`AntColony.Commands` handles selection, designation input, context orders, visual bindings, physical survival, synthetic work, real excavation, explicit material pickup/drop, autonomous hauling and real Background construction. Location-owned supplies remain in `SurvivalInteractionWorld`; job identity, ownership and progress remain in `ColonyJobRegistry`; designation registries are typed views over those same jobs rather than second queues. Source reservations remain in the world-drop or Material Storage authority, and carried stacks remain on the ant record. All travel reuses the shared map and motor.
+
+`ConstructionJobOrder` reserves one builder and moves existing physical material through inventory into a cell-owned `ConstructionSite`. `ConstructionWorldTransaction` validates occupancy, source Background and staged quantity before consuming once, replacing only the Background, registering one functional-capacity slot, refreshing presentation and invalidating navigation.
 
 ### Development composition
 
@@ -84,7 +88,7 @@ One `GridNavigationWorldService` owns the shared navigation map and bounded sche
 | --- | --- | --- |
 | `AntMovementPrototype.unity` | Continuous-input surface movement regression course | Retained developer fixture |
 | `AntNavigationPrototype.unity` | Navigation classification and visualisation fixture | Retained developer fixture |
-| `AntGameDevelopment.unity` | Integrated world, ants, selection, grid movement, survival, jobs, excavation, inventory, Material Storage and hauling | Primary development scene |
+| `AntGameDevelopment.unity` | Integrated world, ants, selection, movement, survival, jobs, excavation, inventory, storage, hauling and Background construction | Primary development scene |
 
 There is no finished menu-to-game flow, Bootstrap scene, save selection, or production world-loading sequence yet. Future work must preserve the existing authored coordinator seams rather than introducing an unnecessary global manager.
 

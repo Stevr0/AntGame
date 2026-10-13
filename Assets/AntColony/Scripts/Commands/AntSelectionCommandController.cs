@@ -10,7 +10,8 @@ namespace AntColony.Commands
     public enum WorldDesignationMode
     {
         None,
-        Excavate
+        Excavate,
+        BackgroundConversion
     }
 
     /// <summary>Mutually exclusive sections in the development toolbar.</summary>
@@ -98,6 +99,10 @@ namespace AntColony.Commands
         private WorldMaterialDropRegistry materialDrops;
         private MaterialStorageWorld materialStorage;
         private readonly Dictionary<ColonyJobId, MaterialHaulingPlan> haulingPlans = new();
+        private ConstructionDesignationRegistry constructionDesignations;
+        private ConstructionWorldTransaction constructionTransaction;
+        private IReadOnlyList<ConstructionRecipe> constructionRecipes;
+        private int selectedConstructionRecipeIndex;
         private Vector2Int dragStartCell;
         private bool excavationDragActive;
         private bool developmentUiVisible = true;
@@ -116,6 +121,12 @@ namespace AntColony.Commands
         public ExcavationDesignationRegistry ExcavationDesignations => excavationDesignations;
         public WorldMaterialDropRegistry MaterialDrops => materialDrops;
         public MaterialStorageWorld MaterialStorage => materialStorage;
+        public ConstructionDesignationRegistry ConstructionDesignations =>
+            constructionDesignations;
+        public ConstructionRecipe SelectedConstructionRecipe =>
+            constructionRecipes != null && constructionRecipes.Count > 0
+                ? constructionRecipes[Mathf.Clamp(selectedConstructionRecipeIndex,
+                    0, constructionRecipes.Count - 1)] : null;
         public WorldDesignationMode DesignationMode { get; private set; }
         public bool DevelopmentUiVisible => developmentUiVisible;
         public DevelopmentUiCategory ExpandedDevelopmentCategory =>
@@ -214,6 +225,18 @@ namespace AntColony.Commands
                 ant?.BindMaterialHauling(storage);
         }
 
+        public void BindConstruction(ConstructionDesignationRegistry designations,
+            ConstructionWorldTransaction transaction,
+            IReadOnlyList<ConstructionRecipe> recipes)
+        {
+            constructionDesignations = designations;
+            constructionTransaction = transaction;
+            constructionRecipes = recipes;
+            selectedConstructionRecipeIndex = 0;
+            foreach (SelectableGridAnt ant in selectableAnts)
+                ant?.BindConstruction(designations, transaction);
+        }
+
         public void ClearSelectableAnts()
         {
             foreach (SelectableGridAnt ant in selectableAnts)
@@ -241,6 +264,8 @@ namespace AntColony.Commands
                 ant.BindExcavation(
                     excavationDesignations, excavationTransaction, materialDrops);
                 ant.BindMaterialHauling(materialStorage);
+                ant.BindConstruction(constructionDesignations,
+                    constructionTransaction);
                 autonomousStates[ant] = new AutonomousSurvivalAgentState();
                 autonomousWorkStates[ant] = new AutonomousWorkAgentState();
             }
@@ -440,7 +465,7 @@ namespace AntColony.Commands
 
         public bool TryHandleLeftClick(Vector2 screenPoint)
         {
-            if (DesignationMode == WorldDesignationMode.Excavate) return false;
+            if (DesignationMode != WorldDesignationMode.None) return false;
             if (IsScreenPointBlocked(screenPoint) || worldCamera == null)
             {
                 return false;
@@ -464,7 +489,68 @@ namespace AntColony.Commands
             excavationDragActive = false;
             interactionMessage = mode == WorldDesignationMode.Excavate
                 ? "Excavate mode: left-click or drag over foreground Solids."
-                : "Excavate mode closed; selection controls restored.";
+                : mode == WorldDesignationMode.BackgroundConversion
+                    ? $"Background Conversion: {SelectedConstructionRecipe?.Result.DisplayName ?? "No recipe"}."
+                    : "Designation mode closed; selection controls restored.";
+        }
+
+        public void CycleConstructionRecipe(int direction)
+        {
+            if (constructionRecipes == null || constructionRecipes.Count == 0) return;
+            selectedConstructionRecipeIndex =
+                (selectedConstructionRecipeIndex + direction + constructionRecipes.Count) %
+                constructionRecipes.Count;
+            interactionMessage =
+                $"Background Conversion target: {SelectedConstructionRecipe.Result.DisplayName}.";
+        }
+
+        public bool TryDesignateConstruction(Vector2Int cell, out string message)
+        {
+            ConstructionRecipe recipe = SelectedConstructionRecipe;
+            if (constructionDesignations == null || recipe == null)
+            {
+                message = "Construction services or recipes are unavailable.";
+                return false;
+            }
+            bool result = constructionDesignations.TryDesignate(cell,
+                recipe.Result.StableMaterialId, out _, out message);
+            if (result)
+                message = $"Designated {cell} for {recipe.Result.DisplayName}.";
+            interactionMessage = message;
+            nextWorkEvaluationTime = 0d;
+            return result;
+        }
+
+        public int DesignateConstructionArea(Vector2Int first, Vector2Int second,
+            out string message)
+        {
+            ConstructionRecipe recipe = SelectedConstructionRecipe;
+            if (constructionDesignations == null || recipe == null)
+            {
+                message = "Construction services or recipes are unavailable.";
+                return 0;
+            }
+            int count = constructionDesignations.DesignateArea(first, second,
+                recipe.Result.StableMaterialId, out message);
+            interactionMessage = message;
+            nextWorkEvaluationTime = 0d;
+            return count;
+        }
+
+        public bool TryCancelConstruction(Vector2Int cell, out string message)
+        {
+            if (constructionDesignations == null)
+            {
+                message = "Construction services are unavailable.";
+                return false;
+            }
+            foreach (SelectableGridAnt ant in selectableAnts)
+                if (ant?.ConstructionOrder?.Job.TargetCell == cell && ant.HasActiveOrder)
+                    ant.CancelOrder("Background conversion was cancelled.");
+            bool result = constructionDesignations.TryCancel(cell, out message);
+            interactionMessage = result
+                ? $"Cancelled Background conversion at {cell}." : message;
+            return result;
         }
 
         public bool TryDesignateExcavation(Vector2Int cell, out string message)
@@ -906,7 +992,7 @@ namespace AntColony.Commands
                 DesignationMode != WorldDesignationMode.None)
                 SetDesignationMode(WorldDesignationMode.None);
 
-            if (DesignationMode == WorldDesignationMode.Excavate)
+            if (DesignationMode != WorldDesignationMode.None)
             {
                 if (mouse.leftButton.wasPressedThisFrame &&
                     !IsScreenPointBlocked(screenPoint) && worldCamera != null)
@@ -922,7 +1008,10 @@ namespace AntColony.Commands
                         return;
                     Vector2Int end = WorldTileCoordinates.WorldPositionToCell(
                         worldCamera.ScreenToWorldPoint(screenPoint));
-                    DesignateExcavationArea(dragStartCell, end, out _);
+                    if (DesignationMode == WorldDesignationMode.Excavate)
+                        DesignateExcavationArea(dragStartCell, end, out _);
+                    else
+                        DesignateConstructionArea(dragStartCell, end, out _);
                 }
                 return;
             }
@@ -1126,6 +1215,7 @@ namespace AntColony.Commands
                 SyntheticColonyJobOrder previous = ant.JobOrder;
                 ExcavationJobOrder previousExcavation = ant.ExcavationOrder;
                 MaterialHaulingOrder previousHauling = ant.HaulingOrder;
+                ConstructionJobOrder previousConstruction = ant.ConstructionOrder;
                 bool failed = previous != null &&
                     (previous.Phase == SyntheticJobOrderPhase.Failed ||
                      previous.Phase == SyntheticJobOrderPhase.Cancelled) ||
@@ -1134,8 +1224,12 @@ namespace AntColony.Commands
                      previousExcavation.Phase == ExcavationOrderPhase.Cancelled) ||
                     previousHauling != null &&
                     (previousHauling.Phase == MaterialHaulingPhase.Failed ||
-                     previousHauling.Phase == MaterialHaulingPhase.Cancelled);
-                string failure = previousHauling?.FailureReason ??
+                     previousHauling.Phase == MaterialHaulingPhase.Cancelled) ||
+                    previousConstruction != null &&
+                    (previousConstruction.Phase == ConstructionOrderPhase.Failed ||
+                     previousConstruction.Phase == ConstructionOrderPhase.Cancelled);
+                string failure = previousConstruction?.FailureReason ??
+                    previousHauling?.FailureReason ??
                     previousExcavation?.FailureReason ?? previous?.FailureReason;
                 state.JobId = null;
                 if (failed)
@@ -1161,7 +1255,10 @@ namespace AntColony.Commands
                 RecordWorkFailure(state, currentTimeSeconds, error);
                 return false;
             }
-            bool issued = haulingPlans.TryGetValue(job.Id,
+            bool issued = constructionDesignations != null &&
+                    constructionDesignations.TryGet(job.Id, out _)
+                ? ant.IssueConstructionJobOrder(job, approach)
+                : haulingPlans.TryGetValue(job.Id,
                     out MaterialHaulingPlan haulingPlan)
                 ? ant.IssueMaterialHaulingOrder(haulingPlan, approach)
                 : excavationDesignations != null &&
@@ -1342,6 +1439,13 @@ namespace AntColony.Commands
                 interactionMessage = message;
                 return false;
             }
+            // The shared registry panel can display real construction jobs too.
+            // Route those through their designation boundary so staged material
+            // becomes a recoverable world drop instead of being stranded.
+            if (constructionDesignations != null &&
+                constructionDesignations.TryGet(id,
+                    out ConstructionDesignation construction))
+                return TryCancelConstruction(construction.Cell, out message);
             foreach (SelectableGridAnt ant in selectableAnts)
             {
                 if (ant?.ActiveColonyJob?.Id.Equals(id) == true && ant.HasActiveOrder)
@@ -1369,8 +1473,11 @@ namespace AntColony.Commands
             // Dynamic hauling plans point at registry-owned jobs. Remove both
             // together before rebuilding the older synthetic fixture set.
             RemoveDynamicHaulingJobs();
-            colonyJobs.RemoveWhere(job => excavationDesignations == null ||
-                !excavationDesignations.TryGet(job.Id, out _));
+            colonyJobs.RemoveWhere(job =>
+                (excavationDesignations == null ||
+                    !excavationDesignations.TryGet(job.Id, out _)) &&
+                (constructionDesignations == null ||
+                    !constructionDesignations.TryGet(job.Id, out _)));
             nextDevelopmentJobNumber = 1;
             (AntWorkCategory category, Vector2Int cell)[] fixtures =
             {
@@ -1613,24 +1720,48 @@ namespace AntColony.Commands
 
         private void DrawExcavationWorldOverlay()
         {
-            if (worldCamera == null || excavationDesignations == null) return;
-            foreach (ExcavationDesignation designation in
-                excavationDesignations.Designations)
+            if (worldCamera == null) return;
+            if (excavationDesignations != null)
             {
-                if (designation.State is ExcavationDesignationState.Completed or
-                    ExcavationDesignationState.Cancelled) continue;
-                Vector3 screen = worldCamera.WorldToScreenPoint(
-                    new Vector3(designation.Cell.x + 0.5f,
-                        designation.Cell.y + 0.5f, 0f));
-                if (screen.z < 0f) continue;
-                Color previous = GUI.color;
-                GUI.color = designation.State == ExcavationDesignationState.Active
-                    ? new Color(1f, 0.45f, 0.1f, 0.85f)
-                    : new Color(1f, 0.9f, 0.1f, 0.7f);
-                GUI.Box(new Rect(screen.x - 13f, Screen.height - screen.y - 13f,
-                    26f, 26f), designation.State == ExcavationDesignationState.Active
-                        ? "A" : "X");
-                GUI.color = previous;
+                foreach (ExcavationDesignation designation in
+                    excavationDesignations.Designations)
+                {
+                    if (designation.State is ExcavationDesignationState.Completed or
+                        ExcavationDesignationState.Cancelled) continue;
+                    Vector3 screen = worldCamera.WorldToScreenPoint(
+                        new Vector3(designation.Cell.x + 0.5f,
+                            designation.Cell.y + 0.5f, 0f));
+                    if (screen.z < 0f) continue;
+                    Color previous = GUI.color;
+                    GUI.color = designation.State == ExcavationDesignationState.Active
+                        ? new Color(1f, 0.45f, 0.1f, 0.85f)
+                        : new Color(1f, 0.9f, 0.1f, 0.7f);
+                    GUI.Box(new Rect(screen.x - 13f, Screen.height - screen.y - 13f,
+                        26f, 26f), designation.State == ExcavationDesignationState.Active
+                            ? "A" : "X");
+                    GUI.color = previous;
+                }
+            }
+            if (constructionDesignations != null)
+            {
+                foreach (ConstructionDesignation designation in
+                    constructionDesignations.Designations)
+                {
+                    if (designation.State is ConstructionDesignationState.Completed or
+                        ConstructionDesignationState.Cancelled) continue;
+                    Vector3 screen = worldCamera.WorldToScreenPoint(
+                        new Vector3(designation.Cell.x + 0.5f,
+                            designation.Cell.y + 0.5f, 0f));
+                    if (screen.z < 0f) continue;
+                    Color previous = GUI.color;
+                    GUI.color = designation.State == ConstructionDesignationState.Active
+                        ? new Color(0.25f, 0.9f, 1f, 0.9f)
+                        : new Color(0.35f, 0.75f, 1f, 0.75f);
+                    GUI.Box(new Rect(screen.x - 13f, Screen.height - screen.y - 13f,
+                        26f, 26f), designation.State == ConstructionDesignationState.Active
+                            ? "B" : "C");
+                    GUI.color = previous;
+                }
             }
             if (materialDrops == null) return;
             foreach (WorldMaterialDrop drop in materialDrops.Drops)
@@ -1852,6 +1983,41 @@ namespace AntColony.Commands
                     job.Status != ColonyJobStatus.Cancelled &&
                     GUILayout.Button($"Cancel {job.Id}"))
                     TryCancelSyntheticJob(job.Id, out _);
+            }
+            DrawConstructionDiagnostics();
+        }
+
+        private void DrawConstructionDiagnostics()
+        {
+            GUILayout.Space(4f);
+            GUILayout.Label("BACKGROUND CONSTRUCTION");
+            if (constructionDesignations == null)
+            {
+                GUILayout.Label("Construction services unavailable.");
+                return;
+            }
+            foreach (ConstructionDesignation designation in
+                constructionDesignations.Designations)
+            {
+                ConstructionJobOrder order = null;
+                foreach (SelectableGridAnt ant in selectableAnts)
+                    if (ant?.ConstructionOrder?.Job == designation.Job)
+                        order = ant.ConstructionOrder;
+                GUILayout.Label(
+                    $"{designation.Cell} | {designation.Recipe.Result.DisplayName} | " +
+                    $"{designation.State} | progress {designation.Job.Progress:P0} | " +
+                    $"delivered {designation.Site.DeliveredQuantity}/" +
+                    $"{designation.Recipe.RequiredQuantity} {designation.Recipe.ResourceTypeId}");
+                GUILayout.Label(
+                    $"Builder: {(designation.Job.ReservationOwner.IsValid ? designation.Job.ReservationOwner.ToString() : "None")} | " +
+                    $"stage: {order?.Phase.ToString() ?? "Waiting"} | " +
+                    $"source: {order?.CurrentSourceCell.ToString() ?? "None"}");
+                string reason = order?.FailureReason ?? designation.Job.FailureReason;
+                if (!string.IsNullOrEmpty(reason)) GUILayout.Label($"Reason: {reason}");
+                if (designation.State is not ConstructionDesignationState.Completed and
+                    not ConstructionDesignationState.Cancelled &&
+                    GUILayout.Button($"Cancel conversion {designation.Cell}"))
+                    TryCancelConstruction(designation.Cell, out _);
             }
         }
 

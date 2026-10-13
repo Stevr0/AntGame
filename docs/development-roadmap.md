@@ -4,9 +4,9 @@ This page is a concise navigation view of the authoritative `Documentation/Devel
 
 ## Immediate boundary
 
-**Next action:** manually confirm the 24-step development-toolbar checklist, then use the reorganised interface to complete the existing 30-step milestone 3.3D Play Mode checklist in `Assets/AntColony/Scenes/AntGameDevelopment.unity`.
+**Current action:** manually verify Milestone 3.4A's 30-step Background Conversion and Construction checklist in `Assets/AntColony/Scenes/AntGameDevelopment.unity`.
 
-The UI reorganisation is implemented with 8/8 focused Edit, 2/2 focused Play, 455/455 full Edit and 47/47 full Play passing. It is not Milestone 3.4A and changes no simulation behavior. Do not begin construction, Surface Preparation, 3.4A or another milestone without separate approval.
+Milestone 3.4A is implemented with 14/14 focused Edit, 3/3 focused Play, 469/469 full Edit and 50/50 full Play passing. Builder self-supply, physical staging and Background conversion are in scope; doors, rooms, brood and production remain excluded. The UI pass and 3.3D are manually accepted.
 
 ## Current milestone state
 
@@ -30,13 +30,14 @@ The UI reorganisation is implemented with 8/8 focused Edit, 2/2 focused Play, 45
 | 3.3A | Synthetic colony jobs and per-ant priorities | Complete |
 | 3.3B | Real excavation and loose Soil/Stone output | Complete |
 | 3.3C | Per-ant inventory and explicit physical material transfers | Complete |
-| 3.3D | Physical Material Storage and autonomous Soil/Stone hauling | Implemented — Pending Manual Acceptance |
+| 3.3D | Physical Material Storage and autonomous Soil/Stone hauling | Complete |
+| 3.4A | Functional Background conversion and builder self-supply | Implemented — Pending Manual Acceptance |
 
 ## Ordered future direction
 
 The numbered roadmap beyond the accepted foundation remains direction, not authorised implementation:
 
-1. After 3.3D acceptance, define the next narrow slice separately; do not begin construction implicitly.
+1. Complete 3.4A manual acceptance before defining the next narrow slice.
 2. Multiple-ant movement, local avoidance, and congestion recovery.
 3. Autonomous worker and survival loops.
 4. Excavation, Surface Preparation, physical resources, and hauling.

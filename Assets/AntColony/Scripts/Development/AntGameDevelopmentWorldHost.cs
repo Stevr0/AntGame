@@ -32,6 +32,7 @@ namespace AntColony.Development
         [SerializeField] private BackgroundTileMaterialDefinition waterStorageBackground;
         [SerializeField] private BackgroundTileMaterialDefinition sleepingBackground;
         [SerializeField] private BackgroundTileMaterialDefinition materialStorageBackground;
+        [SerializeField] private BackgroundTileMaterialDefinition nurseryBackground;
 
         [Header("Solid Materials")]
         [SerializeField] private SolidTileMaterialDefinition soilSolid;
@@ -99,6 +100,9 @@ namespace AntColony.Development
         public WorldMaterialDropRegistry MaterialDrops { get; private set; }
         public MaterialStorageWorld MaterialStorage { get; private set; }
         public ExcavationWorldTransaction ExcavationTransaction { get; private set; }
+        public ConstructionRecipeCatalog ConstructionRecipes { get; private set; }
+        public ConstructionDesignationRegistry ConstructionDesignations { get; private set; }
+        public ConstructionWorldTransaction ConstructionTransaction { get; private set; }
         public IReadOnlyList<Vector2Int> SurvivalFixtureCells => survivalFixtureCells;
         public int GridStressGroupSize => gridStressGroupSize;
         public AntAutonomousMotor AutonomousAntPrefab => autonomousAntPrefab;
@@ -197,6 +201,15 @@ namespace AntColony.Development
                 return false;
             }
 
+            ConstructionRecipes = BuildConstructionRecipes();
+            ConstructionDesignations = new ConstructionDesignationRegistry(
+                WorldData, navigationWorldService.Map, ColonyJobRegistry,
+                ConstructionRecipes, SurvivalInteractionWorld, MaterialStorage,
+                MaterialDrops);
+            ConstructionTransaction = new ConstructionWorldTransaction(
+                WorldData, SurvivalInteractionWorld, MaterialStorage,
+                OnConstructionCommitted);
+
             tilemapRenderer.BindWorldData(WorldData);
             collisionRenderer.BindWorldData(WorldData);
             RefreshAllChunks();
@@ -206,6 +219,8 @@ namespace AntColony.Development
             selectionController.BindExcavation(
                 ExcavationDesignations, ExcavationTransaction, MaterialDrops);
             selectionController.BindMaterialStorage(MaterialStorage);
+            selectionController.BindConstruction(ConstructionDesignations,
+                ConstructionTransaction, ConstructionRecipes.Recipes);
             if (!selectionController.ResetSyntheticJobFixtures(out string jobError))
             {
                 Debug.LogError(jobError, this);
@@ -862,7 +877,8 @@ namespace AntColony.Development
             BackgroundTileMaterialDefinition foodStorage = null,
             BackgroundTileMaterialDefinition waterStorage = null,
             BackgroundTileMaterialDefinition sleeping = null,
-            BackgroundTileMaterialDefinition materialStorage = null)
+            BackgroundTileMaterialDefinition materialStorage = null,
+            BackgroundTileMaterialDefinition nursery = null)
         {
             worldSeed = seed;
             minimumChunk = authoredMinimumChunk;
@@ -875,6 +891,7 @@ namespace AntColony.Development
             waterStorageBackground = waterStorage;
             sleepingBackground = sleeping;
             materialStorageBackground = materialStorage;
+            nurseryBackground = nursery;
             soilSolid = soil;
             stoneSolid = stoneSolidDefinition;
             tilemapRenderer = visualRenderer;
@@ -894,6 +911,7 @@ namespace AntColony.Development
                 foodStorageBackground != null && waterStorageBackground != null &&
                 sleepingBackground != null &&
                 materialStorageBackground != null &&
+                nurseryBackground != null &&
                 soilSolid != null && stoneSolid != null && blockingOnlySolid != null &&
                 tilemapRenderer != null && collisionRenderer != null &&
                 navigationWorldService != null && primaryGridAntPrefab != null;
@@ -929,6 +947,14 @@ namespace AntColony.Development
         }
 
         private void OnExcavationCommitted(Vector2Int worldCell)
+        {
+            tilemapRenderer.RefreshCell(worldCell);
+            collisionRenderer.RefreshCell(worldCell);
+            autonomousAnt?.NotifyWorldChanged();
+            NotifyGridTerrainChanged(worldCell);
+        }
+
+        private void OnConstructionCommitted(Vector2Int worldCell)
         {
             tilemapRenderer.RefreshCell(worldCell);
             collisionRenderer.RefreshCell(worldCell);
@@ -1058,6 +1084,26 @@ namespace AntColony.Development
             yield return waterStorageBackground;
             yield return sleepingBackground;
             yield return materialStorageBackground;
+            yield return nurseryBackground;
+        }
+
+        private ConstructionRecipeCatalog BuildConstructionRecipes()
+        {
+            return new ConstructionRecipeCatalog(new[]
+            {
+                new ConstructionRecipe("conversion.prepared", string.Empty,
+                    preparedBackground, ExcavatedMaterialType.Soil, 1, 4d),
+                new ConstructionRecipe("conversion.nursery", string.Empty,
+                    nurseryBackground, ExcavatedMaterialType.Soil, 1, 4d),
+                new ConstructionRecipe("conversion.sleeping", string.Empty,
+                    sleepingBackground, ExcavatedMaterialType.Soil, 1, 4d),
+                new ConstructionRecipe("conversion.food-storage", string.Empty,
+                    foodStorageBackground, ExcavatedMaterialType.Soil, 1, 4d),
+                new ConstructionRecipe("conversion.water-storage", string.Empty,
+                    waterStorageBackground, ExcavatedMaterialType.Stone, 1, 4d),
+                new ConstructionRecipe("conversion.material-storage", string.Empty,
+                    materialStorageBackground, ExcavatedMaterialType.Soil, 1, 4d)
+            });
         }
 
         private bool BuildSurvivalFixtures(out string error)

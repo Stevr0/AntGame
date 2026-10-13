@@ -1,5 +1,73 @@
 # Ant Colony Current Game State
 
+## Current implemented milestone — 3.4A Functional Background Conversion & Construction Jobs (13 October 2026)
+
+**Status: Implemented — Pending Manual Acceptance.** Milestone 3.3D and the Development UI Reorganisation are manually accepted. Milestone 3.4A adds only functional Background conversion and builder self-supply; doors, rooms, brood, production, crafting, combat and reproduction remain excluded.
+
+The player can select Prepared, Nursery, Sleeping, Food Storage, Water Storage or Material Storage in the accepted **World** toolbar category, then click or bounded-drag exposed cells in Background Conversion mode. Covered, inaccessible, occupied, duplicate and same-type targets are rejected. Each accepted designation creates a Construction job in the existing `ColonyJobRegistry`; priorities, Disabled behavior, actual path-cost selection, exclusive reservation, survival precedence and player-order interruption remain shared with established colony work.
+
+`ConstructionRecipe` data declares the expected source, physical resource, quantity, duration and result. The current provisional development recipes are:
+
+| Result | Cost | Base duration |
+| --- | --- | --- |
+| Prepared Background | 1 Soil | 4 simulation hours |
+| Nursery Background | 1 Soil | 4 simulation hours |
+| Sleeping Background | 1 Soil | 4 simulation hours |
+| Food Storage Background | 1 Soil | 4 simulation hours |
+| Water Storage Background | 1 Stone | 4 simulation hours |
+| Material Storage Background | 1 Soil | 4 simulation hours |
+
+The reserved builder first uses compatible existing inventory, otherwise reserves the closest reachable compatible quantity from Material Storage or a loose drop. It physically travels to the source, commits the pickup into its own inventory, travels adjacent to the worksite and transfers material into a cell-owned `ConstructionSite`. The same builder repeats this process when a recipe needs more than one inventory trip. Separate haulers cannot consume a builder reservation. Reservations never consume material.
+
+Construction starts only after all required material is staged. Construction skill and Rested modify committed work progress, while Construction XP is awarded only for that accepted progress. Interruptions release source/job reservations while retaining progress, carried inventory and staged site material. Cancelling a designation converts staged material into a recoverable loose drop at the worksite. Completion revalidates source Background, foreground exposure, occupancy, delivered material and ownership; it then changes only the Background, consumes the exact staged quantity once, creates the functional tile's one-slot capacity, refreshes presentation and invalidates shared navigation. Failed or repeated commits consume nothing.
+
+### 3.4A automated verification
+
+- Focused Edit Mode construction suite: **14/14 passed**.
+- Focused Play Mode construction suite: **3/3 passed**.
+- Complete graphics-enabled Edit Mode suite: **469/469 passed**.
+- Complete Play Mode suite: **50/50 passed**.
+- Runtime, Editor, Edit-test and Play-test assemblies also compile cleanly through Unity's generated Roslyn response files.
+
+### Exact 3.4A manual Unity Play Mode acceptance
+
+**Pending:** complete these checks in `Assets/AntColony/Scenes/AntGameDevelopment.unity`; do not mark 3.4A complete until the user confirms them.
+
+1. Confirm Mara, Pip and Tala retain their accepted identities, skills and needs.
+2. Open **World**, enter Background Conversion mode and confirm selection/move commands do not fire.
+3. Cycle through Prepared, Nursery, Sleeping, Food Storage, Water Storage and Material Storage targets.
+4. Designate one valid exposed tile and confirm visible pending feedback.
+5. Drag over a bounded valid area and confirm one Construction job per eligible cell.
+6. Confirm covered, inaccessible, duplicate and same-type cells are rejected with a reason.
+7. Set Construction priorities to 1, 4 and Disabled; confirm priority order and Disabled behavior.
+8. Confirm one builder exclusively claims a Construction job and navigates to its material source.
+9. Confirm the builder collects the reserved Soil or Stone into its own inventory.
+10. Give the builder compatible inventory first and confirm it travels directly to the site.
+11. Exercise the multi-trip fixture/test setup and confirm the same builder supplies every trip.
+12. Confirm the builder travels to a valid adjacent construction position rather than interacting remotely.
+13. Confirm construction progress advances over simulation time and remains visible under **Jobs**.
+14. Confirm only committed construction progress awards Construction XP.
+15. Compare Rested and ordinary builders and confirm the Rested work-speed effect.
+16. Complete construction and confirm the requested Background material appears.
+17. Confirm the required physical resources are consumed exactly once.
+18. Confirm foreground Solid occupancy is unchanged by successful conversion.
+19. Confirm new Food, Water, Sleeping and Material Storage tiles expose one correct empty capacity; Nursery remains capacity-only with brood deferred.
+20. Cancel before pickup, during transport and after staging; confirm reservations release and material remains recoverable.
+21. Interrupt with a player order and critical survival, then confirm valid progress/material can resume.
+22. Remove available supplies and confirm the Construction job remains pending without consumption.
+23. Attempt conversion of occupied Food/Water/Material Storage or a reserved sleeping tile and confirm safe rejection.
+24. Confirm completed conversion refreshes the Tilemap and navigation without moving or trapping ants.
+25. Confirm existing excavation and autonomous hauling still work.
+26. Confirm autonomous hunger, thirst and rest behavior still works.
+27. Confirm normal ant selection, movement, pickup and survival interaction orders still work.
+28. Confirm toolbar categories, Hide All and UI input blocking remain correct during conversion dragging.
+29. Use **Regenerate Seeded World** and confirm construction jobs, sites and converted tiles return to the deterministic baseline.
+30. Confirm the Unity Console contains no relevant errors or warnings.
+
+### 3.4A known limitations
+
+Recipes, four-hour duration and skill scaling are provisional. The authored recipes currently cost one unit, while the generic order supports multi-trip quantities and has automated coverage. Nursery supplies one capacity unit but brood behavior is deliberately absent. Construction sites are plain authoritative data rather than GameObjects; cancelled staged material becomes a loose drop. There is no demolition, relocation, crafting, room detection, door logic, production, save/load or chunk streaming.
+
 ## Latest accepted status — 13 October 2026
 
 **Development UI Reorganisation: COMPLETE.** User confirmed all 24 manual checks and clean Unity Console. Reported focused Edit Mode 8/8, focused Play Mode 2/2, full Edit Mode 455/455 and full Play Mode 47/47 passed before a later environment-blocked rerun.
@@ -9,7 +77,7 @@
 
 ## Development UI reorganisation pass (13 October 2026)
 
-**Status: Implemented and automated — manual visual confirmation pending. This is not Milestone 3.4A. Milestone 3.3D remains Implemented — Pending Manual Acceptance.**
+**Status: COMPLETE — all 24 manual checks confirmed by the user on 13 October 2026. This pass remains separate from Milestone 3.4A.**
 
 The integrated development scene now uses one compact IMGUI toolbar across the top of the Game view. Its mutually exclusive categories are **Ant, Needs, Skills, Jobs, Resources, World and Debug**. Selecting an open category collapses it; selecting another replaces it, so expanded panels cannot overlap each other. `Hide All` removes the toolbar, summary, expanded panel and excavation overlays, leaving only a small `Show UI` button.
 
@@ -62,7 +130,7 @@ All expanded content uses the same resolution-bounded panel and an internal scro
 
 ## Current implemented milestone — 3.3D Material Storage & Autonomous Hauling (13 October 2026)
 
-**Status: Implemented — Pending Manual Acceptance.** Milestone 3.3C is accepted. Milestone 3.3D adds traversable/grippable Material Storage Background tiles, one authoritative physical stack slot per tile, Soil/Stone/general filters, incoming-capacity reservations and autonomous delivery of loose or already-carried building material. It does not add construction, conversion, crafting, global resource balances or storage for food/water.
+**Status: COMPLETE — all 30 manual checks confirmed by the user on 13 October 2026.** Milestone 3.3C is accepted. Milestone 3.3D adds traversable/grippable Material Storage Background tiles, one authoritative physical stack slot per tile, Soil/Stone/general filters, incoming-capacity reservations and autonomous delivery of loose or already-carried building material.
 
 `MaterialStorageWorld` owns slots by world cell. Each slot records its filter, current resource and quantity, maximum stack, reserved incoming quantity and reservation owner. Changing a filter preserves existing contents; an incompatible change releases the pending incoming reservation and prevents further deposits. Deposits and withdrawals are source-to-destination transactions, so ordinary transfers cannot create negative quantities, mix resources or expose a half-committed transfer.
 
@@ -82,7 +150,7 @@ The development scene includes a general partial Soil slot, empty Soil-only and 
 
 ### Exact 3.3D manual Unity Play Mode acceptance
 
-**Pending:** perform these checks in `Assets/AntColony/Scenes/AntGameDevelopment.unity`; do not mark 3.3D complete until the user confirms them.
+**Accepted:** the user confirmed all 30 checks and a clean Console on 13 October 2026.
 
 1. Mara, Pip and Tala retain identities, skills and needs.
 2. Material Storage background tiles are visible.

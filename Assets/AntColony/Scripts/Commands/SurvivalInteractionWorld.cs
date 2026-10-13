@@ -266,6 +266,38 @@ namespace AntColony.Commands
         public string GetSleepingReservation(Vector2Int cell) =>
             sleepingReservations.TryGetValue(cell, out string owner) ? owner : string.Empty;
 
+        public bool IsFunctionOccupied(Vector2Int cell)
+        {
+            return storage.TryGetValue(cell, out SurvivalStorageSlot slot) &&
+                    (slot.Quantity > 0 || slot.ReservedQuantity > 0) ||
+                sleepingReservations.ContainsKey(cell);
+        }
+
+        /// <summary>Adds the empty one-slot capacity created by construction.</summary>
+        public bool TryRegisterConstructedFunction(Vector2Int cell,
+            BackgroundFunction function, out string error)
+        {
+            return function switch
+            {
+                BackgroundFunction.FoodStorage => TryAddStorage(cell,
+                    SurvivalResourceKind.Food, "resource.food.development", 0, out error),
+                BackgroundFunction.WaterStorage => TryAddStorage(cell,
+                    SurvivalResourceKind.Water, "resource.water.development", 0, out error),
+                BackgroundFunction.Sleeping => TryAddSleepingPosition(cell, out error),
+                _ => Succeed(out error)
+            };
+        }
+
+        public void RemoveEmptyFunction(Vector2Int cell)
+        {
+            if (!IsFunctionOccupied(cell))
+            {
+                storage.Remove(cell);
+                sleepingPositions.Remove(cell);
+                sleepingReservations.Remove(cell);
+            }
+        }
+
         public void ReleaseReservations(string ownerId)
         {
             foreach (SurvivalStorageSlot slot in storage.Values) slot.Release(ownerId);
@@ -301,6 +333,12 @@ namespace AntColony.Commands
                 return false;
             }
 
+            error = string.Empty;
+            return true;
+        }
+
+        private static bool Succeed(out string error)
+        {
             error = string.Empty;
             return true;
         }

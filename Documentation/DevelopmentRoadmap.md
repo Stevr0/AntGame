@@ -1,29 +1,35 @@
 # Ant Colony Development Roadmap
 
+## Current milestone — 3.4A Functional Background Conversion & Construction Jobs
+
+**Implemented — Pending Manual Acceptance (13 October 2026).** The accepted shared job registry, priority matrix, grid navigation, ant inventory, world drops and Material Storage now drive real Construction jobs. A designated exposed Background is supplied personally by its reserved builder, staged physically at the site, worked over time with Construction skill and Rested modifiers, then committed through an accounted Background-only transaction. Prepared, Nursery, Sleeping, Food Storage, Water Storage and Material Storage conversions use provisional one-unit Soil/Stone recipes and four-hour base durations.
+
+Focused verification passed **14/14 Edit Mode** and **3/3 Play Mode**. Complete regression verification passed **469/469 graphics-enabled Edit Mode** and **50/50 Play Mode**. The exact 30-step manual checklist is in `CurrentGameState.md`. Do not mark 3.4A complete until the user confirms it. Doors, rooms, brood, production, crafting, demolition and reproduction were not started.
+
 ## Accepted milestones and next development scope — 13 October 2026
 
 **Development UI Reorganisation COMPLETE:** User confirmed 24/24 manual checks and clean Console. Earlier reported 455/455 Edit Mode and 47/47 Play Mode passed.
 
 **Milestone 3.3D COMPLETE:** User confirmed 30/30 manual hauling checks and clean Console. Earlier reported 447/447 Edit Mode and 45/45 Play Mode passed.
 
-**Next proposed Milestone 3.4A — Functional Background Conversion & Construction Jobs:** Player designates exposed background for conversion; Construction-priority ant personally collects required physical Soil/Stone from existing storage, drops or its own inventory, transports materials to an adjacent work anchor, performs interruptible Construction work and commits an accounted material-consumption/background-change transaction. Support targeted conversions including Prepared, Nursery, Sleeping, Food Storage, Water Storage and Material Storage only if their recipes and fixtures are declared provisional. Preserve occupied-slot data and define safe invalidation. Doors, room enclosure/scoring, brood, production and full crafting are excluded. Separate implementation approval required.
+**Current Milestone 3.4A — Functional Background Conversion & Construction Jobs:** implemented as described above; manual acceptance is pending.
 
 
 ## Development UI reorganisation — 13 October 2026
 
-**Implemented and automated; manual visual confirmation pending. Not Milestone 3.4A.** The two independent side panels were replaced by a compact top IMGUI toolbar with mutually exclusive Ant, Needs, Skills, Jobs, Resources, World and Debug categories. One bounded scrollable panel is possible at a time; Hide All leaves only a small reopen control. Existing simulation controls and diagnostics were regrouped without changing their gameplay APIs.
+**COMPLETE — 24/24 manual checks accepted. Not Milestone 3.4A.** The two independent side panels were replaced by a compact top IMGUI toolbar with mutually exclusive Ant, Needs, Skills, Jobs, Resources, World and Debug categories. One bounded scrollable panel is possible at a time; Hide All leaves only a small reopen control. Existing simulation controls and diagnostics were regrouped without changing their gameplay APIs.
 
 Focused verification passed **8/8 Edit Mode** and **2/2 Play Mode**. Complete regression verification passed **455/455 graphics-enabled Edit Mode** and **47/47 Play Mode**. The exact 24-step manual interface checklist is in `CurrentGameState.md`.
 
-Milestone 3.3D remains **Implemented — Pending Manual Acceptance**. Use the reorganised interface to complete its existing 30-point checklist. Do not begin 3.4A or infer approval for new gameplay.
+Milestone 3.3D is **COMPLETE — 30/30 manual checks accepted**.
 
 ## 3.3D implementation status — 13 October 2026
 
-**3.3D Material Storage & Autonomous Hauling: Implemented — Pending Manual Acceptance.** Milestone 3.3C is COMPLETE: the user confirmed all 26 manual Unity checks, and its previously reported 26/26 focused Edit, 5/5 focused Play, 432/432 full Edit and 42/42 full Play evidence remains accepted.
+**3.3D Material Storage & Autonomous Hauling: COMPLETE — 30/30 manual checks accepted.** Milestone 3.3C is COMPLETE: the user confirmed all 26 manual Unity checks, and its previously reported 26/26 focused Edit, 5/5 focused Play, 432/432 full Edit and 42/42 full Play evidence remains accepted.
 
 3.3D adds one-slot-per-tile physical Material Storage, Soil/Stone/general filters, source and destination reservations, actual-path-cost destination choice, partial loads, automatic transport of loose resources and owner-only self-deposit. Completed deliveries award provisional Hauling XP at 5 base XP per unit. Cancellation preserves the resource at its current owner. Construction and other later mechanics remain excluded.
 
-Verification passed **15/15 focused Edit Mode**, **3/3 focused Play Mode**, **447/447 complete graphics-enabled Edit Mode** and **45/45 complete Play Mode**, all without failures or skips. The exact 30-step manual checklist is in `CurrentGameState.md`; do not mark 3.3D complete until the user confirms it.
+Verification passed **15/15 focused Edit Mode**, **3/3 focused Play Mode**, **447/447 complete graphics-enabled Edit Mode** and **45/45 complete Play Mode**, all without failures or skips. The user subsequently accepted all 30 manual checks.
 
 
 ## 3.3C implementation status — 13 October 2026
@@ -359,4 +365,4 @@ These milestones are ordered direction, not approved implementation work. Their 
 
 The 3.3C carrying model is implemented: one initial slot plus one at Hauling 20/40/60/80, capped at five, with compatible resource stacks and a provisional maximum of 10 for Soil and Stone.
 
-No new milestone is complete without implementation and validation evidence. Milestone 2.4D remains pending its separately recorded manual acceptance. Milestone 3.3D implements Material Storage and autonomous Soil/Stone hauling; Surface Preparation, construction, persistence, streaming and local avoidance are not implemented.
+No new milestone is complete without implementation and validation evidence. Milestone 2.4D remains pending its separately recorded manual acceptance. Milestone 3.4A implements functional Background construction and builder self-supply; rooms, doors, brood, production, persistence, streaming and local avoidance are not implemented.

@@ -30,7 +30,10 @@ namespace AntColony.World
         public string ReservationOwnerId { get; internal set; } = string.Empty;
         public string ReservedResourceTypeId { get; internal set; } = string.Empty;
         public int ReservedIncomingQuantity { get; internal set; }
+        public string WithdrawalOwnerId { get; internal set; } = string.Empty;
+        public int ReservedWithdrawalQuantity { get; internal set; }
         public int FreeCapacity => Math.Max(0, MaximumStack - Quantity - ReservedIncomingQuantity);
+        public int AvailableQuantity => Math.Max(0, Quantity - ReservedWithdrawalQuantity);
     }
 
     /// <summary>
@@ -146,6 +149,73 @@ namespace AntColony.World
             if (slot.Quantity == 0) slot.ResourceTypeId = string.Empty;
             error = string.Empty;
             return true;
+        }
+
+        /// <summary>
+        /// Reserves existing physical contents for one builder. Incoming storage
+        /// reservations remain independent because they protect empty capacity,
+        /// while this reservation protects material which already exists.
+        /// </summary>
+        public bool TryReserveWithdrawal(Vector2Int cell, string resourceTypeId,
+            string ownerId, int requested, out int reserved, out string error)
+        {
+            reserved = 0;
+            if (!slots.TryGetValue(cell, out MaterialStorageSlot slot) ||
+                string.IsNullOrWhiteSpace(ownerId) || requested <= 0 ||
+                slot.ResourceTypeId != resourceTypeId || slot.AvailableQuantity <= 0 ||
+                !string.IsNullOrEmpty(slot.WithdrawalOwnerId))
+            {
+                error = "Material Storage has no compatible unreserved contents.";
+                return false;
+            }
+            reserved = Math.Min(requested, slot.AvailableQuantity);
+            slot.WithdrawalOwnerId = ownerId;
+            slot.ReservedWithdrawalQuantity = reserved;
+            error = string.Empty;
+            return true;
+        }
+
+        public bool TryCommitReservedWithdrawal(Vector2Int cell,
+            string resourceTypeId, string ownerId, int quantity,
+            Func<bool> commitDestination, out int maximumStack, out string error)
+        {
+            maximumStack = 0;
+            if (!slots.TryGetValue(cell, out MaterialStorageSlot slot) ||
+                slot.ResourceTypeId != resourceTypeId ||
+                slot.WithdrawalOwnerId != ownerId || quantity <= 0 ||
+                quantity > slot.ReservedWithdrawalQuantity || quantity > slot.Quantity)
+            {
+                error = "The reserved Material Storage withdrawal is no longer valid.";
+                return false;
+            }
+            if (commitDestination == null || !commitDestination())
+            {
+                error = "The builder inventory rejected the prepared withdrawal.";
+                return false;
+            }
+            maximumStack = slot.MaximumStack;
+            slot.Quantity -= quantity;
+            if (slot.Quantity == 0) slot.ResourceTypeId = string.Empty;
+            ReleaseWithdrawal(cell, ownerId);
+            error = string.Empty;
+            return true;
+        }
+
+        public void ReleaseWithdrawal(Vector2Int cell, string ownerId)
+        {
+            if (slots.TryGetValue(cell, out MaterialStorageSlot slot) &&
+                slot.WithdrawalOwnerId == ownerId)
+            {
+                slot.WithdrawalOwnerId = string.Empty;
+                slot.ReservedWithdrawalQuantity = 0;
+            }
+        }
+
+        public bool IsOccupied(Vector2Int cell)
+        {
+            return slots.TryGetValue(cell, out MaterialStorageSlot slot) &&
+                (slot.Quantity > 0 || slot.ReservedIncomingQuantity > 0 ||
+                 slot.ReservedWithdrawalQuantity > 0);
         }
 
         public void ReleaseIncoming(Vector2Int cell, string ownerId)

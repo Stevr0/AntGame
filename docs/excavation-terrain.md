@@ -26,6 +26,8 @@ Visual Tilemaps and the collision-only Tilemap are projections of authoritative 
 
 Milestone 3.3B connected these foundations to player designations and autonomous excavation work. Milestone 3.3C connects committed yield to the excavator's inventory with a recoverable loose-drop fallback. Milestone 3.3D lets ants deliver those physical materials into filtered one-slot Material Storage Background tiles.
 
+Milestone 3.4A adds player-designated Background conversion. Completion consumes builder-staged Soil/Stone, preserves foreground Solid occupancy, refreshes the Background Tilemap and invalidates local navigation through the existing mutation seam.
+
 ## Implemented excavation and material handling
 
 Excavate mode creates registry-owned jobs for eligible foreground Solid cells. Autonomous ants select them through the accepted priority/path-cost rules, reserve exclusively, reach a valid adjacent anchor and make incremental progress. Safe interruption retains progress. Completion removes only the foreground Solid and preserves the Background.
@@ -38,12 +40,11 @@ Material Storage remains physical rather than a global wallet. Each functional B
 
 ## Surface Preparation
 
-Preparation is a future resource-backed Background conversion job. It does not unlock natural climbing: intact exposed Earth and Stone are already grippable. Prepared Background instead provides the provisional `1.25x` travel-speed benefit. Exact recipes, work time, visual progression, and final balance are unresolved.
+Preparation is now one 3.4A resource-backed Background conversion target. It costs a provisional one Soil and four simulation work hours. It does not unlock natural climbing: intact exposed Earth and Stone are already grippable. Prepared Background retains the provisional `1.25x` travel-speed benefit. Final balance remains unresolved.
 
 ## Not implemented
 
-- Resource-backed preparation jobs.
 - Procedural generation, durable chunk streaming, or save/load.
-- Construction delivery or resource crafting.
+- Resource crafting, demolition, rooms and door construction.
 
 See [Ant Movement and Navigation](ant-movement-navigation.md) for mutation response and [Colony Construction and Rooms](colony-construction-rooms.md) for functional Background conversion.

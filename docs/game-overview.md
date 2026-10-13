@@ -1,5 +1,7 @@
 # Game Overview
 
+Milestone 3.4A now permits player-designated conversion of exposed Background into Prepared, Nursery, Sleeping, Food Storage, Water Storage or Material Storage tiles. A Construction-priority ant personally supplies physical Soil/Stone, stages it at the site and performs timed work. The implementation is automated but awaits the documented 30-step manual Play Mode acceptance; doors, rooms, brood and production remain future work.
+
 ## Vision
 
 Ant Colony is a single-player, scrollable and zoomable 2D side-view colony simulation. The intended world is procedural, persistent, chunk-loaded, and destructible. The player manages a colony at strategic scale while issuing explicit orders to persistent individual ants.

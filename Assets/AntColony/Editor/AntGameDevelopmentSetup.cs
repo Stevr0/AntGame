@@ -38,6 +38,8 @@ namespace AntColony.EditorTools
             "Assets/AntColony/Art/WorldTiles/Background_Sleeping.asset";
         private const string MaterialStorageTilePath =
             "Assets/AntColony/Art/WorldTiles/Background_MaterialStorage.asset";
+        private const string NurseryTilePath =
+            "Assets/AntColony/Art/WorldTiles/Background_Nursery.asset";
         private const string SoilTilePath =
             "Assets/AntColony/Art/WorldTiles/Solid_Soil.asset";
         private const string StoneTilePath =
@@ -173,6 +175,8 @@ namespace AntColony.EditorTools
                 new Color32(167, 101, 211, 255), Tile.ColliderType.None);
             GetOrCreateTile(MaterialStorageTilePath, whitePixelSprite,
                 new Color32(127, 185, 126, 255), Tile.ColliderType.None);
+            GetOrCreateTile(NurseryTilePath, whitePixelSprite,
+                new Color32(232, 143, 174, 255), Tile.ColliderType.None);
             GetOrCreateTile(
                 SoilTilePath,
                 whitePixelSprite,
@@ -206,6 +210,8 @@ namespace AntColony.EditorTools
                 LoadBackground("Background_Sleeping");
             BackgroundTileMaterialDefinition materialStorage =
                 LoadBackground("Background_MaterialStorage");
+            BackgroundTileMaterialDefinition nursery =
+                LoadBackground("Background_Nursery");
             SolidTileMaterialDefinition soil = LoadSolid("Solid_Soil");
 
             Scene scene = EditorSceneManager.NewScene(
@@ -306,7 +312,8 @@ namespace AntColony.EditorTools
                 foodStorage,
                 waterStorage,
                 sleeping,
-                materialStorage);
+                materialStorage,
+                nursery);
 
             EditorSceneManager.MarkSceneDirty(scene);
             Require(EditorSceneManager.SaveScene(scene, ScenePath),
@@ -555,6 +562,8 @@ namespace AntColony.EditorTools
             ValidateTileColour(FoodStorageTilePath, new Color32(195, 137, 44, 255));
             ValidateTileColour(WaterStorageTilePath, new Color32(40, 170, 231, 255));
             ValidateTileColour(SleepingTilePath, new Color32(167, 101, 211, 255));
+            ValidateTileColour(MaterialStorageTilePath, new Color32(127, 185, 126, 255));
+            ValidateTileColour(NurseryTilePath, new Color32(232, 143, 174, 255));
             ValidateTileColour(SoilTilePath, new Color32(152, 99, 66, 255));
             ValidateTileColour(StoneTilePath, new Color32(115, 126, 137, 255));
         }

@@ -122,6 +122,25 @@ namespace AntColony.Development
                 controller.SetDesignationMode(controller.DesignationMode ==
                     WorldDesignationMode.Excavate
                         ? WorldDesignationMode.None : WorldDesignationMode.Excavate);
+            GUILayout.Space(4f);
+            ConstructionRecipe recipe = controller.SelectedConstructionRecipe;
+            GUILayout.Label($"Conversion target: {recipe?.Result.DisplayName ?? "Unavailable"}");
+            GUILayout.BeginHorizontal();
+            if (GUILayout.Button("Previous Type")) controller.CycleConstructionRecipe(-1);
+            if (GUILayout.Button("Next Type")) controller.CycleConstructionRecipe(1);
+            GUILayout.EndHorizontal();
+            if (GUILayout.Button(controller.DesignationMode ==
+                    WorldDesignationMode.BackgroundConversion
+                    ? "Exit Background Conversion Mode (Esc)"
+                    : "Enter Background Conversion Mode"))
+                controller.SetDesignationMode(controller.DesignationMode ==
+                    WorldDesignationMode.BackgroundConversion
+                        ? WorldDesignationMode.None
+                        : WorldDesignationMode.BackgroundConversion);
+            if (GUILayout.Button("Designate Inspected Cell for Conversion"))
+                controller.TryDesignateConstruction(selectedCell, out statusMessage);
+            if (GUILayout.Button("Cancel Conversion at Inspected Cell"))
+                controller.TryCancelConstruction(selectedCell, out statusMessage);
             if (GUILayout.Button("Command Primary Grid Ant to Inspected Cell"))
             {
                 worldHost.TryAssignGridDestination(
