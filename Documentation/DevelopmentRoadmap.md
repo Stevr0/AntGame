@@ -2,12 +2,20 @@
 
 ## Milestone status — 13 October 2026
 
-**Next proposed milestone — 3.2A Individual Needs & Survival Foundation.** Add authoritative individual Hunger, Thirst, Health, Fatigue and Rested-effect calculations using deterministic simulation-time inputs, development-only consumable/refill/sleep controls and inspection. Integrate thirst-zero skill XP blocking through the existing XP multiplier boundary. Implement no physical food/water storage, sleep tiles, autonomous needs jobs, resource transactions, combat or death gameplay. Numeric depletion rates, damage thresholds and Rested multipliers remain provisional. Begin only after separately approved Codex scope.
+**3.3A Colony Job Designation & Priority Foundation: Implemented — Pending Manual Acceptance.** Each `AntRecord` owns stable Excavation, Surface Preparation, Construction, Hauling, Foraging, Production, Combat and Brood Care priorities using 1–4 or Disabled. A shared plain-C# registry owns synthetic designation identity, status, exclusive reservation and persistent progress. Selection uses highest enabled priority before actual shared-A* travel cost, deterministic ties, a 32-candidate-per-priority bound and 2/4/8-second retry backoff.
+
+Synthetic work travels through the production grid motor, works from a revalidated adjacent position, preserves progress across safe interruption and awards proportional relevant-skill XP only for committed progress. Provisional balance is 4 simulation hours, +0.5% speed per skill level and 20 base XP per full job; Rested multipliers apply. Ordinary survival waits for active work, while critical survival and explicit player orders interrupt at the cancellation boundary and release a Paused job. Five deterministic fixtures and Developer Only controls/diagnostics are present. No real excavation, preparation, construction, hauling, resource or inventory behavior is implemented.
+
+Verification passes **28/28 focused Edit Mode**, **5/5 focused Play Mode**, **392/392 complete graphics-enabled Edit Mode** and **37/37 complete Play Mode**, all with zero failures/skips. The exact 22-step manual checklist is in `CurrentGameState.md`.
+
+**3.2C Autonomous Survival Behaviour: COMPLETE (acceptance recorded 13 October 2026).** The user confirmed the implemented individual Eat/Drink/Rest decision slice by approving the transition to 3.3A. Its thresholds, hysteresis, player-order rules, least-cost physical destination choice and bounded retry behavior remain accepted.
+
+**Historical proposal — 3.2A Individual Needs & Survival Foundation.** This proposal has since been implemented and accepted; the retained text below is historical context.
 
 
 
 **3.1C Individual Skills & Learn-by-Doing Foundation: COMPLETE (all 18 manual Play Mode checks accepted on 13 October 2026).** Each authoritative ant record owns all seven stable GDD skills from level 0–100. Successful future activities can explicitly award base XP through a validated multiplier boundary; a deterministic provisional curve handles level progress and safe maximum capping. Independently tracked inactivity uses explicit simulation hours, a provisional 24-hour grace period and 0.25 levels/hour decay above 50, with an exact floor of 50. The selected-ant panel displays every skill and contains collapsible Developer Only XP, multiplier, maximum, decay and reset controls. No actual jobs, work effects, needs, inventory or save/load were added.
-**Next proposed milestone — 3.2C Autonomous Survival Behaviour:** Give active idle ants autonomous need-based Eat, Drink and Rest decision-making using existing physical survival interaction orders and grid navigation. Add deterministic priority/threshold rules, controlled evaluation cadence, shortest reachable available destination, safe player-order precedence and failure backoff. Do not introduce colony job scheduling, work priorities, resources gathering, construction, combat, sleep assignments or reproduction. Thresholds and evaluation intervals are provisional pending approval. No implementation is authorised by this documentation change.
+**Historical proposal — 3.2C Autonomous Survival Behaviour:** This proposal has since been implemented and accepted as recorded above.
 
 
 
@@ -29,7 +37,7 @@ Automated evidence: focused 3.1B Edit Mode **16/16 passed**, focused selection/i
 
 **3.1A Ant Selection & Command Integration: COMPLETE.** The user confirmed all 14 manual Play Mode acceptance checks passed. Previously reported automation: focused Edit Mode 6/6, focused Play Mode 4/4, full Edit Mode 258/258 and full Play Mode 18/18. Three selectable ants, independent right-click movement orders, UI click protection, order completion and development-tool separation have been accepted. This is a documentation-only status change; no new tests executed.
 
-**Next action:** complete the exact 3.2B manual Play Mode checklist and wait for user acceptance. Do not begin autonomous survival, colony jobs, gathering, hauling, construction or another gameplay milestone.
+**Next action:** complete the exact 3.3A manual Play Mode checklist and wait for user acceptance. Do not begin real excavation, construction, hauling or another gameplay milestone.
 
 
 ## Current accepted milestone and experimental next step — 12 October 2026
@@ -40,7 +48,7 @@ Automated evidence: 11/11 focused grid EditMode, 238/238 full EditMode, 3/3 focu
 
 **2.4A Natural Background Movement Realignment: COMPLETE.** User reports Roslyn compilation, focused 56/56 Edit Mode, full graphics-enabled 227/227 Edit Mode, 6/6 physics Play Mode and scene validators passed. User has confirmed the manual Unity Play Mode acceptance. Natural earth/stone grip works without preparation; prepared terrain increases movement speed by provisional 1.25×; sky remains non-grippable. Older milestones remain historical. This status is based on user-reported local work and validation; GitHub may need the associated Unity source/tests pushed.
 
-**Latest approved scope: 3.2B Physical Food, Water & Rest Interactions — Implemented, pending manual acceptance.** Explicit context orders now connect physical location-owned supplies and sleeping positions to accepted needs and grid navigation. Preserve the prior architecture and do not infer autonomous survival or colony-work authority from this slice.
+**Latest approved scope: 3.3A Colony Job Designation & Priority Foundation — Implemented, pending manual acceptance.** Only development synthetic work is authorised. Real excavation, construction, hauling, inventories and resource production remain excluded.
 
 **2.4C implementation status: Complete.** A shared main-thread scheduler advances deterministic resumable A* with a configurable 128-node/update total budget and 8-node/request slice. Its weighted High/Normal/Low service cycle prevents starvation; duplicate suppression, replacement/cancellation, terrain revisions and request identity prevent stale delivery. The experimental motor has explicit waiting, following, blocked, falling and recovery lifecycle states with two bounded automatic retries. The development scene can spawn 1/100/300/500 grid ants, exercise simultaneous or staggered requests, cancel one request, mutate terrain and display scheduler diagnostics. Friendly overlap is intentional; stable grid ants do not pay Physics2D contact cost, and the accepted 2.4A ant is retained. The user subsequently confirmed manual Play Mode acceptance.
 
@@ -279,15 +287,15 @@ These milestones are ordered direction, not approved implementation work. Their 
 
 | Milestone | Intended outcome | Status |
 | --- | --- | --- |
-| 3 — Ant selection and inspection | Accepted 3.1A–3.2A foundations remain complete; 3.2B adds explicit physical survival interaction inspection and awaits manual acceptance. | 3.2B pending manual acceptance |
-| 4 — Hybrid task assignment | Support colony-wide designations and priorities plus specific task assignment to an eligible individual. | Not started |
+| 3 — Ant selection and inspection | Accepted foundations through 3.2C remain complete; 3.3A adds synthetic job and priority diagnostics. | 3.3A pending manual acceptance |
+| 4 — Hybrid task assignment | 3.3A implements autonomous synthetic designations and per-ant priorities only; real jobs and forced-work orders remain future. | Foundation pending acceptance |
 | 5 — Multiple-ant movement | Allow shared-tile presence, local avoidance, temporary friendly overlap, congestion-aware routing and bounded recovery without invalid displacement. | Not started |
 | 6 — Autonomous worker loop | Select and perform eligible work while responding predictably to urgent needs and task invalidation. | Not started |
 | 7 — Excavation, Surface Preparation and resources | Excavate reachable foreground Solids, retain their Backgrounds, prepare exposed Background Materials progressively from accessible positions, and reserve/haul/consume configured resources. | Not started |
 | 8 — Population and performance | Scale toward potentially hundreds of independently simulated ants using shared navigation data, efficient nearby-ant lookup and controlled update frequencies. | Not started |
 | 9 — Enemy colonies and hostile interactions | Reuse the same terrain navigation for other colonies and add high-level engage, retreat, avoid, defend and assistance responses. | Not started |
-| 10 — Skills, survival, growth and finished slice | 3.1C supplies skills, 3.2A supplies accepted needs/Rested simulation, and 3.2B implements explicit physical food/water/rest interactions pending manual acceptance. Autonomous survival, skill/work effects, queen/brood progression, onboarding, objectives and save/load remain future slices. | Explicit interactions pending acceptance |
+| 10 — Skills, survival, growth and finished slice | Skills, needs, physical survival, autonomous survival and synthetic work foundations exist. Real work, queen/brood progression, onboarding, objectives and save/load remain future slices. | Synthetic work pending acceptance |
 
 The proposed carrying model remains future work: one initial slot plus one per 20 Hauling skill, capped at five, with one item per slot.
 
-No new milestone is complete without implementation and validation evidence. Milestone 2.4D remains pending its separately recorded manual acceptance. Milestone 3.2B now implements only explicit physical food/water/rest interactions; autonomous survival, colony jobs, gathering/hauling, excavation, Surface Preparation gameplay, general inventories, work-speed application, carrying, persistence, streaming and local avoidance are not implemented.
+No new milestone is complete without implementation and validation evidence. Milestone 2.4D remains pending its separately recorded manual acceptance. Milestone 3.3A implements synthetic work only; real gathering/hauling, excavation, Surface Preparation, construction, inventories, carrying, persistence, streaming and local avoidance are not implemented.

@@ -9,7 +9,8 @@ namespace AntColony.Commands
     {
         None,
         Player,
-        AutonomousSurvival
+        AutonomousSurvival,
+        AutonomousWork
     }
 
     /// <summary>
@@ -37,6 +38,8 @@ namespace AntColony.Commands
         private string failureReason = string.Empty;
         private SurvivalInteractionWorld interactionWorld;
         private SurvivalInteractionOrder interactionOrder;
+        private ColonyJobRegistry colonyJobs;
+        private SyntheticColonyJobOrder jobOrder;
 
         public string DisplayName => Record?.DisplayName ?? "Unbound Ant";
         public AntRecord Record => entityBinding?.Record;
@@ -48,11 +51,14 @@ namespace AntColony.Commands
         public string FailureReason => failureReason;
         public string OrderOutcome => orderOutcome;
         public SurvivalInteractionOrder InteractionOrder => interactionOrder;
+        public SyntheticColonyJobOrder JobOrder => jobOrder;
         public AntOrderSource OrderSource { get; private set; }
         public LineRenderer SelectionIndicator => selectionIndicator;
         public string ControlState => hasActiveOrder
             ? OrderSource == AntOrderSource.AutonomousSurvival
                 ? "Autonomous Survival"
+                : OrderSource == AntOrderSource.AutonomousWork
+                    ? "Autonomous Colony Work"
                 : "Player Ordered"
             : "Autonomous / Idle";
 
@@ -71,6 +77,9 @@ namespace AntColony.Commands
                         ? $"Travelling to {interactionOrder.Kind}"
                         : interactionOrder.Status;
                 }
+
+                if (jobOrder != null && jobOrder.IsActive)
+                    return jobOrder.Status;
 
                 return motor.State switch
                 {
@@ -106,6 +115,7 @@ namespace AntColony.Commands
         private void OnDisable()
         {
             interactionOrder?.Cancel("Interaction cancelled because the ant was disabled.");
+            jobOrder?.Cancel("Synthetic work cancelled because the ant was disabled.");
             hasActiveOrder = false;
             OrderSource = AntOrderSource.None;
         }
@@ -130,8 +140,23 @@ namespace AntColony.Commands
             interactionOrder?.Cancel("Interaction world was replaced.");
             interactionWorld = world;
             interactionOrder = null;
-            hasActiveOrder = false;
-            OrderSource = AntOrderSource.None;
+            if (jobOrder == null || !jobOrder.IsActive)
+            {
+                hasActiveOrder = false;
+                OrderSource = AntOrderSource.None;
+            }
+        }
+
+        public void BindColonyJobs(ColonyJobRegistry jobs)
+        {
+            jobOrder?.Cancel("Colony job registry was replaced.");
+            colonyJobs = jobs;
+            jobOrder = null;
+            if (interactionOrder == null || !interactionOrder.IsActive)
+            {
+                hasActiveOrder = false;
+                OrderSource = AntOrderSource.None;
+            }
         }
 
         public void SetSelected(bool selected)
@@ -161,6 +186,7 @@ namespace AntColony.Commands
         {
             CacheComponents();
             interactionOrder?.Cancel("Interaction replaced by a movement order.");
+            jobOrder?.Cancel("Synthetic work interrupted by a movement order.");
             if (Record == null)
             {
                 failureReason = "Movement order rejected: ant identity is not bound.";
@@ -202,6 +228,7 @@ namespace AntColony.Commands
         {
             CacheComponents();
             interactionOrder?.Cancel("Interaction replaced by a new order.");
+            jobOrder?.Cancel("Synthetic work interrupted by a survival interaction.");
             motor.CancelMovement("Interaction order is choosing an approach.");
             Vector2Int startCell = WorldTileCoordinates.WorldPositionToCell(motor.Position);
             if (!SurvivalInteractionOrder.TryCreate(
@@ -240,6 +267,48 @@ namespace AntColony.Commands
             return true;
         }
 
+        public bool IssueSyntheticJobOrder(
+            ColonyJob job,
+            Vector2Int approachCell)
+        {
+            CacheComponents();
+            interactionOrder?.Cancel("Interaction replaced by synthetic work.");
+            jobOrder?.Cancel("Synthetic work replaced by another job.");
+            motor.CancelMovement("Synthetic work is choosing an approach.");
+            if (!SyntheticColonyJobOrder.TryCreate(
+                    colonyJobs,
+                    motor.NavigationWorld?.Map,
+                    Record,
+                    job,
+                    approachCell,
+                    out jobOrder,
+                    out string error))
+            {
+                failureReason = error;
+                orderOutcome = "Synthetic job rejected";
+                hasActiveOrder = false;
+                OrderSource = AntOrderSource.None;
+                return false;
+            }
+            if (!motor.MoveTo(approachCell))
+            {
+                jobOrder.Cancel(motor.StatusMessage);
+                failureReason = motor.StatusMessage;
+                orderOutcome = "Synthetic job rejected";
+                hasActiveOrder = false;
+                OrderSource = AntOrderSource.None;
+                return false;
+            }
+
+            destination = approachCell;
+            hasDestination = true;
+            hasActiveOrder = true;
+            failureReason = string.Empty;
+            orderOutcome = "Synthetic job active";
+            OrderSource = AntOrderSource.AutonomousWork;
+            return true;
+        }
+
         public void RecordRejectedOrder(Vector2Int rejectedDestination, string reason)
         {
             failureReason = reason;
@@ -250,6 +319,7 @@ namespace AntColony.Commands
         {
             CacheComponents();
             interactionOrder?.Cancel(reason);
+            jobOrder?.Cancel(reason);
             motor.CancelMovement(reason);
             hasActiveOrder = false;
             OrderSource = AntOrderSource.None;
@@ -261,7 +331,9 @@ namespace AntColony.Commands
         /// Converts terminal motor states into the temporary player-order
         /// lifecycle without changing or duplicating pathfinding state.
         /// </summary>
-        public void RefreshOrderStatus(double elapsedSimulationHours = 0d)
+        public void RefreshOrderStatus(
+            double elapsedSimulationHours = 0d,
+            double simulationHours = 0d)
         {
             if (!hasActiveOrder || motor == null)
             {
@@ -276,7 +348,24 @@ namespace AntColony.Commands
 
             if (motor.HasArrived)
             {
-                if (interactionOrder != null && interactionOrder.IsActive)
+                if (jobOrder != null && jobOrder.IsActive)
+                {
+                    if (jobOrder.Phase == SyntheticJobOrderPhase.Travelling)
+                    {
+                        Vector2Int current =
+                            WorldTileCoordinates.WorldPositionToCell(motor.Position);
+                        jobOrder.TryBegin(current);
+                    }
+                    jobOrder.Advance(elapsedSimulationHours, simulationHours);
+                    if (!jobOrder.IsActive)
+                    {
+                        hasActiveOrder = false;
+                        OrderSource = AntOrderSource.None;
+                        orderOutcome = jobOrder.Status;
+                        failureReason = jobOrder.FailureReason;
+                    }
+                }
+                else if (interactionOrder != null && interactionOrder.IsActive)
                 {
                     if (interactionOrder.Phase == SurvivalInteractionPhase.Travelling)
                     {
@@ -303,6 +392,7 @@ namespace AntColony.Commands
             else if (motor.HasFailed)
             {
                 interactionOrder?.Cancel(motor.FailureReason);
+                jobOrder?.Cancel(motor.FailureReason);
                 hasActiveOrder = false;
                 OrderSource = AntOrderSource.None;
                 orderOutcome = "Failed; returned to Autonomous / Idle";
@@ -311,6 +401,7 @@ namespace AntColony.Commands
             else if (motor.State == GridNavigationMotorState.Idle)
             {
                 interactionOrder?.Cancel("Navigation stopped before interaction.");
+                jobOrder?.Cancel("Navigation stopped before synthetic work.");
                 hasActiveOrder = false;
                 OrderSource = AntOrderSource.None;
                 orderOutcome = "Cancelled; returned to Autonomous / Idle";

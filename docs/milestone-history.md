@@ -4,16 +4,30 @@ This history records the strongest confirmed evidence without implying that late
 
 ## 13 October 2026
 
+### 3.3A — Colony Job Designation and Priority Foundation
+
+**Implemented — Pending Manual Acceptance.** Per-ant 1–4/Disabled priorities, a shared synthetic job registry, deterministic priority/path-cost selection, exclusive reservations, persistent progress, skill/Rested work effects, safe survival/player interruption, and development diagnostics were added without real colony work.
+
+- Focused Edit Mode: 28/28 passed.
+- Focused Play Mode: 5/5 passed.
+- Complete graphics-enabled Edit Mode: 392/392 passed.
+- Complete Play Mode: 37/37 passed.
+- Manual Play Mode checklist: 22 steps pending.
+
+### 3.2C — Autonomous Survival Behaviour
+
+**Complete.** Acceptance was recorded through the approved transition to 3.3A. Previously verified results were 24/24 focused Edit Mode, 6/6 focused Play Mode, 364/364 complete Edit Mode, and 32/32 complete Play Mode.
+
 ### 3.2B — Physical Food, Water and Rest Interactions
 
-**Implemented — Pending Manual Acceptance.** Location-owned supplies, reservations, path-cost approach selection, timed interactions, and context orders were integrated with accepted needs and grid movement.
+**Complete.** Location-owned supplies, reservations, path-cost approach selection, timed interactions, and context orders were integrated with accepted needs and grid movement. Manual acceptance was subsequently confirmed.
 
 - Focused Edit Mode: 25/25 passed.
 - Focused Play Mode: 5/5 passed.
 - Complete graphics-enabled Edit Mode: 340/340 passed.
 - Complete Play Mode: 26/26 passed.
 - Compilation and structural scene validation passed.
-- Manual Play Mode checklist: 20 steps pending.
+- Manual Play Mode checklist: all 20 checks accepted.
 
 ### 3.2A — Individual Needs and Survival Foundation
 

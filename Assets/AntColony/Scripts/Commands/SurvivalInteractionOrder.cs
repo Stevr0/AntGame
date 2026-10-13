@@ -109,7 +109,7 @@ namespace AntColony.Commands
             {
                 return false;
             }
-            if (!IsValidAdjacentAnchor(navigationMap, currentCell, TargetCell))
+            if (!IsValidAdjacentInteractionAnchor(navigationMap, currentCell, TargetCell))
             {
                 Fail("The ant is not at a valid adjacent interaction position.");
                 return false;
@@ -245,7 +245,7 @@ namespace AntColony.Commands
             foreach (Vector2Int offset in AdjacentOffsets)
             {
                 Vector2Int candidate = target + offset;
-                if (!IsValidAdjacentAnchor(map, candidate, target)) continue;
+                if (!IsValidAdjacentInteractionAnchor(map, candidate, target)) continue;
                 GridPathResult path = pathfinder.FindPath(start, candidate);
                 if (path.Succeeded &&
                     (path.TravelTime < travelTime ||
@@ -267,7 +267,7 @@ namespace AntColony.Commands
             return true;
         }
 
-        private static bool IsValidAdjacentAnchor(
+        public static bool IsValidAdjacentInteractionAnchor(
             GridNavigationMap map,
             Vector2Int candidate,
             Vector2Int target)

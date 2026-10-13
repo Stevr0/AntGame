@@ -4,9 +4,9 @@ This page is a concise navigation view of the authoritative `Documentation/Devel
 
 ## Immediate boundary
 
-**Next action:** complete the exact 20-step milestone 3.2B manual Play Mode checklist in `Assets/AntColony/Scenes/AntGameDevelopment.unity` and wait for user acceptance.
+**Next action:** complete the exact 22-step milestone 3.3A manual Play Mode checklist in `Assets/AntColony/Scenes/AntGameDevelopment.unity` and wait for user acceptance.
 
-Do not begin autonomous survival, colony jobs, gathering, hauling, construction, excavation gameplay, or another milestone without separate approval.
+Do not begin real gathering, hauling, construction, excavation gameplay, or another milestone without separate approval.
 
 ## Current milestone state
 
@@ -25,13 +25,15 @@ Do not begin autonomous survival, colony jobs, gathering, hauling, construction,
 | 3.1B | Persistent ant identity and attributes | Complete |
 | 3.1C | Learn-by-doing skill foundation | Complete |
 | 3.2A | Needs and survival foundation | Complete |
-| 3.2B | Physical food, water, and rest interactions | Implemented — Pending Manual Acceptance |
+| 3.2B | Physical food, water, and rest interactions | Complete |
+| 3.2C | Individual autonomous survival | Complete |
+| 3.3A | Synthetic colony jobs and per-ant priorities | Implemented — Pending Manual Acceptance |
 
 ## Ordered future direction
 
 The numbered roadmap beyond the accepted foundation remains direction, not authorised implementation:
 
-1. Hybrid task assignment and colony-wide priorities.
+1. Extend the accepted synthetic job foundation into separately approved real jobs and explicit forced-work orders.
 2. Multiple-ant movement, local avoidance, and congestion recovery.
 3. Autonomous worker and survival loops.
 4. Excavation, Surface Preparation, physical resources, and hauling.

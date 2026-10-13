@@ -8,23 +8,25 @@ Ants may also receive temporary explicit orders. Critical survival may interrupt
 
 ## Current implementation
 
-The general job system is not implemented. Existing command behavior is deliberately narrower:
+Milestone 3.3A implements the development-only foundation:
 
-- Ants can be selected individually.
-- Right-click issues Move, Eat, Drink, or Rest according to target context.
-- Orders have explicit travel, interaction, completion, cancellation, and failure states.
-- Movement uses the shared grid navigation service and motor.
-- 3.2B uses stable-ant reservations for physical resources and sleeping positions.
-- A valid order continues when the player changes selection.
+- Every ant record owns independent priorities for Excavation, Surface Preparation, Construction, Hauling, Foraging, Production, Combat, and Brood Care.
+- `ColonyJobRegistry` owns synthetic job identity, target, status, reservation, progress, and failure state outside GameObjects.
+- Highest enabled priority is evaluated before actual A* route cost. Equal costs use stable deterministic ties.
+- Evaluations inspect at most 32 candidates per priority, are staggered, and back off for 2/4/8 seconds on failure.
+- `SyntheticColonyJobOrder` uses `GridNavigationMotor` and an adjacent work position. It does not mutate terrain, resources, or inventories.
+- Work takes a provisional four simulation hours, uses Rested and relevant-skill speed, and awards proportional XP only for committed progress.
+- Player orders and critical survival pause work and release ownership while preserving progress. Ordinary survival waits for active work.
+- The development scene exposes five deterministic fixtures plus priority, designation, cancellation, reset, and diagnostic controls.
 
-These seams are useful foundations, but they do not establish colony-wide work discovery, autonomous survival, priority evaluation, or generic job ownership.
+Milestone 3.2C autonomous survival is accepted. Milestone 3.3A remains **Implemented — Pending Manual Acceptance**.
 
 ## Future decision flow
 
 ```mermaid
 flowchart TD
   A[Ant available] --> S{Critical survival?}
-  S -- Yes --> I[Interrupt safely and reserve survival job]
+  S -- Yes --> I[Interrupt safely and reserve survival interaction]
   S -- No --> O{Explicit order?}
   O -- Yes --> E[Validate and execute order]
   O -- No --> P[Find highest enabled work priority]
@@ -47,4 +49,4 @@ flowchart TD
 
 ## Not implemented
 
-Priority matrices, job categories, colony designations, work scanning, critical-survival autonomy, safe interruption thresholds, generic reservations, hauling, excavation, construction, Draft Mode, group tactics, local avoidance, and persistence all require separately approved milestones.
+All work remains synthetic. Real hauling, excavation, Surface Preparation, construction, gathering, production, combat, brood care, inventories, forced-work orders, Draft Mode, group tactics, local avoidance, persistence, and production-scale indexing require later milestones.

@@ -20,6 +20,8 @@ flowchart TB
     AR[AntRecord and AntRegistry]
     WD[ChunkedWorldData]
     SI[SurvivalInteractionWorld]
+    JP[AntWorkPrioritySet]
+    JR[ColonyJobRegistry]
   end
 
   subgraph Rules[Rules and shared services]
@@ -42,6 +44,8 @@ flowchart TB
   AR --> BIND --> CTRL
   CTRL --> MOTOR
   SI --> CTRL
+  JP --> CTRL
+  JR --> CTRL
   HOST --> Data
   HOST --> Rules
   HOST --> Unity
@@ -49,7 +53,7 @@ flowchart TB
 
 ### Ant data
 
-`AntColony.Ants` owns stable identity, colony membership, caste, attributes, lifecycle, skills, and needs. Runtime visuals bind to records rather than becoming the source of truth.
+`AntColony.Ants` owns stable identity, colony membership, caste, attributes, lifecycle, skills, needs, and per-ant work priorities. Runtime visuals bind to records rather than becoming the source of truth.
 
 ### World data
 
@@ -61,7 +65,7 @@ One `GridNavigationWorldService` owns the shared navigation map and bounded sche
 
 ### Commands and interactions
 
-`AntColony.Commands` handles selection, context orders, visual bindings, and the narrow physical-survival interaction slice. Location-owned storage and reservations live in the plain-C# `SurvivalInteractionWorld`, not in UI labels or Tilemap visuals.
+`AntColony.Commands` handles selection, context orders, visual bindings, physical survival, and synthetic work coordination. Location-owned supplies remain in `SurvivalInteractionWorld`; synthetic job identity, ownership and progress remain in `ColonyJobRegistry`. Both are plain-C# authorities rather than UI or Tilemap state. Job selection reuses the shared map and motor instead of owning navigation.
 
 ### Development composition
 
@@ -73,7 +77,7 @@ One `GridNavigationWorldService` owns the shared navigation map and bounded sche
 | --- | --- | --- |
 | `AntMovementPrototype.unity` | Continuous-input surface movement regression course | Retained developer fixture |
 | `AntNavigationPrototype.unity` | Navigation classification and visualisation fixture | Retained developer fixture |
-| `AntGameDevelopment.unity` | Integrated world, ants, selection, grid movement, needs, and interactions | Primary development scene |
+| `AntGameDevelopment.unity` | Integrated world, ants, selection, grid movement, needs, survival, and synthetic jobs | Primary development scene |
 
 There is no finished menu-to-game flow, Bootstrap scene, save selection, or production world-loading sequence yet. Future work must preserve the existing authored coordinator seams rather than introducing an unnecessary global manager.
 

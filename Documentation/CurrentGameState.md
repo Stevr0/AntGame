@@ -1,5 +1,59 @@
 # Ant Colony Current Game State
 
+## Latest implemented milestone — 3.3A Colony Job Designation & Priority Foundation (13 October 2026)
+
+**Status: Implemented — Pending Manual Acceptance.** Milestone 3.2C Autonomous Survival Behaviour is **complete**; acceptance is recorded through the approved transition to 3.3A. Existing identity, selection, explicit orders, physical survival and shared navigation behavior remains intact.
+
+Every authoritative `AntRecord` owns an independent `AntWorkPrioritySet`. The stable provisional categories are Excavation, Surface Preparation, Construction, Hauling, Foraging, Production, Combat and Brood Care. Each value is Highest (1), High (2), Normal (3), Low (4) or Disabled; development ants start at Normal. Queen and Worker use the same matrix. Skills never change priority rank, and level zero does not prohibit ordinary work. Production currently has no approved matching skill and therefore earns no synthetic skill XP.
+
+One plain-C# `ColonyJobRegistry` owns stable job IDs, category, target cell, progress, status, reservation owner and failure reason independently of GameObjects. States are Available, Reserved, In Progress, Paused, Completed, Cancelled and Blocked. Active duplicate category/target designations are rejected, reservations are exclusive, and terminal jobs cannot be claimed. World rebuild restores five deterministic synthetic fixtures.
+
+Selection applies the approved rule: highest enabled priority first, then least actual shared-A* cost to a valid adjacent work position. Equal costs use category, target Y/X and job ID. At most **32 candidates per priority** are measured per evaluation; failures use bounded **2/4/8-second** backoff. Evaluation is staggered so each ant is considered about every **0.5 seconds**.
+
+Synthetic work reserves, navigates through `GridNavigationMotor`, revalidates the adjacent position, advances registry-owned progress and completes without changing terrain, resources or inventory. Provisional values are **4 simulation hours per job**, **+0.5% work speed per relevant skill level**, and **20 base XP per full job**, awarded proportionally only for committed progress. Accepted Rested work-speed and XP modifiers apply; autonomous work receives no ordered-work bonus.
+
+Player Move/Eat/Drink/Rest orders stop work at the existing cancellation boundary, preserve progress and release the job as Paused. Ordinary survival waits for active work; critical survival confirms a viable target and then interrupts at the same safe boundary. Inactive/deceased ants, disabling work, cancellation, terrain invalidation and reset release ownership safely. The Developer Only Colony Jobs panel exposes toggles, per-ant priorities, designation creation, registry diagnostics, cancellation and fixture reset.
+
+### 3.3A automated verification
+
+- Focused Edit Mode: **28/28 passed**.
+- Focused Play Mode: **5/5 passed**.
+- Complete graphics-enabled Edit Mode: **392/392 passed** with zero failures/skips.
+- Complete Play Mode: **37/37 passed** with zero failures/skips.
+
+### Exact 3.3A manual Unity Play Mode acceptance
+
+**Pending:** perform these checks in `Assets/AntColony/Scenes/AntGameDevelopment.unity`; do not mark 3.3A complete until the user confirms them.
+
+1. Confirm Mara, Pip and Tala retain their accepted identities, skills and needs.
+2. Inspect and change each ant's independent 1–4/Disabled work priorities.
+3. Confirm the five deterministic synthetic designations appear in registry diagnostics.
+4. Enable Autonomous Colony Work and confirm ants select work without player input.
+5. Confirm a higher-priority farther category wins over lower-priority nearby work.
+6. Confirm closest reachable work wins when priority is equal.
+7. Confirm Disabled categories are ignored.
+8. Confirm multiple ants work independently.
+9. Confirm jobs have at most one reservation owner.
+10. Confirm ants work from valid adjacent cells and progress rises over time.
+11. Confirm relevant skill XP is awarded for committed progress, not travel/reservation.
+12. Confirm Rested increases synthetic progress speed.
+13. Confirm a critical need interrupts work safely.
+14. Confirm interrupted progress persists and the Paused job can be reclaimed.
+15. Confirm explicit Move/Eat/Drink/Rest temporarily overrides work.
+16. Confirm completion/cancellation returns the ant to autonomous selection.
+17. Cancel a job and confirm reservation release and no further progress.
+18. Confirm unreachable work waits with bounded retries.
+19. Mutate terrain affecting a work position and confirm safe Blocked status with preserved progress.
+20. Rebuild the world and confirm fixtures, Normal priorities and reservations reset.
+21. Confirm autonomous survival and explicit movement/survival commands still work.
+22. Confirm the Unity Console contains no relevant errors or warnings.
+
+Known limitations are deliberate: 3.3A jobs are synthetic and development-only. They do not excavate, prepare, construct, haul, gather, produce resources, use inventories, fight or perform brood care. There are no forced-work orders, production policies, job ageing/fairness, persistence, Draft Mode, local avoidance or multiplayer. The candidate bound and all duration/speed/XP values are provisional.
+
+## Accepted milestone — 3.2C Autonomous Survival Behaviour (13 October 2026)
+
+**Status: COMPLETE — acceptance recorded through the approved transition to 3.3A.** Active ants independently evaluate Hunger, Thirst and Fatigue, select the least-cost reachable physical interaction, respect player orders and reservations, use hysteresis and bounded retries, and stop cleanly on lifecycle/reset boundaries. Previously verified results were 24/24 focused Edit Mode, 6/6 focused Play Mode, 364/364 complete Edit Mode and 32/32 complete Play Mode.
+
 ## Latest accepted milestone — 3.1C Individual Skills & Learn-by-Doing Foundation (13 October 2026)
 
 **Status: COMPLETE — all 18 manual Unity Play Mode checks confirmed by the user on 13 October 2026.** Previously reported focused Edit Mode 40/40, focused Play Mode 6/6, full graphics-enabled Edit Mode 292/292 and full Play Mode 20/20 passed. These tests were not rerun for this documentation-only status update.
@@ -27,7 +81,7 @@ The deterministic development course contains two accessible Food Storage cells 
 
 ### Exact 3.2B manual Unity Play Mode acceptance
 
-**Pending:** perform these checks in `Assets/AntColony/Scenes/AntGameDevelopment.unity`; do not mark 3.2B complete until the user confirms them.
+**Accepted:** the user confirmed all 20 checks on 13 October 2026.
 
 1. Enter Play Mode and confirm Mara, Pip and Tala spawn with their existing identities, castes, attributes and skills.
 2. Confirm amber Food Storage, blue Water Storage and purple Sleeping background tiles are visible in the underground survival course.
@@ -404,15 +458,15 @@ The revised 2.4B proof of concept described above is the only later implementati
 
 Milestone 2.4A now implements the approved natural-background movement realignment. Exposed Natural Earth and Natural Stone provide full horizontal, vertical and diagonal grip at normal speed. Prepared Background provides the same traversal plus a provisional `1.25` movement-speed multiplier. Sky remains explicitly non-grippable. At that checkpoint, the other approved systems were design targets only; 3.2A now adds needs data and test simulation, while functional backgrounds, rooms, brood, physical shared stores and their gameplay remain unimplemented.
 
-**Next step:** wait for separate approval of the next milestone. Do not begin colony jobs, resources, sleeping-place interactions or another later system from this status update.
+**Next step:** complete the exact 3.3A manual checklist above and wait for user acceptance. Do not begin real excavation, construction, hauling or another milestone.
 
 ## Current milestone
 
-**Milestone 3.2A — Individual Needs & Survival Foundation**
+**Milestone 3.3A — Colony Job Designation & Priority Foundation**
 
-**Status:** **Complete.** Three ants own independent authoritative needs and Rested state while retaining the accepted identity, skill, selection and grid-movement architecture. Final verification passes 63/63 focused Edit Mode, 7/7 focused Play Mode, 315/315 complete Edit Mode and 21/21 complete Play Mode, and the user confirmed all 18 manual checks.
+**Status:** **Implemented — Pending Manual Acceptance.** Per-ant priorities, a shared synthetic job registry, deterministic priority/path-cost selection, exclusive ownership, progress/XP, safe interruption and development diagnostics are implemented. Verification passes 28/28 focused Edit Mode, 5/5 focused Play Mode, 392/392 complete Edit Mode and 37/37 complete Play Mode.
 
-Milestones through accepted 3.2A retain their recorded status. Milestone 2.4D remains implemented pending its separately recorded manual acceptance. Milestone 3.2B now adds explicit physical food/water/rest interactions and remains pending its own manual checklist; autonomous survival jobs and other colony work remain unimplemented.
+Milestones through accepted 3.2C retain their recorded status. Milestone 2.4D remains implemented pending its separately recorded manual acceptance. Milestone 3.3A remains synthetic and pending its own manual checklist; real excavation, preparation, construction, hauling and resource production remain unimplemented.
 
 ## Repository and architecture
 

@@ -92,6 +92,7 @@ namespace AntColony.Development
             selectableGridAnts;
         public AntRegistry AntRegistry => antRegistry;
         public SurvivalInteractionWorld SurvivalInteractionWorld { get; private set; }
+        public ColonyJobRegistry ColonyJobRegistry { get; private set; }
         public IReadOnlyList<Vector2Int> SurvivalFixtureCells => survivalFixtureCells;
         public int GridStressGroupSize => gridStressGroupSize;
         public AntAutonomousMotor AutonomousAntPrefab => autonomousAntPrefab;
@@ -143,6 +144,7 @@ namespace AntColony.Development
                 Debug.LogError(fixtureError, this);
                 return false;
             }
+            ColonyJobRegistry = new ColonyJobRegistry();
             navigationWorldService ??= GetComponent<GridNavigationWorldService>();
             if (navigationWorldService == null ||
                 !navigationWorldService.Initialize(
@@ -160,6 +162,12 @@ namespace AntColony.Development
             RefreshAllChunks();
             ResetDevelopmentAntRecords();
             selectionController.BindInteractionWorld(SurvivalInteractionWorld);
+            selectionController.BindColonyJobs(ColonyJobRegistry);
+            if (!selectionController.ResetSyntheticJobFixtures(out string jobError))
+            {
+                Debug.LogError(jobError, this);
+                return false;
+            }
 
             if (Application.isPlaying)
             {
@@ -398,6 +406,7 @@ namespace AntColony.Development
 
                 selectable.Configure(colours[index]);
                 selectable.BindInteractionWorld(SurvivalInteractionWorld);
+                selectable.BindColonyJobs(ColonyJobRegistry);
                 selectionController.RegisterSelectableAnt(selectable);
             }
 

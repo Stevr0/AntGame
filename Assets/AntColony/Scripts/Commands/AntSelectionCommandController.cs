@@ -33,6 +33,9 @@ namespace AntColony.Commands
         private readonly Dictionary<SelectableGridAnt, AutonomousSurvivalAgentState>
             autonomousStates = new();
         private readonly AutonomousSurvivalDecisionService autonomousDecisionService = new();
+        private readonly Dictionary<SelectableGridAnt, AutonomousWorkAgentState>
+            autonomousWorkStates = new();
+        private readonly ColonyJobSelectionService colonyJobSelectionService = new();
         private Rect additionalBlockedGuiRect;
         private bool hasAdditionalBlockedGuiRect;
         private string interactionMessage = "Left-click an ant to select it.";
@@ -47,6 +50,12 @@ namespace AntColony.Commands
         private double nextAutonomousEvaluationTime;
         private double autonomousClockAccumulator;
         private int autonomousEvaluationIndex;
+        private ColonyJobRegistry colonyJobs;
+        private double nextWorkEvaluationTime;
+        private int workEvaluationIndex;
+        private bool colonyJobsDebugExpanded;
+        private int selectedWorkCategoryIndex;
+        private int nextDevelopmentJobNumber = 1;
 
         public IReadOnlyList<SelectableGridAnt> SelectableAnts => selectableAnts;
         public SelectableGridAnt SelectedAnt { get; private set; }
@@ -54,6 +63,8 @@ namespace AntColony.Commands
         public double SimulationHours => simulationHours;
         public double SkillSimulationHours => simulationHours;
         public bool AutonomousSurvivalEnabled { get; private set; }
+        public bool AutonomousColonyWorkEnabled { get; private set; }
+        public ColonyJobRegistry ColonyJobs => colonyJobs;
         public Rect PlayerPanelGuiRect => new(
             Mathf.Max(12f, Screen.width - PlayerPanelWidth - 12f),
             12f,
@@ -62,16 +73,19 @@ namespace AntColony.Commands
                 Mathf.Max(100f, Screen.height - 24f),
                 SelectedAnt == null
                     ? 112f
-                    : skillDebugExpanded || needsDebugExpanded ? 920f : 650f));
+                    : skillDebugExpanded || needsDebugExpanded || colonyJobsDebugExpanded
+                        ? 920f : 700f));
 
         public void Configure(
             Camera commandCamera,
             GridNavigationWorldService sharedNavigationWorld,
-            SurvivalInteractionWorld sharedInteractionWorld = null)
+            SurvivalInteractionWorld sharedInteractionWorld = null,
+            ColonyJobRegistry sharedColonyJobs = null)
         {
             worldCamera = commandCamera;
             navigationWorld = sharedNavigationWorld;
             interactionWorld = sharedInteractionWorld;
+            colonyJobs = sharedColonyJobs;
         }
 
         public void BindInteractionWorld(SurvivalInteractionWorld sharedInteractionWorld)
@@ -83,17 +97,28 @@ namespace AntColony.Commands
             }
         }
 
+        public void BindColonyJobs(ColonyJobRegistry sharedColonyJobs)
+        {
+            colonyJobs = sharedColonyJobs;
+            foreach (SelectableGridAnt ant in selectableAnts)
+                ant?.BindColonyJobs(sharedColonyJobs);
+        }
+
         public void ClearSelectableAnts()
         {
             foreach (SelectableGridAnt ant in selectableAnts)
             {
-                if (ant != null && ant.OrderSource == AntOrderSource.AutonomousSurvival)
-                    ant.CancelOrder("Autonomous survival cleared with the world.");
+                if (ant != null &&
+                    (ant.OrderSource == AntOrderSource.AutonomousSurvival ||
+                     ant.OrderSource == AntOrderSource.AutonomousWork))
+                    ant.CancelOrder("Autonomous activity cleared with the world.");
             }
             Deselect();
             selectableAnts.Clear();
             autonomousStates.Clear();
+            autonomousWorkStates.Clear();
             autonomousEvaluationIndex = 0;
+            workEvaluationIndex = 0;
         }
 
         public void RegisterSelectableAnt(SelectableGridAnt ant)
@@ -102,7 +127,9 @@ namespace AntColony.Commands
             {
                 selectableAnts.Add(ant);
                 ant.BindInteractionWorld(interactionWorld);
+                ant.BindColonyJobs(colonyJobs);
                 autonomousStates[ant] = new AutonomousSurvivalAgentState();
+                autonomousWorkStates[ant] = new AutonomousWorkAgentState();
             }
         }
 
@@ -111,6 +138,32 @@ namespace AntColony.Commands
         {
             return ant != null && autonomousStates.TryGetValue(
                 ant, out AutonomousSurvivalAgentState state) ? state : null;
+        }
+
+        public AutonomousWorkAgentState GetAutonomousWorkState(SelectableGridAnt ant)
+        {
+            return ant != null && autonomousWorkStates.TryGetValue(
+                ant, out AutonomousWorkAgentState state) ? state : null;
+        }
+
+        public void SetAutonomousColonyWorkEnabled(bool enabled)
+        {
+            if (AutonomousColonyWorkEnabled == enabled) return;
+            AutonomousColonyWorkEnabled = enabled;
+            nextWorkEvaluationTime = 0d;
+            foreach (KeyValuePair<SelectableGridAnt, AutonomousWorkAgentState> entry
+                in autonomousWorkStates)
+            {
+                if (!enabled && entry.Key != null &&
+                    entry.Key.OrderSource == AntOrderSource.AutonomousWork)
+                    entry.Key.CancelOrder("Autonomous colony work was disabled.");
+                entry.Value.Reset(enabled
+                    ? "Waiting for colony work evaluation."
+                    : "Autonomous colony work disabled.");
+            }
+            interactionMessage = enabled
+                ? "Developer Only: autonomous colony work enabled."
+                : "Developer Only: autonomous colony work disabled.";
         }
 
         public void SetAutonomousSurvivalEnabled(bool enabled)
@@ -497,9 +550,14 @@ namespace AntColony.Commands
         {
             simulationHours = 0d;
             nextAutonomousEvaluationTime = 0d;
+            nextWorkEvaluationTime = 0d;
             autonomousClockAccumulator = 0d;
             foreach (AutonomousSurvivalAgentState state in autonomousStates.Values)
                 state.Reset();
+            foreach (AutonomousWorkAgentState state in autonomousWorkStates.Values)
+                state.Reset(AutonomousColonyWorkEnabled
+                    ? "Waiting for colony work evaluation."
+                    : "Autonomous colony work disabled.");
         }
 
         /// <summary>Compatibility name retained for the accepted 3.1C API.</summary>
@@ -514,10 +572,12 @@ namespace AntColony.Commands
                 autonomousDecisionService.Settings.SimulationHoursPerRealSecond;
             foreach (SelectableGridAnt ant in selectableAnts)
             {
-                ant?.RefreshOrderStatus(interactionHours);
+                ant?.RefreshOrderStatus(interactionHours, simulationHours);
             }
 
+            UpdateAutonomousSimulationClock();
             UpdateAutonomousSurvival();
+            UpdateAutonomousColonyWork();
 
             Mouse mouse = Mouse.current;
             if (mouse == null)
@@ -593,7 +653,9 @@ namespace AntColony.Commands
                 {
                     state.Status = decision.IsCritical
                         ? "Player order already addresses the critical need."
-                        : "Player order has precedence over ordinary needs.";
+                        : ant.OrderSource == AntOrderSource.AutonomousWork
+                            ? "Ordinary needs wait for the current work boundary."
+                            : "Player order has precedence over ordinary needs.";
                     return false;
                 }
 
@@ -661,17 +723,6 @@ namespace AntColony.Commands
         {
             if (!AutonomousSurvivalEnabled || selectableAnts.Count == 0) return;
 
-            autonomousClockAccumulator += Time.deltaTime;
-            double tickSeconds = autonomousDecisionService.Settings.SimulationTickSeconds;
-            if (autonomousClockAccumulator >= tickSeconds)
-            {
-                double elapsedHours = autonomousClockAccumulator *
-                    autonomousDecisionService.Settings.SimulationHoursPerRealSecond;
-                autonomousClockAccumulator = 0d;
-                TryAdvanceSimulationTimeInternal(
-                    elapsedHours, updateInteractionMessage: false, out _);
-            }
-
             double now = Time.unscaledTimeAsDouble;
             if (now < nextAutonomousEvaluationTime) return;
             autonomousEvaluationIndex %= selectableAnts.Count;
@@ -682,6 +733,222 @@ namespace AntColony.Commands
             nextAutonomousEvaluationTime = now +
                 autonomousDecisionService.Settings.EvaluationIntervalSeconds /
                 selectableAnts.Count;
+        }
+
+        private void UpdateAutonomousSimulationClock()
+        {
+            if (!AutonomousSurvivalEnabled && !AutonomousColonyWorkEnabled) return;
+            autonomousClockAccumulator += Time.deltaTime;
+            double tickSeconds = autonomousDecisionService.Settings.SimulationTickSeconds;
+            if (autonomousClockAccumulator < tickSeconds) return;
+            double elapsedHours = autonomousClockAccumulator *
+                autonomousDecisionService.Settings.SimulationHoursPerRealSecond;
+            autonomousClockAccumulator = 0d;
+            TryAdvanceSimulationTimeInternal(
+                elapsedHours, updateInteractionMessage: false, out _);
+        }
+
+        public bool EvaluateAutonomousColonyWorkNow(
+            SelectableGridAnt ant,
+            double currentTimeSeconds)
+        {
+            if (!AutonomousColonyWorkEnabled || ant?.Record == null ||
+                colonyJobs == null || navigationWorld?.Map == null ||
+                !autonomousWorkStates.TryGetValue(
+                    ant, out AutonomousWorkAgentState state))
+                return false;
+
+            if (ant.Record.LifecycleStatus != AntLifecycleStatus.Active ||
+                ant.Record.Needs.HasDepletedHealth)
+            {
+                if (ant.OrderSource == AntOrderSource.AutonomousWork)
+                    ant.CancelOrder("Autonomous work stopped because the ant is inactive.");
+                colonyJobs.ReleaseOwnedJobs(
+                    ant.Record.Id, "Reservation released because the ant is inactive.");
+                state.Reset("Inactive; autonomous colony work stopped.");
+                return false;
+            }
+
+            if (ant.HasActiveOrder)
+            {
+                state.Status = ant.OrderSource switch
+                {
+                    AntOrderSource.AutonomousWork => ant.OrderStatus,
+                    AntOrderSource.AutonomousSurvival =>
+                        "Autonomous survival has precedence over colony work.",
+                    _ => "Player order has precedence over colony work."
+                };
+                return false;
+            }
+
+            if (state.JobId.HasValue)
+            {
+                SyntheticColonyJobOrder previous = ant.JobOrder;
+                bool failed = previous != null &&
+                    (previous.Phase == SyntheticJobOrderPhase.Failed ||
+                     previous.Phase == SyntheticJobOrderPhase.Cancelled);
+                string failure = previous?.FailureReason;
+                state.JobId = null;
+                if (failed)
+                {
+                    RecordWorkFailure(state, currentTimeSeconds,
+                        string.IsNullOrEmpty(failure)
+                            ? "Synthetic work ended before completion."
+                            : failure);
+                    return false;
+                }
+                state.ConsecutiveFailures = 0;
+            }
+
+            if (currentTimeSeconds < state.NextEvaluationTime) return false;
+            Vector2Int start =
+                WorldTileCoordinates.WorldPositionToCell(ant.Motor.Position);
+            if (!colonyJobSelectionService.TryChoose(
+                    ant.Record, colonyJobs, navigationWorld.Map, start,
+                    out ColonyJob job, out Vector2Int approach, out string error))
+            {
+                RecordWorkFailure(state, currentTimeSeconds, error);
+                return false;
+            }
+            if (!ant.IssueSyntheticJobOrder(job, approach))
+            {
+                RecordWorkFailure(state, currentTimeSeconds, ant.FailureReason);
+                return false;
+            }
+
+            state.JobId = job.Id;
+            state.Status = $"Claimed {job.Category} job {job.Id} at {job.TargetCell}.";
+            state.FailureReason = string.Empty;
+            state.NextEvaluationTime = currentTimeSeconds +
+                autonomousDecisionService.Settings.EvaluationIntervalSeconds;
+            return true;
+        }
+
+        private void UpdateAutonomousColonyWork()
+        {
+            if (!AutonomousColonyWorkEnabled || selectableAnts.Count == 0) return;
+            double now = Time.unscaledTimeAsDouble;
+            if (now < nextWorkEvaluationTime) return;
+            workEvaluationIndex %= selectableAnts.Count;
+            EvaluateAutonomousColonyWorkNow(
+                selectableAnts[workEvaluationIndex], now);
+            workEvaluationIndex = (workEvaluationIndex + 1) % selectableAnts.Count;
+            nextWorkEvaluationTime = now +
+                autonomousDecisionService.Settings.EvaluationIntervalSeconds /
+                selectableAnts.Count;
+        }
+
+        private static void RecordWorkFailure(
+            AutonomousWorkAgentState state,
+            double currentTimeSeconds,
+            string reason)
+        {
+            state.JobId = null;
+            state.ConsecutiveFailures++;
+            double delay = System.Math.Min(
+                8d, 2d * System.Math.Pow(
+                    2d, System.Math.Min(2, state.ConsecutiveFailures - 1)));
+            state.NextEvaluationTime = currentTimeSeconds + delay;
+            state.FailureReason = reason;
+            state.Status = $"No eligible reachable work; retry in {delay:0.##}s.";
+        }
+
+        public bool TrySetSelectedWorkPriority(
+            AntWorkCategory category,
+            AntWorkPriority priority,
+            out string message)
+        {
+            if (SelectedAnt?.Record == null)
+            {
+                message = "Select a bound ant before changing work priorities.";
+                return false;
+            }
+            bool changed = SelectedAnt.Record.WorkPriorities.TrySet(
+                category, priority, out message);
+            if (changed)
+                message = $"{SelectedAnt.DisplayName}: {category} priority is {priority}.";
+            interactionMessage = message;
+            nextWorkEvaluationTime = 0d;
+            return changed;
+        }
+
+        public bool TryAddSyntheticJob(
+            AntWorkCategory category,
+            Vector2Int targetCell,
+            out ColonyJob job,
+            out string message)
+        {
+            if (colonyJobs == null)
+            {
+                job = null;
+                message = "The development colony job registry is unavailable.";
+                return false;
+            }
+            ColonyJobId id = new($"development.job.{nextDevelopmentJobNumber++:D3}");
+            bool added = colonyJobs.TryAdd(id, category, targetCell, out job, out message);
+            interactionMessage = added
+                ? $"Added synthetic {category} job {id} at {targetCell}."
+                : message;
+            nextWorkEvaluationTime = 0d;
+            return added;
+        }
+
+        public bool TryCancelSyntheticJob(ColonyJobId id, out string message)
+        {
+            if (colonyJobs == null)
+            {
+                message = "The development colony job registry is unavailable.";
+                interactionMessage = message;
+                return false;
+            }
+            foreach (SelectableGridAnt ant in selectableAnts)
+            {
+                if (ant?.JobOrder?.Job.Id.Equals(id) == true && ant.HasActiveOrder)
+                    ant.CancelOrder("Synthetic job was cancelled by the developer.");
+            }
+            bool cancelled = colonyJobs.TryCancel(
+                id, "Developer cancelled the synthetic job.", out message);
+            interactionMessage = message;
+            return cancelled;
+        }
+
+        public bool ResetSyntheticJobFixtures(out string message)
+        {
+            if (colonyJobs == null)
+            {
+                message = "The development colony job registry is unavailable.";
+                return false;
+            }
+            foreach (SelectableGridAnt ant in selectableAnts)
+            {
+                if (ant != null && ant.OrderSource == AntOrderSource.AutonomousWork)
+                    ant.CancelOrder("Synthetic job fixtures were reset.");
+            }
+            colonyJobs.Clear();
+            nextDevelopmentJobNumber = 1;
+            (AntWorkCategory category, Vector2Int cell)[] fixtures =
+            {
+                (AntWorkCategory.Excavation, new Vector2Int(-10, SampleWorldGenerator.MainPassageY)),
+                (AntWorkCategory.Construction, new Vector2Int(2, SampleWorldGenerator.MainPassageY)),
+                (AntWorkCategory.Hauling, new Vector2Int(8, SampleWorldGenerator.MainPassageY)),
+                (AntWorkCategory.Foraging, new Vector2Int(11, SampleWorldGenerator.MainPassageY)),
+                (AntWorkCategory.Excavation, SampleWorldGenerator.GridUnreachableDestination)
+            };
+            for (int index = 0; index < fixtures.Length; index++)
+            {
+                ColonyJobId id = new($"development.fixture.{index + 1:D2}");
+                if (!colonyJobs.TryAdd(
+                        id, fixtures[index].category, fixtures[index].cell,
+                        out _, out message)) return false;
+            }
+            foreach (AutonomousWorkAgentState state in autonomousWorkStates.Values)
+                state.Reset(AutonomousColonyWorkEnabled
+                    ? "Synthetic fixtures reset; waiting for evaluation."
+                    : "Autonomous colony work disabled.");
+            nextWorkEvaluationTime = 0d;
+            message = "Reset five deterministic synthetic colony job fixtures.";
+            interactionMessage = message;
+            return true;
         }
 
         private bool TryChooseAutonomousTarget(
@@ -750,6 +1017,14 @@ namespace AntColony.Commands
             state.Target = null;
             state.Status = "Player order has precedence.";
             state.FailureReason = string.Empty;
+            AutonomousWorkAgentState workState = GetAutonomousWorkState(ant);
+            if (workState != null)
+            {
+                workState.JobId = null;
+                workState.Status = "Player order has precedence over colony work.";
+                workState.FailureReason = string.Empty;
+                workState.NextEvaluationTime = 0d;
+            }
         }
 
         private static bool IsMatchingInteraction(
@@ -766,7 +1041,7 @@ namespace AntColony.Commands
             GUILayout.BeginArea(PlayerPanelGuiRect, GUI.skin.box);
             playerPanelScrollPosition = GUILayout.BeginScrollView(
                 playerPanelScrollPosition);
-            GUILayout.Label("ANT SELECTION & SURVIVAL ORDERS");
+            GUILayout.Label("ANT SELECTION, SURVIVAL & COLONY WORK");
             if (GUILayout.Button(AutonomousSurvivalEnabled
                     ? "Disable Developer Only Autonomous Survival"
                     : "Enable Developer Only Autonomous Survival"))
@@ -776,6 +1051,12 @@ namespace AntColony.Commands
             GUILayout.Label(AutonomousSurvivalEnabled
                 ? "Autonomous clock: 1 simulation hour / real second"
                 : "Autonomous survival is disabled.");
+            if (GUILayout.Button(AutonomousColonyWorkEnabled
+                    ? "Disable Developer Only Autonomous Colony Work"
+                    : "Enable Developer Only Autonomous Colony Work"))
+            {
+                SetAutonomousColonyWorkEnabled(!AutonomousColonyWorkEnabled);
+            }
             if (SelectedAnt == null)
             {
                 GUILayout.Label("Selected ant: None");
@@ -803,10 +1084,13 @@ namespace AntColony.Commands
                 GUILayout.Label(
                     $"Interaction target: {SelectedAnt.InteractionOrder?.TargetCell.ToString() ?? "None"}");
                 GUILayout.Label(
+                    $"Colony job: {SelectedAnt.JobOrder?.Job.Id.ToString() ?? "None"}");
+                GUILayout.Label(
                     $"Destination: {(SelectedAnt.HasDestination ? SelectedAnt.Destination.ToString() : "None")}");
                 GUILayout.Label(
                     $"Failure: {(string.IsNullOrEmpty(SelectedAnt.FailureReason) ? "None" : SelectedAnt.FailureReason)}");
                 DrawAutonomousSurvivalInspection(SelectedAnt);
+                DrawAutonomousWorkInspection(SelectedAnt);
                 GUI.enabled = SelectedAnt.HasActiveOrder;
                 if (GUILayout.Button("Cancel Selected Order"))
                 {
@@ -815,9 +1099,11 @@ namespace AntColony.Commands
                 GUI.enabled = true;
                 DrawNeedsDebugControls();
                 DrawSkillDebugControls();
+                DrawColonyJobsDebugControls();
             }
 
             DrawResourceDiagnostics();
+            DrawColonyJobDiagnostics();
 
             GUILayout.Label(interactionMessage);
             GUILayout.EndScrollView();
@@ -843,6 +1129,92 @@ namespace AntColony.Commands
             double retryIn = System.Math.Max(
                 0d, state.NextEvaluationTime - Time.unscaledTimeAsDouble);
             GUILayout.Label($"Next evaluation/retry: {retryIn:0.##}s");
+        }
+
+        private void DrawAutonomousWorkInspection(SelectableGridAnt ant)
+        {
+            GUILayout.Space(4f);
+            GUILayout.Label("AUTONOMOUS COLONY WORK");
+            AutonomousWorkAgentState state = GetAutonomousWorkState(ant);
+            if (state == null)
+            {
+                GUILayout.Label("State unavailable.");
+                return;
+            }
+            GUILayout.Label($"Job: {state.JobId?.ToString() ?? "None"}");
+            GUILayout.Label($"Status: {state.Status}");
+            GUILayout.Label($"Failure: {(string.IsNullOrEmpty(state.FailureReason) ? "None" : state.FailureReason)}");
+            double retryIn = System.Math.Max(
+                0d, state.NextEvaluationTime - Time.unscaledTimeAsDouble);
+            GUILayout.Label($"Next evaluation/retry: {retryIn:0.##}s");
+        }
+
+        private void DrawColonyJobsDebugControls()
+        {
+            if (GUILayout.Button(colonyJobsDebugExpanded
+                    ? "Hide Developer Only Colony Jobs"
+                    : "Show Developer Only Colony Jobs"))
+                colonyJobsDebugExpanded = !colonyJobsDebugExpanded;
+            if (!colonyJobsDebugExpanded || SelectedAnt?.Record == null) return;
+
+            GUILayout.Label("DEVELOPER ONLY — COLONY JOBS");
+            foreach (AntWorkCategoryDefinition definition in AntWorkCategoryCatalog.All)
+            {
+                AntWorkPriority current =
+                    SelectedAnt.Record.WorkPriorities.Get(definition.Id);
+                if (GUILayout.Button($"{definition.DisplayName}: {current}"))
+                {
+                    AntWorkPriority next = current == AntWorkPriority.Low
+                        ? AntWorkPriority.Disabled
+                        : current == AntWorkPriority.Disabled
+                            ? AntWorkPriority.Highest
+                            : (AntWorkPriority)((int)current + 1);
+                    TrySetSelectedWorkPriority(definition.Id, next, out _);
+                }
+            }
+            string[] categoryNames = new string[AntWorkCategoryCatalog.All.Count];
+            for (int index = 0; index < categoryNames.Length; index++)
+                categoryNames[index] = AntWorkCategoryCatalog.All[index].DisplayName;
+            selectedWorkCategoryIndex = GUILayout.SelectionGrid(
+                selectedWorkCategoryIndex, categoryNames, 2);
+            AntWorkCategory selectedCategory =
+                AntWorkCategoryCatalog.All[selectedWorkCategoryIndex].Id;
+            if (GUILayout.Button("Add Reachable Synthetic Job"))
+            {
+                Vector2Int target = new(
+                    -10 + selectedWorkCategoryIndex * 3,
+                    SampleWorldGenerator.MainPassageY);
+                TryAddSyntheticJob(selectedCategory, target, out _, out _);
+            }
+            if (GUILayout.Button("Add Unreachable Synthetic Job"))
+                TryAddSyntheticJob(
+                    selectedCategory, SampleWorldGenerator.GridUnreachableDestination,
+                    out _, out _);
+            if (GUILayout.Button("Reset Synthetic Job Fixtures"))
+                ResetSyntheticJobFixtures(out _);
+        }
+
+        private void DrawColonyJobDiagnostics()
+        {
+            GUILayout.Space(4f);
+            GUILayout.Label("DEVELOPER ONLY — COLONY JOB REGISTRY");
+            if (colonyJobs == null)
+            {
+                GUILayout.Label("Registry unavailable.");
+                return;
+            }
+            foreach (ColonyJob job in colonyJobs.Jobs)
+            {
+                GUILayout.Label(
+                    $"{job.Id} | {job.Category} | {job.Status} | {job.Progress:P0} | " +
+                    $"owner {(job.ReservationOwner.IsValid ? job.ReservationOwner.ToString() : "None")}");
+                if (!string.IsNullOrEmpty(job.FailureReason))
+                    GUILayout.Label($"Reason: {job.FailureReason}");
+                if (job.Status != ColonyJobStatus.Completed &&
+                    job.Status != ColonyJobStatus.Cancelled &&
+                    GUILayout.Button($"Cancel {job.Id}"))
+                    TryCancelSyntheticJob(job.Id, out _);
+            }
         }
 
         private void DrawResourceDiagnostics()

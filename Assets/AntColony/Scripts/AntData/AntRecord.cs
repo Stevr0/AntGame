@@ -134,6 +134,7 @@ namespace AntColony.Ants
             LifecycleStatus = AntLifecycleStatus.Active;
             Skills = new AntSkillSet(skillSettings, startingSimulationHours);
             Needs = new AntNeedsState(needsSettings);
+            WorkPriorities = new AntWorkPrioritySet();
         }
 
         public AntId Id { get; }
@@ -143,6 +144,7 @@ namespace AntColony.Ants
         public AntAttributes Attributes { get; }
         public AntSkillSet Skills { get; private set; }
         public AntNeedsState Needs { get; }
+        public AntWorkPrioritySet WorkPriorities { get; }
         public AntLifecycleStatus LifecycleStatus { get; private set; }
         public bool CanAcceptMovementOrders => LifecycleStatus == AntLifecycleStatus.Active;
 
