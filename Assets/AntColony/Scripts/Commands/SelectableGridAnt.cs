@@ -1,3 +1,4 @@
+using AntColony.Ants;
 using AntColony.Navigation;
 using UnityEngine;
 
@@ -8,12 +9,16 @@ namespace AntColony.Commands
     /// ant. Navigation remains entirely owned by <see cref="GridNavigationMotor"/>.
     /// </summary>
     [DisallowMultipleComponent]
-    [RequireComponent(typeof(GridNavigationMotor), typeof(CapsuleCollider2D))]
+    [RequireComponent(
+        typeof(GridNavigationMotor),
+        typeof(CapsuleCollider2D),
+        typeof(AntEntityBinding))]
     public sealed class SelectableGridAnt : MonoBehaviour
     {
         private const int IndicatorPointCount = 32;
 
         private GridNavigationMotor motor;
+        private AntEntityBinding entityBinding;
         private CapsuleCollider2D selectionCollider;
         private LineRenderer selectionIndicator;
         private Material indicatorMaterial;
@@ -23,7 +28,8 @@ namespace AntColony.Commands
         private string orderOutcome = "No movement order.";
         private string failureReason = string.Empty;
 
-        public string DisplayName { get; private set; } = "Ant";
+        public string DisplayName => Record?.DisplayName ?? "Unbound Ant";
+        public AntRecord Record => entityBinding?.Record;
         public GridNavigationMotor Motor => motor;
         public bool IsSelected { get; private set; }
         public bool HasActiveOrder => hasActiveOrder;
@@ -77,12 +83,9 @@ namespace AntColony.Commands
         }
 
         /// <summary>Applies the temporary name, colour and selection indicator.</summary>
-        public void Configure(string displayName, Color placeholderColour)
+        public void Configure(Color placeholderColour)
         {
             CacheComponents();
-            DisplayName = string.IsNullOrWhiteSpace(displayName)
-                ? name
-                : displayName;
 
             SpriteRenderer[] renderers = GetComponentsInChildren<SpriteRenderer>(true);
             foreach (SpriteRenderer renderer in renderers)
@@ -118,6 +121,21 @@ namespace AntColony.Commands
         public bool IssueMoveOrder(Vector2Int requestedDestination)
         {
             CacheComponents();
+            if (Record == null)
+            {
+                failureReason = "Movement order rejected: ant identity is not bound.";
+                orderOutcome = "Order rejected";
+                return false;
+            }
+
+            if (!Record.CanAcceptMovementOrders)
+            {
+                failureReason =
+                    $"Movement order rejected: {DisplayName} is {Record.LifecycleStatus}.";
+                orderOutcome = "Order rejected";
+                return false;
+            }
+
             if (!motor.MoveTo(requestedDestination))
             {
                 failureReason = motor.StatusMessage;
@@ -159,6 +177,12 @@ namespace AntColony.Commands
                 return;
             }
 
+            if (Record == null || !Record.CanAcceptMovementOrders)
+            {
+                CancelOrder("Movement cancelled because the ant is not active.");
+                return;
+            }
+
             if (motor.HasArrived)
             {
                 hasActiveOrder = false;
@@ -181,6 +205,7 @@ namespace AntColony.Commands
         private void CacheComponents()
         {
             motor ??= GetComponent<GridNavigationMotor>();
+            entityBinding ??= GetComponent<AntEntityBinding>();
             selectionCollider ??= GetComponent<CapsuleCollider2D>();
         }
 

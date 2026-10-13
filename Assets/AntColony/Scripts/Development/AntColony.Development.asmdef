@@ -2,6 +2,7 @@
     "name": "AntColony.Development",
     "rootNamespace": "AntColony.Development",
     "references": [
+        "AntColony.Ants",
         "AntColony.World",
         "AntColony.Navigation",
         "AntColony.Commands",

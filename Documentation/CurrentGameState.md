@@ -1,5 +1,47 @@
 # Ant Colony Current Game State
 
+## Latest implemented milestone — 3.1B Persistent Ant Identity & Attributes (13 October 2026)
+
+**Status: Implemented — Pending Manual Acceptance.** Automated suites pass, but the Unity Editor checklist below has not been user-confirmed.
+
+`AntColony.Ants` is a focused runtime assembly containing plain C# identity data with no MonoBehaviours, navigation or visual state. `AntId` and `ColonyId` wrap stable text values suitable for future serialization without using Unity instance IDs or GameObject names. `AntRecord` is the one model used by both `Queen` and `Worker`; caste currently changes no movement, carrying or other statistics. `AntRegistry` owns one colony's records, rejects duplicate Ant IDs and rejects records whose Colony ID does not match the registry.
+
+`AntAttributes` stores Strength, Agility and Endurance independently. The documented provisional development range is **1–10 inclusive**; construction rejects out-of-range values instead of silently clamping them. These values have no progression, derived-stat, equipment, combat, carrying or movement-speed effects. The deterministic development records are provisional fixtures: **Mara** (`ant-dev-queen-001`, Queen, Strength 7 / Agility 5 / Endurance 8), **Pip** (`ant-dev-worker-002`, Worker, 4 / 8 / 5), and **Tala** (`ant-dev-worker-003`, Worker, 6 / 6 / 7), all in `development-colony`.
+
+`AntEntityBinding` resolves a configured Ant ID to an existing record and never creates or removes authoritative data. `AntEntityBindingRegistry` rejects a second live visual claiming the same ID. Destroying a visual releases only that transient claim, so a replacement visual can bind to the same retained record. `SelectableGridAnt` reads its display name and lifecycle from the binding while `GridNavigationMotor` remains the only movement executor. Active ants accept the existing temporary movement orders; inactive or deceased records reject new orders, and an active order is cancelled safely if its record stops being active. No health, damage, ageing, corpse, burial or equipment-drop mechanics exist.
+
+The compact top-right selection panel now shows Ant ID, name, colony, caste, Strength, Agility, Endurance and lifecycle above the existing control, navigation order, destination and failure fields. Selection changes only which bound record is displayed; it does not alter identity or another ant's order. The development tools remain separately collapsible.
+
+### 3.1B automated verification
+
+- Unity imported and compiled `AntColony.Ants`, Commands, Navigation, Development and both test assemblies successfully.
+- Focused identity/selection Edit Mode: **16/16 passed**. Coverage includes unique creation, duplicate rejection, colony ownership, shared Queen/Worker model, independent attributes, range rejection, lifecycle retention, duplicate visual rejection, missing-record rejection, visual rebinding, deterministic identities, selection stability, correct motor targeting and deceased-order rejection.
+- Focused selection/identity Play Mode: **5/5 passed**.
+- Complete graphics-enabled Edit Mode: **268/268 passed**. A preceding `-nographics` attempt reached the retained rendered-pixel test and crashed while creating a RenderTexture; the graphics-enabled rerun passed completely.
+- Complete Play Mode: **19/19 passed**, including all production grid-navigation and retained continuous 2.4A regressions. Separate confirmation runs also passed selection/identity 5/5, grid navigation 8/8 and autonomous movement 6/6.
+- Manual Scene/Game-view acceptance was not performed and remains pending user confirmation.
+
+### Exact 3.1B manual Unity Play Mode acceptance
+
+No Inspector setup is required.
+
+1. Open `Assets/AntColony/Scenes/AntGameDevelopment.unity`, clear the Console and enter Play Mode. Confirm three distinct cyan, pink and green selectable ants appear.
+2. Select the cyan ant and confirm the panel reports Mara, `ant-dev-queen-001`, `development-colony`, Queen, attributes 7/5/8 and Active.
+3. Select the pink and green ants and confirm Pip and Tala are Workers with IDs `ant-dev-worker-002` and `ant-dev-worker-003`, and attributes 4/8/5 and 6/6/7 respectively.
+4. Switch repeatedly among all three ants. Confirm each identity and attribute set remains unchanged and exactly one selection ring follows the selected ant.
+5. Right-click separate valid destinations for each ant. Confirm the selected record receives the order, all three retain independent destinations and movement remains smooth through `GridNavigationMotor`.
+6. While one ant moves, select another. Confirm the first ant keeps its identity and order while the panel changes to the second ant's correct record.
+7. Allow an order to complete, cancel another and issue an unreachable destination. Confirm the existing order/navigation status and failure information remain readable alongside identity data.
+8. Pan with WASD/arrow keys, zoom with the wheel and reset with Home. Confirm selection and displayed identity remain correct.
+9. Open and collapse `Show Developer Tools`. Confirm terrain inspection, mutation and stress tools remain functional and do not replace the three authoritative records.
+10. Exit and re-enter Play Mode. Confirm the same three deterministic fixture IDs, names, castes and provisional attributes return in a clean state.
+11. Confirm one Queen and two Workers share the same movement and selection behavior; caste grants no visible bonus or restriction.
+12. Confirm the Unity Console has no relevant error, assertion or missing-reference messages.
+
+This checklist does not expose a player-facing death control. Deceased-order rejection is automated-test coverage only; actual death gameplay and presentation remain excluded.
+
+Known limitations are deliberate: the registry is in-memory only; save/load and chunk streaming are absent; records contain no skills, needs, health depletion, jobs, work priorities, inventory, equipment, brood, reproduction, ageing or combat; lifecycle transitions have no gameplay cause; and this fixture does not define the finished starting population. The approved future game begins with one working founding queen.
+
 ## Latest accepted milestone — 3.1A Ant Selection & Command Integration (13 October 2026)
 
 **Status: COMPLETE — user confirmed all 14 manual Unity Play Mode acceptance checks passed on 13 October 2026.** The prior reported automated results were focused Edit Mode 6/6, focused Play Mode 4/4, full Edit Mode 258/258, full Play Mode 18/18, plus scene validation. This documentation update did not rerun tests.
@@ -191,15 +233,15 @@ The revised 2.4B proof of concept described above is the only later implementati
 
 Milestone 2.4A now implements the approved natural-background movement realignment. Exposed Natural Earth and Natural Stone provide full horizontal, vertical and diagonal grip at normal speed. Prepared Background provides the same traversal plus a provisional `1.25` movement-speed multiplier. Sky remains explicitly non-grippable. The other newly approved systems—starting queen, player-facing direct ant control, functional backgrounds, rooms, brood, needs and shared stores—remain design targets, **not implemented or verified features**.
 
-**Next step:** complete the exact 3.1A three-ant manual checklist above. Automated suites are no longer licensing-blocked. Do not begin attributes, inspection data, colony jobs or Draft Mode without a separately approved milestone.
+**Next step:** complete the exact 3.1B manual checklist at the top of this document. Do not begin colony jobs, needs, inventory, progression, reproduction, Draft Mode or another later milestone without separate approval.
 
 ## Current milestone
 
-**Milestone 3.1A — Ant Selection & Command Integration**
+**Milestone 3.1B — Persistent Ant Identity & Attributes**
 
-**Status:** **Implemented — Pending Manual Acceptance.** Three ants use the default grid architecture through a reusable single-selection and temporary move-order layer; legacy continuous systems remain developer-only regression tools.
+**Status:** **Implemented — Pending Manual Acceptance.** Three ants use authoritative plain-C# records through focused runtime bindings while retaining the accepted grid selection and movement architecture; legacy continuous systems remain developer-only regression tools.
 
-Milestones through accepted 2.4C retain their previously reported status. Milestone 2.4D remains implemented pending its separately recorded manual acceptance. 3.1A adds no colony simulation.
+Milestones through accepted 3.1A retain their previously reported status. Milestone 2.4D remains implemented pending its separately recorded manual acceptance. 3.1B adds identity data but no colony jobs or other simulation.
 
 ## Repository and architecture
 

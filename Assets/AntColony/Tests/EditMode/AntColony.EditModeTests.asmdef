@@ -2,6 +2,7 @@
     "name": "AntColony.EditModeTests",
     "rootNamespace": "AntColony.Tests.EditMode",
     "references": [
+        "AntColony.Ants",
         "AntColony.World",
         "AntColony.Navigation",
         "AntColony.Commands",

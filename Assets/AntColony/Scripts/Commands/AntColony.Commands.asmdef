@@ -2,6 +2,7 @@
     "name": "AntColony.Commands",
     "rootNamespace": "AntColony.Commands",
     "references": [
+        "AntColony.Ants",
         "AntColony.Navigation",
         "AntColony.World",
         "Unity.InputSystem"

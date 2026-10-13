@@ -1,4 +1,5 @@
 using System.Linq;
+using AntColony.Ants;
 using AntColony.Commands;
 using AntColony.Development;
 using AntColony.Navigation;
@@ -41,6 +42,56 @@ namespace AntColony.Tests.EditMode
                 .Select(ant => ant.GetComponentInChildren<SpriteRenderer>().color)
                 .ToArray();
             Assert.That(colours.Distinct().Count(), Is.EqualTo(3));
+
+            SelectableGridAnt[] selectable = host.SelectionController.SelectableAnts
+                .ToArray();
+            Assert.That(selectable.Select(ant => ant.Record.Id).Distinct().Count(),
+                Is.EqualTo(3));
+            Assert.That(selectable.Count(ant => ant.Record.Caste == AntCaste.Queen),
+                Is.EqualTo(1));
+            Assert.That(selectable.Count(ant => ant.Record.Caste == AntCaste.Worker),
+                Is.EqualTo(2));
+            Assert.That(selectable.Select(ant => ant.Record.Attributes.Strength)
+                .Distinct().Count(), Is.EqualTo(3));
+        }
+
+        [Test]
+        public void SelectionAndCommands_KeepTheCorrectAuthoritativeIdentity()
+        {
+            AntGameDevelopmentWorldHost host = OpenHostWithSelectableAnts();
+            AntSelectionCommandController controller = host.SelectionController;
+            SelectableGridAnt first = controller.SelectableAnts[0];
+            SelectableGridAnt second = controller.SelectableAnts[1];
+            AntId firstId = first.Record.Id;
+            AntId secondId = second.Record.Id;
+
+            controller.Select(first);
+            Assert.That(controller.SelectedAnt.Record.Id, Is.EqualTo(firstId));
+            Assert.That(controller.TryIssueMoveOrder(
+                SampleWorldGenerator.GridDirectDestination), Is.True);
+            controller.Select(second);
+            Assert.That(controller.SelectedAnt.Record.Id, Is.EqualTo(secondId));
+            Assert.That(first.Record.Id, Is.EqualTo(firstId));
+            Assert.That(first.Motor.PendingRequestId, Is.GreaterThan(0));
+            Assert.That(second.Motor.PendingRequestId, Is.EqualTo(0));
+        }
+
+        [Test]
+        public void DeceasedAnt_RejectsNewMovementOrderAndKeepsItsRecord()
+        {
+            AntGameDevelopmentWorldHost host = OpenHostWithSelectableAnts();
+            AntSelectionCommandController controller = host.SelectionController;
+            SelectableGridAnt ant = controller.SelectableAnts[0];
+            AntId id = ant.Record.Id;
+            ant.Record.MarkDeceased();
+            controller.Select(ant);
+
+            Assert.That(controller.TryIssueMoveOrder(
+                SampleWorldGenerator.GridDirectDestination), Is.False);
+            Assert.That(ant.FailureReason, Does.Contain("Deceased"));
+            Assert.That(ant.Motor.PendingRequestId, Is.EqualTo(0));
+            Assert.That(host.AntRegistry.TryGet(id, out AntRecord retained), Is.True);
+            Assert.That(retained, Is.SameAs(ant.Record));
         }
 
         [Test]

@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Linq;
+using AntColony.Ants;
 using AntColony.Commands;
 using AntColony.Development;
 using AntColony.Navigation;
@@ -26,6 +27,38 @@ namespace AntColony.Tests.PlayMode
                 host.SelectableGridAnts.Select(ant => ant.Position).Distinct().Count(),
                 Is.EqualTo(3));
             Assert.That(host.SelectionController.SelectedAnt, Is.Null);
+            Assert.That(host.SelectionController.SelectableAnts
+                .Select(ant => ant.Record.Id).Distinct().Count(), Is.EqualTo(3));
+            Assert.That(host.SelectionController.SelectableAnts
+                .Count(ant => ant.Record.Caste == AntCaste.Queen), Is.EqualTo(1));
+            Assert.That(host.SelectionController.SelectableAnts
+                .Count(ant => ant.Record.Caste == AntCaste.Worker), Is.EqualTo(2));
+        }
+
+        [UnityTest]
+        public IEnumerator SelectionPreservesIdentityAndDeceasedAntRejectsMovement()
+        {
+            yield return LoadScene();
+            AntGameDevelopmentWorldHost host = FindHost();
+            AntSelectionCommandController controller = host.SelectionController;
+            SelectableGridAnt first = controller.SelectableAnts[0];
+            SelectableGridAnt second = controller.SelectableAnts[1];
+            AntId firstId = first.Record.Id;
+            AntId secondId = second.Record.Id;
+
+            controller.Select(first);
+            controller.Select(second);
+            controller.Select(first);
+            Assert.That(first.Record.Id, Is.EqualTo(firstId));
+            Assert.That(second.Record.Id, Is.EqualTo(secondId));
+
+            first.Record.MarkDeceased();
+            Assert.That(controller.TryIssueMoveOrder(
+                SampleWorldGenerator.GridDirectDestination), Is.False);
+            Assert.That(first.Motor.HasPendingRequest, Is.False);
+            Assert.That(host.AntRegistry.TryGet(firstId, out AntRecord retained),
+                Is.True);
+            Assert.That(retained, Is.SameAs(first.Record));
         }
 
         [UnityTest]

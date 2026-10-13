@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using AntColony.Ants;
 using AntColony.Navigation;
 using AntColony.World;
 using UnityEngine;
@@ -14,7 +15,7 @@ namespace AntColony.Commands
     public sealed class AntSelectionCommandController : MonoBehaviour
     {
         private const float PlayerPanelWidth = 330f;
-        private const float PlayerPanelHeight = 174f;
+        private const float PlayerPanelHeight = 292f;
         private const float MinimumClickRadiusPixels = 16f;
 
         [SerializeField] private Camera worldCamera;
@@ -223,7 +224,17 @@ namespace AntColony.Commands
             }
             else
             {
+                AntRecord record = SelectedAnt.Record;
                 GUILayout.Label($"Selected ant: {SelectedAnt.DisplayName}");
+                GUILayout.Label($"Ant ID: {record?.Id.ToString() ?? "Unbound"}");
+                GUILayout.Label($"Colony: {record?.ColonyId.ToString() ?? "Unbound"}");
+                GUILayout.Label($"Caste: {record?.Caste.ToString() ?? "Unbound"}");
+                GUILayout.Label(
+                    $"Attributes: STR {record?.Attributes.Strength.ToString() ?? "-"}  " +
+                    $"AGI {record?.Attributes.Agility.ToString() ?? "-"}  " +
+                    $"END {record?.Attributes.Endurance.ToString() ?? "-"}");
+                GUILayout.Label(
+                    $"Lifecycle: {record?.LifecycleStatus.ToString() ?? "Unbound"}");
                 GUILayout.Label($"Control: {SelectedAnt.ControlState}");
                 GUILayout.Label($"Order: {SelectedAnt.OrderStatus}");
                 GUILayout.Label(

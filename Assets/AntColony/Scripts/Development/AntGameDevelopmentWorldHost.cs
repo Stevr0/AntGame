@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using AntColony.Ants;
 using AntColony.Commands;
 using AntColony.Navigation;
 using AntColony.World;
@@ -56,6 +57,8 @@ namespace AntColony.Development
         private GridNavigationMotor gridNavigationAnt;
         private readonly List<GridNavigationMotor> selectableGridAnts = new();
         private readonly List<GridNavigationMotor> gridStressAnts = new();
+        private AntRegistry antRegistry;
+        private AntEntityBindingRegistry antBindingRegistry;
         private bool staggeredRequestsActive;
         private int staggeredRequestIndex;
 
@@ -82,6 +85,7 @@ namespace AntColony.Development
             gridStressAnts;
         public IReadOnlyList<GridNavigationMotor> SelectableGridAnts =>
             selectableGridAnts;
+        public AntRegistry AntRegistry => antRegistry;
         public int GridStressGroupSize => gridStressGroupSize;
         public AntAutonomousMotor AutonomousAntPrefab => autonomousAntPrefab;
         public GridNavigationMotor PrimaryGridAntPrefab => primaryGridAntPrefab;
@@ -317,6 +321,11 @@ namespace AntColony.Development
             }
 
             selectionController.ClearSelectableAnts();
+            if (!EnsureDevelopmentAntRecords(out message))
+            {
+                return false;
+            }
+
             while (selectableGridAnts.Count < spawnCells.Count)
             {
                 int number = selectableGridAnts.Count + 1;
@@ -349,7 +358,21 @@ namespace AntColony.Development
                 {
                     selectable = ant.gameObject.AddComponent<SelectableGridAnt>();
                 }
-                selectable.Configure($"Ant {index + 1}", colours[index]);
+
+                AntEntityBinding binding = ant.GetComponent<AntEntityBinding>();
+                if (binding == null)
+                {
+                    binding = ant.gameObject.AddComponent<AntEntityBinding>();
+                }
+
+                AntRecord record = GetDevelopmentAntRecord(index);
+                binding.Configure(record.Id.Value);
+                if (!binding.Bind(antRegistry, antBindingRegistry, out message))
+                {
+                    return false;
+                }
+
+                selectable.Configure(colours[index]);
                 selectionController.RegisterSelectableAnt(selectable);
             }
 
@@ -358,6 +381,65 @@ namespace AntColony.Development
                 $"Spawned {selectableGridAnts.Count} selectable grid ants at " +
                 $"{string.Join(", ", spawnCells)}.";
             return true;
+        }
+
+        private bool EnsureDevelopmentAntRecords(out string message)
+        {
+            if (antRegistry != null)
+            {
+                message = string.Empty;
+                return true;
+            }
+
+            var colonyId = new ColonyId("development-colony");
+            antRegistry = new AntRegistry(colonyId);
+            antBindingRegistry = new AntEntityBindingRegistry();
+            AntRecord[] records =
+            {
+                new(
+                    new AntId("ant-dev-queen-001"),
+                    "Mara",
+                    colonyId,
+                    AntCaste.Queen,
+                    new AntAttributes(7, 5, 8)),
+                new(
+                    new AntId("ant-dev-worker-002"),
+                    "Pip",
+                    colonyId,
+                    AntCaste.Worker,
+                    new AntAttributes(4, 8, 5)),
+                new(
+                    new AntId("ant-dev-worker-003"),
+                    "Tala",
+                    colonyId,
+                    AntCaste.Worker,
+                    new AntAttributes(6, 6, 7))
+            };
+
+            foreach (AntRecord record in records)
+            {
+                if (!antRegistry.TryRegister(record, out message))
+                {
+                    antRegistry = null;
+                    antBindingRegistry = null;
+                    return false;
+                }
+            }
+
+            message = string.Empty;
+            return true;
+        }
+
+        private AntRecord GetDevelopmentAntRecord(int index)
+        {
+            string id = index switch
+            {
+                0 => "ant-dev-queen-001",
+                1 => "ant-dev-worker-002",
+                _ => "ant-dev-worker-003"
+            };
+            antRegistry.TryGet(id, out AntRecord record);
+            return record;
         }
 
         public void SetGridStressGroupSize(int count)
