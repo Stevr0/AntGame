@@ -1,5 +1,14 @@
 # Ant Colony Development Roadmap
 
+## Accepted milestones and next development scope — 13 October 2026
+
+**Development UI Reorganisation COMPLETE:** User confirmed 24/24 manual checks and clean Console. Earlier reported 455/455 Edit Mode and 47/47 Play Mode passed.
+
+**Milestone 3.3D COMPLETE:** User confirmed 30/30 manual hauling checks and clean Console. Earlier reported 447/447 Edit Mode and 45/45 Play Mode passed.
+
+**Next proposed Milestone 3.4A — Functional Background Conversion & Construction Jobs:** Player designates exposed background for conversion; Construction-priority ant personally collects required physical Soil/Stone from existing storage, drops or its own inventory, transports materials to an adjacent work anchor, performs interruptible Construction work and commits an accounted material-consumption/background-change transaction. Support targeted conversions including Prepared, Nursery, Sleeping, Food Storage, Water Storage and Material Storage only if their recipes and fixtures are declared provisional. Preserve occupied-slot data and define safe invalidation. Doors, room enclosure/scoring, brood, production and full crafting are excluded. Separate implementation approval required.
+
+
 ## Development UI reorganisation — 13 October 2026
 
 **Implemented and automated; manual visual confirmation pending. Not Milestone 3.4A.** The two independent side panels were replaced by a compact top IMGUI toolbar with mutually exclusive Ant, Needs, Skills, Jobs, Resources, World and Debug categories. One bounded scrollable panel is possible at a time; Hide All leaves only a small reopen control. Existing simulation controls and diagnostics were regrouped without changing their gameplay APIs.

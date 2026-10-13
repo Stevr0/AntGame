@@ -1,5 +1,12 @@
 # Ant Colony Current Game State
 
+## Latest accepted status — 13 October 2026
+
+**Development UI Reorganisation: COMPLETE.** User confirmed all 24 manual checks and clean Unity Console. Reported focused Edit Mode 8/8, focused Play Mode 2/2, full Edit Mode 455/455 and full Play Mode 47/47 passed before a later environment-blocked rerun.
+
+**Milestone 3.3D Material Storage & Autonomous Hauling: COMPLETE.** User confirmed all 30 manual checks and clean Console. Reported focused Edit Mode 15/15, focused Play Mode 3/3, full Edit Mode 447/447 and full Play Mode 45/45 passed. No tests rerun for this documentation update. Prior pending-acceptance statements below are historical.
+
+
 ## Development UI reorganisation pass (13 October 2026)
 
 **Status: Implemented and automated — manual visual confirmation pending. This is not Milestone 3.4A. Milestone 3.3D remains Implemented — Pending Manual Acceptance.**
