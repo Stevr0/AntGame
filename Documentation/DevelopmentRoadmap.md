@@ -1,8 +1,15 @@
 # Ant Colony Development Roadmap
 
+## 3.3C acceptance and 3.3D handoff — 13 October 2026
+
+Milestone 3.3C is COMPLETE. User confirmed all 26 manual Unity Play Mode checks. Previously reported focused Edit Mode 26/26, focused Play Mode 5/5, full Edit Mode 432/432 and full Play Mode 42/42 passed. These were not rerun for this documentation update.
+
+Next approved scope: Milestone 3.3D — Material Storage and Autonomous Hauling, following the existing Codex prompt. Codex must verify accepted 3.3C implementation locally first. 3.3D adds one-slot-per-tile Material Storage, filters, physical stacking, automatic transport of loose Soil/Stone and self-deposit of carried materials, using existing navigation/jobs/reservations. Construction and other later mechanics remain excluded.
+
+
 ## 3.3C implementation status — 13 October 2026
 
-**3.3C Ant Inventory, Automatic Excavation Pickup & Physical Material Handling: Implemented — Pending Manual Acceptance.** Each authoritative ant record owns independent stack-based inventory. Hauling levels 0/20/40/60/80 grant one through five natural slots; Soil and Stone provisionally stack to 10. Capacity decay retains occupied overflow without permitting further additions. Excavation atomically sends output to the excavator, a recoverable drop, or an explicit split between both. Selected ants can reserve and pick up a reachable drop or use Developer Only controls to drop a chosen quantity at their current valid anchor. Compatible world stacks merge, partial transfer is conserved, failures preserve the source and stable output keys prevent retries from duplicating resources.
+**3.3C Ant Inventory, Automatic Excavation Pickup & Physical Material Handling: COMPLETE — manual 26/26 accepted.** Each authoritative ant record owns independent stack-based inventory. Hauling levels 0/20/40/60/80 grant one through five natural slots; Soil and Stone provisionally stack to 10. Capacity decay retains occupied overflow without permitting further additions. Excavation atomically sends output to the excavator, a recoverable drop, or an explicit split between both. Selected ants can reserve and pick up a reachable drop or use Developer Only controls to drop a chosen quantity at their current valid anchor. Compatible world stacks merge, partial transfer is conserved, failures preserve the source and stable output keys prevent retries from duplicating resources.
 
 Automated verification passes **26/26 focused Edit Mode**, **5/5 focused Play Mode**, **432/432 complete graphics-enabled Edit Mode** and **42/42 complete Play Mode**, all with zero failures/skips. The exact 26-step manual checklist is recorded in `CurrentGameState.md` and remains pending user confirmation. **No autonomous hauling, Material Storage, stockpiles, construction or broader resource scheduling is implemented.** Stack limits, fixture quantities and carrying balance remain provisional.
 
