@@ -1,5 +1,12 @@
 # Ant Colony Development Roadmap
 
+## 3.3A acceptance and proposed excavation milestone — 13 October 2026
+
+**3.3A Colony Job Designation & Priority Foundation: COMPLETE.** The user confirmed all 22 manual Unity Play Mode checks. Previously reported focused Edit Mode 28/28, focused Play Mode 5/5, full Edit Mode 392/392, full Play Mode 37/37 and documentation validation passed. This documentation update did not execute tests.
+
+**Next proposed milestone 3.3B — Real Excavation With Physical Material Output:** Translate player excavation designations into real existing job-registry jobs; ant reaches adjacent safe work position, progresses using skill/Rested and safe interruption, and removes an eligible foreground Solid only in a resource-conserving transaction that also creates recoverable physical output. Reuse shared navigation and authoritative world mutation/projection; do not add hauling, inventory, construction or other jobs yet. Exact output recipes/yields remain provisional. Implementation separately authorised by user.
+
+
 ## Latest accepted milestone and next proposed scope — 13 October 2026
 
 **3.2C Autonomous Survival Behaviour: COMPLETE.** User confirmed all 20 manual Play Mode acceptance checks. Previously reported focused 24/24 Edit Mode, 6/6 Play Mode and full 364/364 Edit Mode, 32/32 Play Mode passed, with the focused Edit Mode suite rerun after final diagnostic cleanup. No new test execution in this documentation-only change.
