@@ -8,18 +8,20 @@ Ants may also receive temporary explicit orders. Critical survival may interrupt
 
 ## Current implementation
 
-Milestone 3.3A implements the development-only foundation:
+Milestone 3.3A is accepted, and 3.3B extends that same foundation with real excavation:
 
 - Every ant record owns independent priorities for Excavation, Surface Preparation, Construction, Hauling, Foraging, Production, Combat, and Brood Care.
 - `ColonyJobRegistry` owns synthetic job identity, target, status, reservation, progress, and failure state outside GameObjects.
 - Highest enabled priority is evaluated before actual A* route cost. Equal costs use stable deterministic ties.
 - Evaluations inspect at most 32 candidates per priority, are staggered, and back off for 2/4/8 seconds on failure.
-- `SyntheticColonyJobOrder` uses `GridNavigationMotor` and an adjacent work position. It does not mutate terrain, resources, or inventories.
+- `SyntheticColonyJobOrder` remains as a regression fixture. Real designations use `ExcavationJobOrder` through the same registry, selector, motor, adjacency, priority and interruption seams.
+- Excavate mode accepts eligible foreground Solids by world coordinate, supports bounded area drags, and blocks ordinary selection/orders while active.
+- Soil and Stone completion uses a stable job-keyed terrain-to-drop transaction. Output failure preserves the Solid; successful removal preserves Background and refreshes one visual/collision/navigation locality.
 - Work takes a provisional four simulation hours, uses Rested and relevant-skill speed, and awards proportional XP only for committed progress.
 - Player orders and critical survival pause work and release ownership while preserving progress. Ordinary survival waits for active work.
 - The development scene exposes five deterministic fixtures plus priority, designation, cancellation, reset, and diagnostic controls.
 
-Milestone 3.2C autonomous survival is accepted. Milestone 3.3A remains **Implemented — Pending Manual Acceptance**.
+Milestone 3.3A is accepted. Milestone 3.3B is **Implemented — Pending Manual Acceptance** with 14/14 focused Edit, 3/3 focused Play, 406/406 full Edit and 40/40 full Play passing.
 
 ## Future decision flow
 
@@ -49,4 +51,4 @@ flowchart TD
 
 ## Not implemented
 
-All work remains synthetic. Real hauling, excavation, Surface Preparation, construction, gathering, production, combat, brood care, inventories, forced-work orders, Draft Mode, group tactics, local avoidance, persistence, and production-scale indexing require later milestones.
+Excavation is now real, but all output temporarily remains a loose world drop. Pickup, inventories, hauling, storage, Surface Preparation, construction, gathering, production, combat, brood care, forced-work orders, Draft Mode, group tactics, local avoidance, persistence, and production-scale indexing require later milestones.

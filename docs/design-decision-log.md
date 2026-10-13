@@ -24,6 +24,7 @@ This log summarises approved decisions. It does not approve unresolved details o
 | 13 Oct 2026 | Store identity, skills, and needs on authoritative ant records | Visual replacement and selection changes do not transfer or erase ant state |
 | 13 Oct 2026 | Keep 3.2B interactions narrow and location-owned | No generic inventory, global stockpile, or autonomous job authority is implied |
 | 13 Oct 2026 | Implement 3.3A work as synthetic registry-owned jobs | Validate priority, path-cost, ownership and interruption seams without implying real excavation, construction or hauling |
+| 13 Oct 2026 | Commit 3.3B excavation output and foreground removal as one boundary | A resource-bearing Solid remains intact on output failure, and stable job keys prevent duplicate loose output |
 
 ## Open decisions
 

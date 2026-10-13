@@ -29,7 +29,7 @@ namespace AntColony.Commands
         Blocked
     }
 
-    /// <summary>Authoritative serialisation-ready state for one synthetic job.</summary>
+    /// <summary>Authoritative serialisation-ready state for one colony job.</summary>
     public sealed class ColonyJob
     {
         internal ColonyJob(ColonyJobId id, AntWorkCategory category, Vector2Int targetCell)
@@ -51,8 +51,8 @@ namespace AntColony.Commands
     }
 
     /// <summary>
-    /// Small shared owner for one colony's synthetic designations. It deliberately
-    /// contains no GameObjects, navigation code, terrain mutation or inventories.
+    /// Small shared owner for one colony's jobs. It deliberately contains no
+    /// GameObjects, navigation code, terrain mutation or inventories.
     /// </summary>
     public sealed class ColonyJobRegistry
     {
@@ -206,6 +206,15 @@ namespace AntColony.Commands
         }
 
         public void Clear() => jobs.Clear();
+
+        public void RemoveWhere(Predicate<ColonyJob> shouldRemove)
+        {
+            if (shouldRemove == null) return;
+            var ids = new List<ColonyJobId>();
+            foreach (ColonyJob job in jobs.Values)
+                if (shouldRemove(job)) ids.Add(job.Id);
+            foreach (ColonyJobId id in ids) jobs.Remove(id);
+        }
 
         private bool TryGetOwned(
             ColonyJobId id,

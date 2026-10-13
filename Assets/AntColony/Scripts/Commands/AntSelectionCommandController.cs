@@ -7,6 +7,12 @@ using UnityEngine.InputSystem;
 
 namespace AntColony.Commands
 {
+    public enum WorldDesignationMode
+    {
+        None,
+        Excavate
+    }
+
     /// <summary>
     /// Player-facing single-ant selection and temporary move-order input. The
     /// controller owns neither terrain navigation nor ant movement execution.
@@ -56,6 +62,11 @@ namespace AntColony.Commands
         private bool colonyJobsDebugExpanded;
         private int selectedWorkCategoryIndex;
         private int nextDevelopmentJobNumber = 1;
+        private ExcavationDesignationRegistry excavationDesignations;
+        private ExcavationWorldTransaction excavationTransaction;
+        private WorldMaterialDropRegistry materialDrops;
+        private Vector2Int dragStartCell;
+        private bool excavationDragActive;
 
         public IReadOnlyList<SelectableGridAnt> SelectableAnts => selectableAnts;
         public SelectableGridAnt SelectedAnt { get; private set; }
@@ -65,6 +76,10 @@ namespace AntColony.Commands
         public bool AutonomousSurvivalEnabled { get; private set; }
         public bool AutonomousColonyWorkEnabled { get; private set; }
         public ColonyJobRegistry ColonyJobs => colonyJobs;
+        public ExcavationDesignationRegistry ExcavationDesignations => excavationDesignations;
+        public WorldMaterialDropRegistry MaterialDrops => materialDrops;
+        public WorldDesignationMode DesignationMode { get; private set; }
+        public Rect DesignationToolbarGuiRect => new(12f, 12f, 220f, 82f);
         public Rect PlayerPanelGuiRect => new(
             Mathf.Max(12f, Screen.width - PlayerPanelWidth - 12f),
             12f,
@@ -104,6 +119,16 @@ namespace AntColony.Commands
                 ant?.BindColonyJobs(sharedColonyJobs);
         }
 
+        public void BindExcavation(ExcavationDesignationRegistry designations,
+            ExcavationWorldTransaction transaction, WorldMaterialDropRegistry drops)
+        {
+            excavationDesignations = designations;
+            excavationTransaction = transaction;
+            materialDrops = drops;
+            foreach (SelectableGridAnt ant in selectableAnts)
+                ant?.BindExcavation(designations, transaction);
+        }
+
         public void ClearSelectableAnts()
         {
             foreach (SelectableGridAnt ant in selectableAnts)
@@ -128,6 +153,7 @@ namespace AntColony.Commands
                 selectableAnts.Add(ant);
                 ant.BindInteractionWorld(interactionWorld);
                 ant.BindColonyJobs(colonyJobs);
+                ant.BindExcavation(excavationDesignations, excavationTransaction);
                 autonomousStates[ant] = new AutonomousSurvivalAgentState();
                 autonomousWorkStates[ant] = new AutonomousWorkAgentState();
             }
@@ -200,6 +226,7 @@ namespace AntColony.Commands
         {
             Vector2 guiPoint = new(screenPoint.x, Screen.height - screenPoint.y);
             return PlayerPanelGuiRect.Contains(guiPoint) ||
+                DesignationToolbarGuiRect.Contains(guiPoint) ||
                 (hasAdditionalBlockedGuiRect &&
                     additionalBlockedGuiRect.Contains(guiPoint));
         }
@@ -231,6 +258,7 @@ namespace AntColony.Commands
 
         public bool TryHandleLeftClick(Vector2 screenPoint)
         {
+            if (DesignationMode == WorldDesignationMode.Excavate) return false;
             if (IsScreenPointBlocked(screenPoint) || worldCamera == null)
             {
                 return false;
@@ -246,6 +274,58 @@ namespace AntColony.Commands
             Vector3 worldPoint = worldCamera.ScreenToWorldPoint(screenPoint);
             TrySelectAtWorldPoint(worldPoint);
             return false;
+        }
+
+        public void SetDesignationMode(WorldDesignationMode mode)
+        {
+            DesignationMode = mode;
+            excavationDragActive = false;
+            interactionMessage = mode == WorldDesignationMode.Excavate
+                ? "Excavate mode: left-click or drag over foreground Solids."
+                : "Excavate mode closed; selection controls restored.";
+        }
+
+        public bool TryDesignateExcavation(Vector2Int cell, out string message)
+        {
+            if (excavationDesignations == null)
+            {
+                message = "Excavation services are unavailable.";
+                return false;
+            }
+            bool result = excavationDesignations.TryDesignate(cell, out _, out message);
+            if (result) message = $"Designated foreground Solid at {cell}.";
+            interactionMessage = message;
+            nextWorkEvaluationTime = 0d;
+            return result;
+        }
+
+        public int DesignateExcavationArea(Vector2Int first, Vector2Int second,
+            out string message)
+        {
+            if (excavationDesignations == null)
+            {
+                message = "Excavation services are unavailable.";
+                return 0;
+            }
+            int count = excavationDesignations.DesignateArea(first, second, out message);
+            interactionMessage = message;
+            nextWorkEvaluationTime = 0d;
+            return count;
+        }
+
+        public bool TryCancelExcavation(Vector2Int cell, out string message)
+        {
+            if (excavationDesignations == null)
+            {
+                message = "Excavation services are unavailable.";
+                return false;
+            }
+            foreach (SelectableGridAnt ant in selectableAnts)
+                if (ant?.ExcavationOrder?.Job.TargetCell == cell && ant.HasActiveOrder)
+                    ant.CancelOrder("Excavation designation was cancelled.");
+            bool result = excavationDesignations.TryCancel(cell, out message);
+            interactionMessage = result ? $"Cancelled excavation at {cell}." : message;
+            return result;
         }
 
         public void Select(SelectableGridAnt ant)
@@ -586,6 +666,28 @@ namespace AntColony.Commands
             }
 
             Vector2 screenPoint = mouse.position.ReadValue();
+            if (Keyboard.current?.escapeKey.wasPressedThisFrame == true &&
+                DesignationMode != WorldDesignationMode.None)
+                SetDesignationMode(WorldDesignationMode.None);
+
+            if (DesignationMode == WorldDesignationMode.Excavate)
+            {
+                if (mouse.leftButton.wasPressedThisFrame &&
+                    !IsScreenPointBlocked(screenPoint) && worldCamera != null)
+                {
+                    dragStartCell = WorldTileCoordinates.WorldPositionToCell(
+                        worldCamera.ScreenToWorldPoint(screenPoint));
+                    excavationDragActive = true;
+                }
+                if (mouse.leftButton.wasReleasedThisFrame && excavationDragActive)
+                {
+                    excavationDragActive = false;
+                    Vector2Int end = WorldTileCoordinates.WorldPositionToCell(
+                        worldCamera.ScreenToWorldPoint(screenPoint));
+                    DesignateExcavationArea(dragStartCell, end, out _);
+                }
+                return;
+            }
             if (mouse.leftButton.wasPressedThisFrame)
             {
                 TryHandleLeftClick(screenPoint);
@@ -784,10 +886,14 @@ namespace AntColony.Commands
             if (state.JobId.HasValue)
             {
                 SyntheticColonyJobOrder previous = ant.JobOrder;
+                ExcavationJobOrder previousExcavation = ant.ExcavationOrder;
                 bool failed = previous != null &&
                     (previous.Phase == SyntheticJobOrderPhase.Failed ||
-                     previous.Phase == SyntheticJobOrderPhase.Cancelled);
-                string failure = previous?.FailureReason;
+                     previous.Phase == SyntheticJobOrderPhase.Cancelled) ||
+                    previousExcavation != null &&
+                    (previousExcavation.Phase == ExcavationOrderPhase.Failed ||
+                     previousExcavation.Phase == ExcavationOrderPhase.Cancelled);
+                string failure = previousExcavation?.FailureReason ?? previous?.FailureReason;
                 state.JobId = null;
                 if (failed)
                 {
@@ -810,7 +916,11 @@ namespace AntColony.Commands
                 RecordWorkFailure(state, currentTimeSeconds, error);
                 return false;
             }
-            if (!ant.IssueSyntheticJobOrder(job, approach))
+            bool issued = excavationDesignations != null &&
+                excavationDesignations.TryGet(job.Id, out _)
+                    ? ant.IssueExcavationJobOrder(job, approach)
+                    : ant.IssueSyntheticJobOrder(job, approach);
+            if (!issued)
             {
                 RecordWorkFailure(state, currentTimeSeconds, ant.FailureReason);
                 return false;
@@ -903,7 +1013,7 @@ namespace AntColony.Commands
             }
             foreach (SelectableGridAnt ant in selectableAnts)
             {
-                if (ant?.JobOrder?.Job.Id.Equals(id) == true && ant.HasActiveOrder)
+                if (ant?.ActiveColonyJob?.Id.Equals(id) == true && ant.HasActiveOrder)
                     ant.CancelOrder("Synthetic job was cancelled by the developer.");
             }
             bool cancelled = colonyJobs.TryCancel(
@@ -921,10 +1031,12 @@ namespace AntColony.Commands
             }
             foreach (SelectableGridAnt ant in selectableAnts)
             {
-                if (ant != null && ant.OrderSource == AntOrderSource.AutonomousWork)
+                if (ant != null && ant.OrderSource == AntOrderSource.AutonomousWork &&
+                    ant.JobOrder != null && ant.JobOrder.IsActive)
                     ant.CancelOrder("Synthetic job fixtures were reset.");
             }
-            colonyJobs.Clear();
+            colonyJobs.RemoveWhere(job => excavationDesignations == null ||
+                !excavationDesignations.TryGet(job.Id, out _));
             nextDevelopmentJobNumber = 1;
             (AntWorkCategory category, Vector2Int cell)[] fixtures =
             {
@@ -1038,6 +1150,15 @@ namespace AntColony.Commands
 
         private void OnGUI()
         {
+            GUILayout.BeginArea(DesignationToolbarGuiRect, GUI.skin.box);
+            GUILayout.Label($"DESIGNATION: {DesignationMode}");
+            if (GUILayout.Button(DesignationMode == WorldDesignationMode.Excavate
+                    ? "Exit Excavate (Esc)" : "Excavate"))
+                SetDesignationMode(DesignationMode == WorldDesignationMode.Excavate
+                    ? WorldDesignationMode.None : WorldDesignationMode.Excavate);
+            GUILayout.Label("Left-click or drag; selection/orders are blocked.");
+            GUILayout.EndArea();
+
             GUILayout.BeginArea(PlayerPanelGuiRect, GUI.skin.box);
             playerPanelScrollPosition = GUILayout.BeginScrollView(
                 playerPanelScrollPosition);
@@ -1084,7 +1205,7 @@ namespace AntColony.Commands
                 GUILayout.Label(
                     $"Interaction target: {SelectedAnt.InteractionOrder?.TargetCell.ToString() ?? "None"}");
                 GUILayout.Label(
-                    $"Colony job: {SelectedAnt.JobOrder?.Job.Id.ToString() ?? "None"}");
+                    $"Colony job: {SelectedAnt.ActiveColonyJob?.Id.ToString() ?? "None"}");
                 GUILayout.Label(
                     $"Destination: {(SelectedAnt.HasDestination ? SelectedAnt.Destination.ToString() : "None")}");
                 GUILayout.Label(
@@ -1104,10 +1225,44 @@ namespace AntColony.Commands
 
             DrawResourceDiagnostics();
             DrawColonyJobDiagnostics();
+            DrawExcavationDiagnostics();
 
             GUILayout.Label(interactionMessage);
             GUILayout.EndScrollView();
             GUILayout.EndArea();
+            DrawExcavationWorldOverlay();
+        }
+
+        private void DrawExcavationWorldOverlay()
+        {
+            if (worldCamera == null || excavationDesignations == null) return;
+            foreach (ExcavationDesignation designation in
+                excavationDesignations.Designations)
+            {
+                if (designation.State is ExcavationDesignationState.Completed or
+                    ExcavationDesignationState.Cancelled) continue;
+                Vector3 screen = worldCamera.WorldToScreenPoint(
+                    new Vector3(designation.Cell.x + 0.5f,
+                        designation.Cell.y + 0.5f, 0f));
+                if (screen.z < 0f) continue;
+                Color previous = GUI.color;
+                GUI.color = designation.State == ExcavationDesignationState.Active
+                    ? new Color(1f, 0.45f, 0.1f, 0.85f)
+                    : new Color(1f, 0.9f, 0.1f, 0.7f);
+                GUI.Box(new Rect(screen.x - 13f, Screen.height - screen.y - 13f,
+                    26f, 26f), designation.State == ExcavationDesignationState.Active
+                        ? "A" : "X");
+                GUI.color = previous;
+            }
+            if (materialDrops == null) return;
+            foreach (WorldMaterialDrop drop in materialDrops.Drops)
+            {
+                Vector3 screen = worldCamera.WorldToScreenPoint(
+                    new Vector3(drop.WorldCell.x + 0.5f, drop.WorldCell.y + 0.5f, 0f));
+                if (screen.z >= 0f)
+                    GUI.Box(new Rect(screen.x - 24f, Screen.height - screen.y - 12f,
+                        48f, 24f), $"{drop.Material} {drop.Quantity}");
+            }
         }
 
         private void DrawAutonomousSurvivalInspection(SelectableGridAnt ant)
@@ -1215,6 +1370,37 @@ namespace AntColony.Commands
                     GUILayout.Button($"Cancel {job.Id}"))
                     TryCancelSyntheticJob(job.Id, out _);
             }
+        }
+
+        private void DrawExcavationDiagnostics()
+        {
+            GUILayout.Space(4f);
+            GUILayout.Label("EXCAVATION DESIGNATIONS & LOOSE MATERIALS");
+            if (excavationDesignations == null)
+            {
+                GUILayout.Label("Excavation services unavailable.");
+                return;
+            }
+            foreach (ExcavationDesignation designation in
+                excavationDesignations.Designations)
+            {
+                ColonyJob job = designation.Job;
+                GUILayout.Label(
+                    $"{designation.Cell} | {designation.SolidMaterialId} -> " +
+                    $"{designation.OutputQuantity} {designation.OutputMaterial} | " +
+                    $"{designation.State} | {job.Progress:P0} | owner " +
+                    $"{(job.ReservationOwner.IsValid ? job.ReservationOwner.ToString() : "None")}");
+                if (!string.IsNullOrEmpty(job.FailureReason))
+                    GUILayout.Label($"Transaction/job reason: {job.FailureReason}");
+            }
+            if (materialDrops == null || materialDrops.Count == 0)
+            {
+                GUILayout.Label("Loose material drops: None");
+                return;
+            }
+            foreach (WorldMaterialDrop drop in materialDrops.Drops)
+                GUILayout.Label(
+                    $"Drop {drop.OwnershipKey}: {drop.Quantity} {drop.Material} at {drop.WorldCell}");
         }
 
         private void DrawResourceDiagnostics()

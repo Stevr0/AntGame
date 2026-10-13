@@ -1,5 +1,58 @@
 # Ant Colony Current Game State
 
+## Current milestone — 3.3B Real Excavation Designations & Physical Material Output (13 October 2026)
+
+**Status: Implemented — Pending Manual Acceptance.** Milestone 3.3A is complete: the user confirmed its 22-step Play Mode checklist before authorising this milestone.
+
+The player-facing **Excavate** mode blocks ordinary selection and movement input while active. Left-click or a bounded drag marks only resource-bearing, excavatable foreground Solid cells by authoritative world coordinate. Each accepted designation creates one Excavation job in the existing `ColonyJobRegistry`; duplicate active cells are rejected, cancellation makes the job terminal, and inaccessible work remains pending for controlled retry rather than disappearing. Yellow `X` feedback denotes pending work and orange `A` feedback denotes active work.
+
+Autonomous job selection remains priority-first and then least reachable shared-A* path cost. Excavators reserve exclusively, travel through `GridNavigationMotor` to a valid adjacent full-clearance anchor, revalidate before work, and never enter the Solid cell. Provisional work remains four simulation hours, +0.5% speed per Excavation level, and 20 base XP per block, with accepted Rested modifiers. XP is awarded only for committed progress; safe interruption preserves progress and releases ownership.
+
+`SolidTileMaterialDefinition` now authoritatively declares excavation output type and positive yield. Soil yields one Soil and Stone yields one Stone provisionally. `ExcavationWorldTransaction` performs every fallible output check before removing foreground, commits a stable job-keyed `WorldMaterialDrop` immediately after removal, then refreshes exactly the affected visual/collision cell and invalidates local navigation. Failed drop creation leaves the Solid intact; retry keys prevent duplicate yield. Background material is unchanged. Drops are plain authoritative data with type, non-negative quantity, location and stable ownership key; they are not Tilemap state, GameObjects, inventories, hauling, stockpiles or global counters.
+
+The development scene adds reachable Soil and Stone blocks, a three-block area, a two-block access sequence, a non-excavatable blocker and drop overlays. Rebuild replaces jobs, designations and drops deterministically while retaining the five synthetic 3.3A fixtures and existing survival diagnostics.
+
+### 3.3B automated verification
+
+- Focused Edit Mode: **14/14 passed**.
+- Focused Play Mode: **3/3 passed**.
+- Complete graphics-enabled Edit Mode: **406/406 passed** with zero failures/skips.
+- Complete Play Mode: **40/40 passed** with zero failures/skips.
+- `git diff --check` and strict Zensical validation passed at final handoff.
+
+### Exact 3.3B manual Unity Play Mode acceptance
+
+**Pending:** perform these checks in `Assets/AntColony/Scenes/AntGameDevelopment.unity`; do not mark 3.3B complete until the user confirms them.
+
+1. Mara, Pip and Tala retain their identities and needs.
+2. Excavate mode can be activated and deactivated.
+3. Clicking Soil designates an excavation.
+4. Dragging marks a small area.
+5. Designated blocks display clear visual feedback.
+6. Eligible ants independently claim excavation work.
+7. Disabled Excavation prevents automatic work.
+8. Ants navigate adjacent to target blocks.
+9. Excavation progress advances visibly.
+10. Excavation XP is awarded.
+11. Rested bonuses affect excavation speed.
+12. Player movement orders interrupt excavation safely.
+13. Critical survival interrupts without losing progress.
+14. Another ant can resume interrupted excavation.
+15. Completed Soil blocks disappear and create physical Soil.
+16. Completed Stone blocks create physical Stone.
+17. Background remains after excavation.
+18. Terrain collision and navigation update correctly.
+19. A newly accessible designation can begin after prior excavation.
+20. Cancelling jobs prevents further excavation.
+21. Resource quantities do not duplicate or disappear.
+22. Multiple ants excavate independently.
+23. Existing survival and synthetic-job functionality remains available.
+24. World reset restores deterministic fixtures.
+25. Camera pan/zoom and UI blocking work.
+26. Unity Console remains free of relevant errors or warnings.
+
+Known limitations are intentional: all excavated output becomes a loose drop because inventories are not implemented; there is no pickup, carrying, hauling, stockpile, construction, Surface Preparation, equipment, save/load, world streaming or multiplayer. Drop stacking is not yet needed because stable one-output-per-job entries are retained separately. Yield, duration and skill speed are provisional; material hardness has no effect yet.
+
 ## Latest accepted milestone — 3.3A Colony Job Designation & Priority Foundation (13 October 2026)
 
 **Status: COMPLETE — user confirmed all 22 manual Play Mode checks on 13 October 2026.** Previously reported focused Edit Mode 28/28, focused Play Mode 5/5, full graphics-enabled Edit Mode 392/392, full Play Mode 37/37 passed. No tests were rerun during this documentation update. Milestone 3.2C is also complete; Existing identity, selection, explicit orders, physical survival and shared navigation behavior remains intact.
@@ -23,7 +76,7 @@ Player Move/Eat/Drink/Rest orders stop work at the existing cancellation boundar
 
 ### Exact 3.3A manual Unity Play Mode acceptance
 
-**Pending:** perform these checks in `Assets/AntColony/Scenes/AntGameDevelopment.unity`; do not mark 3.3A complete until the user confirms them.
+**Accepted:** the user confirmed all 22 checks on 13 October 2026.
 
 1. Confirm Mara, Pip and Tala retain their accepted identities, skills and needs.
 2. Inspect and change each ant's independent 1–4/Disabled work priorities.
@@ -48,7 +101,7 @@ Player Move/Eat/Drink/Rest orders stop work at the existing cancellation boundar
 21. Confirm autonomous survival and explicit movement/survival commands still work.
 22. Confirm the Unity Console contains no relevant errors or warnings.
 
-Known limitations are deliberate: 3.3A jobs are synthetic and development-only. They do not excavate, prepare, construct, haul, gather, produce resources, use inventories, fight or perform brood care. There are no forced-work orders, production policies, job ageing/fairness, persistence, Draft Mode, local avoidance or multiplayer. The candidate bound and all duration/speed/XP values are provisional.
+Historical 3.3A limitations remain applicable to its synthetic fixtures. Milestone 3.3B adds only real excavation and loose physical output; preparation, construction, hauling, inventories, combat, brood care, forced-work orders, persistence, Draft Mode, local avoidance and multiplayer remain unimplemented.
 
 ## Accepted milestone — 3.2C Autonomous Survival Behaviour (13 October 2026)
 
@@ -458,15 +511,15 @@ The revised 2.4B proof of concept described above is the only later implementati
 
 Milestone 2.4A now implements the approved natural-background movement realignment. Exposed Natural Earth and Natural Stone provide full horizontal, vertical and diagonal grip at normal speed. Prepared Background provides the same traversal plus a provisional `1.25` movement-speed multiplier. Sky remains explicitly non-grippable. At that checkpoint, the other approved systems were design targets only; 3.2A now adds needs data and test simulation, while functional backgrounds, rooms, brood, physical shared stores and their gameplay remain unimplemented.
 
-**Next step:** complete the exact 3.3A manual checklist above and wait for user acceptance. Do not begin real excavation, construction, hauling or another milestone.
+**Historical next step:** the 3.3A checklist was accepted and 3.3B was subsequently authorised. See the current milestone section at the top of this file.
 
 ## Current milestone
 
 **Milestone 3.3A — Colony Job Designation & Priority Foundation**
 
-**Status:** **Implemented — Pending Manual Acceptance.** Per-ant priorities, a shared synthetic job registry, deterministic priority/path-cost selection, exclusive ownership, progress/XP, safe interruption and development diagnostics are implemented. Verification passes 28/28 focused Edit Mode, 5/5 focused Play Mode, 392/392 complete Edit Mode and 37/37 complete Play Mode.
+**Status:** **Complete.** Per-ant priorities, a shared synthetic job registry, deterministic priority/path-cost selection, exclusive ownership, progress/XP, safe interruption and development diagnostics are implemented. Verification passed 28/28 focused Edit Mode, 5/5 focused Play Mode, 392/392 complete Edit Mode and 37/37 complete Play Mode; the user confirmed all 22 manual checks.
 
-Milestones through accepted 3.2C retain their recorded status. Milestone 2.4D remains implemented pending its separately recorded manual acceptance. Milestone 3.3A remains synthetic and pending its own manual checklist; real excavation, preparation, construction, hauling and resource production remain unimplemented.
+Milestones through accepted 3.3A retain their recorded status. Milestone 2.4D remains implemented pending its separately recorded manual acceptance. Milestone 3.3B now adds real excavation and loose Soil/Stone output; preparation, construction, hauling and inventory remain unimplemented.
 
 ## Repository and architecture
 

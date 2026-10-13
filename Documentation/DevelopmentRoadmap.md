@@ -1,5 +1,17 @@
 # Ant Colony Development Roadmap
 
+## 3.3B implementation status — 13 October 2026
+
+**3.3B Real Excavation Designations & Physical Material Output: Implemented — Pending Manual Acceptance.** Excavate mode creates real Excavation jobs in the accepted registry from eligible foreground Solids, including bounded area drags and deterministic duplicate/cancellation handling. Priority/path-cost selection, exclusive reservation, shared navigation, adjacent work, partial progress, Excavation XP, Rested speed and survival/player interruption reuse the 3.3A foundation.
+
+Completion uses a narrow transaction: validate the authored Solid output, prepare a stable job-keyed loose drop, remove foreground only, commit the non-fallible drop record, refresh the single visual/collision cell and invalidate local navigation. Failure leaves terrain intact; retry cannot duplicate output; permanent Background is preserved. Soil and Stone provisionally yield one matching unit. All output is temporarily a world drop because inventories and hauling are excluded.
+
+Verification passes **14/14 focused Edit Mode**, **3/3 focused Play Mode**, **406/406 complete graphics-enabled Edit Mode** and **40/40 complete Play Mode**, all with zero failures/skips. The exact 26-step manual checklist is in `CurrentGameState.md`.
+
+**3.3A Colony Job Designation & Priority Foundation: COMPLETE.** The user confirmed all 22 manual Unity Play Mode checks on 13 October 2026.
+
+**Next smallest milestone after acceptance:** define and implement the narrow ant inventory/pickup boundary required by the already-approved “excavator collects if capacity permits; otherwise drops” rule. Do not begin hauling, storage or construction in that slice without separate approval.
+
 ## 3.3A acceptance and proposed excavation milestone — 13 October 2026
 
 **3.3A Colony Job Designation & Priority Foundation: COMPLETE.** The user confirmed all 22 manual Unity Play Mode checks. Previously reported focused Edit Mode 28/28, focused Play Mode 5/5, full Edit Mode 392/392, full Play Mode 37/37 and documentation validation passed. This documentation update did not execute tests.
@@ -16,7 +28,7 @@
 
 ## Milestone status — 13 October 2026
 
-**3.3A Colony Job Designation & Priority Foundation: Implemented — Pending Manual Acceptance.** Each `AntRecord` owns stable Excavation, Surface Preparation, Construction, Hauling, Foraging, Production, Combat and Brood Care priorities using 1–4 or Disabled. A shared plain-C# registry owns synthetic designation identity, status, exclusive reservation and persistent progress. Selection uses highest enabled priority before actual shared-A* travel cost, deterministic ties, a 32-candidate-per-priority bound and 2/4/8-second retry backoff.
+**3.3A Colony Job Designation & Priority Foundation: COMPLETE.** Each `AntRecord` owns stable Excavation, Surface Preparation, Construction, Hauling, Foraging, Production, Combat and Brood Care priorities using 1–4 or Disabled. A shared plain-C# registry owns synthetic designation identity, status, exclusive reservation and persistent progress. Selection uses highest enabled priority before actual shared-A* travel cost, deterministic ties, a 32-candidate-per-priority bound and 2/4/8-second retry backoff.
 
 Synthetic work travels through the production grid motor, works from a revalidated adjacent position, preserves progress across safe interruption and awards proportional relevant-skill XP only for committed progress. Provisional balance is 4 simulation hours, +0.5% speed per skill level and 20 base XP per full job; Rested multipliers apply. Ordinary survival waits for active work, while critical survival and explicit player orders interrupt at the cancellation boundary and release a Paused job. Five deterministic fixtures and Developer Only controls/diagnostics are present. No real excavation, preparation, construction, hauling, resource or inventory behavior is implemented.
 
@@ -51,7 +63,7 @@ Automated evidence: focused 3.1B Edit Mode **16/16 passed**, focused selection/i
 
 **3.1A Ant Selection & Command Integration: COMPLETE.** The user confirmed all 14 manual Play Mode acceptance checks passed. Previously reported automation: focused Edit Mode 6/6, focused Play Mode 4/4, full Edit Mode 258/258 and full Play Mode 18/18. Three selectable ants, independent right-click movement orders, UI click protection, order completion and development-tool separation have been accepted. This is a documentation-only status change; no new tests executed.
 
-**Next action:** complete the exact 3.3A manual Play Mode checklist and wait for user acceptance. Do not begin real excavation, construction, hauling or another gameplay milestone.
+**Historical next action:** the 3.3A checklist was accepted and 3.3B was subsequently authorised. The current next action is the 3.3B manual checklist recorded at the top of `CurrentGameState.md`.
 
 
 ## Current accepted milestone and experimental next step — 12 October 2026
@@ -301,8 +313,8 @@ These milestones are ordered direction, not approved implementation work. Their 
 
 | Milestone | Intended outcome | Status |
 | --- | --- | --- |
-| 3 — Ant selection and inspection | Accepted foundations through 3.2C remain complete; 3.3A adds synthetic job and priority diagnostics. | 3.3A pending manual acceptance |
-| 4 — Hybrid task assignment | 3.3A implements autonomous synthetic designations and per-ant priorities only; real jobs and forced-work orders remain future. | Foundation pending acceptance |
+| 3 — Ant selection and inspection | Accepted foundations through 3.3A remain complete; 3.3B adds real excavation designation diagnostics. | 3.3B pending manual acceptance |
+| 4 — Hybrid task assignment | 3.3B implements autonomous real excavation through the accepted priorities; forced-work orders and other real jobs remain future. | Excavation implemented, acceptance pending |
 | 5 — Multiple-ant movement | Allow shared-tile presence, local avoidance, temporary friendly overlap, congestion-aware routing and bounded recovery without invalid displacement. | Not started |
 | 6 — Autonomous worker loop | Select and perform eligible work while responding predictably to urgent needs and task invalidation. | Not started |
 | 7 — Excavation, Surface Preparation and resources | Excavate reachable foreground Solids, retain their Backgrounds, prepare exposed Background Materials progressively from accessible positions, and reserve/haul/consume configured resources. | Not started |
@@ -312,4 +324,4 @@ These milestones are ordered direction, not approved implementation work. Their 
 
 The proposed carrying model remains future work: one initial slot plus one per 20 Hauling skill, capped at five, with one item per slot.
 
-No new milestone is complete without implementation and validation evidence. Milestone 2.4D remains pending its separately recorded manual acceptance. Milestone 3.3A implements synthetic work only; real gathering/hauling, excavation, Surface Preparation, construction, inventories, carrying, persistence, streaming and local avoidance are not implemented.
+No new milestone is complete without implementation and validation evidence. Milestone 2.4D remains pending its separately recorded manual acceptance. Milestone 3.3B implements excavation and loose Soil/Stone output only; gathering/hauling, Surface Preparation, construction, inventories, carrying, persistence, streaming and local avoidance are not implemented.

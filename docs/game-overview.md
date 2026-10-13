@@ -33,7 +33,7 @@ The integrated `AntGameDevelopment.unity` scene is a deterministic development e
 - explicit physical Eat, Drink, and Rest interactions;
 - developer diagnostics and deterministic fixtures.
 
-Milestone 3.2B is implemented and fully automated-tested, but its 20-step manual Play Mode checklist remains pending. Autonomous colony work, general inventories, construction, excavation gameplay, brood, room quality, combat, persistence, and a finished onboarding flow are not implemented.
+Milestones through 3.3A are accepted. Milestone 3.3B implements real excavation and loose Soil/Stone output with full automated verification, while its 26-step manual Play Mode checklist remains pending. General inventories, pickup/hauling, construction, brood, room quality, combat, persistence, and a finished onboarding flow are not implemented.
 
 ## Scope boundaries
 

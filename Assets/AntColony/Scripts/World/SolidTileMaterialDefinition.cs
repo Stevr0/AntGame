@@ -2,9 +2,16 @@ using UnityEngine;
 
 namespace AntColony.World
 {
+    public enum ExcavatedMaterialType
+    {
+        None,
+        Soil,
+        Stone
+    }
+
     /// <summary>
-    /// Defines the properties needed to store a foreground Solid Tile. Digging,
-    /// durability, and resource production intentionally remain future work.
+    /// Defines foreground collision plus the narrow 3.3B excavation output.
+    /// Material hardness, tools and richer yield tables remain future work.
     /// </summary>
     [CreateAssetMenu(
         fileName = "SolidMaterial",
@@ -14,9 +21,13 @@ namespace AntColony.World
         [SerializeField] private bool blocksMovement = true;
         [SerializeField] private bool supportsNavigation = true;
         [SerializeField] private bool isExcavatable = true;
+        [SerializeField] private ExcavatedMaterialType excavatedMaterial;
+        [SerializeField, Min(0)] private int excavationYield = 1;
 
         public bool BlocksMovement => blocksMovement;
         public bool SupportsNavigation => supportsNavigation;
         public bool IsExcavatable => isExcavatable;
+        public ExcavatedMaterialType ExcavatedMaterial => excavatedMaterial;
+        public int ExcavationYield => excavationYield;
     }
 }

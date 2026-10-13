@@ -18,3 +18,5 @@ MonoBehaviour:
   blocksMovement: 1
   supportsNavigation: 0
   isExcavatable: 0
+  excavatedMaterial: 0
+  excavationYield: 0

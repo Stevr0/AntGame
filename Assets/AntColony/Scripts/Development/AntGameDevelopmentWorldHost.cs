@@ -35,6 +35,7 @@ namespace AntColony.Development
         [Header("Solid Materials")]
         [SerializeField] private SolidTileMaterialDefinition soilSolid;
         [SerializeField] private SolidTileMaterialDefinition stoneSolid;
+        [SerializeField] private SolidTileMaterialDefinition blockingOnlySolid;
 
         [Header("Existing presentation services")]
         [SerializeField] private WorldTilemapRenderer tilemapRenderer;
@@ -93,6 +94,9 @@ namespace AntColony.Development
         public AntRegistry AntRegistry => antRegistry;
         public SurvivalInteractionWorld SurvivalInteractionWorld { get; private set; }
         public ColonyJobRegistry ColonyJobRegistry { get; private set; }
+        public ExcavationDesignationRegistry ExcavationDesignations { get; private set; }
+        public WorldMaterialDropRegistry MaterialDrops { get; private set; }
+        public ExcavationWorldTransaction ExcavationTransaction { get; private set; }
         public IReadOnlyList<Vector2Int> SurvivalFixtureCells => survivalFixtureCells;
         public int GridStressGroupSize => gridStressGroupSize;
         public AntAutonomousMotor AutonomousAntPrefab => autonomousAntPrefab;
@@ -105,6 +109,13 @@ namespace AntColony.Development
             : default;
         public int SpawnedAutonomousAntCount =>
             GetComponentsInChildren<AntAutonomousMotor>(true).Length;
+        public static readonly Vector2Int ExcavationSoilFixture = new(-4, -6);
+        public static readonly Vector2Int ExcavationAreaMinimum = new(4, -6);
+        public static readonly Vector2Int ExcavationAreaMaximum = new(6, -6);
+        public static readonly Vector2Int ExcavationStoneFixture = new(24, -26);
+        public static readonly Vector2Int ExcavationOpeningFixture = new(12, -10);
+        public static readonly Vector2Int ExcavationInitiallyBlockedFixture = new(12, -11);
+        public static readonly Vector2Int NonExcavatableFixture = new(16, -6);
 
         private void Awake()
         {
@@ -144,7 +155,17 @@ namespace AntColony.Development
                 Debug.LogError(fixtureError, this);
                 return false;
             }
+            if (!BuildExcavationFixtures(out fixtureError))
+            {
+                Debug.LogError(fixtureError, this);
+                return false;
+            }
             ColonyJobRegistry = new ColonyJobRegistry();
+            MaterialDrops = new WorldMaterialDropRegistry();
+            ExcavationDesignations = new ExcavationDesignationRegistry(
+                WorldData, ColonyJobRegistry);
+            ExcavationTransaction = new ExcavationWorldTransaction(
+                WorldData, MaterialDrops, OnExcavationCommitted);
             navigationWorldService ??= GetComponent<GridNavigationWorldService>();
             if (navigationWorldService == null ||
                 !navigationWorldService.Initialize(
@@ -163,6 +184,8 @@ namespace AntColony.Development
             ResetDevelopmentAntRecords();
             selectionController.BindInteractionWorld(SurvivalInteractionWorld);
             selectionController.BindColonyJobs(ColonyJobRegistry);
+            selectionController.BindExcavation(
+                ExcavationDesignations, ExcavationTransaction, MaterialDrops);
             if (!selectionController.ResetSyntheticJobFixtures(out string jobError))
             {
                 Debug.LogError(jobError, this);
@@ -848,7 +871,7 @@ namespace AntColony.Development
                 stoneBackground != null && preparedBackground != null &&
                 foodStorageBackground != null && waterStorageBackground != null &&
                 sleepingBackground != null &&
-                soilSolid != null && stoneSolid != null &&
+                soilSolid != null && stoneSolid != null && blockingOnlySolid != null &&
                 tilemapRenderer != null && collisionRenderer != null &&
                 navigationWorldService != null && primaryGridAntPrefab != null;
         }
@@ -880,6 +903,14 @@ namespace AntColony.Development
             {
                 ant?.NotifyTerrainChanged();
             }
+        }
+
+        private void OnExcavationCommitted(Vector2Int worldCell)
+        {
+            tilemapRenderer.RefreshCell(worldCell);
+            collisionRenderer.RefreshCell(worldCell);
+            autonomousAnt?.NotifyWorldChanged();
+            NotifyGridTerrainChanged(worldCell);
         }
 
         private GridNavigationMotor CreateGridNavigationAnt(
@@ -1065,6 +1096,33 @@ namespace AntColony.Development
         {
             yield return soilSolid;
             yield return stoneSolid;
+            yield return blockingOnlySolid;
+        }
+
+        private bool BuildExcavationFixtures(out string error)
+        {
+            (Vector2Int cell, string material)[] fixtures =
+            {
+                (ExcavationSoilFixture, soilSolid.StableMaterialId),
+                (new Vector2Int(4, -6), soilSolid.StableMaterialId),
+                (new Vector2Int(5, -6), soilSolid.StableMaterialId),
+                (new Vector2Int(6, -6), soilSolid.StableMaterialId),
+                (ExcavationStoneFixture, stoneSolid.StableMaterialId),
+                (ExcavationOpeningFixture, soilSolid.StableMaterialId),
+                (ExcavationInitiallyBlockedFixture, soilSolid.StableMaterialId),
+                (NonExcavatableFixture, blockingOnlySolid.StableMaterialId)
+            };
+            foreach ((Vector2Int cell, string material) in fixtures)
+            {
+                if (WorldData.SetSolidMaterial(cell, material) !=
+                    WorldCellMutationResult.Success)
+                {
+                    error = $"Could not author excavation fixture at {cell}.";
+                    return false;
+                }
+            }
+            error = string.Empty;
+            return true;
         }
     }
 }

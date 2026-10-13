@@ -52,6 +52,6 @@ Eat reserves and consumes one `resource.food.development` unit after one simulat
 
 ## Not implemented
 
-Gathering, hauling, general inventories, cooking, food varieties, spoilage, water production, containers, permanent beds, colony-wide stock accounting, death, corpses, and save/load remain outside the current slice. Milestone 3.3A synthetic work does not produce or transport supplies.
+Gathering, hauling, general inventories, cooking, food varieties, spoilage, water production, containers, permanent beds, colony-wide stock accounting, death, corpses, and save/load remain outside the current slice. Milestone 3.3B produces only loose Soil/Stone world drops; it does not produce or transport survival supplies.
 
 See [Development Roadmap](development-roadmap.md) before extending this system.

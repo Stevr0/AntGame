@@ -22,6 +22,7 @@ flowchart TB
     SI[SurvivalInteractionWorld]
     JP[AntWorkPrioritySet]
     JR[ColonyJobRegistry]
+    DR[Excavation designations and world drops]
   end
 
   subgraph Rules[Rules and shared services]
@@ -46,6 +47,8 @@ flowchart TB
   SI --> CTRL
   JP --> CTRL
   JR --> CTRL
+  DR --> CTRL
+  WD --> DR --> TILE
   HOST --> Data
   HOST --> Rules
   HOST --> Unity
@@ -57,7 +60,7 @@ flowchart TB
 
 ### World data
 
-`AntColony.World` owns chunks, Background/Solid material definitions, classification, clearance, capability, pathfinding data, and scheduling. Visual and collision Tilemaps project that data through `AntColony.WorldPresentation`.
+`AntColony.World` owns chunks, Background/Solid material definitions, loose material drops, the atomic excavation commit, classification, clearance, capability, pathfinding data, and scheduling. Visual and collision Tilemaps project that data through `AntColony.WorldPresentation`.
 
 ### Navigation
 
@@ -65,7 +68,7 @@ One `GridNavigationWorldService` owns the shared navigation map and bounded sche
 
 ### Commands and interactions
 
-`AntColony.Commands` handles selection, context orders, visual bindings, physical survival, and synthetic work coordination. Location-owned supplies remain in `SurvivalInteractionWorld`; synthetic job identity, ownership and progress remain in `ColonyJobRegistry`. Both are plain-C# authorities rather than UI or Tilemap state. Job selection reuses the shared map and motor instead of owning navigation.
+`AntColony.Commands` handles selection, designation input, context orders, visual bindings, physical survival, synthetic work and real excavation execution. Location-owned supplies remain in `SurvivalInteractionWorld`; job identity, ownership and progress remain in `ColonyJobRegistry`; `ExcavationDesignationRegistry` is a typed view over those same jobs rather than a second queue. Job selection reuses the shared map and motor instead of owning navigation.
 
 ### Development composition
 
@@ -77,7 +80,7 @@ One `GridNavigationWorldService` owns the shared navigation map and bounded sche
 | --- | --- | --- |
 | `AntMovementPrototype.unity` | Continuous-input surface movement regression course | Retained developer fixture |
 | `AntNavigationPrototype.unity` | Navigation classification and visualisation fixture | Retained developer fixture |
-| `AntGameDevelopment.unity` | Integrated world, ants, selection, grid movement, needs, survival, and synthetic jobs | Primary development scene |
+| `AntGameDevelopment.unity` | Integrated world, ants, selection, grid movement, survival, synthetic jobs, excavation and loose drops | Primary development scene |
 
 There is no finished menu-to-game flow, Bootstrap scene, save selection, or production world-loading sequence yet. Future work must preserve the existing authored coordinator seams rather than introducing an unnecessary global manager.
 

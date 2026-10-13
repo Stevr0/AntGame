@@ -4,15 +4,25 @@ This history records the strongest confirmed evidence without implying that late
 
 ## 13 October 2026
 
+### 3.3B — Real Excavation Designations and Physical Material Output
+
+**Implemented — Pending Manual Acceptance.** Player area designations create real registry jobs; autonomous ants reach valid adjacent positions, preserve progress through interruption, and atomically exchange eligible foreground Soil/Stone for stable loose material drops while preserving Background and invalidating local projections/navigation.
+
+- Focused Edit Mode: 14/14 passed.
+- Focused Play Mode: 3/3 passed.
+- Complete graphics-enabled Edit Mode: 406/406 passed.
+- Complete Play Mode: 40/40 passed.
+- Manual Play Mode checklist: 26 steps pending.
+
 ### 3.3A — Colony Job Designation and Priority Foundation
 
-**Implemented — Pending Manual Acceptance.** Per-ant 1–4/Disabled priorities, a shared synthetic job registry, deterministic priority/path-cost selection, exclusive reservations, persistent progress, skill/Rested work effects, safe survival/player interruption, and development diagnostics were added without real colony work.
+**Complete.** Per-ant 1–4/Disabled priorities, a shared synthetic job registry, deterministic priority/path-cost selection, exclusive reservations, persistent progress, skill/Rested work effects, safe survival/player interruption, and development diagnostics were added and manually accepted.
 
 - Focused Edit Mode: 28/28 passed.
 - Focused Play Mode: 5/5 passed.
 - Complete graphics-enabled Edit Mode: 392/392 passed.
 - Complete Play Mode: 37/37 passed.
-- Manual Play Mode checklist: 22 steps pending.
+- Manual Play Mode checklist: all 22 checks accepted.
 
 ### 3.2C — Autonomous Survival Behaviour
 
