@@ -1,8 +1,13 @@
 # Ant Colony Development Roadmap
 
+## Next proposed milestone — 3.3C Ant Inventory & Excavation Pickup Foundation
+
+3.3B is manually accepted, with previously reported 14/14 focused Edit Mode, 3/3 focused Play Mode, 406/406 full graphics-enabled Edit Mode and 40/40 full Play Mode passes. Introduce per-ant authoritative stack-based inventory with slot-only limits, atomic excavation pickup when space exists and a recoverable world-drop fallback otherwise; explicit adjacent pickup/drop and conservation tests. Preserve physical resource ownership, world transaction idempotence and existing jobs. **No hauling, storage backgrounds, construction or broader resource scheduling** in 3.3C. Numeric stack limits and skill-capacity tuning remain provisional; separately approved implementation required.
+
+
 ## 3.3B implementation status — 13 October 2026
 
-**3.3B Real Excavation Designations & Physical Material Output: Implemented — Pending Manual Acceptance.** Excavate mode creates real Excavation jobs in the accepted registry from eligible foreground Solids, including bounded area drags and deterministic duplicate/cancellation handling. Priority/path-cost selection, exclusive reservation, shared navigation, adjacent work, partial progress, Excavation XP, Rested speed and survival/player interruption reuse the 3.3A foundation.
+**3.3B Real Excavation Designations & Physical Material Output: COMPLETE (all 26 manual Play Mode checks confirmed on 13 October 2026).** Excavate mode creates real Excavation jobs in the accepted registry from eligible foreground Solids, including bounded area drags and deterministic duplicate/cancellation handling. Priority/path-cost selection, exclusive reservation, shared navigation, adjacent work, partial progress, Excavation XP, Rested speed and survival/player interruption reuse the 3.3A foundation.
 
 Completion uses a narrow transaction: validate the authored Solid output, prepare a stable job-keyed loose drop, remove foreground only, commit the non-fallible drop record, refresh the single visual/collision cell and invalidate local navigation. Failure leaves terrain intact; retry cannot duplicate output; permanent Background is preserved. Soil and Stone provisionally yield one matching unit. All output is temporarily a world drop because inventories and hauling are excluded.
 
