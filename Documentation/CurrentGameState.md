@@ -1,8 +1,8 @@
 # Ant Colony Current Game State
 
-## Current milestone — 3.3C Ant Inventory, Automatic Excavation Pickup & Physical Material Handling (13 October 2026)
+## Latest accepted milestone — 3.3C Ant Inventory, Automatic Excavation Pickup & Physical Material Handling (13 October 2026)
 
-**Status: Implemented — Pending Manual Acceptance.** Milestone 3.3B is complete and manually accepted. Milestone 3.3C adds only authoritative personal inventory and explicit physical material transfers; it does not add autonomous hauling, stockpiles, Material Storage, construction or a colony resource wallet.
+**Status: COMPLETE — all 26 manual Unity Play Mode acceptance checks confirmed by the user on 13 October 2026.** Previously reported focused Edit Mode 26/26, focused Play Mode 5/5, full graphics-enabled Edit Mode 432/432 and full Play Mode 42/42 passed; no new tests were run in this documentation-only update. Milestone 3.3B is also complete. Milestone 3.3C adds only authoritative personal inventory and explicit physical material transfers; it does not add autonomous hauling, stockpiles, Material Storage, construction or a colony resource wallet.
 
 Every `AntRecord` owns one plain-C# `AntInventory`, so inventory survives visual replacement and remains independent of selection, navigation and UI. Soil and Stone use stable resource IDs and a provisional maximum stack of **10**. Compatible material first fills compatible partial stacks, then empty natural slots. Hauling determines natural slot count: levels 0–19 grant one slot; 20–39 two; 40–59 three; 60–79 four; and 80–100 five. Caste and Strength do not affect this value. If inactivity decay reduces capacity below occupied slot count, existing stacks remain intact and recoverable, while new additions are refused until usage is again within natural capacity.
 
