@@ -112,3 +112,9 @@ InitTestScene*.unity*
 
 # Auto-generated cache in Assets folder
 /[Aa]ssets/[Ss]ceneDependencyCache*
+
+# Zensical documentation tooling and generated output
+/.venv-zensical/
+/.tmp-zensical/
+/.cache/
+/site/

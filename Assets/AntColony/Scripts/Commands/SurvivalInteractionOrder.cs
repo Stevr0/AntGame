@@ -222,22 +222,42 @@ namespace AntColony.Commands
             out Vector2Int approach,
             out string error)
         {
+            return TryMeasureApproach(
+                map, start, target, out approach, out _, out error);
+        }
+
+        /// <summary>
+        /// Measures the real shared-map route to a target without reserving it.
+        /// Autonomous selection uses this read-only step before the normal order
+        /// boundary performs the final reservation and validation.
+        /// </summary>
+        public static bool TryMeasureApproach(
+            GridNavigationMap map,
+            Vector2Int start,
+            Vector2Int target,
+            out Vector2Int approach,
+            out float travelTime,
+            out string error)
+        {
             approach = default;
-            float bestCost = float.PositiveInfinity;
+            travelTime = float.PositiveInfinity;
             var pathfinder = new GridPathfinder(map);
             foreach (Vector2Int offset in AdjacentOffsets)
             {
                 Vector2Int candidate = target + offset;
                 if (!IsValidAdjacentAnchor(map, candidate, target)) continue;
                 GridPathResult path = pathfinder.FindPath(start, candidate);
-                if (path.Succeeded && path.TravelTime < bestCost)
+                if (path.Succeeded &&
+                    (path.TravelTime < travelTime ||
+                     Mathf.Approximately(path.TravelTime, travelTime) &&
+                     CompareCells(candidate, approach) < 0))
                 {
-                    bestCost = path.TravelTime;
+                    travelTime = path.TravelTime;
                     approach = candidate;
                 }
             }
 
-            if (float.IsPositiveInfinity(bestCost))
+            if (float.IsPositiveInfinity(travelTime))
             {
                 error = $"No reachable adjacent interaction position exists for {target}.";
                 return false;
@@ -261,6 +281,12 @@ namespace AntColony.Commands
             return offset.x == 0 || offset.y == 0 ||
                 map.TryGetAnchor(target + new Vector2Int(offset.x, 0), out _) &&
                 map.TryGetAnchor(target + new Vector2Int(0, offset.y), out _);
+        }
+
+        private static int CompareCells(Vector2Int first, Vector2Int second)
+        {
+            int y = first.y.CompareTo(second.y);
+            return y != 0 ? y : first.x.CompareTo(second.x);
         }
 
         private static BackgroundFunction RequiredFunction(SurvivalInteractionKind kind) =>

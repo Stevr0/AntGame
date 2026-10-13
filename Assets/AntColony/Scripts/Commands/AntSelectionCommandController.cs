@@ -22,7 +22,6 @@ namespace AntColony.Commands
         private const double DebugNeedsTimeStepHours = 1d;
         private const double DebugRestStepHours = 8d;
         private const double DebugFatigueStep = 25d;
-        private const double InteractionSimulationHoursPerSecond = 1d;
 
         private static readonly string[] SkillDisplayNames =
             BuildSkillDisplayNames();
@@ -31,6 +30,9 @@ namespace AntColony.Commands
         [SerializeField] private GridNavigationWorldService navigationWorld;
 
         private readonly List<SelectableGridAnt> selectableAnts = new();
+        private readonly Dictionary<SelectableGridAnt, AutonomousSurvivalAgentState>
+            autonomousStates = new();
+        private readonly AutonomousSurvivalDecisionService autonomousDecisionService = new();
         private Rect additionalBlockedGuiRect;
         private bool hasAdditionalBlockedGuiRect;
         private string interactionMessage = "Left-click an ant to select it.";
@@ -42,12 +44,16 @@ namespace AntColony.Commands
         private Vector2Int selectedInteractionTarget;
         private bool hasSelectedInteractionTarget;
         private Vector2 playerPanelScrollPosition;
+        private double nextAutonomousEvaluationTime;
+        private double autonomousClockAccumulator;
+        private int autonomousEvaluationIndex;
 
         public IReadOnlyList<SelectableGridAnt> SelectableAnts => selectableAnts;
         public SelectableGridAnt SelectedAnt { get; private set; }
         public string InteractionMessage => interactionMessage;
         public double SimulationHours => simulationHours;
         public double SkillSimulationHours => simulationHours;
+        public bool AutonomousSurvivalEnabled { get; private set; }
         public Rect PlayerPanelGuiRect => new(
             Mathf.Max(12f, Screen.width - PlayerPanelWidth - 12f),
             12f,
@@ -79,8 +85,15 @@ namespace AntColony.Commands
 
         public void ClearSelectableAnts()
         {
+            foreach (SelectableGridAnt ant in selectableAnts)
+            {
+                if (ant != null && ant.OrderSource == AntOrderSource.AutonomousSurvival)
+                    ant.CancelOrder("Autonomous survival cleared with the world.");
+            }
             Deselect();
             selectableAnts.Clear();
+            autonomousStates.Clear();
+            autonomousEvaluationIndex = 0;
         }
 
         public void RegisterSelectableAnt(SelectableGridAnt ant)
@@ -89,7 +102,39 @@ namespace AntColony.Commands
             {
                 selectableAnts.Add(ant);
                 ant.BindInteractionWorld(interactionWorld);
+                autonomousStates[ant] = new AutonomousSurvivalAgentState();
             }
+        }
+
+        public AutonomousSurvivalAgentState GetAutonomousSurvivalState(
+            SelectableGridAnt ant)
+        {
+            return ant != null && autonomousStates.TryGetValue(
+                ant, out AutonomousSurvivalAgentState state) ? state : null;
+        }
+
+        public void SetAutonomousSurvivalEnabled(bool enabled)
+        {
+            if (AutonomousSurvivalEnabled == enabled) return;
+            AutonomousSurvivalEnabled = enabled;
+            nextAutonomousEvaluationTime = 0d;
+            autonomousClockAccumulator = 0d;
+            foreach (KeyValuePair<SelectableGridAnt, AutonomousSurvivalAgentState> entry
+                in autonomousStates)
+            {
+                if (!enabled && entry.Key != null &&
+                    entry.Key.OrderSource == AntOrderSource.AutonomousSurvival)
+                {
+                    entry.Key.CancelOrder("Autonomous survival was disabled.");
+                }
+                entry.Value.Reset();
+                entry.Value.Status = enabled
+                    ? "Waiting for staggered survival evaluation."
+                    : "Autonomous survival disabled.";
+            }
+            interactionMessage = enabled
+                ? "Developer Only: autonomous survival enabled."
+                : "Developer Only: autonomous survival disabled.";
         }
 
         public void SetAdditionalUiBlocker(Rect guiRect)
@@ -200,6 +245,8 @@ namespace AntColony.Commands
                 return false;
             }
 
+            MarkPlayerCommand(SelectedAnt);
+
             interactionMessage =
                 $"{SelectedAnt.DisplayName} ordered to {destination} " +
                 $"({anchor.Position}).";
@@ -222,6 +269,8 @@ namespace AntColony.Commands
                 interactionMessage = SelectedAnt.FailureReason;
                 return false;
             }
+
+            MarkPlayerCommand(SelectedAnt);
 
             interactionMessage =
                 $"{SelectedAnt.DisplayName} ordered to {kind} at {targetCell}.";
@@ -313,13 +362,22 @@ namespace AntColony.Commands
             double elapsedHours,
             out string message)
         {
+            return TryAdvanceSimulationTimeInternal(
+                elapsedHours, updateInteractionMessage: true, out message);
+        }
+
+        private bool TryAdvanceSimulationTimeInternal(
+            double elapsedHours,
+            bool updateInteractionMessage,
+            out string message)
+        {
             if (!AntSkillProgressionSettings.IsFinite(elapsedHours) ||
                 elapsedHours < 0d ||
                 !AntSkillProgressionSettings.IsFinite(
                     simulationHours + elapsedHours))
             {
                 message = "Simulation time must be finite and non-negative.";
-                interactionMessage = message;
+                if (updateInteractionMessage) interactionMessage = message;
                 return false;
             }
 
@@ -329,9 +387,11 @@ namespace AntColony.Commands
                 if (ant?.Record != null &&
                     ant.Record.LifecycleStatus == AntLifecycleStatus.Active &&
                     !ant.Record.Needs.HasDepletedHealth &&
+                    !(ant.InteractionOrder?.Kind == SurvivalInteractionKind.Rest &&
+                      ant.InteractionOrder.Phase == SurvivalInteractionPhase.Interacting) &&
                     !ant.Record.TryAdvanceNeeds(elapsedHours, out message))
                 {
-                    interactionMessage = message;
+                    if (updateInteractionMessage) interactionMessage = message;
                     return false;
                 }
             }
@@ -342,7 +402,7 @@ namespace AntColony.Commands
                     ant.Record.LifecycleStatus != AntLifecycleStatus.Deceased &&
                     !ant.Record.TryAdvanceSkillDecay(newTime, out message))
                 {
-                    interactionMessage = message;
+                    if (updateInteractionMessage) interactionMessage = message;
                     return false;
                 }
             }
@@ -350,7 +410,7 @@ namespace AntColony.Commands
             simulationHours = newTime;
             message =
                 $"Developer Only: simulation time is {simulationHours:0.##}h.";
-            interactionMessage = message;
+            if (updateInteractionMessage) interactionMessage = message;
             return true;
         }
 
@@ -436,6 +496,10 @@ namespace AntColony.Commands
         public void ResetSimulationDebugClock()
         {
             simulationHours = 0d;
+            nextAutonomousEvaluationTime = 0d;
+            autonomousClockAccumulator = 0d;
+            foreach (AutonomousSurvivalAgentState state in autonomousStates.Values)
+                state.Reset();
         }
 
         /// <summary>Compatibility name retained for the accepted 3.1C API.</summary>
@@ -446,11 +510,14 @@ namespace AntColony.Commands
 
         private void Update()
         {
+            double interactionHours = Time.deltaTime *
+                autonomousDecisionService.Settings.SimulationHoursPerRealSecond;
             foreach (SelectableGridAnt ant in selectableAnts)
             {
-                ant?.RefreshOrderStatus(
-                    Time.deltaTime * InteractionSimulationHoursPerSecond);
+                ant?.RefreshOrderStatus(interactionHours);
             }
+
+            UpdateAutonomousSurvival();
 
             Mouse mouse = Mouse.current;
             if (mouse == null)
@@ -474,12 +541,241 @@ namespace AntColony.Commands
             }
         }
 
+        public bool EvaluateAutonomousSurvivalNow(
+            SelectableGridAnt ant,
+            double currentTimeSeconds)
+        {
+            if (!AutonomousSurvivalEnabled || ant?.Record == null ||
+                !autonomousStates.TryGetValue(ant, out AutonomousSurvivalAgentState state))
+                return false;
+
+            if (ant.Record.LifecycleStatus != AntLifecycleStatus.Active ||
+                ant.Record.Needs.HasDepletedHealth)
+            {
+                if (ant.OrderSource == AntOrderSource.AutonomousSurvival)
+                    ant.CancelOrder("Autonomous survival stopped because the ant is inactive.");
+                state.Intent = null;
+                state.IntentIsCritical = false;
+                state.Target = null;
+                state.Status = "Inactive; autonomous survival stopped.";
+                state.FailureReason = string.Empty;
+                return false;
+            }
+
+            AutonomousSurvivalDecision decision =
+                autonomousDecisionService.Evaluate(ant.Record.Needs);
+
+            if (ant.HasActiveOrder)
+            {
+                if (ant.OrderSource == AntOrderSource.AutonomousSurvival)
+                {
+                    if (decision.HasDecision && decision.IsCritical &&
+                        state.Intent != decision.Kind &&
+                        TryChooseAutonomousTarget(
+                            ant, decision.Kind, out Vector2Int emergencyTarget,
+                            out _))
+                    {
+                        ant.CancelOrder(
+                            $"Higher-priority critical {decision.Kind} replaced autonomous {state.Intent}.");
+                        return TryStartAutonomousOrder(
+                            ant, state, decision, emergencyTarget,
+                            currentTimeSeconds);
+                    }
+                    state.Status = ant.OrderStatus;
+                    return false; // Hysteresis: finish the current survival action.
+                }
+
+                state.Intent = null;
+                state.IntentIsCritical = false;
+                state.Target = null;
+                if (!decision.HasDecision || !decision.IsCritical ||
+                    IsMatchingInteraction(ant, decision.Kind))
+                {
+                    state.Status = decision.IsCritical
+                        ? "Player order already addresses the critical need."
+                        : "Player order has precedence over ordinary needs.";
+                    return false;
+                }
+
+                // Find a viable emergency destination before cancelling the
+                // player order. This avoids discarding an order when no relief
+                // is physically available.
+                if (!TryChooseAutonomousTarget(
+                        ant, decision.Kind, out Vector2Int criticalTarget,
+                        out string criticalError))
+                {
+                    RecordAutonomousFailure(state, currentTimeSeconds, criticalError);
+                    return false;
+                }
+
+                ant.CancelOrder(
+                    $"Critical {decision.Kind} need interrupted the player order at a safe cancellation boundary.");
+                return TryStartAutonomousOrder(
+                    ant, state, decision, criticalTarget, currentTimeSeconds);
+            }
+
+            if (state.Intent.HasValue)
+            {
+                bool failed = ant.InteractionOrder != null &&
+                    (ant.InteractionOrder.Phase == SurvivalInteractionPhase.Failed ||
+                     ant.InteractionOrder.Phase == SurvivalInteractionPhase.Cancelled);
+                string previousFailure = ant.InteractionOrder?.FailureReason;
+                state.Intent = null;
+                state.IntentIsCritical = false;
+                state.Target = null;
+                if (failed)
+                {
+                    RecordAutonomousFailure(
+                        state, currentTimeSeconds,
+                        string.IsNullOrEmpty(previousFailure)
+                            ? "Autonomous survival interaction ended before completion."
+                            : previousFailure);
+                    return false;
+                }
+                state.ConsecutiveFailures = 0;
+            }
+
+            if (currentTimeSeconds < state.NextEvaluationTime)
+                return false;
+            if (!decision.HasDecision)
+            {
+                state.Status = "Healthy; no survival action needed.";
+                state.FailureReason = string.Empty;
+                state.NextEvaluationTime = currentTimeSeconds +
+                    autonomousDecisionService.Settings.EvaluationIntervalSeconds;
+                return false;
+            }
+
+            if (!TryChooseAutonomousTarget(
+                    ant, decision.Kind, out Vector2Int target, out string error))
+            {
+                RecordAutonomousFailure(state, currentTimeSeconds, error);
+                return false;
+            }
+
+            return TryStartAutonomousOrder(
+                ant, state, decision, target, currentTimeSeconds);
+        }
+
+        private void UpdateAutonomousSurvival()
+        {
+            if (!AutonomousSurvivalEnabled || selectableAnts.Count == 0) return;
+
+            autonomousClockAccumulator += Time.deltaTime;
+            double tickSeconds = autonomousDecisionService.Settings.SimulationTickSeconds;
+            if (autonomousClockAccumulator >= tickSeconds)
+            {
+                double elapsedHours = autonomousClockAccumulator *
+                    autonomousDecisionService.Settings.SimulationHoursPerRealSecond;
+                autonomousClockAccumulator = 0d;
+                TryAdvanceSimulationTimeInternal(
+                    elapsedHours, updateInteractionMessage: false, out _);
+            }
+
+            double now = Time.unscaledTimeAsDouble;
+            if (now < nextAutonomousEvaluationTime) return;
+            autonomousEvaluationIndex %= selectableAnts.Count;
+            EvaluateAutonomousSurvivalNow(
+                selectableAnts[autonomousEvaluationIndex], now);
+            autonomousEvaluationIndex =
+                (autonomousEvaluationIndex + 1) % selectableAnts.Count;
+            nextAutonomousEvaluationTime = now +
+                autonomousDecisionService.Settings.EvaluationIntervalSeconds /
+                selectableAnts.Count;
+        }
+
+        private bool TryChooseAutonomousTarget(
+            SelectableGridAnt ant,
+            SurvivalInteractionKind kind,
+            out Vector2Int target,
+            out string error)
+        {
+            Vector2Int start = WorldTileCoordinates.WorldPositionToCell(ant.Motor.Position);
+            return autonomousDecisionService.TryChooseTarget(
+                interactionWorld, navigationWorld?.Map, start, kind, out target, out error);
+        }
+
+        private bool TryStartAutonomousOrder(
+            SelectableGridAnt ant,
+            AutonomousSurvivalAgentState state,
+            AutonomousSurvivalDecision decision,
+            Vector2Int target,
+            double currentTimeSeconds)
+        {
+            if (!ant.IssueInteractionOrder(
+                    decision.Kind, target, AntOrderSource.AutonomousSurvival))
+            {
+                RecordAutonomousFailure(
+                    state, currentTimeSeconds, ant.FailureReason);
+                return false;
+            }
+
+            state.Intent = decision.Kind;
+            state.IntentIsCritical = decision.IsCritical;
+            state.Target = target;
+            state.Status = decision.IsCritical
+                ? $"Critical autonomous {decision.Kind} targeting {target}."
+                : $"Autonomous {decision.Kind} targeting {target}.";
+            state.FailureReason = string.Empty;
+            state.NextEvaluationTime = currentTimeSeconds +
+                autonomousDecisionService.Settings.EvaluationIntervalSeconds;
+            return true;
+        }
+
+        private void RecordAutonomousFailure(
+            AutonomousSurvivalAgentState state,
+            double currentTimeSeconds,
+            string reason)
+        {
+            state.Intent = null;
+            state.IntentIsCritical = false;
+            state.Target = null;
+            state.ConsecutiveFailures++;
+            double multiplier = System.Math.Pow(
+                2d, System.Math.Min(2, state.ConsecutiveFailures - 1));
+            double delay = System.Math.Min(
+                8d,
+                autonomousDecisionService.Settings.RetryBackoffSeconds * multiplier);
+            state.NextEvaluationTime = currentTimeSeconds + delay;
+            state.FailureReason = reason;
+            state.Status = $"Unmet survival need; retry in {delay:0.##}s.";
+        }
+
+        private void MarkPlayerCommand(SelectableGridAnt ant)
+        {
+            AutonomousSurvivalAgentState state = GetAutonomousSurvivalState(ant);
+            if (state == null) return;
+            state.Intent = null;
+            state.IntentIsCritical = false;
+            state.Target = null;
+            state.Status = "Player order has precedence.";
+            state.FailureReason = string.Empty;
+        }
+
+        private static bool IsMatchingInteraction(
+            SelectableGridAnt ant,
+            SurvivalInteractionKind kind)
+        {
+            return ant.InteractionOrder != null &&
+                ant.InteractionOrder.IsActive &&
+                ant.InteractionOrder.Kind == kind;
+        }
+
         private void OnGUI()
         {
             GUILayout.BeginArea(PlayerPanelGuiRect, GUI.skin.box);
             playerPanelScrollPosition = GUILayout.BeginScrollView(
                 playerPanelScrollPosition);
             GUILayout.Label("ANT SELECTION & SURVIVAL ORDERS");
+            if (GUILayout.Button(AutonomousSurvivalEnabled
+                    ? "Disable Developer Only Autonomous Survival"
+                    : "Enable Developer Only Autonomous Survival"))
+            {
+                SetAutonomousSurvivalEnabled(!AutonomousSurvivalEnabled);
+            }
+            GUILayout.Label(AutonomousSurvivalEnabled
+                ? "Autonomous clock: 1 simulation hour / real second"
+                : "Autonomous survival is disabled.");
             if (SelectedAnt == null)
             {
                 GUILayout.Label("Selected ant: None");
@@ -510,6 +806,7 @@ namespace AntColony.Commands
                     $"Destination: {(SelectedAnt.HasDestination ? SelectedAnt.Destination.ToString() : "None")}");
                 GUILayout.Label(
                     $"Failure: {(string.IsNullOrEmpty(SelectedAnt.FailureReason) ? "None" : SelectedAnt.FailureReason)}");
+                DrawAutonomousSurvivalInspection(SelectedAnt);
                 GUI.enabled = SelectedAnt.HasActiveOrder;
                 if (GUILayout.Button("Cancel Selected Order"))
                 {
@@ -525,6 +822,27 @@ namespace AntColony.Commands
             GUILayout.Label(interactionMessage);
             GUILayout.EndScrollView();
             GUILayout.EndArea();
+        }
+
+        private void DrawAutonomousSurvivalInspection(SelectableGridAnt ant)
+        {
+            GUILayout.Space(4f);
+            GUILayout.Label("AUTONOMOUS SURVIVAL");
+            AutonomousSurvivalAgentState state = GetAutonomousSurvivalState(ant);
+            if (state == null)
+            {
+                GUILayout.Label("State unavailable.");
+                return;
+            }
+
+            GUILayout.Label($"Intent: {state.Intent?.ToString() ?? "None"}");
+            GUILayout.Label($"Target: {state.Target?.ToString() ?? "None"}");
+            GUILayout.Label($"Status: {state.Status}");
+            GUILayout.Label(
+                $"Unmet/failure: {(string.IsNullOrEmpty(state.FailureReason) ? "None" : state.FailureReason)}");
+            double retryIn = System.Math.Max(
+                0d, state.NextEvaluationTime - Time.unscaledTimeAsDouble);
+            GUILayout.Label($"Next evaluation/retry: {retryIn:0.##}s");
         }
 
         private void DrawResourceDiagnostics()

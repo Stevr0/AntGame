@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using AntColony.Ants;
 using AntColony.Commands;
 using AntColony.Navigation;
@@ -729,6 +730,24 @@ namespace AntColony.Development
                 return false;
             }
 
+            // The survival course begins at the bottom of the existing authored
+            // shaft. These three anchors are in one proven connected component,
+            // so Mara, Pip and Tala can all reach every accessible 3.2B fixture.
+            Vector2Int[] survivalSpawns =
+            {
+                new(-8, SampleWorldGenerator.MainPassageY),
+                new(-5, SampleWorldGenerator.MainPassageY),
+                new(-2, SampleWorldGenerator.MainPassageY)
+            };
+            if (count <= survivalSpawns.Length &&
+                survivalSpawns.Take(count).All(cell =>
+                    GridNavigationMap.TryGetAnchor(cell, out _)))
+            {
+                spawnCells.AddRange(survivalSpawns.Take(count));
+                message = string.Empty;
+                return true;
+            }
+
             int minimumX = minimumChunk.x * WorldTileCoordinates.ChunkSize;
             int maximumX = minimumX + generatedWorld.WidthInCells - 1;
             int maximumDistance = Mathf.Max(spawnSearchRadius, count * 4);
@@ -1004,6 +1023,9 @@ namespace AntColony.Development
                     !SurvivalInteractionWorld.TryAddStorage(
                         cell, SurvivalResourceKind.Water, "resource.water.development", 8,
                         out error)) return false;
+                if (index >= 4 &&
+                    !SurvivalInteractionWorld.TryAddSleepingPosition(cell, out error))
+                    return false;
             }
 
             // The existing surrounded pocket gives the context command a valid

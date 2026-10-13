@@ -78,6 +78,7 @@ namespace AntColony.Commands
         private readonly ChunkedWorldData worldData;
         private readonly Dictionary<Vector2Int, SurvivalStorageSlot> storage = new();
         private readonly Dictionary<Vector2Int, string> sleepingReservations = new();
+        private readonly HashSet<Vector2Int> sleepingPositions = new();
 
         public SurvivalInteractionWorld(ChunkedWorldData worldData)
         {
@@ -85,6 +86,7 @@ namespace AntColony.Commands
         }
 
         public IEnumerable<SurvivalStorageSlot> StorageSlots => storage.Values;
+        public IEnumerable<Vector2Int> SleepingPositions => sleepingPositions;
 
         public bool TryAddStorage(
             Vector2Int cell,
@@ -119,6 +121,65 @@ namespace AntColony.Commands
 
         public bool TryGetStorage(Vector2Int cell, out SurvivalStorageSlot slot) =>
             storage.TryGetValue(cell, out slot);
+
+        public bool TryAddSleepingPosition(Vector2Int cell, out string error)
+        {
+            if (!TryValidateFunction(cell, BackgroundFunction.Sleeping, out error))
+            {
+                return false;
+            }
+
+            if (!sleepingPositions.Add(cell))
+            {
+                error = $"Sleeping position {cell} is already registered.";
+                return false;
+            }
+
+            error = string.Empty;
+            return true;
+        }
+
+        /// <summary>
+        /// Collects only currently compatible and unreserved candidates. The
+        /// caller supplies the reusable list so periodic AI evaluation does not
+        /// allocate a new collection for every ant.
+        /// </summary>
+        public void CollectAvailableTargets(
+            SurvivalInteractionKind kind,
+            List<Vector2Int> results)
+        {
+            if (results == null) throw new ArgumentNullException(nameof(results));
+            results.Clear();
+            if (kind == SurvivalInteractionKind.Rest)
+            {
+                foreach (Vector2Int cell in sleepingPositions)
+                {
+                    if (!sleepingReservations.ContainsKey(cell) &&
+                        TryValidateFunction(cell, BackgroundFunction.Sleeping, out _))
+                    {
+                        results.Add(cell);
+                    }
+                }
+                return;
+            }
+
+            SurvivalResourceKind resourceKind = kind == SurvivalInteractionKind.Eat
+                ? SurvivalResourceKind.Food
+                : SurvivalResourceKind.Water;
+            foreach (SurvivalStorageSlot slot in storage.Values)
+            {
+                if (slot.Kind == resourceKind && slot.AvailableQuantity > 0 &&
+                    TryValidateFunction(
+                        slot.Cell,
+                        kind == SurvivalInteractionKind.Eat
+                            ? BackgroundFunction.FoodStorage
+                            : BackgroundFunction.WaterStorage,
+                        out _))
+                {
+                    results.Add(slot.Cell);
+                }
+            }
+        }
 
         public bool TryGetFunction(Vector2Int cell, out BackgroundFunction function)
         {
@@ -182,8 +243,11 @@ namespace AntColony.Commands
 
         public bool TryReserveSleeping(Vector2Int cell, string ownerId, out string error)
         {
-            if (!TryValidateFunction(cell, BackgroundFunction.Sleeping, out error))
+            if (!TryValidateFunction(cell, BackgroundFunction.Sleeping, out error) ||
+                (sleepingPositions.Count > 0 && !sleepingPositions.Contains(cell)))
             {
+                if (string.IsNullOrEmpty(error))
+                    error = $"Sleeping position {cell} is not registered.";
                 return false;
             }
 

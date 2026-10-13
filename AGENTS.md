@@ -117,6 +117,12 @@ For player-ant movement, check directional input, floor traversal, climbing both
 - `Documentation/GameDesignDocument.md`: authoritative design intent. Do not rewrite design decisions without the user's approval.
 - `Documentation/DevelopmentRoadmap.md`: milestone order and explicit acceptance criteria. Create only if missing and needed for the approved task.
 - `Documentation/CurrentGameState.md`: what is implemented, verified, pending Editor setup, broken and next. Update after meaningful implementation changes; distinguish **implemented** from **verified**.
+- `docs/`: the Zensical development wiki. Keep the relevant wiki pages synchronized with the authoritative files above and with verified repository behavior.
+- When a game system changes, update its wiki page in the same task. Update `docs/technical-architecture.md` when ownership, data flow, scene flow or subsystem boundaries change.
+- Record a concise entry in `docs/design-decision-log.md` for significant approved design or architecture decisions. Do not use the decision log to approve unresolved design choices.
+- Update `docs/development-roadmap.md` and `docs/milestone-history.md` when milestone scope, status or evidence changes. Documentation maintenance is part of milestone completion, not an optional follow-up.
+- Report implementation, compilation, automated test execution and manual Unity acceptance separately. Use **Implemented — Pending Manual Acceptance** until required Play Mode or Scene-view checks are actually confirmed.
+- Before finishing documentation changes, run `.venv-zensical\Scripts\zensical build --clean --strict` when the local documentation environment is available. Never commit `.venv-zensical/`, `.cache/` or `site/`.
 - Keep documentation concise, accurate and in Markdown suitable for GitHub.
 - If a referenced document is absent, say so and propose its creation; do not assume its contents.
 

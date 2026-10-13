@@ -5,6 +5,13 @@ using UnityEngine;
 
 namespace AntColony.Commands
 {
+    public enum AntOrderSource
+    {
+        None,
+        Player,
+        AutonomousSurvival
+    }
+
     /// <summary>
     /// Adds player-facing selection and temporary-order presentation to one grid
     /// ant. Navigation remains entirely owned by <see cref="GridNavigationMotor"/>.
@@ -41,9 +48,12 @@ namespace AntColony.Commands
         public string FailureReason => failureReason;
         public string OrderOutcome => orderOutcome;
         public SurvivalInteractionOrder InteractionOrder => interactionOrder;
+        public AntOrderSource OrderSource { get; private set; }
         public LineRenderer SelectionIndicator => selectionIndicator;
         public string ControlState => hasActiveOrder
-            ? "Ordered"
+            ? OrderSource == AntOrderSource.AutonomousSurvival
+                ? "Autonomous Survival"
+                : "Player Ordered"
             : "Autonomous / Idle";
 
         public string OrderStatus
@@ -96,6 +106,8 @@ namespace AntColony.Commands
         private void OnDisable()
         {
             interactionOrder?.Cancel("Interaction cancelled because the ant was disabled.");
+            hasActiveOrder = false;
+            OrderSource = AntOrderSource.None;
         }
 
         /// <summary>Applies the temporary name, colour and selection indicator.</summary>
@@ -118,6 +130,8 @@ namespace AntColony.Commands
             interactionOrder?.Cancel("Interaction world was replaced.");
             interactionWorld = world;
             interactionOrder = null;
+            hasActiveOrder = false;
+            OrderSource = AntOrderSource.None;
         }
 
         public void SetSelected(bool selected)
@@ -141,7 +155,9 @@ namespace AntColony.Commands
                 Mathf.Abs(offsetPoint.y) <= halfSize.y + padding;
         }
 
-        public bool IssueMoveOrder(Vector2Int requestedDestination)
+        public bool IssueMoveOrder(
+            Vector2Int requestedDestination,
+            AntOrderSource source = AntOrderSource.Player)
         {
             CacheComponents();
             interactionOrder?.Cancel("Interaction replaced by a movement order.");
@@ -149,6 +165,7 @@ namespace AntColony.Commands
             {
                 failureReason = "Movement order rejected: ant identity is not bound.";
                 orderOutcome = "Order rejected";
+                OrderSource = AntOrderSource.None;
                 return false;
             }
 
@@ -157,6 +174,7 @@ namespace AntColony.Commands
                 failureReason =
                     $"Movement order rejected: {DisplayName} is {Record.LifecycleStatus}.";
                 orderOutcome = "Order rejected";
+                OrderSource = AntOrderSource.None;
                 return false;
             }
 
@@ -164,6 +182,7 @@ namespace AntColony.Commands
             {
                 failureReason = motor.StatusMessage;
                 orderOutcome = "Order rejected";
+                OrderSource = AntOrderSource.None;
                 return false;
             }
 
@@ -172,12 +191,14 @@ namespace AntColony.Commands
             hasActiveOrder = true;
             failureReason = string.Empty;
             orderOutcome = "Order active";
+            OrderSource = source;
             return true;
         }
 
         public bool IssueInteractionOrder(
             SurvivalInteractionKind kind,
-            Vector2Int targetCell)
+            Vector2Int targetCell,
+            AntOrderSource source = AntOrderSource.Player)
         {
             CacheComponents();
             interactionOrder?.Cancel("Interaction replaced by a new order.");
@@ -196,6 +217,7 @@ namespace AntColony.Commands
                 failureReason = error;
                 orderOutcome = "Interaction rejected";
                 hasActiveOrder = false;
+                OrderSource = AntOrderSource.None;
                 return false;
             }
 
@@ -205,6 +227,7 @@ namespace AntColony.Commands
                 failureReason = motor.StatusMessage;
                 orderOutcome = "Interaction rejected";
                 hasActiveOrder = false;
+                OrderSource = AntOrderSource.None;
                 return false;
             }
 
@@ -213,6 +236,7 @@ namespace AntColony.Commands
             hasActiveOrder = true;
             failureReason = string.Empty;
             orderOutcome = "Interaction active";
+            OrderSource = source;
             return true;
         }
 
@@ -228,6 +252,7 @@ namespace AntColony.Commands
             interactionOrder?.Cancel(reason);
             motor.CancelMovement(reason);
             hasActiveOrder = false;
+            OrderSource = AntOrderSource.None;
             orderOutcome = "Cancelled; returned to Autonomous / Idle";
             failureReason = reason;
         }
@@ -262,6 +287,7 @@ namespace AntColony.Commands
                     if (!interactionOrder.IsActive)
                     {
                         hasActiveOrder = false;
+                        OrderSource = AntOrderSource.None;
                         orderOutcome = interactionOrder.Status;
                         failureReason = interactionOrder.FailureReason;
                     }
@@ -269,6 +295,7 @@ namespace AntColony.Commands
                 else
                 {
                     hasActiveOrder = false;
+                    OrderSource = AntOrderSource.None;
                     orderOutcome = "Completed; returned to Autonomous / Idle";
                     failureReason = string.Empty;
                 }
@@ -277,6 +304,7 @@ namespace AntColony.Commands
             {
                 interactionOrder?.Cancel(motor.FailureReason);
                 hasActiveOrder = false;
+                OrderSource = AntOrderSource.None;
                 orderOutcome = "Failed; returned to Autonomous / Idle";
                 failureReason = motor.FailureReason;
             }
@@ -284,6 +312,7 @@ namespace AntColony.Commands
             {
                 interactionOrder?.Cancel("Navigation stopped before interaction.");
                 hasActiveOrder = false;
+                OrderSource = AntOrderSource.None;
                 orderOutcome = "Cancelled; returned to Autonomous / Idle";
             }
         }
