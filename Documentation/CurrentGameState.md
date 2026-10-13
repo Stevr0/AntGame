@@ -1,5 +1,54 @@
 # Ant Colony Current Game State
 
+## Latest implemented milestone — 3.2B Physical Food, Water & Rest Interactions (13 October 2026)
+
+**Status: Implemented — Pending Manual Acceptance.** The Unity project now connects the accepted functional Background, physical-resource, needs, selection and production grid-navigation foundations. Manual Play Mode acceptance has not been claimed.
+
+Food Storage, Water Storage and Sleeping are authored `BackgroundTileMaterialDefinition` functions with exactly one slot each. They replace the function/material of an existing Background cell, remain fully grippable and traversable at normal `1.0x` speed, and are inaccessible while covered by a foreground Solid. Their amber, blue and purple Tilemap visuals are projections of authoritative world data; they do not create room zones or per-tile GameObjects.
+
+`SurvivalInteractionWorld` is the narrow plain-C# owner for this slice. Each food/water stack belongs to one world cell, has a stable resource type ID, non-negative integer quantity and explicit per-ant reservation. Food and water compatibility is enforced by the cell's function. Sleeping reservations map one cell to one stable ant ID. Cancelling, failing, replacing or disabling an order releases its reservations; rebuilding the world replaces the complete development-only store/reservation state. There is no global colony resource counter, generic inventory framework or per-resource `MonoBehaviour`.
+
+Right-click now remains context-sensitive: ordinary navigation anchors issue Move, Food Storage issues Eat, Water Storage issues Drink and Sleeping issues Rest. A temporary interaction reserves its required unit/position, evaluates all valid adjacent anchors using the existing `GridPathfinder` travel-time cost, and delegates actual travel to the existing `GridNavigationMotor`. Arrival revalidates adjacency and the target function before interaction. Invalid targets, missing quantities, occupied sleep positions and unreachable routes report a reason without remote consumption. Changing selection does not cancel another ant's valid order.
+
+Provisional 3.2B values are explicit: Eat reserves and consumes **1** `resource.food.development` unit after **1 simulation hour**, restoring **40 Hunger**; Drink reserves and consumes **1** `resource.water.development` unit after **1 simulation hour**, restoring **50 Thirst**. Both remain clamped to 100. Rest applies the accepted **12 Fatigue/hour** recovery and completes once the existing Rested qualification reaches Fatigue 20 or lower. Development interaction time advances at one simulation hour per real-time second. Interrupted rest retains recovery already applied.
+
+The deterministic development course contains two accessible Food Storage cells with 6 units each, two accessible Water Storage cells with 8 units each, three accessible Sleeping cells, and a third 3-unit Food Storage in the existing surrounded pocket as an intentionally unreachable failure target. The selected-ant panel shows interaction kind, target, travel/interaction/completion state and failure reason. Its separate Developer Only physical-storage diagnostics show cell, resource ID/kind, quantity, reserved and available values, or sleeping reservation ownership; the default diagnostic list keeps fixture quantities visible.
+
+### 3.2B automated verification
+
+- Focused Edit Mode: **25/25 passed**. Coverage includes all three 1:1 functional capacities and traversal properties, fixture composition, resource compatibility, empty/non-negative storage, exclusive resource/sleep reservations, Eat/Drink need and physical-quantity commits, maximum clamps, dehydration recovery, timed non-consumption, rest/recovery/interruption, lifecycle/cancellation release, adjacency, unreachable and removed-target failures, independent interactions, world reset and actual path-cost approach selection.
+- Focused Play Mode: **5/5 passed**. Coverage includes scene fixture creation, context Eat through the production motor, replacement release, selection-independent ongoing orders and retained ordinary context Move.
+- Complete graphics-enabled Edit Mode: **340/340 passed** with zero failures/skips. A first `-nographics` complete attempt hit Unity's retained native rendered-pixel crash; the known graphics-enabled configuration completed successfully.
+- Complete Play Mode: **26/26 passed** with zero failures/skips, including all retained identity, skills, needs, selection, production-grid and continuous-movement regressions.
+- Unity compilation and the integrated development-scene structural validator passed.
+
+### Exact 3.2B manual Unity Play Mode acceptance
+
+**Pending:** perform these checks in `Assets/AntColony/Scenes/AntGameDevelopment.unity`; do not mark 3.2B complete until the user confirms them.
+
+1. Enter Play Mode and confirm Mara, Pip and Tala spawn with their existing identities, castes, attributes and skills.
+2. Confirm amber Food Storage, blue Water Storage and purple Sleeping background tiles are visible in the underground survival course.
+3. Confirm the Developer Only physical-storage diagnostics display food and water quantities owned by specific world cells.
+4. Lower Mara's Hunger with the existing needs tools, select her, right-click Food Storage and confirm she navigates to a valid adjacent cell before eating.
+5. Confirm that food quantity decreases by one only when Eat completes and Mara's Hunger increases by 40 without exceeding 100.
+6. Lower Pip's Thirst, select him, right-click Water Storage and confirm he navigates adjacent before drinking.
+7. Confirm that water quantity decreases by one only when Drink completes and Pip's Thirst increases by 50 without exceeding 100.
+8. Set Pip to critical Thirst, verify XP is blocked, complete Drink until he is above the critical threshold, then confirm a subsequent valid skill-XP award works again.
+9. Raise Tala's Fatigue, select her, right-click Sleeping and confirm the sleeping cell displays her reservation while she rests adjacent to it.
+10. Confirm Tala's Fatigue decreases over elapsed interaction time rather than changing remotely at order issue.
+11. Confirm rest completes at Fatigue 20 or lower and the accepted Rested work-speed/XP modifiers appear and fade under the existing 3.2A rules.
+12. While Tala owns a sleeping reservation, select another ant and confirm that ant cannot claim the same position.
+13. Cancel an Eat, Drink and Rest order in turn; confirm resource/sleep reservations return to available while any already-applied rest recovery remains.
+14. Consume an accessible storage stack to empty (or repeat with a prepared empty test state) and confirm a new interaction cannot restore the need or make quantity negative.
+15. Target the surrounded Food Storage and another invalid/covered target; confirm meaningful unreachable/invalid failure text and no remote consumption.
+16. Give different ants independent interactions, change selection, and confirm one ant's valid ongoing order is not silently cancelled by selecting or commanding another.
+17. Right-click ordinary reachable terrain and confirm the existing Move order and completion lifecycle still work.
+18. Confirm camera pan/zoom, collapsible developer UI and click blocking work, and clicking UI never issues a world command.
+19. Use Rebuild World and confirm the same fixture cells/starting quantities return with no stale reservations or interactions.
+20. Confirm the Unity Console contains no relevant errors, assertions, missing references or warnings.
+
+Known limitations are deliberate: 3.2B provides explicit player survival interactions only. It has no autonomous need response, colony jobs/priorities, gathering, hauling, ant inventories, construction/conversion, room enclosure/quality, food varieties/spoilage/cooking, water production/containers, permanent beds, equipment/combat, brood/reproduction, save/load, streaming, Draft Mode or multiplayer. Resource IDs, stack limits, restoration amounts, interaction duration and rest completion balance remain provisional.
+
 ## Latest accepted milestone — 3.2A Individual Needs & Survival Foundation (13 October 2026)
 
 **Status: COMPLETE — all 18 manual Unity Play Mode checks confirmed by the user on 13 October 2026.** Final automated verification passes focused Edit Mode 63/63, focused Play Mode 7/7, complete graphics-enabled Edit Mode 315/315 and complete Play Mode 21/21.
@@ -360,7 +409,7 @@ Milestone 2.4A now implements the approved natural-background movement realignme
 
 **Status:** **Complete.** Three ants own independent authoritative needs and Rested state while retaining the accepted identity, skill, selection and grid-movement architecture. Final verification passes 63/63 focused Edit Mode, 7/7 focused Play Mode, 315/315 complete Edit Mode and 21/21 complete Play Mode, and the user confirmed all 18 manual checks.
 
-Milestones through accepted 3.2A retain their recorded status. Milestone 2.4D remains implemented pending its separately recorded manual acceptance. 3.2A adds survival data and deterministic simulation but no physical supplies, survival jobs or other colony work.
+Milestones through accepted 3.2A retain their recorded status. Milestone 2.4D remains implemented pending its separately recorded manual acceptance. Milestone 3.2B now adds explicit physical food/water/rest interactions and remains pending its own manual checklist; autonomous survival jobs and other colony work remain unimplemented.
 
 ## Repository and architecture
 

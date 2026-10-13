@@ -266,6 +266,39 @@ namespace AntColony.Ants
             return Needs.TryRest(elapsedHours, out error);
         }
 
+        public bool TryEat(double hungerRestored, out string error)
+        {
+            if (!CanReceiveSurvivalInteraction(out error))
+            {
+                return false;
+            }
+
+            return Needs.TryRestoreHunger(hungerRestored, out error);
+        }
+
+        public bool TryDrink(double thirstRestored, out string error)
+        {
+            if (!CanReceiveSurvivalInteraction(out error))
+            {
+                return false;
+            }
+
+            return Needs.TryRestoreThirst(thirstRestored, out error);
+        }
+
+        private bool CanReceiveSurvivalInteraction(out string error)
+        {
+            if (LifecycleStatus != AntLifecycleStatus.Active ||
+                Needs.HasDepletedHealth)
+            {
+                error = "Only active ants with Health remaining can use survival interactions.";
+                return false;
+            }
+
+            error = string.Empty;
+            return true;
+        }
+
         /// <summary>
         /// Development-only controlled state setup. Real consumption, damage, and
         /// recovery systems will use narrower gameplay APIs in later milestones.

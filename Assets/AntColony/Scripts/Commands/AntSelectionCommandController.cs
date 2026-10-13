@@ -22,6 +22,7 @@ namespace AntColony.Commands
         private const double DebugNeedsTimeStepHours = 1d;
         private const double DebugRestStepHours = 8d;
         private const double DebugFatigueStep = 25d;
+        private const double InteractionSimulationHoursPerSecond = 1d;
 
         private static readonly string[] SkillDisplayNames =
             BuildSkillDisplayNames();
@@ -37,6 +38,9 @@ namespace AntColony.Commands
         private bool needsDebugExpanded;
         private int selectedDebugSkillIndex;
         private double simulationHours;
+        private SurvivalInteractionWorld interactionWorld;
+        private Vector2Int selectedInteractionTarget;
+        private bool hasSelectedInteractionTarget;
         private Vector2 playerPanelScrollPosition;
 
         public IReadOnlyList<SelectableGridAnt> SelectableAnts => selectableAnts;
@@ -56,10 +60,21 @@ namespace AntColony.Commands
 
         public void Configure(
             Camera commandCamera,
-            GridNavigationWorldService sharedNavigationWorld)
+            GridNavigationWorldService sharedNavigationWorld,
+            SurvivalInteractionWorld sharedInteractionWorld = null)
         {
             worldCamera = commandCamera;
             navigationWorld = sharedNavigationWorld;
+            interactionWorld = sharedInteractionWorld;
+        }
+
+        public void BindInteractionWorld(SurvivalInteractionWorld sharedInteractionWorld)
+        {
+            interactionWorld = sharedInteractionWorld;
+            foreach (SelectableGridAnt ant in selectableAnts)
+            {
+                ant?.BindInteractionWorld(sharedInteractionWorld);
+            }
         }
 
         public void ClearSelectableAnts()
@@ -73,6 +88,7 @@ namespace AntColony.Commands
             if (ant != null && !selectableAnts.Contains(ant))
             {
                 selectableAnts.Add(ant);
+                ant.BindInteractionWorld(interactionWorld);
             }
         }
 
@@ -188,6 +204,45 @@ namespace AntColony.Commands
                 $"{SelectedAnt.DisplayName} ordered to {destination} " +
                 $"({anchor.Position}).";
             return true;
+        }
+
+        public bool TryIssueInteractionOrder(
+            SurvivalInteractionKind kind,
+            Vector2Int targetCell)
+        {
+            hasSelectedInteractionTarget = true;
+            selectedInteractionTarget = targetCell;
+            if (SelectedAnt == null)
+            {
+                interactionMessage = "Interaction ignored: select an ant first.";
+                return false;
+            }
+            if (!SelectedAnt.IssueInteractionOrder(kind, targetCell))
+            {
+                interactionMessage = SelectedAnt.FailureReason;
+                return false;
+            }
+
+            interactionMessage =
+                $"{SelectedAnt.DisplayName} ordered to {kind} at {targetCell}.";
+            return true;
+        }
+
+        public bool TryIssueContextOrder(Vector2Int cell)
+        {
+            if (interactionWorld != null &&
+                interactionWorld.TryGetFunction(cell, out BackgroundFunction function))
+            {
+                SurvivalInteractionKind kind = function switch
+                {
+                    BackgroundFunction.FoodStorage => SurvivalInteractionKind.Eat,
+                    BackgroundFunction.WaterStorage => SurvivalInteractionKind.Drink,
+                    _ => SurvivalInteractionKind.Rest
+                };
+                return TryIssueInteractionOrder(kind, cell);
+            }
+
+            return TryIssueMoveOrder(cell);
         }
 
         public bool CancelSelectedOrder()
@@ -393,7 +448,8 @@ namespace AntColony.Commands
         {
             foreach (SelectableGridAnt ant in selectableAnts)
             {
-                ant?.RefreshOrderStatus();
+                ant?.RefreshOrderStatus(
+                    Time.deltaTime * InteractionSimulationHoursPerSecond);
             }
 
             Mouse mouse = Mouse.current;
@@ -414,7 +470,7 @@ namespace AntColony.Commands
                 Vector3 worldPoint = worldCamera.ScreenToWorldPoint(screenPoint);
                 Vector2Int cell =
                     WorldTileCoordinates.WorldPositionToCell(worldPoint);
-                TryIssueMoveOrder(cell);
+                TryIssueContextOrder(cell);
             }
         }
 
@@ -423,7 +479,7 @@ namespace AntColony.Commands
             GUILayout.BeginArea(PlayerPanelGuiRect, GUI.skin.box);
             playerPanelScrollPosition = GUILayout.BeginScrollView(
                 playerPanelScrollPosition);
-            GUILayout.Label("ANT SELECTION & MOVE ORDER");
+            GUILayout.Label("ANT SELECTION & SURVIVAL ORDERS");
             if (SelectedAnt == null)
             {
                 GUILayout.Label("Selected ant: None");
@@ -447,11 +503,15 @@ namespace AntColony.Commands
                 GUILayout.Label($"Control: {SelectedAnt.ControlState}");
                 GUILayout.Label($"Order: {SelectedAnt.OrderStatus}");
                 GUILayout.Label(
+                    $"Interaction: {SelectedAnt.InteractionOrder?.Kind.ToString() ?? "None"}");
+                GUILayout.Label(
+                    $"Interaction target: {SelectedAnt.InteractionOrder?.TargetCell.ToString() ?? "None"}");
+                GUILayout.Label(
                     $"Destination: {(SelectedAnt.HasDestination ? SelectedAnt.Destination.ToString() : "None")}");
                 GUILayout.Label(
                     $"Failure: {(string.IsNullOrEmpty(SelectedAnt.FailureReason) ? "None" : SelectedAnt.FailureReason)}");
                 GUI.enabled = SelectedAnt.HasActiveOrder;
-                if (GUILayout.Button("Cancel Selected Move Order"))
+                if (GUILayout.Button("Cancel Selected Order"))
                 {
                     CancelSelectedOrder();
                 }
@@ -460,9 +520,48 @@ namespace AntColony.Commands
                 DrawSkillDebugControls();
             }
 
+            DrawResourceDiagnostics();
+
             GUILayout.Label(interactionMessage);
             GUILayout.EndScrollView();
             GUILayout.EndArea();
+        }
+
+        private void DrawResourceDiagnostics()
+        {
+            GUILayout.Space(4f);
+            GUILayout.Label("DEVELOPER ONLY — PHYSICAL STORAGE");
+            if (!hasSelectedInteractionTarget || interactionWorld == null)
+            {
+                GUILayout.Label("Selected storage tile: None");
+                if (interactionWorld != null)
+                {
+                    foreach (SurvivalStorageSlot fixture in interactionWorld.StorageSlots)
+                    {
+                        GUILayout.Label(
+                            $"{fixture.Kind} {fixture.Cell}: {fixture.Quantity} " +
+                            $"({fixture.AvailableQuantity} available)");
+                    }
+                }
+                return;
+            }
+
+            GUILayout.Label($"Selected storage tile: {selectedInteractionTarget}");
+            if (interactionWorld.TryGetStorage(
+                    selectedInteractionTarget, out SurvivalStorageSlot slot))
+            {
+                GUILayout.Label($"Resource: {slot.ResourceTypeId} ({slot.Kind})");
+                GUILayout.Label(
+                    $"Quantity: {slot.Quantity}  Reserved: {slot.ReservedQuantity}  " +
+                    $"Available: {slot.AvailableQuantity}");
+                return;
+            }
+
+            string sleeper = interactionWorld.GetSleepingReservation(
+                selectedInteractionTarget);
+            GUILayout.Label(string.IsNullOrEmpty(sleeper)
+                ? "Sleeping slot: Available"
+                : $"Sleeping slot reserved by: {sleeper}");
         }
 
         private void DrawNeedsInspection(AntRecord record)

@@ -2,6 +2,14 @@ using UnityEngine;
 
 namespace AntColony.World
 {
+    public enum BackgroundFunction
+    {
+        None,
+        FoodStorage,
+        WaterStorage,
+        Sleeping
+    }
+
     /// <summary>
     /// Defines a permanent Background Tile material. Background Tiles are data
     /// entries, not GameObjects, and do not inherently block or support movement.
@@ -17,6 +25,7 @@ namespace AntColony.World
         [SerializeField] private bool providesClimbingGrip;
         [SerializeField] private bool gravityAppliesWhenUnsupported = true;
         [SerializeField, Min(0.01f)] private float movementSpeedMultiplier = 1f;
+        [SerializeField] private BackgroundFunction function;
 
         /// <summary>
         /// Horizontal permission still needs either physical ground or active
@@ -36,5 +45,12 @@ namespace AntColony.World
         /// </summary>
         public float MovementSpeedMultiplier =>
             Mathf.Max(0.01f, movementSpeedMultiplier);
+        public BackgroundFunction Function => function;
+
+        /// <summary>
+        /// Milestone 3.2B functions deliberately have exactly one physical slot.
+        /// Ordinary backgrounds have no functional capacity.
+        /// </summary>
+        public int FunctionalCapacity => function == BackgroundFunction.None ? 0 : 1;
     }
 }

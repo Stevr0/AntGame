@@ -235,6 +235,37 @@ namespace AntColony.Ants
             return true;
         }
 
+        internal bool TryRestoreHunger(double amount, out string error)
+        {
+            return TryRestoreNeed(amount, true, out error);
+        }
+
+        internal bool TryRestoreThirst(double amount, out string error)
+        {
+            return TryRestoreNeed(amount, false, out error);
+        }
+
+        private bool TryRestoreNeed(double amount, bool hunger, out string error)
+        {
+            if (!AntNeedsSimulationSettings.IsFinite(amount) || amount <= 0d)
+            {
+                error = "Need restoration must be finite and greater than zero.";
+                return false;
+            }
+
+            if (hunger)
+            {
+                Hunger = Clamp(Hunger + amount);
+            }
+            else
+            {
+                Thirst = Clamp(Thirst + amount);
+            }
+
+            error = string.Empty;
+            return true;
+        }
+
         internal bool TrySetForDevelopment(
             double health,
             double hunger,

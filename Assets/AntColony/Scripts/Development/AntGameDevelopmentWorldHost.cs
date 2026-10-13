@@ -27,6 +27,9 @@ namespace AntColony.Development
         [SerializeField] private BackgroundTileMaterialDefinition earthBackground;
         [SerializeField] private BackgroundTileMaterialDefinition stoneBackground;
         [SerializeField] private BackgroundTileMaterialDefinition preparedBackground;
+        [SerializeField] private BackgroundTileMaterialDefinition foodStorageBackground;
+        [SerializeField] private BackgroundTileMaterialDefinition waterStorageBackground;
+        [SerializeField] private BackgroundTileMaterialDefinition sleepingBackground;
 
         [Header("Solid Materials")]
         [SerializeField] private SolidTileMaterialDefinition soilSolid;
@@ -61,6 +64,7 @@ namespace AntColony.Development
         private AntEntityBindingRegistry antBindingRegistry;
         private bool staggeredRequestsActive;
         private int staggeredRequestIndex;
+        private readonly List<Vector2Int> survivalFixtureCells = new();
 
         public bool IsWorldDataAvailable => generatedWorld != null;
         public ChunkedWorldData WorldData => generatedWorld?.WorldData;
@@ -86,6 +90,8 @@ namespace AntColony.Development
         public IReadOnlyList<GridNavigationMotor> SelectableGridAnts =>
             selectableGridAnts;
         public AntRegistry AntRegistry => antRegistry;
+        public SurvivalInteractionWorld SurvivalInteractionWorld { get; private set; }
+        public IReadOnlyList<Vector2Int> SurvivalFixtureCells => survivalFixtureCells;
         public int GridStressGroupSize => gridStressGroupSize;
         public AntAutonomousMotor AutonomousAntPrefab => autonomousAntPrefab;
         public GridNavigationMotor PrimaryGridAntPrefab => primaryGridAntPrefab;
@@ -131,6 +137,11 @@ namespace AntColony.Development
                 worldSeed,
                 minimumChunk,
                 sizeInChunks);
+            if (!BuildSurvivalFixtures(out string fixtureError))
+            {
+                Debug.LogError(fixtureError, this);
+                return false;
+            }
             navigationWorldService ??= GetComponent<GridNavigationWorldService>();
             if (navigationWorldService == null ||
                 !navigationWorldService.Initialize(
@@ -147,6 +158,7 @@ namespace AntColony.Development
             collisionRenderer.BindWorldData(WorldData);
             RefreshAllChunks();
             ResetDevelopmentAntRecords();
+            selectionController.BindInteractionWorld(SurvivalInteractionWorld);
 
             if (Application.isPlaying)
             {
@@ -384,6 +396,7 @@ namespace AntColony.Development
                 }
 
                 selectable.Configure(colours[index]);
+                selectable.BindInteractionWorld(SurvivalInteractionWorld);
                 selectionController.RegisterSelectableAnt(selectable);
             }
 
@@ -774,7 +787,10 @@ namespace AntColony.Development
             GridNavigationMotor gridAntPrefab,
             AntAutonomousMotor antPrefab,
             Transform marker,
-            SpriteRenderer markerRenderer)
+            SpriteRenderer markerRenderer,
+            BackgroundTileMaterialDefinition foodStorage = null,
+            BackgroundTileMaterialDefinition waterStorage = null,
+            BackgroundTileMaterialDefinition sleeping = null)
         {
             worldSeed = seed;
             minimumChunk = authoredMinimumChunk;
@@ -783,6 +799,9 @@ namespace AntColony.Development
             earthBackground = earth;
             stoneBackground = stoneBackgroundDefinition;
             preparedBackground = prepared;
+            foodStorageBackground = foodStorage;
+            waterStorageBackground = waterStorage;
+            sleepingBackground = sleeping;
             soilSolid = soil;
             stoneSolid = stoneSolidDefinition;
             tilemapRenderer = visualRenderer;
@@ -799,6 +818,8 @@ namespace AntColony.Development
         {
             return skyBackground != null && earthBackground != null &&
                 stoneBackground != null && preparedBackground != null &&
+                foodStorageBackground != null && waterStorageBackground != null &&
+                sleepingBackground != null &&
                 soilSolid != null && stoneSolid != null &&
                 tilemapRenderer != null && collisionRenderer != null &&
                 navigationWorldService != null && primaryGridAntPrefab != null;
@@ -951,6 +972,62 @@ namespace AntColony.Development
             yield return earthBackground;
             yield return stoneBackground;
             yield return preparedBackground;
+            yield return foodStorageBackground;
+            yield return waterStorageBackground;
+            yield return sleepingBackground;
+        }
+
+        private bool BuildSurvivalFixtures(out string error)
+        {
+            survivalFixtureCells.Clear();
+            SurvivalInteractionWorld = new SurvivalInteractionWorld(WorldData);
+            int[] xCoordinates = { -6, -3, 0, 3, 6, 14, 17 };
+            for (int index = 0; index < xCoordinates.Length; index++)
+            {
+                var cell = new Vector2Int(
+                    xCoordinates[index], SampleWorldGenerator.MainPassageY);
+                BackgroundTileMaterialDefinition definition = index < 2
+                    ? foodStorageBackground
+                    : index < 4 ? waterStorageBackground : sleepingBackground;
+                if (WorldData.SetBackgroundMaterial(cell, definition.StableMaterialId) !=
+                    WorldCellMutationResult.Success)
+                {
+                    error = $"Could not author survival fixture at {cell}.";
+                    return false;
+                }
+
+                survivalFixtureCells.Add(cell);
+                if (index < 2 && !SurvivalInteractionWorld.TryAddStorage(
+                        cell, SurvivalResourceKind.Food, "resource.food.development", 6,
+                        out error)) return false;
+                if (index >= 2 && index < 4 &&
+                    !SurvivalInteractionWorld.TryAddStorage(
+                        cell, SurvivalResourceKind.Water, "resource.water.development", 8,
+                        out error)) return false;
+            }
+
+            // The existing surrounded pocket gives the context command a valid
+            // functional target whose adjacent anchors cannot be reached.
+            Vector2Int unreachable = SampleWorldGenerator.GridUnreachableDestination;
+            if (WorldData.SetBackgroundMaterial(
+                    unreachable, foodStorageBackground.StableMaterialId) !=
+                WorldCellMutationResult.Success)
+            {
+                error = "Could not author the covered survival failure fixture.";
+                return false;
+            }
+            survivalFixtureCells.Add(unreachable);
+            if (!SurvivalInteractionWorld.TryAddStorage(
+                    unreachable,
+                    SurvivalResourceKind.Food,
+                    "resource.food.development",
+                    3,
+                    out error))
+            {
+                return false;
+            }
+            error = string.Empty;
+            return true;
         }
 
         private IEnumerable<SolidTileMaterialDefinition> SolidDefinitions()
