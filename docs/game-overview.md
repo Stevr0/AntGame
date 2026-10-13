@@ -31,10 +31,11 @@ The integrated `AntGameDevelopment.unity` scene is a deterministic development e
 - three selectable ants with persistent identity, attributes, skills, needs, priorities, and personal inventories;
 - independent movement orders through the production grid motor;
 - explicit physical Eat, Drink, Rest, material Pickup and Developer Only Drop interactions;
-- autonomous survival, synthetic jobs and real foreground excavation;
+- autonomous survival, synthetic jobs, real foreground excavation and autonomous hauling;
+- physical one-slot Material Storage tiles with Soil, Stone and general filters;
 - developer diagnostics and deterministic fixtures.
 
-Milestones through 3.3B are accepted. Milestone 3.3C implements per-ant inventory, excavation auto-pickup and explicit physical drop transfers with full automated verification, while its 26-step manual Play Mode checklist remains pending. Autonomous hauling, Material Storage, construction, brood, room quality, combat, persistence, and a finished onboarding flow are not implemented.
+Milestones through 3.3C are accepted. Milestone 3.3D implements physical Material Storage and autonomous loose-drop/self-deposit hauling with full automated verification, while its 30-step manual Play Mode checklist remains pending. Construction, brood, room quality, combat, persistence, and a finished onboarding flow are not implemented.
 
 ## Scope boundaries
 

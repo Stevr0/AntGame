@@ -27,6 +27,8 @@ This log summarises approved decisions. It does not approve unresolved details o
 | 13 Oct 2026 | Commit 3.3B excavation output and foreground removal as one boundary | A resource-bearing Solid remains intact on output failure, and stable job keys prevent duplicate loose output |
 | 13 Oct 2026 | Keep 3.3C inventory on `AntRecord` with Hauling-based natural slots | Visual rebinding cannot lose cargo; capacity decay retains overflow and blocks additions instead of deleting resources |
 | 13 Oct 2026 | Use a provisional Soil/Stone stack maximum of 10 for 3.3C | Stacking and partial transfer can be tested without claiming final material balance |
+| 13 Oct 2026 | Keep 3.3D storage physical and cell-owned | Each Material Storage Background tile owns one filtered stack and reservation rather than contributing to a global wallet |
+| 13 Oct 2026 | Award 5 provisional Hauling XP per committed stored unit | Travel, reservation, pickup and cancellation cannot farm XP; Rested and hydration rules still apply |
 
 ## Open decisions
 

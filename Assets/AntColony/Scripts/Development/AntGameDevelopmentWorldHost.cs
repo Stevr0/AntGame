@@ -31,6 +31,7 @@ namespace AntColony.Development
         [SerializeField] private BackgroundTileMaterialDefinition foodStorageBackground;
         [SerializeField] private BackgroundTileMaterialDefinition waterStorageBackground;
         [SerializeField] private BackgroundTileMaterialDefinition sleepingBackground;
+        [SerializeField] private BackgroundTileMaterialDefinition materialStorageBackground;
 
         [Header("Solid Materials")]
         [SerializeField] private SolidTileMaterialDefinition soilSolid;
@@ -96,6 +97,7 @@ namespace AntColony.Development
         public ColonyJobRegistry ColonyJobRegistry { get; private set; }
         public ExcavationDesignationRegistry ExcavationDesignations { get; private set; }
         public WorldMaterialDropRegistry MaterialDrops { get; private set; }
+        public MaterialStorageWorld MaterialStorage { get; private set; }
         public ExcavationWorldTransaction ExcavationTransaction { get; private set; }
         public IReadOnlyList<Vector2Int> SurvivalFixtureCells => survivalFixtureCells;
         public int GridStressGroupSize => gridStressGroupSize;
@@ -118,6 +120,11 @@ namespace AntColony.Development
         public static readonly Vector2Int NonExcavatableFixture = new(16, -6);
         public static readonly Vector2Int SoilDropFixture = new(-2, -8);
         public static readonly Vector2Int StoneDropFixture = new(8, -8);
+        public static readonly Vector2Int GeneralMaterialStorageFixture = new(-12, -8);
+        public static readonly Vector2Int SoilMaterialStorageFixture = new(9, -8);
+        public static readonly Vector2Int StoneMaterialStorageFixture = new(22, -8);
+        public static readonly Vector2Int FullMaterialStorageFixture = new(30, -8);
+        public static readonly Vector2Int UnreachableMaterialStorageFixture = new(40, -20);
 
         private void Awake()
         {
@@ -153,6 +160,11 @@ namespace AntColony.Development
                 minimumChunk,
                 sizeInChunks);
             if (!BuildSurvivalFixtures(out string fixtureError))
+            {
+                Debug.LogError(fixtureError, this);
+                return false;
+            }
+            if (!BuildMaterialStorageFixtures(out fixtureError))
             {
                 Debug.LogError(fixtureError, this);
                 return false;
@@ -193,6 +205,7 @@ namespace AntColony.Development
             selectionController.BindColonyJobs(ColonyJobRegistry);
             selectionController.BindExcavation(
                 ExcavationDesignations, ExcavationTransaction, MaterialDrops);
+            selectionController.BindMaterialStorage(MaterialStorage);
             if (!selectionController.ResetSyntheticJobFixtures(out string jobError))
             {
                 Debug.LogError(jobError, this);
@@ -848,7 +861,8 @@ namespace AntColony.Development
             SpriteRenderer markerRenderer,
             BackgroundTileMaterialDefinition foodStorage = null,
             BackgroundTileMaterialDefinition waterStorage = null,
-            BackgroundTileMaterialDefinition sleeping = null)
+            BackgroundTileMaterialDefinition sleeping = null,
+            BackgroundTileMaterialDefinition materialStorage = null)
         {
             worldSeed = seed;
             minimumChunk = authoredMinimumChunk;
@@ -860,6 +874,7 @@ namespace AntColony.Development
             foodStorageBackground = foodStorage;
             waterStorageBackground = waterStorage;
             sleepingBackground = sleeping;
+            materialStorageBackground = materialStorage;
             soilSolid = soil;
             stoneSolid = stoneSolidDefinition;
             tilemapRenderer = visualRenderer;
@@ -878,6 +893,7 @@ namespace AntColony.Development
                 stoneBackground != null && preparedBackground != null &&
                 foodStorageBackground != null && waterStorageBackground != null &&
                 sleepingBackground != null &&
+                materialStorageBackground != null &&
                 soilSolid != null && stoneSolid != null && blockingOnlySolid != null &&
                 tilemapRenderer != null && collisionRenderer != null &&
                 navigationWorldService != null && primaryGridAntPrefab != null;
@@ -1041,6 +1057,7 @@ namespace AntColony.Development
             yield return foodStorageBackground;
             yield return waterStorageBackground;
             yield return sleepingBackground;
+            yield return materialStorageBackground;
         }
 
         private bool BuildSurvivalFixtures(out string error)
@@ -1104,6 +1121,52 @@ namespace AntColony.Development
             yield return soilSolid;
             yield return stoneSolid;
             yield return blockingOnlySolid;
+        }
+
+        private bool BuildMaterialStorageFixtures(out string error)
+        {
+            error = string.Empty;
+            MaterialStorage = new MaterialStorageWorld(WorldData);
+            // Carve one cell inside intact underground Solid terrain. Its four
+            // neighbours remain Solid, so this is a real unreachable fixture
+            // without replacing the accepted survival fixture at (12, -16).
+            WorldCellMutationResult pocketResult = WorldData.RemoveSolidMaterial(
+                UnreachableMaterialStorageFixture);
+            if (pocketResult != WorldCellMutationResult.Success &&
+                pocketResult != WorldCellMutationResult.SolidTileNotPresent)
+            {
+                error = "Could not carve the unreachable Material Storage pocket.";
+                return false;
+            }
+            (Vector2Int cell, MaterialStorageFilter filter, string resource,
+                int quantity)[] fixtures =
+            {
+                (GeneralMaterialStorageFixture,
+                    MaterialStorageFilter.AllBuildingMaterials,
+                    MaterialResourceCatalog.GetStableId(ExcavatedMaterialType.Soil), 5),
+                (SoilMaterialStorageFixture, MaterialStorageFilter.Soil, string.Empty, 0),
+                (StoneMaterialStorageFixture, MaterialStorageFilter.Stone, string.Empty, 0),
+                (FullMaterialStorageFixture, MaterialStorageFilter.AllBuildingMaterials,
+                    MaterialResourceCatalog.GetStableId(ExcavatedMaterialType.Stone), 10),
+                (UnreachableMaterialStorageFixture,
+                    MaterialStorageFilter.AllBuildingMaterials, string.Empty, 0)
+            };
+            foreach (var fixture in fixtures)
+            {
+                if (WorldData.SetBackgroundMaterial(fixture.cell,
+                        materialStorageBackground.StableMaterialId) !=
+                        WorldCellMutationResult.Success ||
+                    !MaterialStorage.TryAdd(fixture.cell, fixture.filter,
+                        fixture.resource, fixture.quantity,
+                        MaterialResourceCatalog.ProvisionalMaximumStack, out error))
+                {
+                    if (string.IsNullOrEmpty(error))
+                        error = $"Could not author Material Storage at {fixture.cell}.";
+                    return false;
+                }
+            }
+            error = string.Empty;
+            return true;
         }
 
         private bool BuildExcavationFixtures(out string error)

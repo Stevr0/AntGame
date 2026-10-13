@@ -36,6 +36,8 @@ namespace AntColony.EditorTools
             "Assets/AntColony/Art/WorldTiles/Background_WaterStorage.asset";
         private const string SleepingTilePath =
             "Assets/AntColony/Art/WorldTiles/Background_Sleeping.asset";
+        private const string MaterialStorageTilePath =
+            "Assets/AntColony/Art/WorldTiles/Background_MaterialStorage.asset";
         private const string SoilTilePath =
             "Assets/AntColony/Art/WorldTiles/Solid_Soil.asset";
         private const string StoneTilePath =
@@ -169,6 +171,8 @@ namespace AntColony.EditorTools
                 new Color32(40, 170, 231, 255), Tile.ColliderType.None);
             GetOrCreateTile(SleepingTilePath, whitePixelSprite,
                 new Color32(167, 101, 211, 255), Tile.ColliderType.None);
+            GetOrCreateTile(MaterialStorageTilePath, whitePixelSprite,
+                new Color32(127, 185, 126, 255), Tile.ColliderType.None);
             GetOrCreateTile(
                 SoilTilePath,
                 whitePixelSprite,
@@ -200,6 +204,8 @@ namespace AntColony.EditorTools
                 LoadBackground("Background_WaterStorage");
             BackgroundTileMaterialDefinition sleeping =
                 LoadBackground("Background_Sleeping");
+            BackgroundTileMaterialDefinition materialStorage =
+                LoadBackground("Background_MaterialStorage");
             SolidTileMaterialDefinition soil = LoadSolid("Solid_Soil");
 
             Scene scene = EditorSceneManager.NewScene(
@@ -299,7 +305,8 @@ namespace AntColony.EditorTools
                 markerRenderer,
                 foodStorage,
                 waterStorage,
-                sleeping);
+                sleeping,
+                materialStorage);
 
             EditorSceneManager.MarkSceneDirty(scene);
             Require(EditorSceneManager.SaveScene(scene, ScenePath),

@@ -24,7 +24,7 @@ Visual Tilemaps and the collision-only Tilemap are projections of authoritative 
 - Local refresh and navigation invalidation seams for controlled development mutations.
 - Natural Earth/Stone grip, Prepared speed, and non-grippable Sky behavior.
 
-Milestone 3.3B connected these foundations to player designations and autonomous excavation work. Milestone 3.3C connects committed yield to the excavator's inventory with a recoverable loose-drop fallback.
+Milestone 3.3B connected these foundations to player designations and autonomous excavation work. Milestone 3.3C connects committed yield to the excavator's inventory with a recoverable loose-drop fallback. Milestone 3.3D lets ants deliver those physical materials into filtered one-slot Material Storage Background tiles.
 
 ## Implemented excavation and material handling
 
@@ -34,14 +34,14 @@ The stable job-keyed transaction prepares material ownership before terrain remo
 
 Loose Soil and Stone stacks have stable identity, quantity, cell and provisional maximum stack 10. A selected ant can right-click a drop, reserve an eligible quantity, navigate adjacent and pick it up. Developer Only controls can drop a selected carried quantity at the ant's current valid anchor. Compatible same-cell stacks merge; failed or cancelled transfers preserve material and release reservations.
 
+Material Storage remains physical rather than a global wallet. Each functional Background cell owns one compatible stack and incoming reservation. Autonomous haulers reserve source and destination, carry partial loads through personal inventory, and deposit only after reaching a valid adjacent anchor. Already-carried material produces an owner-only self-deposit task.
+
 ## Surface Preparation
 
 Preparation is a future resource-backed Background conversion job. It does not unlock natural climbing: intact exposed Earth and Stone are already grippable. Prepared Background instead provides the provisional `1.25x` travel-speed benefit. Exact recipes, work time, visual progression, and final balance are unresolved.
 
 ## Not implemented
 
-- Autonomous hauling or stockpile delivery.
-- Material Storage Background functions.
 - Resource-backed preparation jobs.
 - Procedural generation, durable chunk streaming, or save/load.
 - Construction delivery or resource crafting.

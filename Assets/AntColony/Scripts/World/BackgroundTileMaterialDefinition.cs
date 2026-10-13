@@ -7,7 +7,8 @@ namespace AntColony.World
         None,
         FoodStorage,
         WaterStorage,
-        Sleeping
+        Sleeping,
+        MaterialStorage
     }
 
     /// <summary>

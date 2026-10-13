@@ -129,6 +129,42 @@ namespace AntColony.Ants
             return true;
         }
 
+        /// <summary>
+        /// Removes one resource across compatible stacks only after proving the
+        /// complete quantity exists. This lets a destination commit atomically.
+        /// </summary>
+        public bool TryRemoveResource(string resourceTypeId, int quantity,
+            int maximumStack, out string error)
+        {
+            if (!IsValidResource(resourceTypeId, maximumStack) || quantity <= 0)
+            {
+                error = "Inventory removal requires a stable resource and positive quantity.";
+                return false;
+            }
+            int available = 0;
+            foreach (AntInventorySlot slot in slots)
+                if (slot.ResourceTypeId == resourceTypeId &&
+                    slot.MaximumStack == maximumStack) available += slot.Quantity;
+            if (available < quantity)
+            {
+                error = "The inventory no longer owns the complete transfer quantity.";
+                return false;
+            }
+            int remaining = quantity;
+            for (int index = slots.Count - 1; index >= 0 && remaining > 0; index--)
+            {
+                AntInventorySlot slot = slots[index];
+                if (slot.ResourceTypeId != resourceTypeId ||
+                    slot.MaximumStack != maximumStack) continue;
+                int removed = Math.Min(remaining, slot.Quantity);
+                slot.Quantity -= removed;
+                remaining -= removed;
+                if (slot.Quantity == 0) slots.RemoveAt(index);
+            }
+            error = string.Empty;
+            return true;
+        }
+
         public void Clear() => slots.Clear();
 
         private static bool IsValidResource(string resourceTypeId, int maximumStack) =>

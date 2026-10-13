@@ -23,6 +23,7 @@ flowchart TB
     JP[AntWorkPrioritySet]
     JR[ColonyJobRegistry]
     DR[Excavation designations, transactions and world drops]
+    MS[MaterialStorageWorld]
   end
 
   subgraph Rules[Rules and shared services]
@@ -48,6 +49,7 @@ flowchart TB
   JP --> CTRL
   JR --> CTRL
   DR --> CTRL
+  MS --> CTRL
   WD --> DR --> TILE
   HOST --> Data
   HOST --> Rules
@@ -60,7 +62,7 @@ flowchart TB
 
 ### World data
 
-`AntColony.World` owns chunks, Background/Solid material definitions, loose material drops, the atomic excavation commit, classification, clearance, capability, pathfinding data, and scheduling. Visual and collision Tilemaps project that data through `AntColony.WorldPresentation`.
+`AntColony.World` owns chunks, Background/Solid material definitions, loose material drops, physical Material Storage slots, the atomic excavation commit, classification, clearance, capability, pathfinding data, and scheduling. Visual and collision Tilemaps project that data through `AntColony.WorldPresentation`; they do not own stored quantities.
 
 ### Navigation
 
@@ -68,7 +70,7 @@ One `GridNavigationWorldService` owns the shared navigation map and bounded sche
 
 ### Commands and interactions
 
-`AntColony.Commands` handles selection, designation input, context orders, visual bindings, physical survival, synthetic work, real excavation and explicit material pickup/drop. Location-owned supplies remain in `SurvivalInteractionWorld`; job identity, ownership and progress remain in `ColonyJobRegistry`; `ExcavationDesignationRegistry` is a typed view over those same jobs rather than a second queue. Material pickup reservations remain in the world-drop registry, while carried stacks remain on the destination ant record. Job and pickup travel reuse the shared map and motor instead of owning navigation.
+`AntColony.Commands` handles selection, designation input, context orders, visual bindings, physical survival, synthetic work, real excavation, explicit material pickup/drop and autonomous hauling. Location-owned supplies remain in `SurvivalInteractionWorld`; job identity, ownership and progress remain in `ColonyJobRegistry`; `ExcavationDesignationRegistry` is a typed view over those same jobs rather than a second queue. Source reservations remain in the world-drop registry, destination reservations remain in `MaterialStorageWorld`, and carried stacks remain on the ant record. Job, pickup and hauling travel reuse the shared map and motor instead of owning navigation.
 
 ### Development composition
 
@@ -80,7 +82,7 @@ One `GridNavigationWorldService` owns the shared navigation map and bounded sche
 | --- | --- | --- |
 | `AntMovementPrototype.unity` | Continuous-input surface movement regression course | Retained developer fixture |
 | `AntNavigationPrototype.unity` | Navigation classification and visualisation fixture | Retained developer fixture |
-| `AntGameDevelopment.unity` | Integrated world, ants, selection, grid movement, survival, jobs, excavation, personal inventory and loose material transfers | Primary development scene |
+| `AntGameDevelopment.unity` | Integrated world, ants, selection, grid movement, survival, jobs, excavation, inventory, Material Storage and hauling | Primary development scene |
 
 There is no finished menu-to-game flow, Bootstrap scene, save selection, or production world-loading sequence yet. Future work must preserve the existing authored coordinator seams rather than introducing an unnecessary global manager.
 

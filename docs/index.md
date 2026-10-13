@@ -8,12 +8,12 @@ This wiki is a readable development companion to the repository's authoritative 
   <div class="status-card" markdown>
   **Current accepted baseline**
 
-  Milestone 3.3B: real excavation and physical Soil/Stone output.
+  Milestone 3.3C: personal inventory and physical material transfers.
   </div>
   <div class="status-card" markdown>
   **Latest implemented slice**
 
-  Milestone 3.3C: per-ant inventory and physical material transfers — pending manual acceptance.
+  Milestone 3.3D: Material Storage and autonomous hauling — pending manual acceptance.
   </div>
   <div class="status-card" markdown>
   **Engine**

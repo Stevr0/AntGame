@@ -4,15 +4,25 @@ This history records the strongest confirmed evidence without implying that late
 
 ## 13 October 2026
 
+### 3.3D — Material Storage and Autonomous Hauling
+
+**Implemented — Pending Manual Acceptance.** Pre-authored functional Background tiles own one physical storage slot each with Soil/Stone/general filters. Existing colony jobs, priorities, inventory and grid navigation drive reserved loose-drop delivery and owner-only self-deposit. Cancellation preserves the material at its current physical owner; completed delivery awards 5 base Hauling XP per unit.
+
+- Focused Edit Mode: 15/15 passed.
+- Focused Play Mode: 3/3 passed.
+- Complete graphics-enabled Edit Mode: 447/447 passed.
+- Complete Play Mode: 45/45 passed.
+- Manual Play Mode checklist: 30 steps pending.
+
 ### 3.3C — Ant Inventory, Automatic Excavation Pickup and Physical Material Handling
 
-**Implemented — Pending Manual Acceptance.** Authoritative ant records own independent stack-based inventories; excavation output atomically enters the excavator's inventory, falls back to a recoverable world drop, or splits explicitly. Player-directed adjacent pickup and Developer Only dropping use reservations and source-to-destination conservation without adding autonomous hauling.
+**Complete.** Authoritative ant records own independent stack-based inventories; excavation output atomically enters the excavator's inventory, falls back to a recoverable world drop, or splits explicitly. Player-directed adjacent pickup and Developer Only dropping use reservations and source-to-destination conservation.
 
 - Focused Edit Mode: 26/26 passed.
 - Focused Play Mode: 5/5 passed.
 - Complete graphics-enabled Edit Mode: 432/432 passed.
 - Complete Play Mode: 42/42 passed.
-- Manual Play Mode checklist: 26 steps pending.
+- Manual Play Mode checklist: all 26 checks accepted.
 
 ### 3.3B — Real Excavation Designations and Physical Material Output
 

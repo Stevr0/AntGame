@@ -1,19 +1,21 @@
 # Ant Colony Development Roadmap
 
-## 3.3C acceptance and 3.3D handoff — 13 October 2026
+## 3.3D implementation status — 13 October 2026
 
-Milestone 3.3C is COMPLETE. User confirmed all 26 manual Unity Play Mode checks. Previously reported focused Edit Mode 26/26, focused Play Mode 5/5, full Edit Mode 432/432 and full Play Mode 42/42 passed. These were not rerun for this documentation update.
+**3.3D Material Storage & Autonomous Hauling: Implemented — Pending Manual Acceptance.** Milestone 3.3C is COMPLETE: the user confirmed all 26 manual Unity checks, and its previously reported 26/26 focused Edit, 5/5 focused Play, 432/432 full Edit and 42/42 full Play evidence remains accepted.
 
-Next approved scope: Milestone 3.3D — Material Storage and Autonomous Hauling, following the existing Codex prompt. Codex must verify accepted 3.3C implementation locally first. 3.3D adds one-slot-per-tile Material Storage, filters, physical stacking, automatic transport of loose Soil/Stone and self-deposit of carried materials, using existing navigation/jobs/reservations. Construction and other later mechanics remain excluded.
+3.3D adds one-slot-per-tile physical Material Storage, Soil/Stone/general filters, source and destination reservations, actual-path-cost destination choice, partial loads, automatic transport of loose resources and owner-only self-deposit. Completed deliveries award provisional Hauling XP at 5 base XP per unit. Cancellation preserves the resource at its current owner. Construction and other later mechanics remain excluded.
+
+Verification passed **15/15 focused Edit Mode**, **3/3 focused Play Mode**, **447/447 complete graphics-enabled Edit Mode** and **45/45 complete Play Mode**, all without failures or skips. The exact 30-step manual checklist is in `CurrentGameState.md`; do not mark 3.3D complete until the user confirms it.
 
 
 ## 3.3C implementation status — 13 October 2026
 
 **3.3C Ant Inventory, Automatic Excavation Pickup & Physical Material Handling: COMPLETE — manual 26/26 accepted.** Each authoritative ant record owns independent stack-based inventory. Hauling levels 0/20/40/60/80 grant one through five natural slots; Soil and Stone provisionally stack to 10. Capacity decay retains occupied overflow without permitting further additions. Excavation atomically sends output to the excavator, a recoverable drop, or an explicit split between both. Selected ants can reserve and pick up a reachable drop or use Developer Only controls to drop a chosen quantity at their current valid anchor. Compatible world stacks merge, partial transfer is conserved, failures preserve the source and stable output keys prevent retries from duplicating resources.
 
-Automated verification passes **26/26 focused Edit Mode**, **5/5 focused Play Mode**, **432/432 complete graphics-enabled Edit Mode** and **42/42 complete Play Mode**, all with zero failures/skips. The exact 26-step manual checklist is recorded in `CurrentGameState.md` and remains pending user confirmation. **No autonomous hauling, Material Storage, stockpiles, construction or broader resource scheduling is implemented.** Stack limits, fixture quantities and carrying balance remain provisional.
+Automated verification passed **26/26 focused Edit Mode**, **5/5 focused Play Mode**, **432/432 complete graphics-enabled Edit Mode** and **42/42 complete Play Mode**, all with zero failures/skips. The user subsequently accepted all 26 manual checks. At the 3.3C boundary autonomous hauling and Material Storage were absent; 3.3D now implements that narrow follow-up. Construction and broader resource scheduling remain absent, while stack limits, fixture quantities and carrying balance remain provisional.
 
-**Next smallest milestone after acceptance:** separately authorise the narrow 3.3D Material Storage and autonomous hauling slice. It should reuse these physical ownership, reservation and transfer boundaries without beginning construction or creating a global resource wallet.
+**Completed follow-up:** 3.3D reuses these physical ownership, reservation and transfer boundaries without beginning construction or creating a global resource wallet.
 
 
 ## 3.3B implementation status — 13 October 2026
@@ -329,8 +331,8 @@ These milestones are ordered direction, not approved implementation work. Their 
 
 | Milestone | Intended outcome | Status |
 | --- | --- | --- |
-| 3 — Ant selection and inspection | Accepted foundations through 3.3A remain complete; 3.3B adds real excavation designation diagnostics. | 3.3B pending manual acceptance |
-| 4 — Hybrid task assignment | 3.3B implements autonomous real excavation through the accepted priorities; forced-work orders and other real jobs remain future. | Excavation implemented, acceptance pending |
+| 3 — Ant selection and inspection | Accepted foundations through 3.3C remain complete; 3.3D adds physical Material Storage and hauling diagnostics. | 3.3D pending manual acceptance |
+| 4 — Hybrid task assignment | Real excavation and hauling use accepted priorities; forced-work orders and construction remain future. | Excavation accepted; hauling implemented |
 | 5 — Multiple-ant movement | Allow shared-tile presence, local avoidance, temporary friendly overlap, congestion-aware routing and bounded recovery without invalid displacement. | Not started |
 | 6 — Autonomous worker loop | Select and perform eligible work while responding predictably to urgent needs and task invalidation. | Not started |
 | 7 — Excavation, Surface Preparation and resources | Excavate reachable foreground Solids, retain their Backgrounds, prepare exposed Background Materials progressively from accessible positions, and reserve/haul/consume configured resources. | Not started |
@@ -340,4 +342,4 @@ These milestones are ordered direction, not approved implementation work. Their 
 
 The 3.3C carrying model is implemented: one initial slot plus one at Hauling 20/40/60/80, capped at five, with compatible resource stacks and a provisional maximum of 10 for Soil and Stone.
 
-No new milestone is complete without implementation and validation evidence. Milestone 2.4D remains pending its separately recorded manual acceptance. Milestone 3.3C implements personal inventory, excavation auto-pickup and explicit loose-drop transfer only; autonomous hauling, Material Storage, Surface Preparation, construction, persistence, streaming and local avoidance are not implemented.
+No new milestone is complete without implementation and validation evidence. Milestone 2.4D remains pending its separately recorded manual acceptance. Milestone 3.3D implements Material Storage and autonomous Soil/Stone hauling; Surface Preparation, construction, persistence, streaming and local avoidance are not implemented.

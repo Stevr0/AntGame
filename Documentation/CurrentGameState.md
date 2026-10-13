@@ -1,5 +1,64 @@
 # Ant Colony Current Game State
 
+## Current implemented milestone — 3.3D Material Storage & Autonomous Hauling (13 October 2026)
+
+**Status: Implemented — Pending Manual Acceptance.** Milestone 3.3C is accepted. Milestone 3.3D adds traversable/grippable Material Storage Background tiles, one authoritative physical stack slot per tile, Soil/Stone/general filters, incoming-capacity reservations and autonomous delivery of loose or already-carried building material. It does not add construction, conversion, crafting, global resource balances or storage for food/water.
+
+`MaterialStorageWorld` owns slots by world cell. Each slot records its filter, current resource and quantity, maximum stack, reserved incoming quantity and reservation owner. Changing a filter preserves existing contents; an incompatible change releases the pending incoming reservation and prevents further deposits. Deposits and withdrawals are source-to-destination transactions, so ordinary transfers cannot create negative quantities, mix resources or expose a half-committed transfer.
+
+Autonomous hauling is discovered at the existing staggered colony-work cadence and represented by registry-owned Hauling jobs. A loose-drop haul reserves both source quantity and destination capacity before travel, uses actual A* path cost to select the closest reachable suitable adjacent storage approach, transfers into the ant inventory at the source, then deposits at the destination. An ant carrying Soil/Stone receives an owner-only self-deposit task; no other ant may claim that inventory. Cancellation before pickup leaves the drop in place; cancellation after pickup leaves the cargo on the carrier and releases obsolete storage capacity. Disabled Hauling, critical survival and explicit player orders retain the accepted priority and interruption boundaries.
+
+Completed storage deliveries award provisional Hauling XP equal to **5 base XP per committed unit**. Awards pass through `AntRecord.TryAwardSkillExperience`, so Rested XP and dehydration restrictions apply. Merely reserving, travelling, picking up or cancelling awards no XP. Hauling skill does not override the player's work priority; its existing inventory-slot progression remains authoritative.
+
+The development scene includes a general partial Soil slot, empty Soil-only and Stone-only slots, a full slot, an unreachable isolated slot, loose Soil/Stone, and the accepted excavation course. The collapsible diagnostics show storage contents, filters, incoming reservations, active haul details and failure state, with autonomous-hauling enable/disable and deterministic reset controls.
+
+### 3.3D automated verification
+
+- Focused Edit Mode: **15/15 passed**.
+- Focused Play Mode: **3/3 passed**.
+- Complete graphics-enabled Edit Mode: **447/447 passed** with zero failures/skips.
+- Complete Play Mode: **45/45 passed** with zero failures/skips.
+- Compilation completed as part of the Unity suites. The final handoff additionally records `git diff --check` and strict Zensical validation.
+
+### Exact 3.3D manual Unity Play Mode acceptance
+
+**Pending:** perform these checks in `Assets/AntColony/Scenes/AntGameDevelopment.unity`; do not mark 3.3D complete until the user confirms them.
+
+1. Mara, Pip and Tala retain identities, skills and needs.
+2. Material Storage background tiles are visible.
+3. Soil-only, Stone-only and general storage filters work.
+4. Each storage tile provides exactly one stack slot.
+5. Loose Soil produces autonomous hauling work.
+6. Loose Stone produces autonomous hauling work.
+7. Haulers follow individual work priorities.
+8. Disabled Hauling prevents autonomous claiming.
+9. Ant navigates adjacent to a world drop.
+10. Material enters the correct ant inventory.
+11. Ant travels to a valid storage destination.
+12. Stored quantity increases correctly.
+13. Inventory quantity decreases by the same amount.
+14. A partially full stack merges correctly.
+15. Full storage rejects additional material.
+16. Two ants cannot reserve the same source quantity.
+17. Destination capacity cannot be over-reserved.
+18. Oversized stacks are hauled in partial loads.
+19. An ant carrying excavated material self-deposits.
+20. Critical survival interrupts hauling safely.
+21. Player orders interrupt hauling without material loss.
+22. An interrupted carrier can resume depositing.
+23. Removed or blocked storage triggers safe recovery.
+24. Hauling XP is awarded for completed deliveries.
+25. No pickup/drop XP farming occurs.
+26. Existing excavation remains functional.
+27. Existing autonomous survival remains functional.
+28. World rebuild restores deterministic fixtures.
+29. Camera, UI input and developer-panel controls remain functional.
+30. Unity Console contains no relevant errors or warnings.
+
+### 3.3D known limitations
+
+Material Storage is pre-authored for this slice; ants cannot construct or convert it. Only Soil and Stone are accepted, stack maximum 10 and XP 5/unit are provisional, and storage offers one incoming reservation at a time. Hauling handling has no separate timed work phase yet; skill affects the accepted carrying capacity and XP systems but not travel speed. Inactive/deceased ants retain authoritative inventory, while recovery from those inventories remains a future explicitly scoped system. Save/load, chunk streaming, room bonuses and production-scale spatial indexing remain absent.
+
 ## Latest accepted milestone — 3.3C Ant Inventory, Automatic Excavation Pickup & Physical Material Handling (13 October 2026)
 
 **Status: COMPLETE — all 26 manual Unity Play Mode acceptance checks confirmed by the user on 13 October 2026.** Previously reported focused Edit Mode 26/26, focused Play Mode 5/5, full graphics-enabled Edit Mode 432/432 and full Play Mode 42/42 passed; no new tests were run in this documentation-only update. Milestone 3.3B is also complete. Milestone 3.3C adds only authoritative personal inventory and explicit physical material transfers; it does not add autonomous hauling, stockpiles, Material Storage, construction or a colony resource wallet.
@@ -22,7 +81,7 @@ The deterministic development scene contains a four-unit Soil drop and a three-u
 
 ### Exact 3.3C manual Unity Play Mode acceptance
 
-**Pending:** perform these checks in `Assets/AntColony/Scenes/AntGameDevelopment.unity`; do not mark 3.3C complete until the user confirms them.
+**Accepted:** the user confirmed all 26 checks on 13 October 2026.
 
 1. Mara, Pip and Tala retain their identities.
 2. Each ant has its own visible inventory.
@@ -568,11 +627,11 @@ Milestone 2.4A now implements the approved natural-background movement realignme
 
 ## Current milestone
 
-**Milestone 3.3A — Colony Job Designation & Priority Foundation**
+**Milestone 3.3D — Material Storage & Autonomous Hauling**
 
-**Status:** **Complete.** Per-ant priorities, a shared synthetic job registry, deterministic priority/path-cost selection, exclusive ownership, progress/XP, safe interruption and development diagnostics are implemented. Verification passed 28/28 focused Edit Mode, 5/5 focused Play Mode, 392/392 complete Edit Mode and 37/37 complete Play Mode; the user confirmed all 22 manual checks.
+**Status:** **Implemented — Pending Manual Acceptance.** Physical Material Storage and autonomous loose-drop/self-deposit hauling are implemented. Verification passed 15/15 focused Edit Mode, 3/3 focused Play Mode, 447/447 complete Edit Mode and 45/45 complete Play Mode. The exact 30-step manual checklist is pending above.
 
-Milestones through accepted 3.3A retain their recorded status. Milestone 2.4D remains implemented pending its separately recorded manual acceptance. Milestone 3.3B now adds real excavation and loose Soil/Stone output; preparation, construction, hauling and inventory remain unimplemented.
+Milestones through accepted 3.3C retain their recorded status. Milestone 2.4D remains implemented pending its separately recorded manual acceptance. Milestone 3.3D adds physical Material Storage and autonomous hauling only; preparation, construction and broader economy systems remain unimplemented.
 
 ## Repository and architecture
 

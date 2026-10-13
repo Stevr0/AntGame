@@ -28,6 +28,13 @@ namespace AntColony.Commands
         private const double DebugNeedsTimeStepHours = 1d;
         private const double DebugRestStepHours = 8d;
         private const double DebugFatigueStep = 25d;
+        private static readonly Vector2Int GeneralMaterialStorageFixture = new(-12, -8);
+        private static readonly Vector2Int SoilMaterialStorageFixture = new(9, -8);
+        private static readonly Vector2Int StoneMaterialStorageFixture = new(22, -8);
+        private static readonly Vector2Int FullMaterialStorageFixture = new(30, -8);
+        private static readonly Vector2Int UnreachableMaterialStorageFixture = new(40, -20);
+        private static readonly Vector2Int SoilDropFixture = new(-2, -8);
+        private static readonly Vector2Int StoneDropFixture = new(8, -8);
 
         private static readonly string[] SkillDisplayNames =
             BuildSkillDisplayNames();
@@ -67,6 +74,9 @@ namespace AntColony.Commands
         private ExcavationDesignationRegistry excavationDesignations;
         private ExcavationWorldTransaction excavationTransaction;
         private WorldMaterialDropRegistry materialDrops;
+        private MaterialStorageWorld materialStorage;
+        private readonly Dictionary<ColonyJobId, MaterialHaulingPlan> haulingPlans = new();
+        private bool haulingDebugExpanded;
         private Vector2Int dragStartCell;
         private bool excavationDragActive;
 
@@ -77,9 +87,11 @@ namespace AntColony.Commands
         public double SkillSimulationHours => simulationHours;
         public bool AutonomousSurvivalEnabled { get; private set; }
         public bool AutonomousColonyWorkEnabled { get; private set; }
+        public bool AutonomousHaulingEnabled { get; private set; }
         public ColonyJobRegistry ColonyJobs => colonyJobs;
         public ExcavationDesignationRegistry ExcavationDesignations => excavationDesignations;
         public WorldMaterialDropRegistry MaterialDrops => materialDrops;
+        public MaterialStorageWorld MaterialStorage => materialStorage;
         public WorldDesignationMode DesignationMode { get; private set; }
         public Rect DesignationToolbarGuiRect => new(12f, 12f, 220f, 82f);
         public Rect PlayerPanelGuiRect => new(
@@ -90,7 +102,8 @@ namespace AntColony.Commands
                 Mathf.Max(100f, Screen.height - 24f),
                 SelectedAnt == null
                     ? 112f
-                    : skillDebugExpanded || needsDebugExpanded || colonyJobsDebugExpanded
+                    : skillDebugExpanded || needsDebugExpanded ||
+                      colonyJobsDebugExpanded || haulingDebugExpanded
                         ? 920f : 700f));
 
         public void Configure(
@@ -131,6 +144,14 @@ namespace AntColony.Commands
                 ant?.BindExcavation(designations, transaction, drops);
         }
 
+        public void BindMaterialStorage(MaterialStorageWorld storage)
+        {
+            materialStorage = storage;
+            haulingPlans.Clear();
+            foreach (SelectableGridAnt ant in selectableAnts)
+                ant?.BindMaterialHauling(storage);
+        }
+
         public void ClearSelectableAnts()
         {
             foreach (SelectableGridAnt ant in selectableAnts)
@@ -157,6 +178,7 @@ namespace AntColony.Commands
                 ant.BindColonyJobs(colonyJobs);
                 ant.BindExcavation(
                     excavationDesignations, excavationTransaction, materialDrops);
+                ant.BindMaterialHauling(materialStorage);
                 autonomousStates[ant] = new AutonomousSurvivalAgentState();
                 autonomousWorkStates[ant] = new AutonomousWorkAgentState();
             }
@@ -193,6 +215,88 @@ namespace AntColony.Commands
             interactionMessage = enabled
                 ? "Developer Only: autonomous colony work enabled."
                 : "Developer Only: autonomous colony work disabled.";
+        }
+
+        public void SetAutonomousHaulingEnabled(bool enabled)
+        {
+            if (AutonomousHaulingEnabled == enabled) return;
+            AutonomousHaulingEnabled = enabled;
+            if (!enabled)
+            {
+                foreach (SelectableGridAnt ant in selectableAnts)
+                    if (ant?.HaulingOrder?.IsActive == true)
+                        ant.CancelOrder("Autonomous hauling was disabled.");
+                RemoveDynamicHaulingJobs();
+            }
+            nextWorkEvaluationTime = 0d;
+            interactionMessage = enabled
+                ? "Developer Only: autonomous hauling enabled."
+                : "Developer Only: autonomous hauling disabled.";
+        }
+
+        /// <summary>
+        /// Restores the authored storage, loose-drop and carrier-inventory baseline.
+        /// This explicit development control makes repeated hauling checks comparable.
+        /// </summary>
+        public bool ResetMaterialHaulingFixtures(out string message)
+        {
+            if (materialStorage == null || materialDrops == null)
+            {
+                message = "Material hauling fixtures are unavailable.";
+                interactionMessage = message;
+                return false;
+            }
+            foreach (SelectableGridAnt ant in selectableAnts)
+            {
+                if (ant?.HaulingOrder?.IsActive == true)
+                    ant.CancelOrder("Material hauling fixtures were reset.");
+                ant?.Record?.Inventory.Clear();
+            }
+            RemoveDynamicHaulingJobs();
+            materialStorage.Clear();
+            materialDrops.Clear();
+            string soil = MaterialResourceCatalog.GetStableId(
+                ExcavatedMaterialType.Soil);
+            string stone = MaterialResourceCatalog.GetStableId(
+                ExcavatedMaterialType.Stone);
+            (Vector2Int cell, MaterialStorageFilter filter, string resource,
+                int quantity)[] slots =
+            {
+                (GeneralMaterialStorageFixture,
+                    MaterialStorageFilter.AllBuildingMaterials, soil, 5),
+                (SoilMaterialStorageFixture,
+                    MaterialStorageFilter.Soil, string.Empty, 0),
+                (StoneMaterialStorageFixture,
+                    MaterialStorageFilter.Stone, string.Empty, 0),
+                (FullMaterialStorageFixture,
+                    MaterialStorageFilter.AllBuildingMaterials, stone, 10),
+                (UnreachableMaterialStorageFixture,
+                    MaterialStorageFilter.AllBuildingMaterials, string.Empty, 0)
+            };
+            foreach (var slot in slots)
+                if (!materialStorage.TryAdd(slot.cell, slot.filter, slot.resource,
+                        slot.quantity, MaterialResourceCatalog.ProvisionalMaximumStack,
+                        out message))
+                {
+                    interactionMessage = message;
+                    return false;
+                }
+            if (!materialDrops.TryAdd("development.drop.soil",
+                    ExcavatedMaterialType.Soil, 4,
+                    SoilDropFixture,
+                    out _, out message) ||
+                !materialDrops.TryAdd("development.drop.stone",
+                    ExcavatedMaterialType.Stone, 4,
+                    StoneDropFixture,
+                    out _, out message))
+            {
+                interactionMessage = message;
+                return false;
+            }
+            nextWorkEvaluationTime = 0d;
+            message = "Reset Material Storage, loose drops and ant inventories.";
+            interactionMessage = message;
+            return true;
         }
 
         public void SetAutonomousSurvivalEnabled(bool enabled)
@@ -944,13 +1048,18 @@ namespace AntColony.Commands
             {
                 SyntheticColonyJobOrder previous = ant.JobOrder;
                 ExcavationJobOrder previousExcavation = ant.ExcavationOrder;
+                MaterialHaulingOrder previousHauling = ant.HaulingOrder;
                 bool failed = previous != null &&
                     (previous.Phase == SyntheticJobOrderPhase.Failed ||
                      previous.Phase == SyntheticJobOrderPhase.Cancelled) ||
                     previousExcavation != null &&
                     (previousExcavation.Phase == ExcavationOrderPhase.Failed ||
-                     previousExcavation.Phase == ExcavationOrderPhase.Cancelled);
-                string failure = previousExcavation?.FailureReason ?? previous?.FailureReason;
+                     previousExcavation.Phase == ExcavationOrderPhase.Cancelled) ||
+                    previousHauling != null &&
+                    (previousHauling.Phase == MaterialHaulingPhase.Failed ||
+                     previousHauling.Phase == MaterialHaulingPhase.Cancelled);
+                string failure = previousHauling?.FailureReason ??
+                    previousExcavation?.FailureReason ?? previous?.FailureReason;
                 state.JobId = null;
                 if (failed)
                 {
@@ -964,19 +1073,24 @@ namespace AntColony.Commands
             }
 
             if (currentTimeSeconds < state.NextEvaluationTime) return false;
+            RefreshDynamicHaulingJobs();
             Vector2Int start =
                 WorldTileCoordinates.WorldPositionToCell(ant.Motor.Position);
             if (!colonyJobSelectionService.TryChoose(
                     ant.Record, colonyJobs, navigationWorld.Map, start,
+                    job => IsJobEligibleForAnt(job, ant.Record),
                     out ColonyJob job, out Vector2Int approach, out string error))
             {
                 RecordWorkFailure(state, currentTimeSeconds, error);
                 return false;
             }
-            bool issued = excavationDesignations != null &&
-                excavationDesignations.TryGet(job.Id, out _)
-                    ? ant.IssueExcavationJobOrder(job, approach)
-                    : ant.IssueSyntheticJobOrder(job, approach);
+            bool issued = haulingPlans.TryGetValue(job.Id,
+                    out MaterialHaulingPlan haulingPlan)
+                ? ant.IssueMaterialHaulingOrder(haulingPlan, approach)
+                : excavationDesignations != null &&
+                    excavationDesignations.TryGet(job.Id, out _)
+                        ? ant.IssueExcavationJobOrder(job, approach)
+                        : ant.IssueSyntheticJobOrder(job, approach);
             if (!issued)
             {
                 RecordWorkFailure(state, currentTimeSeconds, ant.FailureReason);
@@ -1003,6 +1117,89 @@ namespace AntColony.Commands
             nextWorkEvaluationTime = now +
                 autonomousDecisionService.Settings.EvaluationIntervalSeconds /
                 selectableAnts.Count;
+        }
+
+        private bool IsJobEligibleForAnt(ColonyJob job, AntRecord ant)
+        {
+            if (!haulingPlans.TryGetValue(job.Id, out MaterialHaulingPlan plan))
+                return true;
+            return AutonomousHaulingEnabled &&
+                (!plan.InventoryOwner.IsValid || plan.InventoryOwner.Equals(ant.Id));
+        }
+
+        /// <summary>
+        /// Material state is small in the deterministic course. Discovery runs at
+        /// the existing staggered work cadence, never from a per-drop Update.
+        /// </summary>
+        private void RefreshDynamicHaulingJobs()
+        {
+            if (!AutonomousHaulingEnabled || colonyJobs == null || materialDrops == null ||
+                materialStorage == null || navigationWorld?.Map == null) return;
+
+            var stale = new List<ColonyJobId>();
+            foreach (KeyValuePair<ColonyJobId, MaterialHaulingPlan> entry in haulingPlans)
+            {
+                ColonyJob job = entry.Value.Job;
+                bool terminal = job.Status is ColonyJobStatus.Completed or
+                    ColonyJobStatus.Cancelled or ColonyJobStatus.Blocked;
+                bool missingDrop = entry.Value.SourceKind == MaterialHaulSourceKind.WorldDrop &&
+                    !materialDrops.TryGet(entry.Value.DropKey, out _) &&
+                    job.Status is not ColonyJobStatus.Reserved and not ColonyJobStatus.InProgress;
+                if (terminal || missingDrop) stale.Add(entry.Key);
+            }
+            foreach (ColonyJobId id in stale)
+            {
+                haulingPlans.Remove(id);
+                colonyJobs.RemoveWhere(job => job.Id.Equals(id));
+            }
+
+            foreach (WorldMaterialDrop drop in materialDrops.Drops)
+            {
+                string resourceId = MaterialResourceCatalog.GetStableId(drop.Material);
+                ColonyJobId id = new($"hauling.drop.{drop.OwnershipKey}");
+                if (string.IsNullOrEmpty(resourceId) || haulingPlans.ContainsKey(id)) continue;
+                if (colonyJobs.TryAdd(id, AntWorkCategory.Hauling, drop.WorldCell,
+                        out ColonyJob job, out _))
+                    haulingPlans.Add(id, new MaterialHaulingPlan(job,
+                        MaterialHaulSourceKind.WorldDrop, resourceId, drop.OwnershipKey));
+            }
+
+            foreach (SelectableGridAnt selectable in selectableAnts)
+            {
+                AntRecord record = selectable?.Record;
+                if (record == null) continue;
+                var seen = new HashSet<string>();
+                foreach (AntInventorySlot slot in record.Inventory.OccupiedSlots)
+                {
+                    if (!seen.Add(slot.ResourceTypeId) ||
+                        !MaterialResourceCatalog.TryGetMaterial(slot.ResourceTypeId, out _))
+                        continue;
+                    Vector2Int start = WorldTileCoordinates.WorldPositionToCell(
+                        selectable.Motor.Position);
+                    if (!MaterialHaulingOrder.TryChooseDestination(materialStorage,
+                            navigationWorld.Map, start, slot.ResourceTypeId,
+                            slot.MaximumStack, slot.Quantity, out Vector2Int destination,
+                            out _, out _, out _)) continue;
+                    ColonyJobId id = new(
+                        $"hauling.self.{record.Id.Value}.{slot.ResourceTypeId}");
+                    if (haulingPlans.ContainsKey(id)) continue;
+                    if (colonyJobs.TryAdd(id, AntWorkCategory.Hauling, destination,
+                            out ColonyJob job, out _))
+                        haulingPlans.Add(id, new MaterialHaulingPlan(job,
+                            MaterialHaulSourceKind.PersonalInventory,
+                            slot.ResourceTypeId, inventoryOwner: record.Id));
+                }
+            }
+        }
+
+        private void RemoveDynamicHaulingJobs()
+        {
+            if (colonyJobs != null)
+            {
+                var ids = new HashSet<ColonyJobId>(haulingPlans.Keys);
+                colonyJobs.RemoveWhere(job => ids.Contains(job.Id));
+            }
+            haulingPlans.Clear();
         }
 
         private static void RecordWorkFailure(
@@ -1092,6 +1289,9 @@ namespace AntColony.Commands
                     ant.JobOrder != null && ant.JobOrder.IsActive)
                     ant.CancelOrder("Synthetic job fixtures were reset.");
             }
+            // Dynamic hauling plans point at registry-owned jobs. Remove both
+            // together before rebuilding the older synthetic fixture set.
+            RemoveDynamicHaulingJobs();
             colonyJobs.RemoveWhere(job => excavationDesignations == null ||
                 !excavationDesignations.TryGet(job.Id, out _));
             nextDevelopmentJobNumber = 1;
@@ -1235,6 +1435,10 @@ namespace AntColony.Commands
             {
                 SetAutonomousColonyWorkEnabled(!AutonomousColonyWorkEnabled);
             }
+            if (GUILayout.Button(AutonomousHaulingEnabled
+                    ? "Disable Developer Only Autonomous Hauling"
+                    : "Enable Developer Only Autonomous Hauling"))
+                SetAutonomousHaulingEnabled(!AutonomousHaulingEnabled);
             if (SelectedAnt == null)
             {
                 GUILayout.Label("Selected ant: None");
@@ -1285,6 +1489,7 @@ namespace AntColony.Commands
             DrawResourceDiagnostics();
             DrawColonyJobDiagnostics();
             DrawExcavationDiagnostics();
+            DrawMaterialHaulingDiagnostics();
 
             GUILayout.Label(interactionMessage);
             GUILayout.EndScrollView();
@@ -1565,6 +1770,70 @@ namespace AntColony.Commands
             foreach (WorldMaterialDrop drop in materialDrops.Drops)
                 GUILayout.Label(
                     $"Drop {drop.OwnershipKey}: {drop.Quantity} {drop.Material} at {drop.WorldCell}");
+        }
+
+        private void DrawMaterialHaulingDiagnostics()
+        {
+            if (GUILayout.Button(haulingDebugExpanded
+                    ? "Hide Developer Only Material Hauling"
+                    : "Show Developer Only Material Hauling"))
+                haulingDebugExpanded = !haulingDebugExpanded;
+            if (!haulingDebugExpanded) return;
+
+            GUILayout.Space(4f);
+            GUILayout.Label("DEVELOPER ONLY — MATERIAL STORAGE & HAULING");
+            GUILayout.Label($"Autonomous hauling: {(AutonomousHaulingEnabled ? "Enabled" : "Disabled")}");
+            GUILayout.Label($"Dynamic hauling plans: {haulingPlans.Count}");
+            if (GUILayout.Button("Reset Material Hauling Fixtures"))
+                ResetMaterialHaulingFixtures(out _);
+            if (materialStorage == null)
+            {
+                GUILayout.Label("Material Storage unavailable.");
+                return;
+            }
+            foreach (MaterialStorageSlot slot in materialStorage.Slots)
+            {
+                string owner = string.IsNullOrEmpty(slot.ReservationOwnerId)
+                    ? "None" : slot.ReservationOwnerId;
+                string contents = slot.Quantity == 0
+                    ? "Empty" : $"{slot.ResourceTypeId} {slot.Quantity}/{slot.MaximumStack}";
+                GUILayout.Label(
+                    $"{slot.Cell} | {slot.Filter} | {contents} | " +
+                    $"incoming {slot.ReservedIncomingQuantity} | owner {owner}");
+                if (GUILayout.Button($"Cycle Filter {slot.Cell}"))
+                {
+                    MaterialStorageFilter next = slot.Filter == MaterialStorageFilter.Soil
+                        ? MaterialStorageFilter.Stone
+                        : slot.Filter == MaterialStorageFilter.Stone
+                            ? MaterialStorageFilter.AllBuildingMaterials
+                            : MaterialStorageFilter.Soil;
+                    materialStorage.TrySetFilter(slot.Cell, next, out interactionMessage);
+                    nextWorkEvaluationTime = 0d;
+                }
+            }
+            if (SelectedAnt?.HaulingOrder != null)
+            {
+                MaterialHaulingOrder order = SelectedAnt.HaulingOrder;
+                int sourceQuantity = order.SourceKind ==
+                        MaterialHaulSourceKind.WorldDrop &&
+                    materialDrops.TryGet(order.DropKey, out WorldMaterialDrop drop)
+                        ? drop.Quantity : SelectedAnt.Record.Inventory.TotalQuantity;
+                int sourceReserved = order.SourceKind ==
+                        MaterialHaulSourceKind.WorldDrop
+                    ? materialDrops.GetReservedQuantity(order.DropKey) : order.Quantity;
+                materialStorage.TryGet(order.DestinationCell,
+                    out MaterialStorageSlot destination);
+                GUILayout.Label(
+                    $"Selected haul: {order.Phase} | {order.Quantity} {order.ResourceTypeId} | " +
+                    $"source {order.SourceCell} -> storage {order.DestinationCell}");
+                GUILayout.Label(
+                    $"Source quantity/reserved: {sourceQuantity}/{sourceReserved} | " +
+                    $"destination reserved: {destination?.ReservedIncomingQuantity ?? 0} | " +
+                    $"job progress: {order.Job.Progress:P0}");
+                string failure = string.IsNullOrEmpty(order.FailureReason)
+                    ? "None" : order.FailureReason;
+                GUILayout.Label($"Failure: {failure}");
+            }
         }
 
         private void DrawResourceDiagnostics()

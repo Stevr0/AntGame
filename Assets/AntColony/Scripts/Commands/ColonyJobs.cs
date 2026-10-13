@@ -85,7 +85,8 @@ namespace AntColony.Commands
             }
             foreach (ColonyJob existing in jobs.Values)
             {
-                if (existing.Category == category && existing.TargetCell == targetCell &&
+                if (category != AntWorkCategory.Hauling &&
+                    existing.Category == category && existing.TargetCell == targetCell &&
                     existing.Status != ColonyJobStatus.Completed &&
                     existing.Status != ColonyJobStatus.Cancelled)
                 {
@@ -251,6 +252,20 @@ namespace AntColony.Commands
             out Vector2Int approach,
             out string error)
         {
+            return TryChoose(ant, registry, map, start, null,
+                out selected, out approach, out error);
+        }
+
+        public bool TryChoose(
+            AntRecord ant,
+            ColonyJobRegistry registry,
+            GridNavigationMap map,
+            Vector2Int start,
+            Predicate<ColonyJob> eligibility,
+            out ColonyJob selected,
+            out Vector2Int approach,
+            out string error)
+        {
             selected = null;
             approach = default;
             if (ant == null || registry == null || map == null)
@@ -265,7 +280,7 @@ namespace AntColony.Commands
                 foreach (ColonyJob job in registry.Jobs)
                 {
                     if (candidates.Count >= MaximumCandidatesPerEvaluation) break;
-                    if (job.CanBeClaimed &&
+                    if (job.CanBeClaimed && (eligibility == null || eligibility(job)) &&
                         (int)ant.WorkPriorities.Get(job.Category) == priority)
                         candidates.Add(job);
                 }

@@ -12,7 +12,8 @@
 | Two-layer terrain and Tilemap projection | Approved | Implemented | Accepted milestones |
 | Grid navigation | Approved foundation | Production integration implemented | 2.4D manual acceptance remains pending |
 | Excavation gameplay | Approved | Implemented | Accepted in Play Mode |
-| Personal inventory and explicit material pickup/drop | Approved slice | Implemented | Automated passed; manual pending |
+| Personal inventory and explicit material pickup/drop | Approved slice | Complete | Automated and manual accepted |
+| Material Storage and autonomous Soil/Stone hauling | Approved slice | Implemented | Automated passed; manual pending |
 | Construction and functional conversion | Approved direction | Only authored development fixtures | Gameplay not tested |
 | Colony priorities and autonomous jobs | Approved design | Implemented foundation | Accepted in Play Mode |
 | Brood and reproduction | Approved design | Not implemented | Not tested |
@@ -28,7 +29,7 @@ The approved player-facing model has three states:
 - **Temporary explicit order:** the player requests a specific task. Completion, cancellation, or invalidation returns the ant to autonomy.
 - **Draft Mode:** a future persistent tactical state for move, attack, hold, defend-area, retreat, and group control.
 
-Current implementation supports selection plus temporary Move, Eat, Drink, Rest and material Pickup orders, along with autonomous survival and colony work selection. It does not yet implement explicit forced-work orders, autonomous hauling or Draft Mode. The old WASD `PlayerMovementInput` path is retained strictly as a developer movement regression tool.
+Current implementation supports selection plus temporary Move, Eat, Drink, Rest and material Pickup orders, along with autonomous survival, colony work selection and autonomous hauling. It does not yet implement explicit forced-work orders or Draft Mode. The old WASD `PlayerMovementInput` path is retained strictly as a developer movement regression tool.
 
 ## Physical-world principles
 
@@ -38,7 +39,7 @@ Current implementation supports selection plus temporary Move, Eat, Drink, Rest 
 - Valid partial work survives safe interruptions.
 - Reservations prevent duplicate consumption and must be released on cancellation or failure.
 
-The current systems prove these principles through location-owned food/water, sleeping reservations, real excavation, per-ant inventory and reserved loose-drop pickup. Material remains in exactly one authoritative inventory or world drop during this slice; no global resource wallet exists.
+The current systems prove these principles through location-owned food/water, sleeping reservations, real excavation, per-ant inventory, reserved loose-drop pickup and cell-owned Material Storage. Material remains in exactly one authoritative inventory, world drop or storage stack; no global resource wallet exists.
 
 ## Progression and failure
 
