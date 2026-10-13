@@ -62,6 +62,8 @@ namespace AntColony.Commands
         private bool colonyJobsDebugExpanded;
         private int selectedWorkCategoryIndex;
         private int nextDevelopmentJobNumber = 1;
+        private int nextDevelopmentDropNumber = 1;
+        private int selectedInventorySlotIndex;
         private ExcavationDesignationRegistry excavationDesignations;
         private ExcavationWorldTransaction excavationTransaction;
         private WorldMaterialDropRegistry materialDrops;
@@ -126,7 +128,7 @@ namespace AntColony.Commands
             excavationTransaction = transaction;
             materialDrops = drops;
             foreach (SelectableGridAnt ant in selectableAnts)
-                ant?.BindExcavation(designations, transaction);
+                ant?.BindExcavation(designations, transaction, drops);
         }
 
         public void ClearSelectableAnts()
@@ -153,7 +155,8 @@ namespace AntColony.Commands
                 selectableAnts.Add(ant);
                 ant.BindInteractionWorld(interactionWorld);
                 ant.BindColonyJobs(colonyJobs);
-                ant.BindExcavation(excavationDesignations, excavationTransaction);
+                ant.BindExcavation(
+                    excavationDesignations, excavationTransaction, materialDrops);
                 autonomousStates[ant] = new AutonomousSurvivalAgentState();
                 autonomousWorkStates[ant] = new AutonomousWorkAgentState();
             }
@@ -412,6 +415,10 @@ namespace AntColony.Commands
 
         public bool TryIssueContextOrder(Vector2Int cell)
         {
+            if (materialDrops != null &&
+                materialDrops.TryFindAtCell(cell, out WorldMaterialDrop drop))
+                return TryIssueMaterialPickupOrder(drop);
+
             if (interactionWorld != null &&
                 interactionWorld.TryGetFunction(cell, out BackgroundFunction function))
             {
@@ -425,6 +432,55 @@ namespace AntColony.Commands
             }
 
             return TryIssueMoveOrder(cell);
+        }
+
+        public bool TryIssueMaterialPickupOrder(WorldMaterialDrop drop)
+        {
+            if (SelectedAnt?.Record == null || navigationWorld?.Map == null)
+            {
+                interactionMessage = "Pickup ignored: select an active ant first.";
+                return false;
+            }
+            Vector2Int start = WorldTileCoordinates.WorldPositionToCell(
+                SelectedAnt.Motor.Position);
+            if (!SurvivalInteractionOrder.TryMeasureApproach(
+                    navigationWorld.Map, start, drop.WorldCell,
+                    out Vector2Int approach, out _, out string error))
+            {
+                interactionMessage = error;
+                return false;
+            }
+            if (!SelectedAnt.IssueMaterialPickupOrder(drop, approach))
+            {
+                interactionMessage = SelectedAnt.FailureReason;
+                return false;
+            }
+            MarkPlayerCommand(SelectedAnt);
+            interactionMessage =
+                $"{SelectedAnt.DisplayName} ordered to pick up {drop.Material}.";
+            return true;
+        }
+
+        public bool TryDropSelectedInventory(int slotIndex, int quantity,
+            out string message)
+        {
+            if (SelectedAnt?.Record == null || materialDrops == null ||
+                navigationWorld?.Map == null)
+            {
+                message = "Select a bound ant before dropping material.";
+                return false;
+            }
+            Vector2Int cell = WorldTileCoordinates.WorldPositionToCell(
+                SelectedAnt.Motor.Position);
+            string key = $"manual-drop.{SelectedAnt.Record.Id.Value}." +
+                $"{nextDevelopmentDropNumber++:D4}";
+            bool succeeded = MaterialDropTransaction.TryDrop(
+                SelectedAnt.Record.Inventory, slotIndex, quantity, cell,
+                navigationWorld.Map, materialDrops, key,
+                out _, out message);
+            interactionMessage = succeeded
+                ? $"Dropped {quantity} material unit(s) at {cell}." : message;
+            return succeeded;
         }
 
         public bool CancelSelectedOrder()
@@ -629,6 +685,7 @@ namespace AntColony.Commands
         public void ResetSimulationDebugClock()
         {
             simulationHours = 0d;
+            nextDevelopmentDropNumber = 1;
             nextAutonomousEvaluationTime = 0d;
             nextWorkEvaluationTime = 0d;
             autonomousClockAccumulator = 0d;
@@ -1198,6 +1255,7 @@ namespace AntColony.Commands
                     $"Lifecycle: {record?.LifecycleStatus.ToString() ?? "Unbound"}");
                 DrawNeedsInspection(record);
                 DrawSkillInspection(record);
+                DrawInventoryInspection(record);
                 GUILayout.Label($"Control: {SelectedAnt.ControlState}");
                 GUILayout.Label($"Order: {SelectedAnt.OrderStatus}");
                 GUILayout.Label(
@@ -1220,6 +1278,7 @@ namespace AntColony.Commands
                 GUI.enabled = true;
                 DrawNeedsDebugControls();
                 DrawSkillDebugControls();
+                DrawInventoryDebugControls();
                 DrawColonyJobsDebugControls();
             }
 
@@ -1262,6 +1321,111 @@ namespace AntColony.Commands
                 if (screen.z >= 0f)
                     GUI.Box(new Rect(screen.x - 24f, Screen.height - screen.y - 12f,
                         48f, 24f), $"{drop.Material} {drop.Quantity}");
+            }
+        }
+
+        private void DrawInventoryInspection(AntRecord record)
+        {
+            if (record?.Inventory == null) return;
+            AntInventory inventory = record.Inventory;
+            int haulingLevel = record.Skills.Get(AntSkillId.Hauling).Level;
+            int nextUnlock = haulingLevel >= 80 ? -1 : (haulingLevel / 20 + 1) * 20;
+            int soilCapacity = inventory.GetAvailableCapacity(
+                MaterialResourceCatalog.GetStableId(ExcavatedMaterialType.Soil),
+                MaterialResourceCatalog.ProvisionalMaximumStack);
+            int stoneCapacity = inventory.GetAvailableCapacity(
+                MaterialResourceCatalog.GetStableId(ExcavatedMaterialType.Stone),
+                MaterialResourceCatalog.ProvisionalMaximumStack);
+            GUILayout.Space(4f);
+            GUILayout.Label("PERSONAL MATERIAL INVENTORY");
+            GUILayout.Label(
+                $"Slots: {inventory.OccupiedSlotCount}/{inventory.NaturalSlotCapacity} | " +
+                $"Total carried: {inventory.TotalQuantity} | Hauling {haulingLevel}");
+            GUILayout.Label(
+                $"Free capacity: Soil {soilCapacity} | Stone {stoneCapacity}");
+            GUILayout.Label(nextUnlock < 0
+                ? "Natural slot capacity is at its maximum."
+                : $"Next natural slot unlock: Hauling {nextUnlock}");
+            for (int index = 0; index < inventory.OccupiedSlots.Count; index++)
+            {
+                AntInventorySlot slot = inventory.OccupiedSlots[index];
+                GUILayout.Label(
+                    $"Slot {index + 1}: {slot.ResourceTypeId} " +
+                    $"{slot.Quantity}/{slot.MaximumStack}");
+            }
+            if (inventory.OccupiedSlotCount == 0) GUILayout.Label("Inventory empty.");
+        }
+
+        private void DrawInventoryDebugControls()
+        {
+            AntInventory inventory = SelectedAnt?.Record?.Inventory;
+            if (inventory == null) return;
+            GUILayout.Space(4f);
+            GUILayout.Label("DEVELOPER ONLY — INVENTORY");
+            if (GUILayout.Button("Add 1 Test Soil"))
+            {
+                bool added = inventory.TryAdd(MaterialResourceCatalog.GetStableId(
+                        ExcavatedMaterialType.Soil), 1,
+                    MaterialResourceCatalog.ProvisionalMaximumStack, true,
+                    out _, out string error);
+                interactionMessage = added
+                    ? "Developer Only: added one test Soil."
+                    : error;
+            }
+            if (GUILayout.Button("Add 1 Test Stone"))
+            {
+                bool added = inventory.TryAdd(MaterialResourceCatalog.GetStableId(
+                        ExcavatedMaterialType.Stone), 1,
+                    MaterialResourceCatalog.ProvisionalMaximumStack, true,
+                    out _, out string error);
+                interactionMessage = added
+                    ? "Developer Only: added one test Stone."
+                    : error;
+            }
+            if (GUILayout.Button("Fill Available Slots With Soil"))
+            {
+                int capacity = inventory.GetAvailableCapacity(
+                    MaterialResourceCatalog.GetStableId(ExcavatedMaterialType.Soil),
+                    MaterialResourceCatalog.ProvisionalMaximumStack);
+                if (capacity > 0)
+                {
+                    bool filled = inventory.TryAdd(
+                        MaterialResourceCatalog.GetStableId(ExcavatedMaterialType.Soil),
+                        capacity, MaterialResourceCatalog.ProvisionalMaximumStack,
+                        false, out _, out string error);
+                    interactionMessage = filled
+                        ? $"Developer Only: added {capacity} test Soil."
+                        : error;
+                }
+                else interactionMessage = "Inventory has no available Soil capacity.";
+            }
+            if (inventory.OccupiedSlotCount > 0)
+            {
+                string[] labels = new string[inventory.OccupiedSlotCount];
+                for (int index = 0; index < labels.Length; index++)
+                    labels[index] = $"Slot {index + 1}";
+                selectedInventorySlotIndex = Mathf.Clamp(
+                    selectedInventorySlotIndex, 0, labels.Length - 1);
+                selectedInventorySlotIndex = GUILayout.SelectionGrid(
+                    selectedInventorySlotIndex, labels, 3);
+                if (GUILayout.Button("Drop 1 From Selected Slot"))
+                    TryDropSelectedInventory(
+                        selectedInventorySlotIndex, 1, out _);
+                if (GUILayout.Button("Remove 1 Test Material"))
+                {
+                    bool removed = inventory.TryRemove(selectedInventorySlotIndex, 1,
+                        out _, out _, out string error);
+                    interactionMessage = removed
+                        ? "Developer Only: removed one test material."
+                        : error;
+                }
+            }
+            if (GUILayout.Button("Reset Selected Inventory"))
+            {
+                inventory.Clear();
+                selectedInventorySlotIndex = 0;
+                interactionMessage =
+                    $"Developer Only: reset {SelectedAnt.DisplayName}'s inventory.";
             }
         }
 

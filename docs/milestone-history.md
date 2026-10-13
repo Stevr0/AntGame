@@ -4,15 +4,25 @@ This history records the strongest confirmed evidence without implying that late
 
 ## 13 October 2026
 
+### 3.3C — Ant Inventory, Automatic Excavation Pickup and Physical Material Handling
+
+**Implemented — Pending Manual Acceptance.** Authoritative ant records own independent stack-based inventories; excavation output atomically enters the excavator's inventory, falls back to a recoverable world drop, or splits explicitly. Player-directed adjacent pickup and Developer Only dropping use reservations and source-to-destination conservation without adding autonomous hauling.
+
+- Focused Edit Mode: 26/26 passed.
+- Focused Play Mode: 5/5 passed.
+- Complete graphics-enabled Edit Mode: 432/432 passed.
+- Complete Play Mode: 42/42 passed.
+- Manual Play Mode checklist: 26 steps pending.
+
 ### 3.3B — Real Excavation Designations and Physical Material Output
 
-**Implemented — Pending Manual Acceptance.** Player area designations create real registry jobs; autonomous ants reach valid adjacent positions, preserve progress through interruption, and atomically exchange eligible foreground Soil/Stone for stable loose material drops while preserving Background and invalidating local projections/navigation.
+**Complete.** Player area designations create real registry jobs; autonomous ants reach valid adjacent positions, preserve progress through interruption, and atomically exchange eligible foreground Soil/Stone for stable loose material drops while preserving Background and invalidating local projections/navigation.
 
 - Focused Edit Mode: 14/14 passed.
 - Focused Play Mode: 3/3 passed.
 - Complete graphics-enabled Edit Mode: 406/406 passed.
 - Complete Play Mode: 40/40 passed.
-- Manual Play Mode checklist: 26 steps pending.
+- Manual Play Mode checklist: all 26 checks accepted.
 
 ### 3.3A — Colony Job Designation and Priority Foundation
 

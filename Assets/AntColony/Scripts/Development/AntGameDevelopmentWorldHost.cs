@@ -116,6 +116,8 @@ namespace AntColony.Development
         public static readonly Vector2Int ExcavationOpeningFixture = new(12, -10);
         public static readonly Vector2Int ExcavationInitiallyBlockedFixture = new(12, -11);
         public static readonly Vector2Int NonExcavatableFixture = new(16, -6);
+        public static readonly Vector2Int SoilDropFixture = new(-2, -8);
+        public static readonly Vector2Int StoneDropFixture = new(8, -8);
 
         private void Awake()
         {
@@ -162,6 +164,11 @@ namespace AntColony.Development
             }
             ColonyJobRegistry = new ColonyJobRegistry();
             MaterialDrops = new WorldMaterialDropRegistry();
+            if (!BuildMaterialDropFixtures(out fixtureError))
+            {
+                Debug.LogError(fixtureError, this);
+                return false;
+            }
             ExcavationDesignations = new ExcavationDesignationRegistry(
                 WorldData, ColonyJobRegistry);
             ExcavationTransaction = new ExcavationWorldTransaction(
@@ -1121,6 +1128,18 @@ namespace AntColony.Development
                     return false;
                 }
             }
+            error = string.Empty;
+            return true;
+        }
+
+        private bool BuildMaterialDropFixtures(out string error)
+        {
+            if (!MaterialDrops.TryAdd("development.drop.soil",
+                    ExcavatedMaterialType.Soil, 4, SoilDropFixture,
+                    out _, out error) ||
+                !MaterialDrops.TryAdd("development.drop.stone",
+                    ExcavatedMaterialType.Stone, 3, StoneDropFixture,
+                    out _, out error)) return false;
             error = string.Empty;
             return true;
         }

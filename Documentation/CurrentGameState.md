@@ -1,5 +1,58 @@
 # Ant Colony Current Game State
 
+## Current milestone — 3.3C Ant Inventory, Automatic Excavation Pickup & Physical Material Handling (13 October 2026)
+
+**Status: Implemented — Pending Manual Acceptance.** Milestone 3.3B is complete and manually accepted. Milestone 3.3C adds only authoritative personal inventory and explicit physical material transfers; it does not add autonomous hauling, stockpiles, Material Storage, construction or a colony resource wallet.
+
+Every `AntRecord` owns one plain-C# `AntInventory`, so inventory survives visual replacement and remains independent of selection, navigation and UI. Soil and Stone use stable resource IDs and a provisional maximum stack of **10**. Compatible material first fills compatible partial stacks, then empty natural slots. Hauling determines natural slot count: levels 0–19 grant one slot; 20–39 two; 40–59 three; 60–79 four; and 80–100 five. Caste and Strength do not affect this value. If inactivity decay reduces capacity below occupied slot count, existing stacks remain intact and recoverable, while new additions are refused until usage is again within natural capacity.
+
+`ExcavationWorldTransaction` now prepares inventory and loose-drop output before foreground removal. A complete yield enters the excavator's inventory when it fits; no capacity creates a recoverable drop; partial capacity splits the yield explicitly. The stable job output key is consumed once even for inventory-only output, preventing retry duplication. If the required output cannot be represented, the foreground Solid remains intact. The accepted Background preservation, projection refresh, collision update, navigation invalidation, progress and XP rules remain unchanged.
+
+Loose `WorldMaterialDrop` data now includes maximum stack size, compatible same-cell merging, partial removal and a single-owner pickup reservation. A selected active ant can right-click a drop, navigate through the existing grid motor to the least-cost valid adjacent anchor, revalidate capacity and transfer its reserved quantity. Cancellation, replacement, failure, disable/death handling and world replacement release the reservation. Developer Only selected-ant controls can add/fill/remove test material, drop a selected quantity at the ant's valid current anchor, or reset only that ant's inventory. All successful pickup/drop operations remove from one authoritative owner and add the same quantity to the other; failed operations preserve the source.
+
+The deterministic development scene contains a four-unit Soil drop and a three-unit Stone drop in addition to the accepted excavation fixtures. World rebuild recreates records with empty independent inventories and restores these authored drops without stale reservations. The selected-ant panel shows natural capacity, occupied slots, each resource/quantity/maximum, free compatible capacity, total carried quantity, Hauling level and the next unlock.
+
+### 3.3C automated verification
+
+- Focused Edit Mode: **26/26 passed**.
+- Focused Play Mode: **5/5 passed**.
+- Complete graphics-enabled Edit Mode: **432/432 passed** with zero failures/skips.
+- Complete Play Mode: **42/42 passed** with zero failures/skips.
+- Compilation completed as part of the Unity suites. `git diff --check` and strict Zensical validation are recorded at final handoff.
+
+### Exact 3.3C manual Unity Play Mode acceptance
+
+**Pending:** perform these checks in `Assets/AntColony/Scenes/AntGameDevelopment.unity`; do not mark 3.3C complete until the user confirms them.
+
+1. Mara, Pip and Tala retain their identities.
+2. Each ant has its own visible inventory.
+3. All ants initially have one carrying slot.
+4. Excavating Soil adds Soil to the excavator's inventory.
+5. Excavating Stone adds Stone to the excavator's inventory.
+6. Multiple identical resources stack correctly.
+7. Incompatible resources occupy separate slots.
+8. A full inventory causes excavation output to drop physically.
+9. No excavated material is lost or duplicated.
+10. Partial capacity transfers retain the remainder as a drop.
+11. Right-clicking a world drop gives a Pickup order.
+12. Ant navigates to a valid adjacent location before pickup.
+13. Picking up a drop transfers the correct quantity.
+14. Multiple ants cannot collect the same reserved material twice.
+15. Cancelling pickup releases reservations.
+16. Dropping an item creates a recoverable world drop.
+17. Failed drop placement leaves inventory unchanged.
+18. Raising Hauling skill unlocks additional slots.
+19. Reducing capacity never silently deletes carried resources.
+20. Changing selection preserves inventories.
+21. Other ants continue working independently.
+22. Autonomous survival remains operational.
+23. Existing excavation and job priorities remain functional.
+24. World reset restores deterministic fixtures.
+25. Camera pan, zoom and UI click protection work.
+26. Unity Console contains no relevant errors or warnings.
+
+Known limitations are intentional: stack size 10, fixture quantities and carrying thresholds are provisional. Pickup/drop is explicitly player-directed; there is no autonomous hauling selection, Material Storage, stockpile policy, construction delivery, equipment capacity, food/water inventory, resource decay, crafting, persistence, streaming or multiplayer. The smallest next milestone after acceptance is separately authorised material storage and autonomous hauling, without beginning construction.
+
 ## Latest accepted milestone — 3.3B Real Excavation Designations & Physical Material Output (13 October 2026)
 
 **Status: COMPLETE — the user confirmed all 26 manual Unity Play Mode checks on 13 October 2026.** Previously reported focused Edit Mode 14/14, focused Play Mode 3/3, full graphics-enabled Edit Mode 406/406 and full Play Mode 40/40 passed. These suites were not rerun during this documentation-only update. Milestone 3.3A was also accepted.
@@ -22,7 +75,7 @@ The development scene adds reachable Soil and Stone blocks, a three-block area, 
 
 ### Exact 3.3B manual Unity Play Mode acceptance
 
-**Pending:** perform these checks in `Assets/AntColony/Scenes/AntGameDevelopment.unity`; do not mark 3.3B complete until the user confirms them.
+**Accepted:** the user confirmed all 26 checks on 13 October 2026.
 
 1. Mara, Pip and Tala retain their identities and needs.
 2. Excavate mode can be activated and deactivated.
@@ -51,7 +104,7 @@ The development scene adds reachable Soil and Stone blocks, a three-block area, 
 25. Camera pan/zoom and UI blocking work.
 26. Unity Console remains free of relevant errors or warnings.
 
-Known limitations are intentional: all excavated output becomes a loose drop because inventories are not implemented; there is no pickup, carrying, hauling, stockpile, construction, Surface Preparation, equipment, save/load, world streaming or multiplayer. Drop stacking is not yet needed because stable one-output-per-job entries are retained separately. Yield, duration and skill speed are provisional; material hardness has no effect yet.
+At the 3.3B checkpoint, all excavated output became a loose drop because inventory and pickup were not yet implemented. Milestone 3.3C supersedes those limitations with personal inventory, stacking and explicit transfers; hauling, stockpiles, construction, Surface Preparation, equipment, save/load, world streaming and multiplayer remain absent. Yield, duration and skill speed are provisional; material hardness has no effect yet.
 
 ## Latest accepted milestone — 3.3A Colony Job Designation & Priority Foundation (13 October 2026)
 

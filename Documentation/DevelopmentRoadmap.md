@@ -1,8 +1,12 @@
 # Ant Colony Development Roadmap
 
-## Next proposed milestone — 3.3C Ant Inventory & Excavation Pickup Foundation
+## 3.3C implementation status — 13 October 2026
 
-3.3B is manually accepted, with previously reported 14/14 focused Edit Mode, 3/3 focused Play Mode, 406/406 full graphics-enabled Edit Mode and 40/40 full Play Mode passes. Introduce per-ant authoritative stack-based inventory with slot-only limits, atomic excavation pickup when space exists and a recoverable world-drop fallback otherwise; explicit adjacent pickup/drop and conservation tests. Preserve physical resource ownership, world transaction idempotence and existing jobs. **No hauling, storage backgrounds, construction or broader resource scheduling** in 3.3C. Numeric stack limits and skill-capacity tuning remain provisional; separately approved implementation required.
+**3.3C Ant Inventory, Automatic Excavation Pickup & Physical Material Handling: Implemented — Pending Manual Acceptance.** Each authoritative ant record owns independent stack-based inventory. Hauling levels 0/20/40/60/80 grant one through five natural slots; Soil and Stone provisionally stack to 10. Capacity decay retains occupied overflow without permitting further additions. Excavation atomically sends output to the excavator, a recoverable drop, or an explicit split between both. Selected ants can reserve and pick up a reachable drop or use Developer Only controls to drop a chosen quantity at their current valid anchor. Compatible world stacks merge, partial transfer is conserved, failures preserve the source and stable output keys prevent retries from duplicating resources.
+
+Automated verification passes **26/26 focused Edit Mode**, **5/5 focused Play Mode**, **432/432 complete graphics-enabled Edit Mode** and **42/42 complete Play Mode**, all with zero failures/skips. The exact 26-step manual checklist is recorded in `CurrentGameState.md` and remains pending user confirmation. **No autonomous hauling, Material Storage, stockpiles, construction or broader resource scheduling is implemented.** Stack limits, fixture quantities and carrying balance remain provisional.
+
+**Next smallest milestone after acceptance:** separately authorise the narrow 3.3D Material Storage and autonomous hauling slice. It should reuse these physical ownership, reservation and transfer boundaries without beginning construction or creating a global resource wallet.
 
 
 ## 3.3B implementation status — 13 October 2026
@@ -68,7 +72,7 @@ Automated evidence: focused 3.1B Edit Mode **16/16 passed**, focused selection/i
 
 **3.1A Ant Selection & Command Integration: COMPLETE.** The user confirmed all 14 manual Play Mode acceptance checks passed. Previously reported automation: focused Edit Mode 6/6, focused Play Mode 4/4, full Edit Mode 258/258 and full Play Mode 18/18. Three selectable ants, independent right-click movement orders, UI click protection, order completion and development-tool separation have been accepted. This is a documentation-only status change; no new tests executed.
 
-**Historical next action:** the 3.3A checklist was accepted and 3.3B was subsequently authorised. The current next action is the 3.3B manual checklist recorded at the top of `CurrentGameState.md`.
+**Historical next action:** the 3.3A and 3.3B checklists were accepted. The current next action is the 3.3C manual checklist recorded at the top of `CurrentGameState.md`.
 
 
 ## Current accepted milestone and experimental next step — 12 October 2026
@@ -327,6 +331,6 @@ These milestones are ordered direction, not approved implementation work. Their 
 | 9 — Enemy colonies and hostile interactions | Reuse the same terrain navigation for other colonies and add high-level engage, retreat, avoid, defend and assistance responses. | Not started |
 | 10 — Skills, survival, growth and finished slice | Skills, needs, physical survival, autonomous survival and synthetic work foundations exist. Real work, queen/brood progression, onboarding, objectives and save/load remain future slices. | Synthetic work pending acceptance |
 
-The proposed carrying model remains future work: one initial slot plus one per 20 Hauling skill, capped at five, with one item per slot.
+The 3.3C carrying model is implemented: one initial slot plus one at Hauling 20/40/60/80, capped at five, with compatible resource stacks and a provisional maximum of 10 for Soil and Stone.
 
-No new milestone is complete without implementation and validation evidence. Milestone 2.4D remains pending its separately recorded manual acceptance. Milestone 3.3B implements excavation and loose Soil/Stone output only; gathering/hauling, Surface Preparation, construction, inventories, carrying, persistence, streaming and local avoidance are not implemented.
+No new milestone is complete without implementation and validation evidence. Milestone 2.4D remains pending its separately recorded manual acceptance. Milestone 3.3C implements personal inventory, excavation auto-pickup and explicit loose-drop transfer only; autonomous hauling, Material Storage, Surface Preparation, construction, persistence, streaming and local avoidance are not implemented.

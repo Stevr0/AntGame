@@ -29,7 +29,7 @@ namespace AntColony.Tests.PlayMode
         }
 
         [UnityTest]
-        public IEnumerator AutonomousAntCompletesRealExcavationAndCreatesDrop()
+        public IEnumerator AutonomousAntCompletesRealExcavationAndPicksUpOutput()
         {
             yield return LoadScene();
             AntGameDevelopmentWorldHost host = FindHost();
@@ -40,10 +40,15 @@ namespace AntColony.Tests.PlayMode
                 AntGameDevelopmentWorldHost.ExcavationSoilFixture, out _), Is.True);
             controller.SetAutonomousColonyWorkEnabled(true);
             float timeout = Time.time + 35f;
-            while (host.MaterialDrops.Count == 0 && Time.time < timeout)
+            while (controller.SelectableAnts.All(
+                    ant => ant.Record.Inventory.TotalQuantity == 0) && Time.time < timeout)
                 yield return null;
-            Assert.That(host.MaterialDrops.GetQuantity(ExcavatedMaterialType.Soil),
-                Is.EqualTo(1));
+            SelectableGridAnt excavator = controller.SelectableAnts.Single(
+                ant => ant.Record.Inventory.TotalQuantity > 0);
+            Assert.That(excavator.Record.Inventory.OccupiedSlots.Single().ResourceTypeId,
+                Is.EqualTo(MaterialResourceCatalog.GetStableId(
+                    ExcavatedMaterialType.Soil)));
+            Assert.That(excavator.Record.Inventory.TotalQuantity, Is.EqualTo(1));
             host.WorldData.GetCell(
                 AntGameDevelopmentWorldHost.ExcavationSoilFixture,
                 out WorldTileCellData cell);
@@ -62,7 +67,59 @@ namespace AntColony.Tests.PlayMode
             Assert.That(host.SelectionController.TryCancelExcavation(
                 AntGameDevelopmentWorldHost.ExcavationSoilFixture, out _), Is.True);
             yield return null;
-            Assert.That(host.MaterialDrops.Count, Is.Zero);
+            Assert.That(host.MaterialDrops.Count, Is.EqualTo(2),
+                "Cancellation must leave only the two authored pickup fixtures.");
+        }
+
+        [UnityTest]
+        public IEnumerator WorldResetRestoresIndependentEmptyInventoriesAndDropFixtures()
+        {
+            yield return LoadScene();
+            AntGameDevelopmentWorldHost host = FindHost();
+            AntSelectionCommandController controller = host.SelectionController;
+
+            Assert.That(controller.SelectableAnts.Count, Is.EqualTo(3));
+            Assert.That(controller.SelectableAnts.All(
+                ant => ant.Record.Inventory.TotalQuantity == 0), Is.True);
+            Assert.That(controller.SelectableAnts.Select(
+                ant => ant.Record.Inventory).Distinct().Count(), Is.EqualTo(3));
+            controller.SelectableAnts[0].Record.Inventory.TryAdd(
+                MaterialResourceCatalog.GetStableId(ExcavatedMaterialType.Soil),
+                3, MaterialResourceCatalog.ProvisionalMaximumStack, false,
+                out _, out _);
+            host.MaterialDrops.Clear();
+
+            Assert.That(host.RebuildWorld(), Is.True);
+            Assert.That(host.SelectionController.SelectableAnts.All(
+                ant => ant.Record.Inventory.TotalQuantity == 0), Is.True);
+            Assert.That(host.MaterialDrops.Count, Is.EqualTo(2));
+        }
+
+        [UnityTest]
+        public IEnumerator PlayerPickupAndDeveloperDropConserveMaterial()
+        {
+            yield return LoadScene();
+            AntGameDevelopmentWorldHost host = FindHost();
+            AntSelectionCommandController controller = host.SelectionController;
+            SelectableGridAnt ant = controller.SelectableAnts[0];
+            controller.Select(ant);
+            Assert.That(host.MaterialDrops.TryFindAtCell(
+                AntGameDevelopmentWorldHost.SoilDropFixture,
+                out WorldMaterialDrop source), Is.True);
+            int initialWorldQuantity = host.MaterialDrops.GetQuantity(
+                ExcavatedMaterialType.Soil);
+
+            Assert.That(controller.TryIssueMaterialPickupOrder(source), Is.True);
+            float timeout = Time.time + 20f;
+            while (ant.Record.Inventory.TotalQuantity == 0 && Time.time < timeout)
+                yield return null;
+            Assert.That(ant.Record.Inventory.TotalQuantity, Is.GreaterThan(0));
+            int carried = ant.Record.Inventory.TotalQuantity;
+            Assert.That(controller.TryDropSelectedInventory(0, carried,
+                out string error), Is.True, error);
+            Assert.That(ant.Record.Inventory.TotalQuantity, Is.Zero);
+            Assert.That(host.MaterialDrops.GetQuantity(ExcavatedMaterialType.Soil),
+                Is.EqualTo(initialWorldQuantity));
         }
 
         private static IEnumerator LoadScene()

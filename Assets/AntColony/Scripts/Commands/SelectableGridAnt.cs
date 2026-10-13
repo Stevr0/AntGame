@@ -43,6 +43,8 @@ namespace AntColony.Commands
         private ExcavationDesignationRegistry excavationDesignations;
         private ExcavationWorldTransaction excavationTransaction;
         private ExcavationJobOrder excavationOrder;
+        private WorldMaterialDropRegistry materialDrops;
+        private MaterialPickupOrder pickupOrder;
 
         public string DisplayName => Record?.DisplayName ?? "Unbound Ant";
         public AntRecord Record => entityBinding?.Record;
@@ -56,6 +58,7 @@ namespace AntColony.Commands
         public SurvivalInteractionOrder InteractionOrder => interactionOrder;
         public SyntheticColonyJobOrder JobOrder => jobOrder;
         public ExcavationJobOrder ExcavationOrder => excavationOrder;
+        public MaterialPickupOrder PickupOrder => pickupOrder;
         public ColonyJob ActiveColonyJob => excavationOrder?.Job ?? jobOrder?.Job;
         public AntOrderSource OrderSource { get; private set; }
         public LineRenderer SelectionIndicator => selectionIndicator;
@@ -85,6 +88,8 @@ namespace AntColony.Commands
 
                 if (excavationOrder != null && excavationOrder.IsActive)
                     return excavationOrder.Status;
+                if (pickupOrder != null && pickupOrder.IsActive)
+                    return pickupOrder.Status;
                 if (jobOrder != null && jobOrder.IsActive) return jobOrder.Status;
 
                 return motor.State switch
@@ -123,6 +128,7 @@ namespace AntColony.Commands
             interactionOrder?.Cancel("Interaction cancelled because the ant was disabled.");
             jobOrder?.Cancel("Synthetic work cancelled because the ant was disabled.");
             excavationOrder?.Cancel("Excavation cancelled because the ant was disabled.");
+            pickupOrder?.Cancel("Pickup cancelled because the ant was disabled.");
             hasActiveOrder = false;
             OrderSource = AntOrderSource.None;
         }
@@ -168,12 +174,16 @@ namespace AntColony.Commands
         }
 
         public void BindExcavation(ExcavationDesignationRegistry designations,
-            ExcavationWorldTransaction transaction)
+            ExcavationWorldTransaction transaction,
+            WorldMaterialDropRegistry drops = null)
         {
             excavationOrder?.Cancel("Excavation world was replaced.");
+            pickupOrder?.Cancel("Material world was replaced.");
             excavationDesignations = designations;
             excavationTransaction = transaction;
+            materialDrops = drops;
             excavationOrder = null;
+            pickupOrder = null;
         }
 
         public void SetSelected(bool selected)
@@ -205,6 +215,7 @@ namespace AntColony.Commands
             interactionOrder?.Cancel("Interaction replaced by a movement order.");
             jobOrder?.Cancel("Synthetic work interrupted by a movement order.");
             excavationOrder?.Cancel("Excavation interrupted by a movement order.");
+            pickupOrder?.Cancel("Pickup interrupted by a movement order.");
             if (Record == null)
             {
                 failureReason = "Movement order rejected: ant identity is not bound.";
@@ -248,6 +259,7 @@ namespace AntColony.Commands
             interactionOrder?.Cancel("Interaction replaced by a new order.");
             jobOrder?.Cancel("Synthetic work interrupted by a survival interaction.");
             excavationOrder?.Cancel("Excavation interrupted by a survival interaction.");
+            pickupOrder?.Cancel("Pickup interrupted by a survival interaction.");
             motor.CancelMovement("Interaction order is choosing an approach.");
             Vector2Int startCell = WorldTileCoordinates.WorldPositionToCell(motor.Position);
             if (!SurvivalInteractionOrder.TryCreate(
@@ -292,6 +304,7 @@ namespace AntColony.Commands
         {
             CacheComponents();
             interactionOrder?.Cancel("Interaction replaced by synthetic work.");
+            pickupOrder?.Cancel("Pickup replaced by synthetic work.");
             jobOrder?.Cancel("Synthetic work replaced by another job.");
             motor.CancelMovement("Synthetic work is choosing an approach.");
             if (!SyntheticColonyJobOrder.TryCreate(
@@ -332,6 +345,7 @@ namespace AntColony.Commands
         {
             CacheComponents();
             interactionOrder?.Cancel("Interaction replaced by excavation.");
+            pickupOrder?.Cancel("Pickup replaced by excavation.");
             jobOrder?.Cancel("Synthetic work replaced by excavation.");
             excavationOrder?.Cancel("Excavation replaced by another job.");
             motor.CancelMovement("Excavation is choosing an approach.");
@@ -366,6 +380,43 @@ namespace AntColony.Commands
             return true;
         }
 
+        public bool IssueMaterialPickupOrder(WorldMaterialDrop drop,
+            Vector2Int approachCell)
+        {
+            CacheComponents();
+            interactionOrder?.Cancel("Interaction replaced by material pickup.");
+            jobOrder?.Cancel("Synthetic work replaced by material pickup.");
+            excavationOrder?.Cancel("Excavation replaced by material pickup.");
+            pickupOrder?.Cancel("Pickup replaced by another pickup.");
+            motor.CancelMovement("Material pickup is choosing an approach.");
+            if (!MaterialPickupOrder.TryCreate(materialDrops,
+                    motor.NavigationWorld?.Map, Record, drop, approachCell,
+                    out pickupOrder, out string error))
+            {
+                failureReason = error;
+                orderOutcome = "Pickup rejected";
+                hasActiveOrder = false;
+                OrderSource = AntOrderSource.None;
+                return false;
+            }
+            if (!motor.MoveTo(approachCell))
+            {
+                pickupOrder.Cancel(motor.StatusMessage);
+                failureReason = motor.StatusMessage;
+                orderOutcome = "Pickup rejected";
+                hasActiveOrder = false;
+                OrderSource = AntOrderSource.None;
+                return false;
+            }
+            destination = approachCell;
+            hasDestination = true;
+            hasActiveOrder = true;
+            failureReason = string.Empty;
+            orderOutcome = "Pickup active";
+            OrderSource = AntOrderSource.Player;
+            return true;
+        }
+
         public void RecordRejectedOrder(Vector2Int rejectedDestination, string reason)
         {
             failureReason = reason;
@@ -378,6 +429,7 @@ namespace AntColony.Commands
             interactionOrder?.Cancel(reason);
             jobOrder?.Cancel(reason);
             excavationOrder?.Cancel(reason);
+            pickupOrder?.Cancel(reason);
             motor.CancelMovement(reason);
             hasActiveOrder = false;
             OrderSource = AntOrderSource.None;
@@ -406,7 +458,17 @@ namespace AntColony.Commands
 
             if (motor.HasArrived)
             {
-                if (excavationOrder != null && excavationOrder.IsActive)
+                if (pickupOrder != null && pickupOrder.IsActive)
+                {
+                    Vector2Int current =
+                        WorldTileCoordinates.WorldPositionToCell(motor.Position);
+                    pickupOrder.TryComplete(current);
+                    hasActiveOrder = false;
+                    OrderSource = AntOrderSource.None;
+                    orderOutcome = pickupOrder.Status;
+                    failureReason = pickupOrder.FailureReason;
+                }
+                else if (excavationOrder != null && excavationOrder.IsActive)
                 {
                     if (excavationOrder.Phase == ExcavationOrderPhase.Travelling)
                     {
@@ -469,6 +531,7 @@ namespace AntColony.Commands
                 interactionOrder?.Cancel(motor.FailureReason);
                 jobOrder?.Cancel(motor.FailureReason);
                 excavationOrder?.Cancel(motor.FailureReason);
+                pickupOrder?.Cancel(motor.FailureReason);
                 hasActiveOrder = false;
                 OrderSource = AntOrderSource.None;
                 orderOutcome = "Failed; returned to Autonomous / Idle";
@@ -479,6 +542,7 @@ namespace AntColony.Commands
                 interactionOrder?.Cancel("Navigation stopped before interaction.");
                 jobOrder?.Cancel("Navigation stopped before synthetic work.");
                 excavationOrder?.Cancel("Navigation stopped before excavation.");
+                pickupOrder?.Cancel("Navigation stopped before material pickup.");
                 hasActiveOrder = false;
                 OrderSource = AntOrderSource.None;
                 orderOutcome = "Cancelled; returned to Autonomous / Idle";

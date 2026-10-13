@@ -8,7 +8,7 @@ Ants may also receive temporary explicit orders. Critical survival may interrupt
 
 ## Current implementation
 
-Milestone 3.3A is accepted, and 3.3B extends that same foundation with real excavation:
+Milestones 3.3A and 3.3B are accepted, and 3.3C extends that foundation with personal inventory and explicit material transfers:
 
 - Every ant record owns independent priorities for Excavation, Surface Preparation, Construction, Hauling, Foraging, Production, Combat, and Brood Care.
 - `ColonyJobRegistry` owns synthetic job identity, target, status, reservation, progress, and failure state outside GameObjects.
@@ -16,12 +16,13 @@ Milestone 3.3A is accepted, and 3.3B extends that same foundation with real exca
 - Evaluations inspect at most 32 candidates per priority, are staggered, and back off for 2/4/8 seconds on failure.
 - `SyntheticColonyJobOrder` remains as a regression fixture. Real designations use `ExcavationJobOrder` through the same registry, selector, motor, adjacency, priority and interruption seams.
 - Excavate mode accepts eligible foreground Solids by world coordinate, supports bounded area drags, and blocks ordinary selection/orders while active.
-- Soil and Stone completion uses a stable job-keyed terrain-to-drop transaction. Output failure preserves the Solid; successful removal preserves Background and refreshes one visual/collision/navigation locality.
+- Soil and Stone completion uses a stable job-keyed transaction. Output enters the excavator's inventory when possible, with any remainder becoming a recoverable drop. Output failure preserves the Solid; successful removal preserves Background and refreshes one visual/collision/navigation locality.
 - Work takes a provisional four simulation hours, uses Rested and relevant-skill speed, and awards proportional XP only for committed progress.
 - Player orders and critical survival pause work and release ownership while preserving progress. Ordinary survival waits for active work.
-- The development scene exposes five deterministic fixtures plus priority, designation, cancellation, reset, and diagnostic controls.
+- Explicit player pickup reserves one loose drop quantity and travels through the same shared navigation/adjacency seam. This is an order, not an autonomous Hauling job.
+- The development scene exposes deterministic job, excavation and loose-drop fixtures plus priority, inventory, cancellation, reset, and diagnostic controls.
 
-Milestone 3.3A is accepted. Milestone 3.3B is **Implemented — Pending Manual Acceptance** with 14/14 focused Edit, 3/3 focused Play, 406/406 full Edit and 40/40 full Play passing.
+Milestones 3.3A and 3.3B are accepted. Milestone 3.3C is **Implemented — Pending Manual Acceptance** with 26/26 focused Edit, 5/5 focused Play, 432/432 full Edit and 42/42 full Play passing.
 
 ## Future decision flow
 
@@ -51,4 +52,4 @@ flowchart TD
 
 ## Not implemented
 
-Excavation is now real, but all output temporarily remains a loose world drop. Pickup, inventories, hauling, storage, Surface Preparation, construction, gathering, production, combat, brood care, forced-work orders, Draft Mode, group tactics, local avoidance, persistence, and production-scale indexing require later milestones.
+Excavation, personal inventory and explicit loose-drop pickup are now real. Autonomous hauling, Material Storage, Surface Preparation, construction, gathering, production, combat, brood care, forced-work orders, Draft Mode, group tactics, local avoidance, persistence, and production-scale indexing require later milestones.

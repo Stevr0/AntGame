@@ -135,6 +135,8 @@ namespace AntColony.Ants
             Skills = new AntSkillSet(skillSettings, startingSimulationHours);
             Needs = new AntNeedsState(needsSettings);
             WorkPriorities = new AntWorkPrioritySet();
+            Inventory = new AntInventory(
+                () => Skills.Get(AntSkillId.Hauling).Level);
         }
 
         public AntId Id { get; }
@@ -145,6 +147,7 @@ namespace AntColony.Ants
         public AntSkillSet Skills { get; private set; }
         public AntNeedsState Needs { get; }
         public AntWorkPrioritySet WorkPriorities { get; }
+        public AntInventory Inventory { get; }
         public AntLifecycleStatus LifecycleStatus { get; private set; }
         public bool CanAcceptMovementOrders => LifecycleStatus == AntLifecycleStatus.Active;
 

@@ -2,7 +2,7 @@
 
 ## Implemented identity model
 
-Each ant is represented by one authoritative plain-C# `AntRecord`. Stable `AntId` and `ColonyId` values, caste, attributes, lifecycle, skills, and needs belong to the record rather than to the visual GameObject. `AntEntityBinding` connects a runtime visual to an existing record, while a visual-claim registry prevents duplicate live representations.
+Each ant is represented by one authoritative plain-C# `AntRecord`. Stable `AntId` and `ColonyId` values, caste, attributes, lifecycle, skills, needs, work priorities and personal inventory belong to the record rather than to the visual GameObject. `AntEntityBinding` connects a runtime visual to an existing record, while a visual-claim registry prevents duplicate live representations.
 
 The deterministic development ants are:
 
@@ -37,6 +37,12 @@ All begin at level 0 and can reach level 100. A successful future activity can c
 - Needs and Rested modifiers can multiply a valid XP award without changing stored base progression rules.
 
 These values are development placeholders. The foundation is implemented and automated-tested; its manual acceptance was recorded through the approved transition to milestone 3.2A.
+
+## Implemented personal inventory
+
+Each Queen or Worker record owns an independent stack-based inventory. Natural slot capacity is based only on current Hauling level: one slot at 0–19, two at 20–39, three at 40–59, four at 60–79 and five at 80–100. Soil and Stone provisionally stack to 10. Compatible additions merge before opening another slot; incompatible resources never share a slot.
+
+If Hauling decay lowers capacity, occupied overflow remains intact and recoverable. New additions are blocked until occupied usage is within the reduced capacity. Inventory survives visual rebinding and selection changes. Equipment slots, weight, saddlebags and final balance are not implemented.
 
 ## Planned individuality
 

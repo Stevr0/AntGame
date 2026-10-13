@@ -17,12 +17,12 @@ The project preserves an authored-content-first approach. Scene and prefab refer
 ```mermaid
 flowchart TB
   subgraph Data[Plain C# authoritative data]
-    AR[AntRecord and AntRegistry]
+    AR[AntRecord, AntRegistry and AntInventory]
     WD[ChunkedWorldData]
     SI[SurvivalInteractionWorld]
     JP[AntWorkPrioritySet]
     JR[ColonyJobRegistry]
-    DR[Excavation designations and world drops]
+    DR[Excavation designations, transactions and world drops]
   end
 
   subgraph Rules[Rules and shared services]
@@ -56,7 +56,7 @@ flowchart TB
 
 ### Ant data
 
-`AntColony.Ants` owns stable identity, colony membership, caste, attributes, lifecycle, skills, needs, and per-ant work priorities. Runtime visuals bind to records rather than becoming the source of truth.
+`AntColony.Ants` owns stable identity, colony membership, caste, attributes, lifecycle, skills, needs, per-ant work priorities and stack-based personal inventory. Runtime visuals bind to records rather than becoming the source of truth.
 
 ### World data
 
@@ -68,7 +68,7 @@ One `GridNavigationWorldService` owns the shared navigation map and bounded sche
 
 ### Commands and interactions
 
-`AntColony.Commands` handles selection, designation input, context orders, visual bindings, physical survival, synthetic work and real excavation execution. Location-owned supplies remain in `SurvivalInteractionWorld`; job identity, ownership and progress remain in `ColonyJobRegistry`; `ExcavationDesignationRegistry` is a typed view over those same jobs rather than a second queue. Job selection reuses the shared map and motor instead of owning navigation.
+`AntColony.Commands` handles selection, designation input, context orders, visual bindings, physical survival, synthetic work, real excavation and explicit material pickup/drop. Location-owned supplies remain in `SurvivalInteractionWorld`; job identity, ownership and progress remain in `ColonyJobRegistry`; `ExcavationDesignationRegistry` is a typed view over those same jobs rather than a second queue. Material pickup reservations remain in the world-drop registry, while carried stacks remain on the destination ant record. Job and pickup travel reuse the shared map and motor instead of owning navigation.
 
 ### Development composition
 
@@ -80,7 +80,7 @@ One `GridNavigationWorldService` owns the shared navigation map and bounded sche
 | --- | --- | --- |
 | `AntMovementPrototype.unity` | Continuous-input surface movement regression course | Retained developer fixture |
 | `AntNavigationPrototype.unity` | Navigation classification and visualisation fixture | Retained developer fixture |
-| `AntGameDevelopment.unity` | Integrated world, ants, selection, grid movement, survival, synthetic jobs, excavation and loose drops | Primary development scene |
+| `AntGameDevelopment.unity` | Integrated world, ants, selection, grid movement, survival, jobs, excavation, personal inventory and loose material transfers | Primary development scene |
 
 There is no finished menu-to-game flow, Bootstrap scene, save selection, or production world-loading sequence yet. Future work must preserve the existing authored coordinator seams rather than introducing an unnecessary global manager.
 

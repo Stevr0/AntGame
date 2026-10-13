@@ -25,13 +25,15 @@ This log summarises approved decisions. It does not approve unresolved details o
 | 13 Oct 2026 | Keep 3.2B interactions narrow and location-owned | No generic inventory, global stockpile, or autonomous job authority is implied |
 | 13 Oct 2026 | Implement 3.3A work as synthetic registry-owned jobs | Validate priority, path-cost, ownership and interruption seams without implying real excavation, construction or hauling |
 | 13 Oct 2026 | Commit 3.3B excavation output and foreground removal as one boundary | A resource-bearing Solid remains intact on output failure, and stable job keys prevent duplicate loose output |
+| 13 Oct 2026 | Keep 3.3C inventory on `AntRecord` with Hauling-based natural slots | Visual rebinding cannot lose cargo; capacity decay retains overflow and blocks additions instead of deleting resources |
+| 13 Oct 2026 | Use a provisional Soil/Stone stack maximum of 10 for 3.3C | Stacking and partial transfer can be tested without claiming final material balance |
 
 ## Open decisions
 
 - Exact ordered-work productivity bonus and eligible actions.
 - Job categories, interrupt thresholds, and explicit-order precedence.
 - Drafted-ant survival intervention.
-- Resource stack sizes, recipes, work durations, and final carrying balance.
+- Final resource stack sizes, recipes, work durations, and carrying balance.
 - Room enclosure algorithm, door behavior, and quality formulas.
 - Brood stages, timing, feeding thresholds, mortality, and overflow policy.
 - Queen-death colony outcome.

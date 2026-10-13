@@ -246,7 +246,9 @@ namespace AntColony.Commands
             // and the resumable pre-completion progress.
             if (requested >= remaining &&
                 !transaction.TryCommit(Job.Id.Value, designation.Cell,
-                    designation.SolidMaterialId, out _, out string commitError))
+                    designation.SolidMaterialId,
+                    new AntInventoryMaterialDestination(ant.Inventory),
+                    out _, out string commitError))
             {
                 Fail(commitError);
                 return;

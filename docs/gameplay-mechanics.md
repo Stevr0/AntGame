@@ -8,12 +8,13 @@
 | Identity and attributes | Approved | Implemented | Accepted in Play Mode |
 | Learn-by-doing skills | Approved with provisional balance | Implemented foundation | Accepted through 3.2A transition |
 | Needs and Rested state | Approved with provisional balance | Implemented foundation | Accepted in Play Mode |
-| Physical Eat, Drink, and Rest | Approved vertical slice | Implemented | Automated passed; manual pending |
+| Physical Eat, Drink, and Rest | Approved vertical slice | Implemented | Accepted in Play Mode |
 | Two-layer terrain and Tilemap projection | Approved | Implemented | Accepted milestones |
 | Grid navigation | Approved foundation | Production integration implemented | 2.4D manual acceptance remains pending |
-| Excavation gameplay and soil logistics | Approved direction | Not implemented | Not tested |
+| Excavation gameplay | Approved | Implemented | Accepted in Play Mode |
+| Personal inventory and explicit material pickup/drop | Approved slice | Implemented | Automated passed; manual pending |
 | Construction and functional conversion | Approved direction | Only authored development fixtures | Gameplay not tested |
-| Colony priorities and autonomous jobs | Approved design | Not implemented | Not tested |
+| Colony priorities and autonomous jobs | Approved design | Implemented foundation | Accepted in Play Mode |
 | Brood and reproduction | Approved design | Not implemented | Not tested |
 | Rooms, doors, and quality bonuses | Approved design | Not implemented | Not tested |
 | Combat, equipment, and enemies | Partial design | Not implemented | Not tested |
@@ -27,7 +28,7 @@ The approved player-facing model has three states:
 - **Temporary explicit order:** the player requests a specific task. Completion, cancellation, or invalidation returns the ant to autonomy.
 - **Draft Mode:** a future persistent tactical state for move, attack, hold, defend-area, retreat, and group control.
 
-Current implementation supports selection plus temporary Move, Eat, Drink, and Rest orders. It does not yet implement the general autonomous job system or Draft Mode. The old WASD `PlayerMovementInput` path is retained strictly as a developer movement regression tool.
+Current implementation supports selection plus temporary Move, Eat, Drink, Rest and material Pickup orders, along with autonomous survival and colony work selection. It does not yet implement explicit forced-work orders, autonomous hauling or Draft Mode. The old WASD `PlayerMovementInput` path is retained strictly as a developer movement regression tool.
 
 ## Physical-world principles
 
@@ -37,7 +38,7 @@ Current implementation supports selection plus temporary Move, Eat, Drink, and R
 - Valid partial work survives safe interruptions.
 - Reservations prevent duplicate consumption and must be released on cancellation or failure.
 
-The current 3.2B interaction slice proves those principles only for location-owned food, water, and sleeping reservations. It is not a generic inventory or job framework.
+The current systems prove these principles through location-owned food/water, sleeping reservations, real excavation, per-ant inventory and reserved loose-drop pickup. Material remains in exactly one authoritative inventory or world drop during this slice; no global resource wallet exists.
 
 ## Progression and failure
 

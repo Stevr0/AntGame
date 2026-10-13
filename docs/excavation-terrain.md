@@ -9,7 +9,7 @@ The two layers have different responsibilities:
 | Layer | Purpose | Mutation rule |
 | --- | --- | --- |
 | Background | Persistent substrate, grip, movement speed, and future colony function | May be converted or prepared; never absent in a resident cell |
-| Foreground Solid | Blocking/excavatable material and supporting geometry | May be removed by future excavation when eligible |
+| Foreground Solid | Blocking/excavatable material and supporting geometry | Removed only by a completed eligible excavation transaction |
 
 Visual Tilemaps and the collision-only Tilemap are projections of authoritative world data. The visual layers do not own gameplay state.
 
@@ -24,13 +24,15 @@ Visual Tilemaps and the collision-only Tilemap are projections of authoritative 
 - Local refresh and navigation invalidation seams for controlled development mutations.
 - Natural Earth/Stone grip, Prepared speed, and non-grippable Sky behavior.
 
-These systems are development foundations. They do not yet provide player-facing excavation work.
+Milestone 3.3B connected these foundations to player designations and autonomous excavation work. Milestone 3.3C connects committed yield to the excavator's inventory with a recoverable loose-drop fallback.
 
-## Approved excavation design
+## Implemented excavation and material handling
 
-The player will designate eligible foreground Solid cells for excavation. An assigned ant must reach a valid work position, make incremental progress, and remove only the foreground material when work completes. The Background remains. Excavated material becomes a physical resource: the excavator picks it up when slot capacity permits and otherwise drops it safely in the world.
+Excavate mode creates registry-owned jobs for eligible foreground Solid cells. Autonomous ants select them through the accepted priority/path-cost rules, reserve exclusively, reach a valid adjacent anchor and make incremental progress. Safe interruption retains progress. Completion removes only the foreground Solid and preserves the Background.
 
-Valid partial progress must survive safe interruptions. Dynamic terrain changes must refresh collision, movement capability, and relevant route data without rebuilding the entire world unconditionally.
+The stable job-keyed transaction prepares material ownership before terrain removal. Yield fills the excavator's compatible inventory capacity first; any remainder becomes a recoverable world drop. Inventory-only, drop-only and split output all commit once. A failed output preparation leaves the Solid intact, and retries cannot duplicate yield. The affected visual/collision cell and local navigation are refreshed after commit.
+
+Loose Soil and Stone stacks have stable identity, quantity, cell and provisional maximum stack 10. A selected ant can right-click a drop, reserve an eligible quantity, navigate adjacent and pick it up. Developer Only controls can drop a selected carried quantity at the ant's current valid anchor. Compatible same-cell stacks merge; failed or cancelled transfers preserve material and release reservations.
 
 ## Surface Preparation
 
@@ -38,11 +40,10 @@ Preparation is a future resource-backed Background conversion job. It does not u
 
 ## Not implemented
 
-- Excavation designations and worker selection.
-- Digging progress, completion, and physical soil creation.
-- Hauling or stockpile delivery.
+- Autonomous hauling or stockpile delivery.
+- Material Storage Background functions.
 - Resource-backed preparation jobs.
 - Procedural generation, durable chunk streaming, or save/load.
-- Player-facing terrain tools outside deterministic development controls.
+- Construction delivery or resource crafting.
 
 See [Ant Movement and Navigation](ant-movement-navigation.md) for mutation response and [Colony Construction and Rooms](colony-construction-rooms.md) for functional Background conversion.

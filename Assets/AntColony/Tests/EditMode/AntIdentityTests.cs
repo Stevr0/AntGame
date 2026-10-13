@@ -115,6 +115,8 @@ namespace AntColony.Tests.EditMode
             double retainedSkillExperience = record.Skills
                 .Get(AntSkillId.Excavation)
                 .TotalExperience;
+            Assert.That(record.Inventory.TryAdd("material.soil", 3, 10, false,
+                out _, out _), Is.True);
 
             GameObject firstObject = new("First Visual");
             AntEntityBinding first = firstObject.AddComponent<AntEntityBinding>();
@@ -142,6 +144,8 @@ namespace AntColony.Tests.EditMode
             Assert.That(replacement.Record, Is.SameAs(retained));
             Assert.That(replacement.Record.Skills.Get(AntSkillId.Excavation)
                 .TotalExperience, Is.EqualTo(retainedSkillExperience));
+            Assert.That(replacement.Record.Inventory.TotalQuantity, Is.EqualTo(3),
+                "Inventory belongs to the record, not its replaceable visual.");
             UnityEngine.Object.DestroyImmediate(replacementObject);
         }
 

@@ -81,6 +81,7 @@ namespace AntColony.Tests.EditMode
         public void FailedDropCreationLeavesSolidAndRetryCannotDuplicate()
         {
             AntGameDevelopmentWorldHost host = OpenHost();
+            int initialDropCount = host.MaterialDrops.Count;
             Vector2Int cell = AntGameDevelopmentWorldHost.ExcavationSoilFixture;
             host.WorldData.GetCell(cell, out WorldTileCellData before);
             host.MaterialDrops.RejectNextCreationForTesting = true;
@@ -92,7 +93,7 @@ namespace AntColony.Tests.EditMode
                 "stable-key", cell, before.SolidMaterialId, out _, out _), Is.True);
             Assert.That(host.ExcavationTransaction.TryCommit(
                 "stable-key", cell, before.SolidMaterialId, out _, out _), Is.False);
-            Assert.That(host.MaterialDrops.Count, Is.EqualTo(1));
+            Assert.That(host.MaterialDrops.Count, Is.EqualTo(initialDropCount + 1));
         }
 
         [Test]
@@ -166,7 +167,7 @@ namespace AntColony.Tests.EditMode
         }
 
         [Test]
-        public void WorldResetClearsDesignationsDropsAndRestoresSolid()
+        public void WorldResetClearsRuntimeChangesAndRestoresAuthoredFixtures()
         {
             AntGameDevelopmentWorldHost host = OpenHost();
             Vector2Int cell = AntGameDevelopmentWorldHost.ExcavationSoilFixture;
@@ -176,7 +177,8 @@ namespace AntColony.Tests.EditMode
                 "reset", cell, before.SolidMaterialId, out _, out _);
             Assert.That(host.RebuildWorld(), Is.True);
             Assert.That(host.ExcavationDesignations.Count, Is.Zero);
-            Assert.That(host.MaterialDrops.Count, Is.Zero);
+            Assert.That(host.MaterialDrops.Count, Is.EqualTo(2),
+                "The two authored Soil/Stone pickup fixtures are rebuilt.");
             host.WorldData.GetCell(cell, out WorldTileCellData restored);
             Assert.That(restored.HasSolidTile, Is.True);
         }
