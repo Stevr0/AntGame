@@ -1,5 +1,10 @@
 # ANT COLONY
 
+## Latest implementation status — 14 October 2026
+
+**Milestone 3.4D Colony Management & Work Priorities UI: manually ACCEPTED.** User confirmed 14 grouped Play Mode checks, including authoritative per-ant priority behaviour, resolution and input compatibility, ongoing jobs and clean Console. The accepted matrix exposes only Excavation, Construction and Hauling, leaving unimplemented work categories out of the normal player screen. This does not change the two-view contract. The art foundation remains pending separate manual visual acceptance.
+
+
 ## Milestone status update — 14 October 2026
 
 **3.4C Player Colony HUD & Developer UI Separation is MANUALLY ACCEPTED.** All 13 grouped Unity manual checks passed, including resolution checks and clean Console. This confirms the current Colony View player uGUI, shared simulation controls and optional developer IMGUI; it does not authorise or implement World View, entrances, surface resources or cross-view routes. The separate art foundation awaits visual acceptance.
