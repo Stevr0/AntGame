@@ -58,6 +58,13 @@ namespace AntColony.Tests.EditMode
                 slot => slot.Kind == SurvivalResourceKind.Water), Is.EqualTo(2));
             Assert.That(host.TryGetCell(host.SurvivalFixtureCells[7], out WorldTileCellData covered), Is.True);
             Assert.That(covered.HasSolidTile, Is.False);
+            Assert.That(host.SurvivalInteractionWorld.StorageSlots
+                .Where(slot => slot.Kind == SurvivalResourceKind.Food &&
+                    slot.Cell != host.SurvivalFixtureCells[7])
+                .Sum(slot => slot.Quantity), Is.EqualTo(24));
+            Assert.That(host.SurvivalInteractionWorld.StorageSlots
+                .Where(slot => slot.Kind == SurvivalResourceKind.Water)
+                .Sum(slot => slot.Quantity), Is.EqualTo(32));
         }
 
         [Test]
@@ -92,10 +99,13 @@ namespace AntColony.Tests.EditMode
             Vector2Int cell = host.SurvivalFixtureCells[0];
             SurvivalInteractionWorld world = host.SurvivalInteractionWorld;
             Assert.That(world.TryReserveResource(cell, SurvivalResourceKind.Food,
-                "ant-a", 6, out _), Is.True);
+                "ant-a", AntGameDevelopmentWorldHost.ReachableFoodQuantityPerFixture,
+                out _), Is.True);
             Assert.That(world.TryReserveResource(cell, SurvivalResourceKind.Food,
                 "ant-b", 1, out _), Is.False);
-            Assert.That(world.TryConsumeReserved(cell, "ant-a", 6, out _), Is.True);
+            Assert.That(world.TryConsumeReserved(cell, "ant-a",
+                AntGameDevelopmentWorldHost.ReachableFoodQuantityPerFixture,
+                out _), Is.True);
             Assert.That(world.TryConsumeReserved(cell, "ant-a", 1, out _), Is.False);
             Assert.That(world.TryGetStorage(cell, out SurvivalStorageSlot slot), Is.True);
             Assert.That(slot.Quantity, Is.Zero);
@@ -125,7 +135,8 @@ namespace AntColony.Tests.EditMode
             order.Advance(SurvivalInteractionOrder.ConsumptionDurationHours);
             host.SurvivalInteractionWorld.TryGetStorage(
                 host.SurvivalFixtureCells[0], out SurvivalStorageSlot slot);
-            Assert.That(slot.Quantity, Is.EqualTo(5));
+            Assert.That(slot.Quantity, Is.EqualTo(
+                AntGameDevelopmentWorldHost.ReachableFoodQuantityPerFixture - 1));
             Assert.That(ant.Needs.Hunger, Is.EqualTo(60));
             Assert.That(order.Phase, Is.EqualTo(SurvivalInteractionPhase.Completed));
         }
@@ -142,7 +153,8 @@ namespace AntColony.Tests.EditMode
             order.Advance(SurvivalInteractionOrder.ConsumptionDurationHours);
             host.SurvivalInteractionWorld.TryGetStorage(
                 host.SurvivalFixtureCells[2], out SurvivalStorageSlot slot);
-            Assert.That(slot.Quantity, Is.EqualTo(7));
+            Assert.That(slot.Quantity, Is.EqualTo(
+                AntGameDevelopmentWorldHost.ReachableWaterQuantityPerFixture - 1));
             Assert.That(ant.Needs.Thirst, Is.EqualTo(50));
             Assert.That(ant.Needs.IsDehydrated, Is.False);
         }
@@ -154,10 +166,11 @@ namespace AntColony.Tests.EditMode
             SurvivalInteractionOrder order = CreateOrder(host, 0,
                 SurvivalInteractionKind.Eat, out _);
             order.TryBeginInteraction(order.ApproachCell);
-            order.Advance(0.5d);
+            order.Advance(0.25d);
             host.SurvivalInteractionWorld.TryGetStorage(
                 host.SurvivalFixtureCells[0], out SurvivalStorageSlot slot);
-            Assert.That(slot.Quantity, Is.EqualTo(6));
+            Assert.That(slot.Quantity, Is.EqualTo(
+                AntGameDevelopmentWorldHost.ReachableFoodQuantityPerFixture));
         }
 
         [Test]
@@ -206,7 +219,7 @@ namespace AntColony.Tests.EditMode
             SurvivalInteractionOrder order = CreateOrder(host, 4,
                 SurvivalInteractionKind.Rest, out _);
             order.TryBeginInteraction(order.ApproachCell);
-            order.Advance(2d);
+            order.Advance(1.5d);
             Assert.That(ant.Needs.Fatigue, Is.EqualTo(20));
             Assert.That(ant.Needs.HasCompletedRest, Is.True);
             Assert.That(ant.Needs.WorkSpeedMultiplier, Is.GreaterThan(1d));
@@ -224,7 +237,7 @@ namespace AntColony.Tests.EditMode
             order.TryBeginInteraction(order.ApproachCell);
             order.Advance(1d);
             order.Cancel("interrupted");
-            Assert.That(ant.Needs.Fatigue, Is.EqualTo(68));
+            Assert.That(ant.Needs.Fatigue, Is.EqualTo(64));
             Assert.That(host.SurvivalInteractionWorld.GetSleepingReservation(
                 host.SurvivalFixtureCells[4]), Is.Empty);
         }
@@ -277,7 +290,8 @@ namespace AntColony.Tests.EditMode
             host.WorldData.SetBackgroundMaterial(cell, ordinary.BackgroundMaterialId);
             order.Advance(1d);
             host.SurvivalInteractionWorld.TryGetStorage(cell, out SurvivalStorageSlot slot);
-            Assert.That(slot.Quantity, Is.EqualTo(6));
+            Assert.That(slot.Quantity, Is.EqualTo(
+                AntGameDevelopmentWorldHost.ReachableFoodQuantityPerFixture));
             Assert.That(order.Phase, Is.EqualTo(SurvivalInteractionPhase.Failed));
         }
 

@@ -1,5 +1,13 @@
 # Ant Colony Development Roadmap
 
+## Focused survival-needs balance correction — 14 October 2026
+
+**Implemented — Pending Manual Acceptance.** Investigation found no navigation, retry, pause, clock-speed or excavation-order defect. A production-API, real-path-cost 12-day projection showed the old provisional survival balance left only 42.7% of time for productive work plus return-to-work travel and allowed all three needs to reach their critical extremes. The dominant cost was frequent Fatigue-driven sleep trips, compounded by faster Hunger/Thirst loss and one-hour consumption actions.
+
+Final provisional values are Hunger **-1/hour**, Thirst **-1.4/hour**, awake Fatigue **+1.4/hour**, rest **-16 Fatigue/hour**, Eat/Drink **0.5 hour**, interventions at Hunger **40**, Thirst **40** and Fatigue **70**, with restores and all critical thresholds/consequences unchanged. The original 1.5 Thirst/hour and 2 Fatigue/hour candidates failed route-aware safety/productivity checks and were reduced to 1.4 from measured evidence. The revised projection reaches **70.7%** productive work/return travel, consumes **17 food / 21 water**, and remains at minimum Hunger **25.8**, minimum Thirst **10.2**, maximum Fatigue **87.9**.
+
+Finite reachable development supply is now **24 food / 32 water** instead of 12/16, held in the same four reachable storage fixtures. Three sleeping positions and the unreachable failure fixture remain unchanged. Verification passed **87/87 focused Edit**, **18/18 focused Play**, **520/520 complete graphics-enabled Edit**, and **67/67 complete Play**. The complete Edit rerun includes the user-confirmed intentional `Colony_R05_C05` Solid Stone / `Colony_R05_C03` Stone Background mapping. Detailed evidence and manual acceptance steps are recorded in `CurrentGameState.md`. This correction does not start a new gameplay milestone and leaves Milestone 3.5A **Implemented — Pending Manual Acceptance**.
+
 ## 3.5B implementation status — 14 October 2026
 
 **Implemented — Pending Manual Acceptance.** Excavation completion now always converts eligible foreground Soil/Stone into an exact-once recoverable loose drop at the authoritative excavated cell. It no longer checks, fills or unloads the excavator's inventory and does not create a coupled hauling assignment. Existing same-cell merge/stack bounds preflight the entire yield; an unrepresentable output leaves terrain unchanged. Hauling remains the accepted separate storage-delivery workflow, and construction retains builder-owned self-supply directly from inventory, storage or loose drops.

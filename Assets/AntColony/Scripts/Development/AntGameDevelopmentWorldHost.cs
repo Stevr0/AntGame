@@ -21,6 +21,9 @@ namespace AntColony.Development
     [RequireComponent(typeof(GameplayModeCoordinator))]
     public sealed class AntGameDevelopmentWorldHost : MonoBehaviour, IWorldDataProvider
     {
+        public const int ReachableFoodQuantityPerFixture = 12;
+        public const int ReachableWaterQuantityPerFixture = 16;
+
         [Header("Deterministic sample")]
         [SerializeField] private int worldSeed = 2203;
         [SerializeField] private Vector2Int minimumChunk = new(-2, -2);
@@ -1161,11 +1164,13 @@ namespace AntColony.Development
 
                 survivalFixtureCells.Add(cell);
                 if (index < 2 && !SurvivalInteractionWorld.TryAddStorage(
-                        cell, SurvivalResourceKind.Food, "resource.food.development", 6,
+                        cell, SurvivalResourceKind.Food, "resource.food.development",
+                        ReachableFoodQuantityPerFixture,
                         out error)) return false;
                 if (index >= 2 && index < 4 &&
                     !SurvivalInteractionWorld.TryAddStorage(
-                        cell, SurvivalResourceKind.Water, "resource.water.development", 8,
+                        cell, SurvivalResourceKind.Water, "resource.water.development",
+                        ReachableWaterQuantityPerFixture,
                         out error)) return false;
                 if (index >= 4 &&
                     !SurvivalInteractionWorld.TryAddSleepingPosition(cell, out error))

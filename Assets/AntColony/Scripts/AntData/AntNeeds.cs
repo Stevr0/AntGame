@@ -9,10 +9,10 @@ namespace AntColony.Ants
     public sealed class AntNeedsSimulationSettings
     {
         public static AntNeedsSimulationSettings Provisional { get; } = new(
-            hungerLossPerHour: 2d,
-            thirstLossPerHour: 3d,
-            awakeFatigueGainPerHour: 4d,
-            restingFatigueRecoveryPerHour: 12d,
+            hungerLossPerHour: 1d,
+            thirstLossPerHour: 1.4d,
+            awakeFatigueGainPerHour: 1.4d,
+            restingFatigueRecoveryPerHour: 16d,
             criticalHungerThreshold: 10d,
             starvationHealthLossPerHour: 2d,
             criticalThirstThreshold: 10d,

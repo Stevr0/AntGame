@@ -62,13 +62,13 @@ The source includes soil, stone, grass/surface edges, dark cavity compositions, 
 | Classification | Candidates | Runtime decision |
 | --- | --- | --- |
 | Full-cell/repeatable terrain surfaces | `R02_C01–C10`, `R08_C01–C10` | Only `R02_C01` is allow-listed now; repetition is visually coherent but not certified seamless. |
-| Foreground Solid artwork | `R01_C01–C10`, `R04_C01–C05` | `R04_C01` is allow-listed for Stone. Surface/edge variants need authored adjacency rules. |
+| Foreground Solid artwork | `R01_C01–C10`, `R04_C01–C05`, `R05_C05` | `R05_C05` is allow-listed for Stone. Surface/edge variants need authored adjacency rules. |
 | Independent Background artwork | None verified | Natural Earth/Stone use darker tints of the two full-cell allow-listed textures. Prepared and functional types retain temporary visuals. |
 | Decorative overlays | `R05_C01–C06`, `R06_C01–C05`, `R07_C01–C10` | Deferred; roots, fungi, small rocks and props must not become terrain truth. |
 | Composite illustrations requiring separation | `R03_C01–C10`, `R04_C06–C10`, `R05_C07–C10`, `R06_C06–C10`, `R09_C01–C10`, `R10_C01–C10` | Deferred because cavity, edge, Solid and decoration pixels are combined. |
-| Unusable/not yet verified | Every candidate except `R02_C01` and `R04_C01` for its stated mapping | Kept in the library. No silent Tile binding or seamless claim. |
+| Unusable/not yet verified | Every candidate except `R02_C01`, `R05_C03` and `R05_C05` for their stated mappings | Kept in the library. No silent Tile binding or seamless claim. |
 
-`Colony_R02_C01` maps to `Solid_Soil` and a darker `Background_UnpreparedEarth`. `Colony_R04_C01` maps to `Solid_Stone` and a darker `Background_UnpreparedStone`. The existing Tile assets retain stable GUIDs and `Collider Type: None`.
+`Colony_R02_C01` maps to `Solid_Soil` and a darker `Background_UnpreparedEarth`. The intentionally distinct Stone mapping uses `Colony_R05_C05` for `Solid_Stone` and `Colony_R05_C03` for the darker `Background_UnpreparedStone`. The existing Tile assets retain stable GUIDs and `Collider Type: None`.
 
 ## World View conventions
 
@@ -112,7 +112,7 @@ Automated validation completed on 14 October 2026:
 2. Open each prepared texture and confirm Sprite Mode Multiple, PPU 32, Point filtering, no compression and no mipmaps.
 3. Open Sprite Editor and confirm all named rectangles are exactly `32x32` with no overlap.
 4. Inspect prepared sprites at 1x, 2x and normal gameplay camera zoom for lost detail and coloured fringe artefacts.
-5. Inspect repeated `Colony_R02_C01` and `Colony_R04_C01` mappings horizontally and vertically; record visible seams rather than assuming seamlessness.
+5. Inspect repeated `Colony_R02_C01`, `Colony_R05_C03` and `Colony_R05_C05` mappings horizontally and vertically; record visible seams rather than assuming seamlessness.
 6. Confirm no candidate outside the documented allow-list is silently bound to a gameplay Tile.
 7. Confirm Soil/Stone foreground and darker natural Background presentation changed as documented while collision, excavation, navigation and ant locomotion remain unchanged.
 

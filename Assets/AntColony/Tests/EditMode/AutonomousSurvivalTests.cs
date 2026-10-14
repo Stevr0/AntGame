@@ -37,6 +37,16 @@ namespace AntColony.Tests.EditMode
             Assert.That(service.Evaluate(ant.Needs).Kind, Is.EqualTo(expected));
         }
 
+        [TestCase(40.01, 100, 20)]
+        [TestCase(100, 40.01, 20)]
+        [TestCase(100, 100, 69.99)]
+        public void ValueJustOutsideInterventionBoundary_DoesNotTrigger(
+            double hunger, double thirst, double fatigue)
+        {
+            Assert.That(service.Evaluate(
+                CreateRecord(hunger, thirst, fatigue).Needs).HasDecision, Is.False);
+        }
+
         [Test]
         public void CriticalThirst_OutranksCriticalHungerAndFatigue()
         {

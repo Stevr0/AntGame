@@ -164,10 +164,11 @@ namespace AntColony.EditorTools
         private static void CreateAssetsAndScene()
         {
             Sprite whitePixelSprite = GetOrCreateWhitePixelSprite();
-            // These two full-cell candidates are the deliberately small 3.5A
+            // These full-cell candidates are the deliberately small 3.5A
             // allow-list. Composite cavities and decorative edges remain unbound.
             Sprite colonySoilSprite = LoadColonySprite("Colony_R02_C01");
-            Sprite colonyStoneSprite = LoadColonySprite("Colony_R04_C01");
+            Sprite colonyStoneBackgroundSprite = LoadColonySprite("Colony_R05_C03");
+            Sprite colonyStoneSolidSprite = LoadColonySprite("Colony_R05_C05");
             Sprite antSprite = AssetDatabase.LoadAllAssetsAtPath(AntSpritePath)
                 .OfType<Sprite>()
                 .FirstOrDefault();
@@ -189,7 +190,7 @@ namespace AntColony.EditorTools
                 Tile.ColliderType.None);
             GetOrCreateTile(
                 StoneBackgroundTilePath,
-                colonyStoneSprite,
+                colonyStoneBackgroundSprite,
                 new Color32(105, 112, 121, 255),
                 Tile.ColliderType.None);
             GetOrCreateTile(
@@ -214,7 +215,7 @@ namespace AntColony.EditorTools
                 Tile.ColliderType.None);
             Tile stoneTile = GetOrCreateTile(
                 StoneTilePath,
-                colonyStoneSprite,
+                colonyStoneSolidSprite,
                 Color.white,
                 Tile.ColliderType.None);
             SolidTileMaterialDefinition stoneSolid = GetOrCreateSolidMaterial(

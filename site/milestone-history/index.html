@@ -734,6 +734,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#14-october-2026-35b-excavation-output-loose-resource-handling" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        14 October 2026 — 3.5B Excavation Output &amp; Loose Resource Handling
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#14-october-2026-35a-colony-view-presentation-tile-preview-art-integration" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -1056,6 +1067,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#14-october-2026-35b-excavation-output-loose-resource-handling" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        14 October 2026 — 3.5B Excavation Output &amp; Loose Resource Handling
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#14-october-2026-35a-colony-view-presentation-tile-preview-art-integration" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -1349,6 +1371,16 @@
 
 
 <h1 id="milestone-history">Milestone History<a class="headerlink" href="#milestone-history" title="Permanent link">&para;</a></h1>
+<h2 id="14-october-2026-35b-excavation-output-loose-resource-handling">14 October 2026 — 3.5B Excavation Output &amp; Loose Resource Handling<a class="headerlink" href="#14-october-2026-35b-excavation-output-loose-resource-handling" title="Permanent link">&para;</a></h2>
+<ul>
+<li>Replaced historical inventory-first excavation output with an exact-once loose drop at the excavated authoritative cell.</li>
+<li>Kept excavation independent of ant capacity and storage while preserving progression, XP, terrain refresh and navigation invalidation.</li>
+<li>Preserved the separate hauling scheduler and accepted construction builder self-supply from inventory, storage or loose drops.</li>
+<li>Added empty/partial/full inventory, same-cell merging and real autonomous loose-output regressions while retaining conservation/failure coverage.</li>
+<li>Automated evidence: focused Edit <code>96/96</code>, focused Play <code>14/14</code>, complete graphics-enabled Edit <code>514/514</code>, complete Play <code>67/67</code>; zero failures/skips.</li>
+<li>Status: <strong>Implemented — Pending Manual Acceptance</strong> (27 steps).</li>
+</ul>
+<p>Milestone 3.5A remains separately <strong>Implemented — Pending Manual Acceptance</strong>; this milestone changed no presentation geometry or art mappings.</p>
 <h2 id="14-october-2026-35a-colony-view-presentation-tile-preview-art-integration">14 October 2026 — 3.5A Colony View Presentation, Tile Preview &amp; Art Integration<a class="headerlink" href="#14-october-2026-35a-colony-view-presentation-tile-preview-art-integration" title="Permanent link">&para;</a></h2>
 <ul>
 <li>Added registry-backed hover and bounded drag previews for excavation and all six Background Conversion recipes.</li>
@@ -1417,7 +1449,7 @@
 <li>Manual Play Mode checklist: all 30 checks accepted.</li>
 </ul>
 <h3 id="33c-ant-inventory-automatic-excavation-pickup-and-physical-material-handling">3.3C — Ant Inventory, Automatic Excavation Pickup and Physical Material Handling<a class="headerlink" href="#33c-ant-inventory-automatic-excavation-pickup-and-physical-material-handling" title="Permanent link">&para;</a></h3>
-<p><strong>Complete.</strong> Authoritative ant records own independent stack-based inventories; excavation output atomically enters the excavator's inventory, falls back to a recoverable world drop, or splits explicitly. Player-directed adjacent pickup and Developer Only dropping use reservations and source-to-destination conservation.</p>
+<p><strong>Complete historical milestone; its auto-pickup rule is superseded by 3.5B.</strong> Authoritative ant records own independent stack-based inventories. At this checkpoint excavation output entered the excavator's inventory, fell back to a recoverable world drop, or split explicitly. Player-directed adjacent pickup and Developer Only dropping still use reservations and source-to-destination conservation; current excavation always leaves loose output.</p>
 <ul>
 <li>Focused Edit Mode: 26/26 passed.</li>
 <li>Focused Play Mode: 5/5 passed.</li>

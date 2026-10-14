@@ -278,8 +278,8 @@ namespace AntColony.Tests.EditMode
 
         [TestCase("Solid_Soil", "Colony_R02_C01")]
         [TestCase("Background_UnpreparedEarth", "Colony_R02_C01")]
-        [TestCase("Solid_Stone", "Colony_R04_C01")]
-        [TestCase("Background_UnpreparedStone", "Colony_R04_C01")]
+        [TestCase("Solid_Stone", "Colony_R05_C05")]
+        [TestCase("Background_UnpreparedStone", "Colony_R05_C03")]
         public void RuntimeArtMappingUsesOnlyReviewedColliderFreeCandidates(
             string tileName, string expectedSprite)
         {

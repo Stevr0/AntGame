@@ -1,5 +1,41 @@
 # Ant Colony Current Game State
 
+## Focused survival-needs balance correction — 14 October 2026
+
+**Implemented — Pending Manual Acceptance.** A deterministic 12-day projection for Mara, Pip and Tala now drives the production needs and survival-decision APIs while using real path costs from work anchors beside the two small excavation areas. The baseline isolated the cause of low output: the old Fatigue cycle (4/hour awake, 12/hour recovery, intervention at 60) forced frequent long sleep round trips, while Hunger 2/hour, Thirst 3/hour and one-hour Eat/Drink actions added more survival travel. No reachability, retry, pause, clock-speed, excavation-coordinate or job-interruption defect was found.
+
+Across 864 colony-hours with deliberately abundant baseline supplies, the old values measured **88.00 productive-work hours**, **280.75 work-travel hours**, **11.50 eating hours**, **20.50 drinking hours**, **177.75 resting hours**, **285.50 survival-travel hours**, no idle/blocked time, and only **42.7% productive work plus productive return travel**. Needs reached Hunger 0, Thirst 0 and Fatigue 100. This confirms survival timing and trip frequency, rather than excavation duration, as the dominant cause.
+
+The corrected provisional values are Hunger loss **1/hour**, Thirst loss **1.4/hour**, awake Fatigue gain **1.4/hour**, rest recovery **16/hour**, Eat **0.5 hour**, Drink **0.5 hour**, Hunger/Thirst interventions at **40**, and Fatigue intervention at **70**. The reviewed 1.5 Thirst/hour and 2 Fatigue/hour candidates were tested first, but real route exposure still crossed critical Thirst and produced only 66.5% productive share; the final evidence-based 1.4 values provide safe travel margin. Restores remain 40 Hunger and 50 Thirst. Critical thresholds remain Hunger 10, Thirst 10 and Fatigue 90; starvation damage remains 2 Health/hour. Critical interruption, safe ordinary interruption, bounded retry, physical consumption, pause and speed semantics are unchanged.
+
+The final projection measured **449.00 productive-work hours**, **161.50 work-travel hours**, **8.50 eating hours**, **10.50 drinking hours**, **62.25 resting hours**, **172.25 survival-travel hours**, zero idle/blocked time, and **70.7% productive work plus productive return travel**. It consumed 17 food and 21 water and stayed above critical at minimum Hunger 25.8, minimum Thirst 10.2 and maximum Fatigue 87.9.
+
+The previous accessible development supply was mathematically insufficient for 12 days: 12 food and 16 water, compared with the measured revised demand of 17 food and 21 water. The same two reachable Food Storage and two reachable Water Storage cells now contain 12 food each and 16 water each, for finite totals of **24 food and 32 water**. The three sleeping positions and intentionally unreachable 3-food failure fixture are unchanged; there is no refill or infinite-resource behavior.
+
+### Automated verification
+
+- Focused Edit Mode: **87/87 passed** (needs, exact intervention boundaries, critical behavior, interactions/consumption, deterministic 12-day productivity and supply exhaustion, clock/pause).
+- Focused Play Mode: **18/18 passed** (survival interaction, autonomous survival and simulation-clock regressions).
+- Complete Play Mode: **67/67 passed**, zero failures/skips.
+- Complete graphics-enabled Edit Mode: **520/520 passed**, zero failures/skips. The first run was 518/520 because its allow-list still expected the superseded shared Stone sprite; after the user confirmed the imported `Colony_R05_C05` Solid / `Colony_R05_C03` Background mapping is intentional, validation, setup and documentation were corrected and the complete suite passed.
+
+### Exact manual Unity verification
+
+1. Open `Assets/AntColony/Scenes/AntGameDevelopment.unity`, enter Play Mode and confirm the simulation begins paused.
+2. Rebuild/reset the development world; confirm two reachable Food stores show 12 each, two Water stores show 16 each, three sleeping positions remain, and the surrounded failure fixture remains unreachable.
+3. Designate the Soil fixture and the three-cell Soil area, then resume at 1× with autonomous survival and colony work following normal gameplay.
+4. Observe Mara, Pip and Tala through several work/survival cycles; confirm ordinary needs wait for safe work interruption and critical needs still interrupt when necessary.
+5. Confirm Eat and Drink each complete after 0.5 simulation hour, consume exactly one reserved physical unit only on completion, and restore 40 Hunger / 50 Thirst.
+6. Confirm Rest reduces Fatigue at 16/hour and completes at Fatigue 20 or lower; cancel a rest and confirm applied recovery remains while the sleeping reservation releases.
+7. Run representative excavation for multiple days and confirm the ants spend most time working or travelling back to work rather than cycling continuously between survival destinations.
+8. Let the clock approach Day 12 with the representative workload; confirm reachable supplies do not exhaust and no ant reaches critical Hunger, critical Thirst or critical Fatigue under normal reachable conditions.
+9. Pause during work, travel and interaction; confirm needs, orders, reservations, work progress and consumption stop without cancellation, then resume correctly.
+10. Repeat representative sections at 1×, 2× and 3×; confirm equivalent simulation outcomes and no increased need loss per simulation hour.
+11. Exhaust or reserve a supply deliberately; confirm bounded retry and meaningful failure state remain, with no free restoration or negative quantity.
+12. Confirm the Console contains no errors, assertions or warnings introduced by this correction.
+
+This focused correction does not change the acceptance state of any milestone. In particular, Milestone 3.5A remains **Implemented — Pending Manual Acceptance**.
+
 ## Current implemented milestone — 3.5B Excavation Output & Loose Resource Handling (14 October 2026)
 
 **Implemented — Pending Manual Acceptance.** Successful Soil and Stone excavation now always creates the material definition's quantity as a physical loose world drop. Excavation never adds output to the excavator's inventory, never requires inventory capacity or storage, and never assigns a follow-up hauling job. The accepted excavation progress, skill/Rested modifiers, XP, shared job ownership, foreground-only mutation, Background preservation, Tilemap/collision refresh and navigation invalidation remain unchanged.
@@ -58,7 +94,7 @@ Hover and bounded drag preview update every frame, including while simulation is
 
 Cancelled cell-stable job IDs may now be replaced by a fresh job, while active, paused and completed IDs remain protected. Cancellation releases any reservation, retains the cancelled job's recorded progress for diagnostics, and leaves the foreground Solid untouched. A still-eligible Solid can therefore repeat `Available → Designated → Cancelled → Designated` without limit; completed excavation cannot be cancelled or re-created. Construction follows the same re-designation rule. Its existing staged-material recovery remains conservative and now uses a distinct transaction key for every cancellation cycle so repeated cycles cannot suppress or duplicate a recovered drop.
 
-The first custom Colony art mapping is intentionally narrow. `Colony_R02_C01` supplies Soil foreground and darker Natural Earth Background Tiles; `Colony_R04_C01` supplies Stone foreground and darker Natural Stone Background Tiles. All four Tile assets remain collider-free. Prepared and functional Backgrounds retain their clear temporary colours because the candidate sheet does not contain a verified independent semantic match. World data, collision, navigation, material generation and excavation rules are unchanged.
+The first custom Colony art mapping is intentionally narrow. `Colony_R02_C01` supplies Soil foreground and darker Natural Earth Background Tiles; `Colony_R05_C05` supplies Stone foreground and `Colony_R05_C03` supplies the darker Natural Stone Background. All four Tile assets remain collider-free. Prepared and functional Backgrounds retain their clear temporary colours because the candidate sheet does not contain a verified independent semantic match. World data, collision, navigation, material generation and excavation rules are unchanged.
 
 ### 3.5A automated verification
 
@@ -86,7 +122,7 @@ The first custom Colony art mapping is intentionally narrow. `Colony_R02_C01` su
 14. Verify all HUD/modal input blocking, camera zoom, and `1280×720`, `1920×1080`, and `2560×1080` layouts.
 15. Confirm a clean Unity Console and unchanged movement, clock, job, HUD and accepted Soil/Stone art behaviour.
 
-Known limitations: the source sheet has no verified independent Prepared or functional Background art; composite cavities, exposed edges, roots, fungi and decorations remain unbound; `Colony_R02_C01` and `Colony_R04_C01` repeat safely as full-cell textures but visible tile seams remain possible and no seamless/autotile claim is made. Manual acceptance remains pending.
+Known limitations: the source sheet has no verified independent Prepared or functional Background art; composite cavities, exposed edges, roots, fungi and decorations remain unbound; `Colony_R02_C01`, `Colony_R05_C03` and `Colony_R05_C05` repeat safely as full-cell textures but visible tile seams remain possible and no seamless/autotile claim is made. Manual acceptance remains pending.
 
 ## Latest acceptance — 3.4C Player Colony HUD & Developer UI Separation (14 October 2026)
 

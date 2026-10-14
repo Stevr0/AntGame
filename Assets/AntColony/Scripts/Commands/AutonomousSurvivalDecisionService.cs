@@ -34,11 +34,11 @@ namespace AntColony.Commands
         public static AutonomousSurvivalSettings Provisional { get; } = new();
 
         public AutonomousSurvivalSettings(
-            double seekHungerAtOrBelow = 50d,
+            double seekHungerAtOrBelow = 40d,
             double criticalHungerAtOrBelow = 10d,
-            double seekThirstAtOrBelow = 50d,
+            double seekThirstAtOrBelow = 40d,
             double criticalThirstAtOrBelow = 10d,
-            double seekFatigueAtOrAbove = 60d,
+            double seekFatigueAtOrAbove = 70d,
             double criticalFatigueAtOrAbove = 90d,
             double evaluationIntervalSeconds = 0.5d,
             double retryBackoffSeconds = 2d,

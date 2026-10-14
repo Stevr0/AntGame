@@ -708,10 +708,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#current-implementation-milestone-35a" class="md-nav__link">
+  <a href="#current-implementation-milestone-35b" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        Current implementation — Milestone 3.5A
+        Current implementation — Milestone 3.5B
       </span>
     </span>
   </a>
@@ -862,10 +862,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#current-implementation-milestone-35a" class="md-nav__link">
+  <a href="#current-implementation-milestone-35b" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        Current implementation — Milestone 3.5A
+        Current implementation — Milestone 3.5B
       </span>
     </span>
   </a>
@@ -961,14 +961,15 @@
 
 
 <h1 id="development-roadmap">Development Roadmap<a class="headerlink" href="#development-roadmap" title="Permanent link">&para;</a></h1>
-<h2 id="current-implementation-milestone-35a">Current implementation — Milestone 3.5A<a class="headerlink" href="#current-implementation-milestone-35a" title="Permanent link">&para;</a></h2>
-<p><strong>Implemented — Pending Manual Acceptance (14 October 2026).</strong> Colony View designation previews, compatible right-click cancellation and the first allow-listed Soil/Stone custom-art projection are implemented. 3.4E congestion recovery, World View runtime, seamless autotiling and wider art replacement remain out of scope.</p>
+<h2 id="current-implementation-milestone-35b">Current implementation — Milestone 3.5B<a class="headerlink" href="#current-implementation-milestone-35b" title="Permanent link">&para;</a></h2>
+<p><strong>Implemented — Pending Manual Acceptance (14 October 2026).</strong> Soil and Stone excavation now always creates exact-once loose output at the excavated authoritative cell, independent of excavator inventory and storage. Existing hauling remains the separate collection/storage activity, and construction retains direct builder self-supply from inventory, storage or drops. Focused verification passed 96/96 Edit and 14/14 Play; complete verification passed 514/514 Edit and 67/67 Play. The 27-step manual checklist remains pending.</p>
+<p>Milestone 3.5A also remains <strong>Implemented — Pending Manual Acceptance</strong> as a separate presentation/art gate. 3.5B changed no art mappings, cell projection, designation input or HUD behavior. 3.4E congestion recovery, World View runtime, new Foraging AI and new extraction types remain out of scope.</p>
 <p>This page is a concise navigation view of the authoritative <code>Documentation/DevelopmentRoadmap.md</code>. The authoritative file retains the full acceptance criteria and historical details.</p>
 <h2 id="parallel-art-foundation">Parallel art foundation<a class="headerlink" href="#parallel-art-foundation" title="Permanent link">&para;</a></h2>
 <p><strong>Implemented — Pending Manual Acceptance.</strong> The custom source sheets and separate 32-pixel Colony/World candidate libraries are committed with deterministic extraction and import settings. They are not gameplay-bound or certified seamless. Manual Sprite Editor, camera-scale and repeated-edge review precedes production Tile assets and palettes; World View gameplay remains deferred.</p>
 <h2 id="immediate-boundary">Immediate boundary<a class="headerlink" href="#immediate-boundary" title="Permanent link">&para;</a></h2>
-<p><strong>Current action:</strong> manually verify Milestone 3.4D's 18-step Colony Management &amp; Work Priorities checklist in <code>Assets/AntColony/Scenes/AntGameDevelopment.unity</code>.</p>
-<p>Milestones 3.4B and 3.4C are manually accepted. Milestone 3.4D is <strong>Implemented — Pending Manual Acceptance</strong>. Its global Work matrix uses authoritative active ant records, exposes only real Excavation/Construction/Hauling executors, and edits the existing per-ant 1–4/Disabled values shared with developer diagnostics. Verification passed 7/7 focused Edit, 7/7 focused Play, 492/492 full Edit and 65/65 full Play.</p>
+<p><strong>Current action:</strong> manually verify Milestone 3.5B's 27-step loose-excavation checklist in <code>Assets/AntColony/Scenes/AntGameDevelopment.unity</code>, while keeping 3.5A visual acceptance and older pending UI checklists separately tracked.</p>
+<p>Milestones 3.4B and 3.4C are manually accepted. Milestone 3.4D remains <strong>Implemented — Pending Manual Acceptance</strong>. Its global Work matrix uses authoritative active ant records, exposes only real Excavation/Construction/Hauling executors, and edits the existing per-ant 1–4/Disabled values shared with developer diagnostics. Verification passed 7/7 focused Edit, 7/7 focused Play, 492/492 full Edit and 65/65 full Play.</p>
 <h2 id="current-milestone-state">Current milestone state<a class="headerlink" href="#current-milestone-state" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
@@ -1094,6 +1095,16 @@
 <td>Colony management and work priorities UI</td>
 <td>Implemented — Pending Manual Acceptance</td>
 </tr>
+<tr>
+<td>3.5A</td>
+<td>Colony View presentation, preview and first art integration</td>
+<td>Implemented — Pending Manual Acceptance</td>
+</tr>
+<tr>
+<td>3.5B</td>
+<td>Loose-only excavation output and activity separation</td>
+<td>Implemented — Pending Manual Acceptance</td>
+</tr>
 </tbody>
 </table>
 <h2 id="approved-world-view-direction">Approved World View direction<a class="headerlink" href="#approved-world-view-direction" title="Permanent link">&para;</a></h2>
@@ -1112,7 +1123,8 @@
 <h2 id="ordered-future-direction">Ordered future direction<a class="headerlink" href="#ordered-future-direction" title="Permanent link">&para;</a></h2>
 <p>The numbered roadmap beyond the accepted foundation remains direction, not authorised implementation:</p>
 <ol>
-<li>Complete 3.4D manual acceptance and correct only observed matrix defects.</li>
+<li>Complete the separate 3.5A visual and 3.5B gameplay manual acceptance checklists.</li>
+<li>Complete any still-pending earlier UI acceptance without expanding scope.</li>
 <li>Multiple-ant movement, local avoidance, and congestion recovery.</li>
 <li>Extend functional construction into rooms, doors and quality through separate scope.</li>
 <li>Add Nursery, brood, reproduction and colony growth through separate scope.</li>

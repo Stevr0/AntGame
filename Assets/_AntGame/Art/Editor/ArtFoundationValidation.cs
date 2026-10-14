@@ -105,10 +105,10 @@ namespace AntColony.EditorTools
                 "Colony_R02_C01");
             ValidateMappedTile(
                 "Assets/AntColony/Art/WorldTiles/Solid_Stone.asset",
-                "Colony_R04_C01");
+                "Colony_R05_C05");
             ValidateMappedTile(
                 "Assets/AntColony/Art/WorldTiles/Background_UnpreparedStone.asset",
-                "Colony_R04_C01");
+                "Colony_R05_C03");
         }
 
         private static void ValidateMappedTile(string assetPath, string spriteName)

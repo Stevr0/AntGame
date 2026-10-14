@@ -10,7 +10,7 @@ namespace AntColony.Commands
     /// </summary>
     public sealed class SurvivalInteractionOrder
     {
-        public const double ConsumptionDurationHours = 1d;
+        public const double ConsumptionDurationHours = 0.5d;
         public const double HungerRestoredPerUnit = 40d;
         public const double ThirstRestoredPerUnit = 50d;
         private static readonly Vector2Int[] AdjacentOffsets =

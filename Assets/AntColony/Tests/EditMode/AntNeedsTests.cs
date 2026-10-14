@@ -30,7 +30,7 @@ namespace AntColony.Tests.EditMode
 
             Assert.That(first.TryAdvanceNeeds(5d, out _), Is.True);
 
-            Assert.That(first.Needs.Hunger, Is.EqualTo(90d));
+            Assert.That(first.Needs.Hunger, Is.EqualTo(95d));
             Assert.That(second.Needs.Hunger, Is.EqualTo(100d));
             Assert.That(first.Needs, Is.Not.SameAs(second.Needs));
         }
@@ -42,9 +42,9 @@ namespace AntColony.Tests.EditMode
 
             Assert.That(ant.TryAdvanceNeeds(5d, out _), Is.True);
 
-            Assert.That(ant.Needs.Hunger, Is.EqualTo(90d));
-            Assert.That(ant.Needs.Thirst, Is.EqualTo(85d));
-            Assert.That(ant.Needs.Fatigue, Is.EqualTo(40d));
+            Assert.That(ant.Needs.Hunger, Is.EqualTo(95d));
+            Assert.That(ant.Needs.Thirst, Is.EqualTo(93d));
+            Assert.That(ant.Needs.Fatigue, Is.EqualTo(27d));
         }
 
         [Test]
@@ -55,7 +55,7 @@ namespace AntColony.Tests.EditMode
 
             Assert.That(ant.TryRest(8d, out _), Is.True);
 
-            Assert.That(ant.Needs.Fatigue, Is.EqualTo(4d));
+            Assert.That(ant.Needs.Fatigue, Is.Zero);
             Assert.That(ant.Needs.HasCompletedRest, Is.True);
             Assert.That(ant.Needs.WorkSpeedMultiplier, Is.EqualTo(1.15d)
                 .Within(0.000001d));
@@ -108,7 +108,7 @@ namespace AntColony.Tests.EditMode
         {
             AntRecord ant = CreateAnt("worker");
 
-            Assert.That(ant.TryAdvanceNeeds(45d, out _), Is.True);
+            Assert.That(ant.TryAdvanceNeeds(90d, out _), Is.True);
             Assert.That(ant.Needs.Hunger, Is.EqualTo(10d));
             Assert.That(ant.Needs.Health, Is.EqualTo(100d));
             Assert.That(ant.TryAdvanceNeeds(2d, out _), Is.True);
@@ -185,9 +185,9 @@ namespace AntColony.Tests.EditMode
                 Is.True);
             Assert.That(result.AwardedExperience, Is.EqualTo(125d));
 
-            Assert.That(ant.TryAdvanceNeeds(10d, out _), Is.True);
+            Assert.That(ant.TryAdvanceNeeds(20d, out _), Is.True);
 
-            Assert.That(ant.Needs.Fatigue, Is.EqualTo(48d));
+            Assert.That(ant.Needs.Fatigue, Is.EqualTo(32d));
             Assert.That(ant.Needs.RestedStrength, Is.GreaterThan(0d)
                 .And.LessThan(1d));
             Assert.That(ant.Needs.SkillExperienceMultiplier, Is.GreaterThan(1d)
@@ -199,7 +199,7 @@ namespace AntColony.Tests.EditMode
         {
             AntRecord ant = CreateAnt("worker");
             Assert.That(ant.TryRest(1d, out _), Is.True);
-            Assert.That(ant.TryAdvanceNeeds(20d, out _), Is.True);
+            Assert.That(ant.TryAdvanceNeeds(55d, out _), Is.True);
             Assert.That(ant.Needs.Fatigue, Is.GreaterThanOrEqualTo(80d));
             Assert.That(ant.Needs.WorkSpeedMultiplier, Is.EqualTo(1d));
             Assert.That(ant.Needs.SkillExperienceMultiplier, Is.EqualTo(1d));

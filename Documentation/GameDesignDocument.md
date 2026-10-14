@@ -218,6 +218,8 @@ Before another gameplay milestone, perform a **read-only architecture/code-to-de
 
 - **Critical survival overrides ordinary work** (and may interrupt player-issued autonomous jobs). Ordinary hunger/thirst/fatigue needs wait for a **safe work interruption**, preventing constant task switching. Exact danger priorities, thresholds, starvation damage, dehydration/skill blockade, emergency cancellation and direct-player-control safety semantics are **TBD**.
 - If a need cannot be satisfied because supplies or a destination are missing, ants must indicate the reason rather than spin in an impossible request loop. Existing approved shared food/water storage, individual gauges, sleeping spot, gradual Rested buff decay and survival effects remain authoritative.
+- **Current provisional development balance (14 October 2026):** Hunger loses 1/hour, Thirst loses 1.4/hour and awake Fatigue gains 1.4/hour; rest recovers 16 Fatigue/hour. Autonomous intervention begins at Hunger 40, Thirst 40 or Fatigue 70. Eat and Drink each require 0.5 simulation hour and one physical unit, restoring the unchanged 40 Hunger or 50 Thirst. Critical Hunger 10, critical Thirst 10, critical Fatigue 90 and starvation damage 2 Health/hour are unchanged. These are measured development values, not final production balance.
+- The development fixture remains finite: two reachable Food stores hold 12 units each, two reachable Water stores hold 16 units each, and three sleeping positions allow the three-ant test population to rest concurrently. The unreachable food fixture remains failure-test data and is excluded from supply sufficiency.
 
 ### Job execution, ownership and recovery
 
