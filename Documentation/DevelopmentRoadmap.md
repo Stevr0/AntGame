@@ -1,5 +1,10 @@
 # Ant Colony Development Roadmap
 
+## Approved future excavation/extraction output rule — 14 October 2026
+
+**Design approved, code pending:** all excavation and extraction output becomes physical loose drops, never automatic excavator inventory. Foraging identifies resource locations; extraction is a separate mining/removal task; hauling and construction obtain loose items via their accepted inventory/transfer transactions. Add a small independently tested implementation milestone after current 3.5A acceptance, modifying excavation output and tests without rewriting hauling, building, navigation or clocks. Verify repeated excavations, full/no inventory, no storage, accessible drop placement, conservation and regression. Surface discovery/extraction implementation remains deferred until the relevant World View phase.
+
+
 ## 3.5A implementation status — 14 October 2026
 
 **Implemented — Pending Manual Acceptance.** The 3.5A acceptance corrections provide explicit camera-aligned full-cell fills and borders for hover, live drag and persistent pending/active excavation and construction designations. The alignment follow-up now projects the authoritative integer-centred cell bounds (`centre ± 0.5`) instead of incorrectly treating the cell coordinate as its lower-left corner. This matches the authored one-unit Tilemap Grid offset by `(-0.5, -0.5)` at every camera position, zoom and supported resolution. UI-blocked pointer entry clears and abandons a drag. Cancelled stable cell jobs can be replaced repeatedly, reservations are released, completed excavation remains terminal, and repeated construction cancellation retains exact staged-material recovery. The accepted custom Soil/Stone Tilemap mapping and all gameplay timings, costs and authorities are unchanged. Prepared/functional Background art, decoration, composite-cavity separation and seamless autotiling remain deferred. Milestone 3.4E congestion recovery remains explicitly parked.
