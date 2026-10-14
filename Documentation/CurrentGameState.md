@@ -1,5 +1,12 @@
 # Ant Colony Current Game State
 
+## Latest acceptance and approved next direction — 14 October 2026
+
+**Milestone 3.4A Functional Background Conversion & Construction Jobs: MANUALLY ACCEPTED.** User confirmed 3.4A Play Mode testing accepted, including the inventory-capacity recovery correction. Codex previously reported focused construction 19/19 Edit and 4/4 Play; full 474/474 Edit and 51/51 Play after that correction. These suites were not rerun for this documentation-only update. Earlier "pending manual acceptance" passages below are retained as historical milestone records.
+
+**UI & game-loop architecture audit: read-only, completed.** Approved next implementation is **Milestone 3.4B — Unified Simulation Clock & Gameplay Mode** (not yet implemented). Normal play should begin paused; direct orders authored while paused queue for execution on resume without world-time advancement; Unity uGUI is selected for future production HUD while current IMGUI becomes optional developer UI; show only implemented work types; temporarily retain Mara/Pip/Tala; alerts notify without automatic pause. Gameplay Play activates survival, colony work and hauling together; 1×/2×/3× speed and pause must use one authoritative clock and preserve work/ownership state. 3.4C will implement the full player HUD. This passage does not claim 3.4B or 3.4C functionality exists.
+
+
 ## Current implemented milestone — 3.4A Functional Background Conversion & Construction Jobs (13 October 2026)
 
 **Status: Implemented — Pending Manual Acceptance.** Milestone 3.3D and the Development UI Reorganisation are manually accepted. Milestone 3.4A adds only functional Background conversion and builder self-supply; doors, rooms, brood, production, crafting, combat and reproduction remain excluded.
