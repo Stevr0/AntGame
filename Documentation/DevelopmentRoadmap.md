@@ -1,5 +1,13 @@
 # Ant Colony Development Roadmap
 
+## 3.5A implementation status — 14 October 2026
+
+**Implemented — Pending Manual Acceptance.** Colony View now has authoritative amber/green/red/muted hover and bounded drag previews, compatible-only right-click designation cancellation, and a first allow-listed custom Soil/Stone Tilemap mapping. Existing world, collision, navigation, excavation, construction and resource authorities are unchanged. Prepared/functional Background art, decoration, composite-cavity separation and seamless autotiling remain deferred. Milestone 3.4E congestion recovery remains explicitly parked.
+
+Verification: focused 3.5A Edit Mode **11/11**, complete graphics-enabled Edit Mode **503/503**, complete Play Mode **65/65**, updated Unity art validation, deterministic art verification, strict docs build and diff check passed. Manual visual/gameplay acceptance remains pending.
+
+The smallest subsequent presentation milestone should be a manual seam/readability acceptance and, only for failed mappings, production-ready independent Background/Solid replacement art. It must not expand into World View runtime, surface movement or new gameplay systems.
+
 ## 3.4C manually accepted — 14 October 2026
 
 **COMPLETE — 3.4C Player Colony HUD & Developer UI Separation.** User confirmed 13/13 grouped HUD, colony gameplay, input and resolution manual checks and clean Console. Codex-reported full suites passed 489/489 Edit and 62/62 Play. Existing uGUI player HUD and optional F12 developer IMGUI are accepted; World View runtime has not begun. Older pending-acceptance text is historical.

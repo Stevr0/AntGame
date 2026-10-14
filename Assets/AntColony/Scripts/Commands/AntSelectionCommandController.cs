@@ -126,6 +126,9 @@ namespace AntColony.Commands
         private int selectedConstructionRecipeIndex;
         private Vector2Int dragStartCell;
         private bool excavationDragActive;
+        private readonly List<DesignationPreviewCell> designationPreview = new();
+        private bool hasHoveredDesignationCell;
+        private Vector2Int hoveredDesignationCell;
         private bool developmentUiVisible;
         private DevelopmentUiCategory expandedDevelopmentCategory;
         private Vector2 developmentPanelScrollPosition;
@@ -154,6 +157,11 @@ namespace AntColony.Commands
                 ? constructionRecipes[Mathf.Clamp(selectedConstructionRecipeIndex,
                     0, constructionRecipes.Count - 1)] : null;
         public WorldDesignationMode DesignationMode { get; private set; }
+        public IReadOnlyList<DesignationPreviewCell> DesignationPreview =>
+            designationPreview;
+        public bool HasHoveredDesignationCell => hasHoveredDesignationCell;
+        public Vector2Int HoveredDesignationCell => hoveredDesignationCell;
+        public string PreviewDiagnostic { get; private set; } = string.Empty;
         public event Action<SelectableGridAnt> SelectionChanged;
         public bool DevelopmentUiVisible => developmentUiVisible;
         public DevelopmentUiCategory ExpandedDevelopmentCategory =>
@@ -250,6 +258,7 @@ namespace AntColony.Commands
         public void BindExcavation(ExcavationDesignationRegistry designations,
             ExcavationWorldTransaction transaction, WorldMaterialDropRegistry drops)
         {
+            ClearDesignationPreview();
             excavationDesignations = designations;
             excavationTransaction = transaction;
             materialDrops = drops;
@@ -537,6 +546,7 @@ namespace AntColony.Commands
         {
             DesignationMode = mode;
             excavationDragActive = false;
+            ClearDesignationPreview();
             interactionMessage = mode == WorldDesignationMode.Excavate
                 ? "Excavate mode: left-click or drag over foreground Solids."
                 : mode == WorldDesignationMode.BackgroundConversion
@@ -662,6 +672,78 @@ namespace AntColony.Commands
             bool result = excavationDesignations.TryCancel(cell, out message);
             interactionMessage = result ? $"Cancelled excavation at {cell}." : message;
             return result;
+        }
+
+        /// <summary>
+        /// Cancels only the designation compatible with the active tool. The
+        /// pointer event is still consumed when no designation exists so a move
+        /// order cannot leak through the same right-click.
+        /// </summary>
+        public bool TryHandleDesignationRightClick(Vector2Int cell)
+        {
+            if (DesignationMode == WorldDesignationMode.Excavate)
+                return TryCancelExcavation(cell, out _);
+            if (DesignationMode == WorldDesignationMode.BackgroundConversion)
+                return TryCancelConstruction(cell, out _);
+            return false;
+        }
+
+        /// <summary>Rebuilds the bounded visual preview without changing the world.</summary>
+        public void UpdateDesignationPreview(Vector2Int hoveredCell, bool dragging)
+        {
+            designationPreview.Clear();
+            hasHoveredDesignationCell = true;
+            hoveredDesignationCell = hoveredCell;
+            Vector2Int first = dragging ? dragStartCell : hoveredCell;
+            int minimumX = Mathf.Min(first.x, hoveredCell.x);
+            int maximumX = Mathf.Max(first.x, hoveredCell.x);
+            int minimumY = Mathf.Min(first.y, hoveredCell.y);
+            int maximumY = Mathf.Max(first.y, hoveredCell.y);
+            int considered = 0;
+            int maximum = DesignationMode == WorldDesignationMode.BackgroundConversion
+                ? ConstructionDesignationRegistry.MaximumAreaCells
+                : ExcavationDesignationRegistry.MaximumAreaCells;
+
+            for (int y = minimumY; y <= maximumY && considered < maximum; y++)
+            for (int x = minimumX; x <= maximumX && considered < maximum; x++)
+            {
+                considered++;
+                Vector2Int cell = new(x, y);
+                DesignationPreviewState state;
+                string reason;
+                if (DesignationMode == WorldDesignationMode.Excavate &&
+                    excavationDesignations != null)
+                    state = excavationDesignations.EvaluateCell(cell, out reason);
+                else if (DesignationMode == WorldDesignationMode.BackgroundConversion &&
+                    constructionDesignations != null && SelectedConstructionRecipe != null)
+                    state = constructionDesignations.EvaluateCell(cell,
+                        SelectedConstructionRecipe.Result.StableMaterialId, out reason);
+                else
+                {
+                    state = DesignationPreviewState.Invalid;
+                    reason = "The active designation tool is unavailable.";
+                }
+                designationPreview.Add(new DesignationPreviewCell(cell, state, reason));
+            }
+
+            PreviewDiagnostic = designationPreview.Count == 1
+                ? designationPreview[0].Reason
+                : $"Previewing {designationPreview.Count} cells.";
+        }
+
+        /// <summary>Testable pointer-independent entry point for drag presentation.</summary>
+        public void BeginDesignationDragPreview(Vector2Int startCell)
+        {
+            dragStartCell = startCell;
+            excavationDragActive = true;
+            UpdateDesignationPreview(startCell, true);
+        }
+
+        public void ClearDesignationPreview()
+        {
+            designationPreview.Clear();
+            hasHoveredDesignationCell = false;
+            PreviewDiagnostic = string.Empty;
         }
 
         /// <summary>
@@ -1119,6 +1201,7 @@ namespace AntColony.Commands
             Mouse mouse = Mouse.current;
             if (mouse == null)
             {
+                ClearDesignationPreview();
                 return;
             }
 
@@ -1126,12 +1209,35 @@ namespace AntColony.Commands
 
             if (DesignationMode != WorldDesignationMode.None)
             {
+                if (IsScreenPointBlocked(screenPoint) || worldCamera == null)
+                {
+                    ClearDesignationPreview();
+                    return;
+                }
+                Vector2Int pointerCell = WorldTileCoordinates.WorldPositionToCell(
+                    worldCamera.ScreenToWorldPoint(screenPoint));
+                if (simulationRunning &&
+                    (DesignationMode is WorldDesignationMode.Excavate or
+                        WorldDesignationMode.BackgroundConversion))
+                    UpdateDesignationPreview(pointerCell, excavationDragActive);
+                else ClearDesignationPreview();
+
+                if (mouse.rightButton.wasPressedThisFrame)
+                {
+                    TryHandleDesignationRightClick(pointerCell);
+                    if (simulationRunning)
+                        UpdateDesignationPreview(pointerCell, false);
+                    else ClearDesignationPreview();
+                    return;
+                }
                 if (mouse.leftButton.wasPressedThisFrame &&
                     !IsScreenPointBlocked(screenPoint) && worldCamera != null)
                 {
-                    dragStartCell = WorldTileCoordinates.WorldPositionToCell(
-                        worldCamera.ScreenToWorldPoint(screenPoint));
+                    dragStartCell = pointerCell;
                     excavationDragActive = true;
+                    if (simulationRunning)
+                        UpdateDesignationPreview(pointerCell, true);
+                    else ClearDesignationPreview();
                 }
                 if (mouse.leftButton.wasReleasedThisFrame && excavationDragActive)
                 {
@@ -1767,6 +1873,7 @@ namespace AntColony.Commands
                 developmentPanelScrollPosition = GUILayout.BeginScrollView(
                     developmentPanelScrollPosition);
                 DrawSelectedDevelopmentCategory();
+                DrawDesignationPreviewDiagnostics();
                 GUILayout.Space(6f);
                 GUILayout.Label(interactionMessage);
                 GUILayout.EndScrollView();
@@ -1788,6 +1895,15 @@ namespace AntColony.Commands
             }
             GUILayout.EndHorizontal();
             GUILayout.EndArea();
+        }
+
+        private void DrawDesignationPreviewDiagnostics()
+        {
+            if (!hasHoveredDesignationCell) return;
+            GUILayout.Space(6f);
+            GUILayout.Label("DESIGNATION PREVIEW");
+            GUILayout.Label($"Mode / cell: {DesignationMode} / {hoveredDesignationCell}");
+            GUILayout.Label($"Eligibility: {PreviewDiagnostic}");
         }
 
         private void DrawSelectedAntSummary()
@@ -1917,6 +2033,7 @@ namespace AntColony.Commands
         private void DrawExcavationWorldOverlay()
         {
             if (worldCamera == null) return;
+            DrawDesignationPreview();
             if (excavationDesignations != null)
             {
                 foreach (ExcavationDesignation designation in
@@ -1967,6 +2084,40 @@ namespace AntColony.Commands
                 if (screen.z >= 0f)
                     GUI.Box(new Rect(screen.x - 24f, Screen.height - screen.y - 12f,
                         48f, 24f), $"{drop.Material} {drop.Quantity}");
+            }
+        }
+
+        private void DrawDesignationPreview()
+        {
+            foreach (DesignationPreviewCell preview in designationPreview)
+            {
+                Vector3 minimum = worldCamera.WorldToScreenPoint(
+                    new Vector3(preview.Cell.x, preview.Cell.y, 0f));
+                Vector3 maximum = worldCamera.WorldToScreenPoint(
+                    new Vector3(preview.Cell.x + 1f, preview.Cell.y + 1f, 0f));
+                if (minimum.z < 0f || maximum.z < 0f) continue;
+                float left = Mathf.Min(minimum.x, maximum.x);
+                float top = Screen.height - Mathf.Max(minimum.y, maximum.y);
+                var rectangle = new Rect(left, top,
+                    Mathf.Abs(maximum.x - minimum.x),
+                    Mathf.Abs(maximum.y - minimum.y));
+                Color previous = GUI.color;
+                GUI.color = preview.State switch
+                {
+                    DesignationPreviewState.ExistingDesignation =>
+                        new Color(0.65f, 0.65f, 0.58f, 0.55f),
+                    DesignationPreviewState.Invalid =>
+                        new Color(0.95f, 0.2f, 0.18f, 0.6f),
+                    _ when DesignationMode == WorldDesignationMode.Excavate =>
+                        new Color(1f, 0.68f, 0.08f, 0.58f),
+                    _ => new Color(0.2f, 0.85f, 0.35f, 0.58f)
+                };
+                string symbol = preview.State == DesignationPreviewState.Invalid
+                    ? "!" : preview.State == DesignationPreviewState.ExistingDesignation
+                        ? "≡" : DesignationMode == WorldDesignationMode.Excavate
+                            ? "X" : "+";
+                GUI.Box(rectangle, symbol);
+                GUI.color = previous;
             }
         }
 

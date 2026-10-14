@@ -1,5 +1,46 @@
 # Ant Colony Current Game State
 
+## Current implemented milestone — 3.5A Colony View Presentation, Tile Preview & Art Integration (14 October 2026)
+
+**Implemented — Pending Manual Acceptance.** Excavation and Background Conversion now show a bounded, per-cell hover/drag preview above terrain. Excavation uses amber `X` cells, valid construction uses green `+` cells, invalid targets use red `!` cells, and existing compatible designations use a muted `≡` marker. The preview asks the authoritative designation registry for each cell's state and reason; it never mutates terrain, creates work, or creates per-tile GameObjects. It clears when the tool closes, pointer focus belongs to UI, or simulation is paused.
+
+Right-click while Excavation or Background Conversion is active consumes the world click and calls only that tool's authoritative cancellation API. Normal Select-mode right-click orders are unchanged. Construction cancellation retains its existing reservation release and staged-material-to-loose-drop recovery path. The player Cancel tool still owns its existing bounded left-drag area cancellation; no new area erase gesture was added.
+
+The first custom Colony art mapping is intentionally narrow. `Colony_R02_C01` supplies Soil foreground and darker Natural Earth Background Tiles; `Colony_R04_C01` supplies Stone foreground and darker Natural Stone Background Tiles. All four Tile assets remain collider-free. Prepared and functional Backgrounds retain their clear temporary colours because the candidate sheet does not contain a verified independent semantic match. World data, collision, navigation, material generation and excavation rules are unchanged.
+
+### 3.5A automated verification
+
+- Focused 3.5A Edit Mode: **11/11 passed**, covering authoritative hover/drag states, invalid and occupied construction targets, selected recipes, existing designations, tool/world-reset cleanup, compatible-only right-click cancellation, empty-cell safety and the four allow-listed collider-free art mappings.
+- Complete graphics-enabled Edit Mode: **503/503 passed**.
+- Complete Play Mode: **65/65 passed**.
+- Updated Unity art validation passed for all 170 prepared candidates, import settings, the four allow-listed runtime mappings and collider-free Tile configuration.
+- Deterministic art preparation `--verify-only`, strict Zensical documentation build and `git diff --check` passed. A separate headless full-Edit attempt crashed inside Unity's Tilemap renderer during the existing graphics-backed pixel test; the authoritative complete result is the subsequent graphics-enabled 503/503 pass.
+
+### Exact 3.5A manual Unity Play Mode acceptance
+
+1. In Excavation mode, hover eligible Soil and Stone and confirm an amber outlined `X`; hover Background-only or non-excavatable terrain and confirm a red `!` plus a useful reason.
+2. Drag across mixed terrain and confirm every targeted cell has its own translucent boundary and valid/invalid state.
+3. Open Background Conversion, select each of the six recipes, and confirm the selected functional Background remains visible in the command bar.
+4. Hover and drag valid exposed cells; confirm green `+`, red invalid/occupied cells, and muted `≡` on an existing construction designation.
+5. Right-click an excavation designation in Excavation mode and confirm only that excavation is cancelled.
+6. Right-click a construction designation in Background Conversion mode and confirm only that construction is cancelled.
+7. Right-click empty or incompatible cells and confirm no other job changes and no movement order is issued.
+8. Return to Select mode and confirm normal right-click movement remains functional.
+9. Click/drag/right-click over every HUD and Colony Management region and confirm no world command leaks through.
+10. Stage construction material, cancel the designation, and confirm reservations release and the exact staged quantity becomes a physical loose drop; verify carried and stored totals remain conserved.
+11. Confirm all six recipes still designate and complete through their established construction path.
+12. At normal zoom, inspect Soil and Stone, darker Background variants, foreground removal revealing Background, and conversion refreshing Background presentation.
+13. Inspect repeated mapped tiles for visible seams; these two candidates are allow-listed full-cell textures but are not certified seamless autotiles.
+14. Confirm pixel edges remain sharp during camera movement and zoom.
+15. Confirm falling, pathfinding, excavation, hauling, construction, clock, HUD, work management and camera behavior are unchanged.
+16. Pause with a preview visible and confirm it clears; resume, change tools, press Escape, open modal UI and reset the world, confirming stale preview cells do not remain.
+17. Toggle F12 Developer Mode and confirm all established tools still work; inspect hovered cell, active mode and preview reason through the controller diagnostics.
+18. Repeat at `1280×720`, `1920×1080` and `2560×1080`.
+19. Reset the world and confirm terrain art and designations return to the deterministic baseline.
+20. Confirm the Unity Console is clean.
+
+Known limitations: the source sheet has no verified independent Prepared or functional Background art; composite cavities, exposed edges, roots, fungi and decorations remain unbound; `Colony_R02_C01` and `Colony_R04_C01` repeat safely as full-cell textures but visible tile seams remain possible and no seamless/autotile claim is made. Manual acceptance remains pending.
+
 ## Latest acceptance — 3.4C Player Colony HUD & Developer UI Separation (14 October 2026)
 
 **COMPLETE — MANUALLY ACCEPTED.** User confirmed 13/13 grouped Unity HUD/gameplay/input checks, including resolution testing and clean Console. Codex previously reported focused 12/12 Edit, 13/13 Play; full 489/489 Edit and 62/62 Play. No tests rerun in this documentation update. Earlier pending-acceptance passages are historical. The separate art foundation remains **Pending Manual Visual Acceptance**. Future World View runtime is not implemented.
@@ -9,7 +50,7 @@
 
 **Implemented — Pending Manual Acceptance.** Original `1254x1254` RGBA Colony and World tilesets are preserved under `Assets/_AntGame/Art/<View>/Source`. A deterministic preparation tool produces 100 Colony and 70 World position-named `32x32` candidate sprites with Multiple-sprite, 32 PPU, Point, uncompressed, no-mipmap import metadata. The extraction uses measured variable source rectangles and aspect-preserving square padding rather than blind 32x32 source slicing.
 
-No candidate is gameplay-bound and none is claimed seamless. Production Tile assets and palettes are deferred because several Colony cells combine Background, Solid, cavity edge and decoration visuals, while World props have variable footprints. Existing terrain definitions, Tilemaps, collision, excavation, navigation, ant locomotion and scenes are unchanged. See `Documentation/ArtDirection.md` for source hashes, limitations and the manual Unity inspection checklist.
+This foundation status is superseded only by the narrow 3.5A visual mapping above: two reviewed Colony candidates now feed four existing natural Soil/Stone Tile assets. No candidate is claimed seamless, and wider production palettes remain deferred because several Colony cells combine Background, Solid, cavity edge and decoration visuals while World props have variable footprints. Gameplay terrain definitions, collision, excavation, navigation and ant locomotion remain unchanged. See `Documentation/ArtDirection.md` for the allow-list, source hashes, limitations and manual Unity inspection checklist.
 
 ## Latest acceptance — 14 October 2026
 

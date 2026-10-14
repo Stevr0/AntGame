@@ -404,6 +404,32 @@
   
   
     <li class="md-nav__item">
+      <a href="../art-foundation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Art Foundation
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../colony-construction-rooms/" class="md-nav__link">
         
   
@@ -625,10 +651,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_11" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_12" >
         
           
-          <label class="md-nav__link" for="__nav_11" id="__nav_11_label" tabindex="">
+          <label class="md-nav__link" for="__nav_12" id="__nav_12_label" tabindex="">
             
   
   
@@ -646,8 +672,8 @@
           </label>
         
         
-          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_11_label" aria-expanded="false">
-            <label class="md-nav__title" for="__nav_11">
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_12_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_12">
               <span class="md-nav__icon md-icon"></span>
               
   
@@ -917,20 +943,31 @@
 <p>Future autonomous work uses a per-ant matrix of priorities <code>1–4</code> plus <strong>Disabled</strong>. The highest eligible priority wins before the closest reachable job by path cost. Skills change efficiency; they do not override player-assigned priority.</p>
 <p>Ants may also receive temporary explicit orders. Critical survival may interrupt ordinary work at a safe point. Valid partial progress persists, and exclusive reservations prevent two ants from consuming or owning the same work target. Drafted survival intervention remains unresolved.</p>
 <h2 id="current-implementation">Current implementation<a class="headerlink" href="#current-implementation" title="Permanent link">&para;</a></h2>
-<p>The general job system is not implemented. Existing command behavior is deliberately narrower:</p>
+<p>Milestones through 3.3D are accepted, and 3.4A extends that foundation with physical Background construction:</p>
 <ul>
-<li>Ants can be selected individually.</li>
-<li>Right-click issues Move, Eat, Drink, or Rest according to target context.</li>
-<li>Orders have explicit travel, interaction, completion, cancellation, and failure states.</li>
-<li>Movement uses the shared grid navigation service and motor.</li>
-<li>3.2B uses stable-ant reservations for physical resources and sleeping positions.</li>
-<li>A valid order continues when the player changes selection.</li>
+<li>Every ant record owns independent priorities for Excavation, Surface Preparation, Construction, Hauling, Foraging, Production, Combat, and Brood Care.</li>
+<li><code>ColonyJobRegistry</code> owns synthetic job identity, target, status, reservation, progress, and failure state outside GameObjects.</li>
+<li>Highest enabled priority is evaluated before actual A* route cost. Equal costs use stable deterministic ties.</li>
+<li>Evaluations inspect at most 32 candidates per priority, are staggered, and back off for 2/4/8 seconds on failure.</li>
+<li><code>SyntheticColonyJobOrder</code> remains as a regression fixture. Real designations use <code>ExcavationJobOrder</code> through the same registry, selector, motor, adjacency, priority and interruption seams.</li>
+<li>Excavate mode accepts eligible foreground Solids by world coordinate, supports bounded area drags, and blocks ordinary selection/orders while active.</li>
+<li>Soil and Stone completion uses a stable job-keyed transaction. Output enters the excavator's inventory when possible, with any remainder becoming a recoverable drop. Output failure preserves the Solid; successful removal preserves Background and refreshes one visual/collision/navigation locality.</li>
+<li>Work takes a provisional four simulation hours, uses Rested and relevant-skill speed, and awards proportional XP only for committed progress.</li>
+<li>Player orders and critical survival pause work and release ownership while preserving progress. Ordinary survival waits for active work.</li>
+<li>Explicit player pickup reserves one loose drop quantity and travels through the same shared navigation/adjacency seam. This is an order, not an autonomous Hauling job.</li>
+<li>Autonomous Hauling jobs reserve loose source quantity and compatible Material Storage capacity, then use the same motor to visit valid adjacent source and destination anchors. Already-carried Soil/Stone creates an owner-only self-deposit task.</li>
+<li>Actual A* travel cost selects the closest reachable compatible storage with deterministic ties. Disabled Hauling blocks dynamic claims; critical survival and explicit player orders interrupt safely.</li>
+<li>The development scene exposes deterministic job, excavation and loose-drop fixtures plus priority, inventory, cancellation, reset, and diagnostic controls.</li>
+<li>Background Conversion designations create real Construction jobs. The exclusive builder uses inventory first, otherwise reserves reachable storage/drop material, stages it at the site, performs timed work and commits the Background transaction.</li>
+<li>A construction builder with no usable inventory capacity temporarily unloads unnecessary cargo through a reusable recovery operation: closest reachable reserved storage first, validated recoverable current-anchor drop second, then automatic resumption of the same job. Critical survival and player orders may interrupt this state safely.</li>
+<li>Construction interruption preserves progress, carried material and staged material. Cancellation releases reservations and exposes staged material as a recoverable drop.</li>
 </ul>
-<p>These seams are useful foundations, but they do not establish colony-wide work discovery, autonomous survival, priority evaluation, or generic job ownership.</p>
+<p>Milestones 3.4A, 3.4B and 3.4C are manually accepted. Milestone 3.4D is <strong>Implemented — Pending Manual Acceptance</strong>. Its global player-facing matrix lists active authoritative ant records whether or not their Colony View visual is loaded. Excavation, Construction and Hauling are the only functional columns because only those categories have real executors. Cells display mapped skills and edit the existing record-owned 1–4/Disabled values; developer diagnostics read the same values.</p>
+<p>Changing a matrix value resets subsequent autonomous evaluation but never cancels an active job, changes a skill, pauses simulation or changes a developer autonomy override. Current activity and real failure/waiting text are displayed where the existing agent/job state exposes them. Surface Preparation, Foraging, Production, Combat and Brood Care stay out of the functional player matrix until real executors exist.</p>
 <h2 id="future-decision-flow">Future decision flow<a class="headerlink" href="#future-decision-flow" title="Permanent link">&para;</a></h2>
 <pre class="mermaid"><code>flowchart TD
   A[Ant available] --&gt; S{Critical survival?}
-  S -- Yes --&gt; I[Interrupt safely and reserve survival job]
+  S -- Yes --&gt; I[Interrupt safely and reserve survival interaction]
   S -- No --&gt; O{Explicit order?}
   O -- Yes --&gt; E[Validate and execute order]
   O -- No --&gt; P[Find highest enabled work priority]
@@ -950,7 +987,7 @@
 <li>Hundreds-of-ants goals require controlled update rates and shared data, but do not justify DOTS/ECS before profiling.</li>
 </ul>
 <h2 id="not-implemented">Not implemented<a class="headerlink" href="#not-implemented" title="Permanent link">&para;</a></h2>
-<p>Priority matrices, job categories, colony designations, work scanning, critical-survival autonomy, safe interruption thresholds, generic reservations, hauling, excavation, construction, Draft Mode, group tactics, local avoidance, and persistence all require separately approved milestones.</p>
+<p>Excavation, personal inventory, explicit pickup, Material Storage, autonomous Soil/Stone hauling and functional Background construction are now real. Gathering, production, combat, brood care, forced-work orders, Draft Mode, group tactics, local avoidance, persistence, rooms and production-scale indexing require later milestones.</p>
 
 
 

@@ -519,6 +519,32 @@
   
   
     <li class="md-nav__item">
+      <a href="../art-foundation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Art Foundation
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../colony-construction-rooms/" class="md-nav__link">
         
   
@@ -636,10 +662,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_11" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_12" >
         
           
-          <label class="md-nav__link" for="__nav_11" id="__nav_11_label" tabindex="">
+          <label class="md-nav__link" for="__nav_12" id="__nav_12_label" tabindex="">
             
   
   
@@ -657,8 +683,8 @@
           </label>
         
         
-          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_11_label" aria-expanded="false">
-            <label class="md-nav__title" for="__nav_11">
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_12_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_12">
               <span class="md-nav__icon md-icon"></span>
               
   
@@ -935,8 +961,10 @@
 
 
 <h1 id="game-overview">Game Overview<a class="headerlink" href="#game-overview" title="Permanent link">&para;</a></h1>
+<p>Milestone 3.4C is manually accepted. Milestone 3.4D is <strong>Implemented — Pending Manual Acceptance</strong>. The development game opens paused at Day 1 08:00 with an authored uGUI player HUD and a global Work screen where priorities for active colony ants can be inspected and changed. The matrix uses authoritative records and exposes only implemented Excavation, Construction and Hauling work. Developer IMGUI starts hidden and remains deliberately accessible through F12 without replacing the player interface.</p>
+<p>Accepted Milestone 3.4A permits player-designated conversion of exposed Background into Prepared, Nursery, Sleeping, Food Storage, Water Storage or Material Storage tiles. A Construction-priority ant personally supplies physical Soil/Stone, stages it at the site and performs timed work. Doors, rooms, brood and production remain future work.</p>
 <h2 id="vision">Vision<a class="headerlink" href="#vision" title="Permanent link">&para;</a></h2>
-<p>Ant Colony is a single-player, scrollable and zoomable 2D side-view colony simulation. The intended world is procedural, persistent, chunk-loaded, and destructible. The player manages a colony at strategic scale while issuing explicit orders to persistent individual ants.</p>
+<p>Ant Colony is a single-player, scrollable and zoomable 2D colony simulation with two interconnected perspectives. <strong>Colony View</strong> is the existing side-on underground space for excavation, construction, storage, brood and colony activity. <strong>World View</strong> is an approved but unimplemented top-down surface space for exploration, foraging, resource collection and later environmental threats. The intended world is persistent and chunk-based, while individual ants remain authoritative across both views.</p>
 <p>The game should remain small enough to finish. Depth comes from physical work, individual needs and skills, shared terrain rules, and colony logistics rather than from a large collection of disconnected systems.</p>
 <h2 id="player-fantasy">Player fantasy<a class="headerlink" href="#player-fantasy" title="Permanent link">&para;</a></h2>
 <p>The player guides a founding queen and, later, a growing colony through excavation, survival, construction, brood care, and defence. Ants are individuals rather than anonymous counters: each retains identity, attributes, learned skills, health, hunger, thirst, fatigue, equipment, and lifecycle state as the relevant systems are implemented.</p>
@@ -949,6 +977,7 @@
 <li>Authorise brood and support it until new workers mature.</li>
 <li>Assign work through colony priorities or temporary explicit orders.</li>
 <li>Expand while maintaining individual survival and preparing for hostile encounters.</li>
+<li>Travel through nest entrances to explore a small nearby surface, collect useful resources and return to the colony.</li>
 </ol>
 <p>Only the foundations of this loop exist today. See <a href="../gameplay-mechanics/">Gameplay Mechanics</a> for the system-by-system status.</p>
 <h2 id="current-playable-development-state">Current playable development state<a class="headerlink" href="#current-playable-development-state" title="Permanent link">&para;</a></h2>
@@ -956,12 +985,16 @@
 <ul>
 <li>authoritative two-layer world data and Tilemap projection;</li>
 <li>whole-body clearance, Background grip, gravity, and grid navigation;</li>
-<li>three selectable ants with persistent identity, attributes, skills, and needs;</li>
+<li>three selectable ants with persistent identity, attributes, skills, needs, priorities, and personal inventories;</li>
+<li>a global work-priority matrix over authoritative ant records, including records without a loaded Colony View visual;</li>
 <li>independent movement orders through the production grid motor;</li>
-<li>explicit physical Eat, Drink, and Rest interactions;</li>
+<li>explicit physical Eat, Drink, Rest, material Pickup and Developer Only Drop interactions;</li>
+<li>autonomous survival, synthetic jobs, real foreground excavation and autonomous hauling;</li>
+<li>physical one-slot Material Storage tiles with Soil, Stone and general filters;</li>
 <li>developer diagnostics and deterministic fixtures.</li>
 </ul>
-<p>Milestone 3.2B is implemented and fully automated-tested, but its 20-step manual Play Mode checklist remains pending. Autonomous colony work, general inventories, construction, excavation gameplay, brood, room quality, combat, persistence, and a finished onboarding flow are not implemented.</p>
+<p>Normal gameplay uses the authored player HUD. Development controls remain grouped in one compact top IMGUI toolbar: Ant, Needs, Skills, Jobs, Resources, World and Debug share a single bounded scrollable expansion area. Developer Mode starts hidden, can be opened deliberately with F12 or its separate reopen control, and can close without changing the clock or autonomy. One uGUI/IMGUI input boundary prevents either interface from issuing world commands or moving the camera through pointer leakage.</p>
+<p>Milestones through 3.3C are accepted. Milestone 3.3D implements physical Material Storage and autonomous loose-drop/self-deposit hauling with full automated verification, while its 30-step manual Play Mode checklist remains pending. Construction, brood, room quality, combat, persistence, and a finished onboarding flow are not implemented.</p>
 <h2 id="scope-boundaries">Scope boundaries<a class="headerlink" href="#scope-boundaries" title="Permanent link">&para;</a></h2>
 <ul>
 <li>Single-player only; no networking package is planned.</li>
@@ -969,6 +1002,7 @@
 <li>The earlier continuous-input movement course remains a developer regression fixture, not the intended normal-play control scheme.</li>
 <li>Numerical balance is provisional unless the GDD explicitly marks it approved.</li>
 <li>Future ideas are not an implementation checklist and require a separately authorised milestone.</li>
+<li>World View, nest transitions, cross-view jobs and unloaded-chunk simulation are approved design only; no surface gameplay is currently implemented.</li>
 </ul>
 <h2 id="related-pages">Related pages<a class="headerlink" href="#related-pages" title="Permanent link">&para;</a></h2>
 <ul>

@@ -63,15 +63,18 @@ namespace AntColony.Commands
         public IEnumerable<ExcavationDesignation> Designations => byCell.Values;
         public int Count => byCell.Count;
 
-        public bool TryDesignate(Vector2Int cell, out ExcavationDesignation designation,
-            out string error)
+        /// <summary>
+        /// Uses the same rules as designation commit without creating a job.
+        /// Presentation calls this so preview colours cannot drift from gameplay.
+        /// </summary>
+        public DesignationPreviewState EvaluateCell(Vector2Int cell,
+            out string reason)
         {
-            designation = null;
             if (byCell.TryGetValue(cell, out ExcavationDesignation existing) &&
                 existing.State != ExcavationDesignationState.Cancelled)
             {
-                error = $"An excavation designation already exists at {cell}.";
-                return false;
+                reason = $"An excavation designation already exists at {cell}.";
+                return DesignationPreviewState.ExistingDesignation;
             }
             if (world.GetCell(cell, out WorldTileCellData cellData) !=
                     WorldCellQueryResult.Available || !cellData.HasSolidTile ||
@@ -81,9 +84,24 @@ namespace AntColony.Commands
                 definition.ExcavatedMaterial == ExcavatedMaterialType.None ||
                 definition.ExcavationYield <= 0)
             {
-                error = "Only resource-bearing excavatable foreground Solids can be designated.";
-                return false;
+                reason = "Only resource-bearing excavatable foreground Solids can be designated.";
+                return DesignationPreviewState.Invalid;
             }
+
+            reason = "Foreground Solid is eligible for excavation.";
+            return DesignationPreviewState.Valid;
+        }
+
+        public bool TryDesignate(Vector2Int cell, out ExcavationDesignation designation,
+            out string error)
+        {
+            designation = null;
+            if (EvaluateCell(cell, out error) != DesignationPreviewState.Valid)
+                return false;
+
+            world.GetCell(cell, out WorldTileCellData cellData);
+            world.TryGetSolidMaterialDefinition(cellData.SolidMaterialId,
+                out SolidTileMaterialDefinition definition);
 
             ColonyJobId id = new($"excavation.{cell.x}.{cell.y}");
             if (!jobs.TryAdd(id, AntWorkCategory.Excavation, cell,

@@ -32,6 +32,8 @@ Loose drops remain traversable and cannot by themselves prevent ordinary progres
 
 Current provisional recipes cost one Soil for Prepared, Nursery, Sleeping, Food Storage or Material Storage, and one Stone for Water Storage. Base duration is four simulation hours.
 
+Milestone 3.5A previews the selected recipe over a bounded hover/drag rectangle by calling the construction registry's non-mutating authoritative validation. Valid cells are green, invalid/occupied cells red and existing conversions muted with a separate symbol. Right-click in Background Conversion mode invokes the existing cancellation transaction for only that cell, so staged material still becomes a recoverable loose drop and no movement order leaks through.
+
 ## Rooms and doors
 
 The approved design allows mixed-use spaces. Enclosure is not required for base tile function, but an enclosed specialised room may earn quality or efficiency bonuses. Every opening into an enclosed room requires a door. Exact enclosure detection, door rules, scoring, mixed-use penalties, and quality formulas remain unresolved.

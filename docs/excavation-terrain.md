@@ -32,6 +32,10 @@ Milestone 3.4A adds player-designated Background conversion. Completion consumes
 
 Milestone 3.4C exposes ordinary Colony View **Excavate**, six-recipe **Build**, and **Cancel designation** tools through the authored player HUD. Single-cell and bounded-drag input still delegates to the accepted registries. Cancellation retains the existing conserving material behavior, and uGUI/developer-IMGUI hit testing blocks designation start or release over interface panels.
 
+Milestone 3.5A adds a read-only hover/drag preview. Excavation cells are amber when the excavation registry reports eligible, red when invalid and muted with an explicit marker when already designated. Background Conversion uses the same pattern with green valid cells and the selected recipe's authoritative construction validation. The preview does not create jobs or terrain objects and clears on tool exit, blocked pointer focus or pause.
+
+Right-click in Excavation mode cancels only an excavation designation under the pointer; right-click in Background Conversion cancels only construction. The click is consumed even when the target is empty, preventing a movement order from dispatching through the tool. Select-mode contextual right-click and the existing Cancel tool remain unchanged.
+
 ## Implemented excavation and material handling
 
 Excavate mode creates registry-owned jobs for eligible foreground Solid cells. Autonomous ants select them through the accepted priority/path-cost rules, reserve exclusively, reach a valid adjacent anchor and make incremental progress. Safe interruption retains progress. Completion removes only the foreground Solid and preserves the Background.

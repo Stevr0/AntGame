@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.Tilemaps;
 
 namespace AntColony.EditorTools
 {
@@ -43,6 +44,7 @@ namespace AntColony.EditorTools
             ValidateSource(WorldSource);
             ValidatePrepared(ColonyPrepared, 320, 320, 100);
             ValidatePrepared(WorldPrepared, 320, 224, 70);
+            ValidateColonyRuntimeMapping();
         }
 
         private static void ValidateSource(string assetPath)
@@ -91,6 +93,32 @@ namespace AntColony.EditorTools
             Require(importer.textureCompression == TextureImporterCompression.Uncompressed, assetPath);
             Require(!importer.mipmapEnabled, assetPath);
             Require(importer.alphaIsTransparency, assetPath);
+        }
+
+        private static void ValidateColonyRuntimeMapping()
+        {
+            ValidateMappedTile(
+                "Assets/AntColony/Art/WorldTiles/Solid_Soil.asset",
+                "Colony_R02_C01");
+            ValidateMappedTile(
+                "Assets/AntColony/Art/WorldTiles/Background_UnpreparedEarth.asset",
+                "Colony_R02_C01");
+            ValidateMappedTile(
+                "Assets/AntColony/Art/WorldTiles/Solid_Stone.asset",
+                "Colony_R04_C01");
+            ValidateMappedTile(
+                "Assets/AntColony/Art/WorldTiles/Background_UnpreparedStone.asset",
+                "Colony_R04_C01");
+        }
+
+        private static void ValidateMappedTile(string assetPath, string spriteName)
+        {
+            Tile tile = AssetDatabase.LoadAssetAtPath<Tile>(assetPath);
+            Require(tile != null, $"Missing mapped Tile asset: {assetPath}");
+            Require(tile.sprite != null && tile.sprite.name == spriteName,
+                $"{assetPath} must use reviewed candidate {spriteName}.");
+            Require(tile.colliderType == Tile.ColliderType.None,
+                $"{assetPath} must not create sprite collision authority.");
         }
 
         private static Texture2D LoadTexture(string assetPath)
