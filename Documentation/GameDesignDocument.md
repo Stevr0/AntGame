@@ -1,5 +1,18 @@
 # ANT COLONY
 
+## Approved founding-colony survival direction — 14 October 2026
+
+> **APPROVED DESIGN; IMPLEMENTATION DEFERRED.** This supersedes any assumption that a new founding colony starts with prebuilt food, water or sleeping fixtures. The three-ant development scene remains a testing fixture.
+
+- **Start:** One founding queen on the surface, no excavated chambers and no preconstructed Sleeping, Food Storage, Water Storage, Material Storage or Nursery backgrounds.
+- **Foraging discovers** food, water and other resource sources; **extraction physically removes/collects** finite resources and generates recoverable loose output. **Hauling** transports extracted materials. **Construction** self-supplies physical materials from inventory, storage or loose drops.
+- **Direct survival:** Ants may eat/drink at an accessible natural food/water source without requiring constructed storage. Natural sources must obey future finite-source/access/consumption rules; extraction and water transport need their own approved technical specification. Do not assume water is stackable like stone or that discovery automatically extracts it.
+- **Rest:** Ants may rest at a physically safe, accessible natural position before any dedicated sleeping space exists. Constructed Sleeping Backgrounds grant one dedicated resting position per tile with improved recovery efficiency; later enclosed-room quality may enhance efficiency but never gates basic use.
+- **Storage and nursery:** Food Storage, Water Storage, Material Storage and Nursery are built via existing resource-backed Background conversion jobs; each functional tile provides its previously approved 1:1 capacity. Unenclosed initial chambers can function; future doors/enclosure provide efficiency bonuses.
+- **Progression intent:** Discover nearby natural sustenance → excavate first chamber → recover/rest naturally → construct sleeping and food/water storage → transport resources → prepare nursery → authorise first brood → expand workforce. Brood, World View runtime, natural-source resource interactions and storage efficiency bonuses are not implemented by this decision.
+- **Testing exception:** Preserve finite pre-authored Food, Water and Sleeping fixtures for Mara/Pip/Tala in AntGameDevelopment; they are not the eventual new-game bootstrap.
+
+
 ## Approved resource acquisition separation — 14 October 2026
 
 > **Status: APPROVED AND IMPLEMENTED BY MILESTONE 3.5B; MANUAL ACCEPTANCE PENDING.** This decision supersedes every older excavation auto-pickup, inventory-first and inventory-capacity-gated rule retained later in this document as historical context.
