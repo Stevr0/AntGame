@@ -1,5 +1,12 @@
 # Ant Colony Development Roadmap
 
+## Approved founding-colony survival specification — 14 October 2026
+
+**Design agreed; not implemented.** New-game start will be one founding queen without prebuilt Food/Water/Sleeping/Material Storage or Nursery areas. Natural food/water sources permit direct eating/drinking, and safe natural ground permits baseline rest. Constructed storage/sleeping improves organisation and efficiency; functional Background 1:1 capacities and later room-quality enhancements remain. Foraging is discovery; extraction generates loose physical output; hauling transports it. Keep three-ant development fixtures unchanged.
+
+**Prerequisites for playable founding start:** specify finite natural source identity/quantity/access; food extraction and transport; physical water extraction/carriage/storage accounting; natural resting safety and efficiency; initial accessible surface sources and entrance relationship; queen survival/brood bootstrap. Coordinate with approved WV-A/WV-B/WV-C sequencing and implement each in separately authorised milestones. Do not interpret this approved design as permission to implement World View now.
+
+
 ## Focused survival-needs balance correction — 14 October 2026
 
 **Implemented — Pending Manual Acceptance.** Investigation found no navigation, retry, pause, clock-speed or excavation-order defect. A production-API, real-path-cost 12-day projection showed the old provisional survival balance left only 42.7% of time for productive work plus return-to-work travel and allowed all three needs to reach their critical extremes. The dominant cost was frequent Fatigue-driven sleep trips, compounded by faster Hunger/Thirst loss and one-hour consumption actions.

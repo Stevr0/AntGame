@@ -1,5 +1,10 @@
 # Ant Colony Current Game State
 
+## Founding-colony survival decisions — 14 October 2026
+
+**APPROVED DESIGN ONLY, NOT IMPLEMENTED:** eventual new game begins with a single founding queen and no prebuilt facilities. Natural food/water sources can satisfy needs directly; safe natural positions permit baseline rest; constructed Food/Water/Material Storage, Sleeping and Nursery Backgrounds are created through construction. Foraging locates resources; extraction generates physical loose material; hauling handles transport. Physical water handling and source/entrance behaviour require separate specifications. Existing Mara/Pip/Tala developer scene retains its finite survival fixtures for reproducible testing. Do not mark any natural-source, World View or brood gameplay implemented based on this decision.
+
+
 ## Focused survival-needs balance correction — 14 October 2026
 
 **Implemented — Pending Manual Acceptance.** A deterministic 12-day projection for Mara, Pip and Tala now drives the production needs and survival-decision APIs while using real path costs from work anchors beside the two small excavation areas. The baseline isolated the cause of low output: the old Fatigue cycle (4/hour awake, 12/hour recovery, intervention at 60) forced frequent long sleep round trips, while Hunger 2/hour, Thirst 3/hour and one-hour Eat/Drink actions added more survival travel. No reachability, retry, pause, clock-speed, excavation-coordinate or job-interruption defect was found.
