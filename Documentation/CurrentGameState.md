@@ -1,5 +1,12 @@
 # Ant Colony Current Game State
 
+## Milestone 3.4D manual acceptance — 14 October 2026
+
+**3.4D Colony Management & Work Priorities UI: COMPLETE — MANUALLY ACCEPTED.** User confirmed all 14 grouped checks covering independent Excavation/Construction/Hauling priorities, preservation of active work, authoritative ant bindings, layouts, input blocking, clock and clean Console. Codex previously reported focused 7/7 Edit and 7/7 Play, full 492/492 Edit and 65/65 Play. These were not rerun for this documentation-only update. Older pending-acceptance language is historical.
+
+**Next proposed milestone: 3.4E Multiple-Ant Local Avoidance & Congestion Recovery.** Scope must remain narrow: prevent persistent ant overlap/deadlock at close quarters while preserving authoritative grid navigation, valid climbing/falling, orders, jobs, time controls, resources and UI. No World View runtime, new navigation graph or pathfinding rewrite. This proposal is not yet implemented. Custom art foundation visual acceptance remains separate and pending.
+
+
 ## Latest acceptance — 3.4C Player Colony HUD & Developer UI Separation (14 October 2026)
 
 **COMPLETE — MANUALLY ACCEPTED.** User confirmed 13/13 grouped Unity HUD/gameplay/input checks, including resolution testing and clean Console. Codex previously reported focused 12/12 Edit, 13/13 Play; full 489/489 Edit and 62/62 Play. No tests rerun in this documentation update. Earlier pending-acceptance passages are historical. The separate art foundation remains **Pending Manual Visual Acceptance**. Future World View runtime is not implemented.
