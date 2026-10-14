@@ -1,5 +1,10 @@
 # Ant Colony Current Game State
 
+## Approved resource loop change — 14 October 2026
+
+**DESIGN APPROVED; IMPLEMENTATION PENDING.** Foraging discovers resource locations; excavation/extraction mines or removes resources and always creates recoverable loose world drops rather than auto-filling the excavator's inventory. Hauling and explicit pickups transport loose resources; builders self-supply from carried/stored/loose stock. This intentionally replaces the accepted earlier auto-pickup excavation behaviour when implemented. Existing code/test baseline may still auto-pickup until the next scoped implementation and manual acceptance. World View foraging and extraction remain future work. Preserve resource-conservation and cancel/retry guarantees. 3.5A visual acceptance remains separate and pending.
+
+
 ## Current implemented milestone — 3.5A Colony View Presentation, Tile Preview & Art Integration (14 October 2026)
 
 **Implemented — Pending Manual Acceptance.** Excavation and Background Conversion now show a bounded, per-cell hover/drag preview above terrain. The presentation draws an explicit translucent fill and four screen-space border edges over the exact projected world-cell rectangle, rather than depending on the active IMGUI box skin. The alignment correction derives that rectangle from `WorldTileCoordinates.CellToWorldPosition` plus half the authoritative cell size: integer world coordinates are cell centres, matching the authored Grid's `(-0.5, -0.5)` transform and one-unit Tilemap cells. The earlier implementation incorrectly treated the integer coordinate as the lower-left corner, shifting every overlay half a world unit up and right. Excavation uses an amber border with a small `X`, valid construction uses a green border with `+`, invalid targets use red `!`, and existing compatible designations use a muted `≡` marker. Committed pending/active jobs retain a subtle full-cell border; cancelled and completed jobs do not render. The preview asks the authoritative designation registry for each cell's state and reason, and never mutates terrain, creates work, or creates per-tile GameObjects.
