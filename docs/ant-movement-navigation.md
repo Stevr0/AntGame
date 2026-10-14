@@ -57,15 +57,17 @@ Milestone 3.4B binds the service to the scene simulation clock. While paused, th
 
 World View will use top-down surface movement over its own explicit coordinate and chunk space. It may use different local connections, obstacles and movement presentation from Colony View. The established underground grounded/gripping/climbing/falling rules remain valid in Colony View and must not be simplified to make both views use one local motor or path graph.
 
-Cross-view travel must eventually compose:
+WV-A defines cross-view travel as:
 
 1. a Colony View route to a valid nest entrance;
 2. one controlled residency/representation transition; and
 3. a World View route from the paired surface entrance.
 
-The same authoritative ant, inventory, needs, job and reservation state continues through all three stages. Only one live movement representation may own the ant at a time. Autonomous job selection will eventually need bounded cross-view reachability and cost information, but the precise cost model, entrance capacity, route caching and failure recovery are unresolved.
+The same authoritative ant, inventory, needs, job and reservation state continues through all three stages. Only one live movement representation may own the ant at a time. The initial entrance has capacity one. A transaction reserves it, revalidates the destination and commits one residency revision idempotently; failure restores source residency. Local cost is simulated travel time, while future total cost adds an entrance wait/interaction estimate and destination-local travel. Autonomous composition remains deferred to WV-D.
 
 Hidden loaded regions continue using the shared simulation clock. Future unloaded chunks require reduced-fidelity travel and job simulation rather than full physics or per-frame path execution. The reconciliation rules for an ant that returns to a loaded chunk must be deterministic and must not duplicate distance, work, resources or elapsed needs.
+
+WV-B should introduce a separate `SurfaceCell` and Surface-local navigator. It must not pass a Surface coordinate to `GridPathfinder`, reuse Colony grip/falling edges for top-down movement or generalise `GridNavigationMotor` until a demonstrated shared abstraction exists. See [World View Foundation](world-view-foundation.md).
 
 ## Future acceptance
 

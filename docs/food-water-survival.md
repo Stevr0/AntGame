@@ -10,10 +10,10 @@ Milestone 3.2A is complete and manually accepted. Every authoritative ant record
 | --- | ---: |
 | Starting Health / Hunger / Thirst | 100 / 100 / 100 |
 | Starting Fatigue | 20 |
-| Awake Hunger loss | 2 per simulation hour |
-| Awake Thirst loss | 3 per simulation hour |
-| Awake Fatigue gain | 4 per simulation hour |
-| Rest recovery | 12 Fatigue per simulation hour |
+| Awake Hunger loss | 1 per simulation hour |
+| Awake Thirst loss | 1.4 per simulation hour |
+| Awake Fatigue gain | 1.4 per simulation hour |
+| Rest recovery | 16 Fatigue per simulation hour |
 | Critical Hunger threshold | 10 or lower |
 | Critical Hunger damage | 2 Health per simulation hour |
 | Critical Thirst effect | Blocks ordinary skill XP |
@@ -39,7 +39,7 @@ Milestone 3.2B physical Eat, Drink, and Rest interactions and Milestone 3.2C aut
 - Ordinary needs use normalized urgency and hysteresis, and do not interrupt active colony work.
 - Failed searches use bounded retry backoff rather than per-frame path requests.
 
-Eat reserves and consumes one `resource.food.development` unit after one simulation hour and restores 40 Hunger. Drink consumes one `resource.water.development` unit after one simulation hour and restores 50 Thirst. Rest recovers Fatigue over time and completes at the accepted Rested threshold. Interaction time advances at one simulation hour per real-time second in the development scene.
+Eat reserves and consumes one `resource.food.development` unit after 0.5 simulation hour and restores 40 Hunger. Drink consumes one `resource.water.development` unit after 0.5 simulation hour and restores 50 Thirst. Rest recovers Fatigue over time and completes at the accepted Rested threshold. Interaction time advances at one simulation hour per real-time second in the development scene.
 
 Milestone 3.4B routes needs, interactions, autonomous evaluation and retry/backoff through the authoritative simulation clock. Pause advances none of them and preserves any existing survival reservation. Running 1×/2×/3× changes simulated time per real second without changing the provisional per-simulation-hour rates above.
 
@@ -52,8 +52,12 @@ Milestone 3.4B routes needs, interactions, autonomous evaluation and retry/backo
 - Unity compilation and structural scene validation passed.
 - The 3.2B and 3.2C manual checklists are accepted through their recorded milestone transitions.
 
+## Future founding-colony contract
+
+The WV-A specification adds design only, not runtime behavior: finite Surface seed and freshwater sources, direct eating/drinking without storage, extraction to recoverable output, one-unit non-solid water payloads, and safe natural rest. Constructed Sleeping Background keeps one-ant capacity and the existing 16/hour recovery; a provisional 8/hour natural-rest rate requires WV-C1 approval. Water must remain conserved across source, ground cache, ant inventory and Water Storage ownership.
+
 ## Not implemented
 
-Gathering, hauling, general inventories, cooking, food varieties, spoilage, water production, containers, permanent beds, colony-wide stock accounting, death, corpses, and save/load remain outside the current slice. Milestone 3.3B produces only loose Soil/Stone world drops; it does not produce or transport survival supplies.
+Natural source discovery, seed/water extraction, food parcels, water caches, survival-supply hauling, cooking, food varieties, spoilage, water production, containers, death, corpses, and save/load remain outside the current slice. General ant inventory, Soil/Stone hauling, Material Storage and constructed survival fixtures do exist; they do not yet transport natural survival supplies.
 
-See [Development Roadmap](development-roadmap.md) before extending this system.
+See [World View Foundation](world-view-foundation.md) and [Development Roadmap](development-roadmap.md) before extending this system.

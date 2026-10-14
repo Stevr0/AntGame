@@ -59,6 +59,10 @@ flowchart TD
 - Construction preserves builder self-supply.
 - Hundreds-of-ants goals require controlled update rates and shared data, but do not justify DOTS/ECS before profiling.
 
+## Future cross-region work boundary
+
+WV-A preserves the active job/order identity and valid partial work while an ant changes regions. A cross-view destination is region-scoped and composes a source-local route, one capacity-one entrance transaction and a destination-local route. The current Colony `Vector2Int` job targets and A* service remain unchanged; they are not valid Surface coordinates. An occupied or invalid entrance produces a recoverable waiting/failure state and releases reservations only through the owning job's existing cancellation rules. Autonomous cross-view selection and cost comparison are deferred to WV-D. See [World View Foundation](world-view-foundation.md).
+
 ## Not implemented
 
 Excavation, personal inventory, explicit pickup, Material Storage, autonomous Soil/Stone hauling and functional Background construction are now real. Gathering, production, combat, brood care, forced-work orders, Draft Mode, group tactics, local avoidance, persistence, rooms and production-scale indexing require later milestones.

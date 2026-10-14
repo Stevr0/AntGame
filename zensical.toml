@@ -16,6 +16,7 @@ nav = [
   { "Gameplay Mechanics" = "gameplay-mechanics.md" },
   { "Ants, Attributes and Skills" = "ants-attributes-skills.md" },
   { "Ant Movement and Navigation" = "ant-movement-navigation.md" },
+  { "World View Foundation" = "world-view-foundation.md" },
   { "Excavation and Terrain" = "excavation-terrain.md" },
   { "Art Foundation" = "art-foundation.md" },
   { "Colony Construction and Rooms" = "colony-construction-rooms.md" },

@@ -1,8 +1,16 @@
 # Ant Colony Current Game State
 
+## WV-A two-view architecture specification — 14 October 2026
+
+**DOCUMENTED, NOT IMPLEMENTED:** `WorldViewTechnicalSpecification.md` is the implementation-ready contract for the future Colony/World connection. It specifies distinct typed coordinate spaces, stable region/entrance/source identities, one authoritative ant residency, a capacity-one idempotent transition with rollback, manual camera/input switching, shared-clock loaded-region behavior, finite sources, exact-once food/water interactions, a recoverable one-unit liquid payload, natural rest and WV-B/WV-C acceptance tests.
+
+Read-only code inspection found reusable seams in `AntRecord`, `AntRegistry`, `AntEntityBindingRegistry`, the shared clock, Colony navigation, job ownership and physical-resource transactions. It also confirmed current Colony-only assumptions: unscoped `Vector2Int` targets, one camera/navigation service in the command controller, `PlayerViewContext.Colony`, loaded-visual local orders and a single-region development host. No residency, Surface terrain/motor, view coordinator, entrance runtime, natural sources, liquid payload or cross-view routing exists.
+
+Historical sections later in this file retain the evidence available at their dates. Where they say general pathfinding, excavation, survival or colony work is absent, the newer dated sections above them and current repository code supersede those statements. The Mara/Pip/Tala development scene and all Unity assets remain unchanged by WV-A.
+
 ## Founding-colony survival decisions — 14 October 2026
 
-**APPROVED DESIGN ONLY, NOT IMPLEMENTED:** eventual new game begins with a single founding queen and no prebuilt facilities. Natural food/water sources can satisfy needs directly; safe natural positions permit baseline rest; constructed Food/Water/Material Storage, Sleeping and Nursery Backgrounds are created through construction. Foraging locates resources; extraction generates physical loose material; hauling handles transport. Physical water handling and source/entrance behaviour require separate specifications. Existing Mara/Pip/Tala developer scene retains its finite survival fixtures for reproducible testing. Do not mark any natural-source, World View or brood gameplay implemented based on this decision.
+**APPROVED DESIGN ONLY, NOT IMPLEMENTED:** eventual new game begins with a single founding queen and no prebuilt facilities. Natural food/water sources can satisfy needs directly; safe natural positions permit baseline rest; constructed Food/Water/Material Storage, Sleeping and Nursery Backgrounds are created through construction. Foraging locates resources; extraction generates physical recoverable output; hauling handles transport. WV-A now specifies source/entrance behavior and one-unit water accounting, while the listed balance/presentation decisions and all runtime work remain deferred. Existing Mara/Pip/Tala developer scene retains its finite survival fixtures for reproducible testing. Do not mark any natural-source, World View or brood gameplay implemented based on this decision.
 
 
 ## Focused survival-needs balance correction — 14 October 2026

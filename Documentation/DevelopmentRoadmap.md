@@ -1,10 +1,16 @@
 # Ant Colony Development Roadmap
 
+## WV-A technical specification complete — documentation only (14 October 2026)
+
+`WorldViewTechnicalSpecification.md` now defines the approved typed region and coordinate contracts, one-ant entrance transaction, ant residency/representation handoff, manual view/camera lifecycle, local-navigation boundaries, shared-clock behavior, finite seed/freshwater records, direct consumption, extraction conservation, one-unit recoverable water payload, natural rest, founding-queen bootstrap, failure recovery and acceptance strategy. Read-only inspection confirmed useful existing seams and current single-Colony assumptions. No Unity scripts, scenes, prefabs, ScriptableObjects, terrain, art bindings or tests were changed.
+
+WV-A does **not** authorise implementation. The recommended next scope is **WV-B1: typed two-region foundation, one bounded deterministic Surface fixture, manual view switch, one capacity-one entrance and one round-trip ant transition**, with both regions loaded on the accepted clock. Stop after WV-B1 acceptance before WV-C1 natural survival or WV-C2 extraction/transport.
+
 ## Approved WV-A entry contract — 14 October 2026
 
-**WV-A is next as DOCUMENTATION-ONLY TECHNICAL SPECIFICATION, not runtime work.** Approved decisions: one pre-authored bidirectional one-ant-at-a-time entrance; manual Colony/World camera switching with separate remembered cameras; ants physically approach entrance before transition; finite seeds and freshwater near the entrance; provisional one-unit liquid payload using existing inventory accounting; safe natural resting with constructed Sleeping backgrounds faster. These decisions do not authorise Unity scenes, scripts, prefabs, world generation or movement changes.
+**WV-A was authorised as a DOCUMENTATION-ONLY TECHNICAL SPECIFICATION and is now complete as documentation, not runtime work.** Approved decisions: one pre-authored bidirectional one-ant-at-a-time entrance; manual Colony/World camera switching with separate remembered cameras; ants physically approach entrance before transition; finite seeds and freshwater near the entrance; provisional one-unit liquid payload using existing inventory accounting; safe natural resting with constructed Sleeping backgrounds faster. These decisions do not authorise Unity scenes, scripts, prefabs, world generation or movement changes.
 
-**WV-A specification deliverables:** typed region/local coordinate contract and entrance endpoint mapping; source/destination transition validation, atomic ownership handoff, capacity and retries; manual view-switch/input/camera behaviour; one clock and simultaneously loaded starting regions; local vs cross-region navigation responsibilities; source discovery, extraction, direct consumption and exact physical seed/water accounting (including a non-lossy liquid drop/transfer policy); safe natural resting definition; deterministic failure/test cases; design-question register and staged WV-B / WV-C implementation acceptance criteria.
+**Completed WV-A deliverables:** typed region/local coordinate contract and entrance endpoint mapping; source/destination transition validation, atomic ownership handoff, capacity and retries; manual view-switch/input/camera behaviour; one clock and simultaneously loaded starting regions; local vs cross-region navigation responsibilities; source discovery, extraction, direct consumption and exact physical seed/water accounting (including a non-lossy liquid cache/transfer policy); safe natural resting definition; deterministic failure/test cases; decision register and staged WV-B1 / WV-C1 / WV-C2 acceptance criteria.
 
 **Later:** WV-B constructs only one small bounded surface with one entrance and same-ant round trip; WV-C1 introduces finite natural consumption/discovery; WV-C2 introduces extracting and hauling surface resources including water, subject to WV-A approvals. Preserve Colony View and development fixture baselines. Brood, broad streaming/unloaded simulation, hazards and more entrances remain deferred.
 
@@ -82,20 +88,28 @@ Before the first playable World View slice:
 
 - preserve the existing Colony View terrain, movement, construction, logistics and simulation-clock baselines;
 - keep ant identity, stats, skills, needs, inventory and jobs independent from a particular visual or movement representation;
-- approve explicit region/coordinate ownership and a nest-entrance transition contract;
-- define how only one live representation may own an ant at a time;
-- define separate local-navigation responsibilities and the boundary for composing cross-view routes;
-- establish deterministic persistence/residency rules before relying on unloaded surface chunks; and
+- preserve the WV-A typed region/coordinate and capacity-one entrance transition contract;
+- preserve one authoritative residency and at most one live representation per ant;
+- keep separate local-navigation responsibilities behind the specified cross-view composition boundary;
+- implement the specified loaded-region residency rules before designing WV-F persistence for unloaded surface chunks; and
 - keep the first surface course small enough to validate travel, return and conservation before expanding generation or population scale.
 
 ### Proposed phased milestones
 
+- **WV-A — Two-view technical specification:** Documentation complete. No runtime implementation or Unity acceptance claim.
+- **WV-B1 — Two-region and entrance vertical slice:** Proposed next approval. Typed locations/residency, bounded Surface fixture, Surface-local movement, manual cameras/input and one safe bidirectional transition. No resources or autonomous cross-view work.
+- **WV-C1 — Founding survival:** Finite source discovery, direct eating/drinking and safe natural rest without starting facilities.
+- **WV-C2 — Physical return loop:** Seed extraction/parcels, one-unit recoverable liquid payload, hauling and constructed Food/Water Storage.
+- **WV-D — Autonomous cross-view routing/work:** Compose source local route, entrance edge and destination local route without replacing Colony A*.
+- **WV-F — Unloaded-region simulation:** Reduced-fidelity deterministic catch-up and reconciliation only after loaded two-region gameplay is accepted.
+
 | Phase | Proposed outcome | Depends on | Explicitly deferred |
 | --- | --- | --- | --- |
 | **WV-A — Two-view technical specification** | Approve region identity, coordinate-space boundaries, entrance mapping, transition invariants, simulation residency and validation strategy. Documentation/prototypes only unless separately authorised. | Current persistent ant identity and unified simulation clock | Playable surface, procedural expansion, enemies |
-| **WV-B — Small playable surface foundation** | One bounded top-down surface area, one known nest entrance, camera/view switching and local surface traversal by the same persistent ant. Colony View continues simulating. | WV-A; stable Colony View regressions; single-owner ant representation | General streaming, autonomous cross-view jobs, predators, rival colonies |
-| **WV-C — Surface foraging loop** | A narrow physical surface resource interaction, inventory-conserving collection and return through the entrance to Colony View. | WV-B; approved surface resource and transfer rules | Large biomes, combat, multiple colonies |
-| **WV-D — Autonomous cross-view work** | Jobs can select and execute composed routes through entrances while preserving ownership, reservations, needs and cancellation semantics. | WV-C; cross-region route and failure policy; scheduler budgets | Unbounded job search, global path graph assumptions |
+| **WV-B1 — Small playable surface and entrance** | One bounded top-down surface area, one known entrance, manual camera/view switching, Surface-local traversal and one same-ant round trip. Colony View continues simulating. | WV-A; stable Colony View regressions; single-owner ant representation | Natural resources, general streaming, autonomous cross-view jobs, threats |
+| **WV-C1 — Founding survival** | Finite source discovery, direct eating/drinking and safe natural rest without constructed facilities. | WV-B1; approved source and rest balance | Extraction, hauling, large biomes, combat |
+| **WV-C2 — Physical surface return loop** | Recoverable seed/water extraction, one-unit liquid payload, hauling and constructed Food/Water Storage. | WV-C1; approved output and transfer presentation | Production ecology, combat, multiple colonies |
+| **WV-D — Autonomous cross-view work** | Jobs can select and execute composed routes through entrances while preserving ownership, reservations, needs and cancellation semantics. | WV-C2; cross-region route and failure policy; scheduler budgets | Unbounded job search, global path graph assumptions |
 | **WV-E — Incremental chunk expansion** | Add surface chunks/environments gradually, with persistence and bounded loading around the initial playable area. | WV-D; chunk save/version rules; performance evidence | Whole-world generation in one step |
 | **WV-F — Lightweight unloaded simulation** | Deterministic reduced-fidelity progress for ants/jobs in unloaded chunks, reconciled safely when chunks reload. | WV-E; approved fidelity/catch-up rules and save support | Full offscreen physics or frame-by-frame navigation |
 | **WV-G — Surface threats and wider ecology** | Incremental predators, rival colonies and environmental interactions after exploration/logistics are stable. | Earlier World View phases plus separately approved combat/ecology design | Any unapproved enemy or combat scope |

@@ -17,6 +17,8 @@
 | Construction and functional conversion | Approved slice with provisional recipes | Complete | Automated and manual accepted |
 | Colony View player HUD | Approved 3.4C slice | Complete | Automated and manual accepted |
 | Colony work-priority matrix | Approved 3.4D slice | Implemented | Automated passed; manual pending |
+| Two-view region/entrance contract | Approved WV-A specification | Documentation only | Link/build validation only; no Unity runtime tests |
+| World View, natural sources and cross-view travel | Approved phased direction | Not implemented | Not tested |
 | Colony priorities and autonomous jobs | Approved design | Implemented foundation | Accepted in Play Mode |
 | Brood and reproduction | Approved design | Not implemented | Not tested |
 | Rooms, doors, and quality bonuses | Approved design | Not implemented | Not tested |
@@ -45,6 +47,8 @@ The accepted 3.4C player HUD provides roster selection, shared ant inspection, t
 - Reservations prevent duplicate consumption and must be released on cancellation or failure.
 
 The current systems prove these principles through location-owned food/water, sleeping reservations, real excavation, per-ant inventory, reserved loose-drop pickup and cell-owned Material Storage. Material remains in exactly one authoritative inventory, world drop or storage stack; no global resource wallet exists.
+
+Future natural sources preserve the same conservation rule. Direct consumption reserves and decrements a source exactly once without creating cargo. Extraction creates recoverable physical output before source quantity commits. Water uses a stable one-unit liquid payload/cache rather than an ordinary Soil/Stone drop. See [World View Foundation](world-view-foundation.md).
 
 ## Progression and failure
 

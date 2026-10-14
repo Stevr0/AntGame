@@ -1,5 +1,9 @@
 # Development Roadmap
 
+## WV-A documentation gate
+
+**Complete as documentation; no runtime implementation authorised (14 October 2026).** The approved two-view foundation now has typed region/coordinate, entrance transaction, residency, view lifecycle, shared-clock, natural-source, water-conservation, natural-rest, failure and test contracts. The recommended next approval is WV-B1: one bounded deterministic Surface, manual remembered cameras, Surface-local movement and one safe capacity-one round trip. WV-C1/C2 resources, WV-D autonomous cross-view work and WV-F unloaded simulation remain separate later scopes. See [World View Foundation](world-view-foundation.md).
+
 ## Current implementation — Milestone 3.5B
 
 **Implemented — Pending Manual Acceptance (14 October 2026).** Soil and Stone excavation now always creates exact-once loose output at the excavated authoritative cell, independent of excavator inventory and storage. Existing hauling remains the separate collection/storage activity, and construction retains direct builder self-supply from inventory, storage or drops. Focused verification passed 96/96 Edit and 14/14 Play; complete verification passed 514/514 Edit and 67/67 Play. The 27-step manual checklist remains pending.
@@ -52,15 +56,16 @@ Milestones 3.4B and 3.4C are manually accepted. Milestone 3.4D remains **Impleme
 
 World View is approved design but is not implemented or authorised for coding. It will add a top-down surface connected to the side-on Colony View through nest entrances. Persistent ants and the simulation clock are shared; switching views must not duplicate ants or stop the hidden region.
 
-The proposed delivery order is:
+The specified delivery order is:
 
-1. approve two-view coordinate, residency, entrance, navigation and persistence contracts;
-2. build one small bounded surface and one entrance transition;
-3. add a narrow physical surface-foraging and return loop;
-4. add bounded autonomous cross-view jobs;
-5. expand surface chunks and environments incrementally;
-6. add lightweight unloaded-chunk simulation; and
-7. consider predators, rival colonies and wider ecology only through later approved scopes.
+1. **WV-A complete:** approve two-view coordinate, residency, entrance, navigation and survival contracts as documentation;
+2. **WV-B1:** build one small bounded surface, manual view switching and one entrance transition;
+3. **WV-C1:** add finite-source discovery, direct survival and natural rest;
+4. **WV-C2:** add recoverable seed/water extraction, hauling and storage;
+5. **WV-D:** add bounded autonomous cross-view jobs;
+6. expand surface chunks and environments incrementally;
+7. **WV-F:** add lightweight unloaded-chunk simulation; and
+8. consider predators, rival colonies and wider ecology only through later approved scopes.
 
 The authoritative prerequisites and phase boundaries are in `Documentation/DevelopmentRoadmap.md`.
 

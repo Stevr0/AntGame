@@ -8,12 +8,12 @@ This wiki is a readable development companion to the repository's authoritative 
   <div class="status-card" markdown>
   **Current accepted baseline**
 
-  Milestone 3.3C: personal inventory and physical material transfers.
+  Milestone 3.4C: player Colony HUD and developer UI separation.
   </div>
   <div class="status-card" markdown>
   **Latest implemented slice**
 
-  Milestone 3.3D: Material Storage and autonomous hauling — pending manual acceptance.
+  Milestone 3.5B: loose-only excavation output — pending manual acceptance.
   </div>
   <div class="status-card" markdown>
   **Engine**
@@ -31,6 +31,7 @@ This wiki is a readable development companion to the repository's authoritative 
 - [Gameplay Mechanics](gameplay-mechanics.md) maps the main loops and their current status.
 - [Ant Movement and Navigation](ant-movement-navigation.md) covers the most mature technical gameplay foundation.
 - [Technical Architecture](technical-architecture.md) shows ownership and data flow.
+- [World View Foundation](world-view-foundation.md) records the documentation-only WV-A contracts and future acceptance gates.
 - [Development Roadmap](development-roadmap.md) identifies the next authorised action and future milestones.
 - [Milestone History](milestone-history.md) records implementation and validation evidence.
 - [Design Decision Log](design-decision-log.md) summarises approved decisions and unresolved choices.

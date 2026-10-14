@@ -27,6 +27,8 @@ The player guides a founding queen and, later, a growing colony through excavati
 
 Only the foundations of this loop exist today. See [Gameplay Mechanics](gameplay-mechanics.md) for the system-by-system status.
 
+The documentation-only WV-A contract now defines how the two views will connect without claiming implementation: distinct region coordinates, one persistent ant residency, a capacity-one entrance transaction, manual remembered cameras, a shared clock, finite nearby seed/freshwater, recoverable one-unit water carriage and natural rest. See [World View Foundation](world-view-foundation.md).
+
 ## Current playable development state
 
 The integrated `AntGameDevelopment.unity` scene is a deterministic development environment, not a finished game loop. It currently demonstrates:

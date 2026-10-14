@@ -4,6 +4,8 @@
 
 WV-A must specify but must not implement: one paired, pre-authored bidirectional entrance with capacity one ant; manual Colony/World presentation switch with independent remembered cameras; physical approach to entrance followed by a validated atomic single-ant residency/representation handoff; both initially small regions loaded and subject to one existing simulation clock; finite nearby seed/freshwater source records; provisional one-unit liquid payload reusing existing inventory ownership transactions; safe natural rest with constructed Sleeping tile recovery advantage. Region identities, coordinates, entrance occupancy/arrival, cross-region route status, timeout/retry and liquid physical conservation require detailed specifications rather than guessed implementation. No World View runtime exists from this decision.
 
+WV-A is now specified in [World View Foundation](world-view-foundation.md). The authoritative detailed contract is `Documentation/WorldViewTechnicalSpecification.md`; this wiki page is its concise implementation companion.
+
 
 ## Project shape
 
@@ -84,7 +86,7 @@ Custom art is organised under `Assets/_AntGame/Art/Colony` and `Assets/_AntGame/
 
 Candidate sprites do not own or imply material identity. Colony art must be separated into Background, optional foreground Solid, exposed-edge and decoration responsibilities before binding to the existing Tilemap projection. Collision stays on the dedicated collision Tilemap. World art remains an unbound future-view library until its terrain and coordinate authority are approved.
 
-Milestone 3.5A binds only reviewed full-cell `Colony_R02_C01` and `Colony_R04_C01` sprites through the existing Soil/Stone visual Tile assets. Darker Tile colours distinguish the corresponding natural Background projections. Tile colliders remain `None`; the dedicated collision Tilemap continues to read only authoritative Solid definitions.
+Milestone 3.5A binds only reviewed `Colony_R02_C01` for Soil, `Colony_R05_C05` for Stone Solid and `Colony_R05_C03` for Natural Stone Background. Darker Tile colours distinguish natural Background projections. Tile colliders remain `None`; the dedicated collision Tilemap continues to read only authoritative Solid definitions.
 
 ### Navigation
 
@@ -164,22 +166,23 @@ flowchart LR
 
 Colony View retains its implemented signed cell/chunk coordinates and permanent Background plus optional Solid model. World View requires its own approved surface coordinate and terrain specification. A shared chunk size or data schema is not assumed merely because both regions are chunked. Cross-view references use stable region and entrance identities plus explicit local positions rather than one ambiguous global `Vector2`.
 
+WV-A requires distinct `ColonyCell` and `SurfaceCell` value types wrapped by region-scoped location variants. The existing integer-centre Colony mapping is unchanged. The recommended first Surface is `64×64` logical cells with candidate `32×32` Surface chunks; those dimensions, cell scale and obstacle rules still require WV-B approval and do not reuse `ChunkedWorldData` by assumption.
+
 The first World View implementation should load one small bounded surface region around a known entrance. Continuous-world streaming, additional environments and distant chunks follow only after the bounded transition and return loop is validated.
 
 ### Navigation and transitions
 
 A cross-view route is conceptually three parts: a local route to a nest entrance, a validated region transition, and a local route from the paired entrance. The local navigation implementations may differ, but job selection and order execution need a common way to report reachability, progress, cancellation and failure. Reservations associated with an ant or physical item must remain stable through the handoff or be released by explicit existing cancellation semantics.
 
-The transition must detach or suspend the source-region visual/motor before enabling the destination representation. Shared identity and inventory never transfer by copying; only residency and presentation change. Exact transition staging, animation and failure recovery remain unresolved design work.
+The transition reserves the capacity-one entrance, completes the source local approach, revalidates both endpoints, acquires an idempotent commit guard, changes one residency revision and then performs a single representation handoff. Destination activation failure rolls residency back to the source; source ownership remains authoritative even if its visual must be restored later. Shared identity, needs, skills, jobs and inventory are never copied. Exact animation and timing remain WV-B approvals.
 
-### Simulation and persistence questions
+### Simulation and persistence boundary
 
-- What minimum ant/job/need state advances in a loaded but hidden region?
-- What lower-fidelity cadence is acceptable in an unloaded chunk, and how is catch-up bounded?
-- Which activities require a loaded detailed simulation rather than abstract progress?
-- How are entrance blockage, chunk unload and route invalidation represented to jobs?
-- What save/version data identifies region residency and an in-progress transition?
-- How are surface generation seeds and durable mutations stored without forcing all chunks resident?
+- Both initial regions remain loaded and advance full simulation from the one `SimulationClockController`, including when hidden.
+- Pause freezes both regions, transition commits, route scheduling, needs, jobs, interactions and retry time. View switching never changes clock state.
+- Region residency is persistent authoritative state keyed by `AntId`; representation and camera state do not define it.
+- Save/version structure, durable Surface mutations and in-progress route persistence remain unapproved.
+- Reduced-fidelity unloaded simulation and reconciliation are explicitly deferred to WV-F; WV-B and WV-C must not simulate unloaded chunks.
 
 ## Scene flow
 

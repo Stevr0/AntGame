@@ -54,11 +54,11 @@ Preparation is now one 3.4A resource-backed Background conversion target. It cos
 
 ## Future World View terrain
 
-> **Approved direction, not implementation.** World View will be a top-down, continuous chunk-based surface. Its terrain representation, obstacle/elevation rules, chunk data and local mutation model still require a separately approved specification.
+> **WV-A specified direction, not implementation.** World View will be a top-down, continuous chunk-based surface. WV-A now requires distinct typed Surface coordinates, a deterministic bounded first region, explicit unavailable missing chunks and a Surface-local terrain/navigation authority. Final dimensions, cell scale, obstacle/diagonal rules, scene packaging and mutation model still require WV-B approval.
 
 The first surface slice must be a small playable area around a known nest entrance. It should prove surface presentation, traversal, a narrow collection/return loop and persistent state before additional chunks or environments are introduced. Read-only queries must not generate missing surface chunks or treat unloaded space as empty, matching the existing conservative availability rule without requiring both views to share the same tile layers.
 
-Nest entrances map explicit Colony View locations to explicit World View locations. Excavation near an underground entrance and surface changes near its paired exit will eventually need coordinated validity rules, but entrance construction, blockage and relocation behavior remain unresolved.
+The first stable `EntranceId` maps one typed Colony endpoint to one typed Surface endpoint and has transition capacity one. Endpoint blockage invalidates approach/arrival and leaves the ant source-resident. Entrance construction, relocation, multiple entrances and terrain changes that would remove an endpoint remain deferred beyond the first slice.
 
 ## Not implemented
 
@@ -66,4 +66,4 @@ Nest entrances map explicit Colony View locations to explicit World View locatio
 - World View surface terrain, nest-entrance transitions and cross-view terrain persistence.
 - Resource crafting, demolition, rooms and door construction.
 
-See [Ant Movement and Navigation](ant-movement-navigation.md) for mutation response and [Colony Construction and Rooms](colony-construction-rooms.md) for functional Background conversion.
+See [World View Foundation](world-view-foundation.md), [Ant Movement and Navigation](ant-movement-navigation.md) and [Colony Construction and Rooms](colony-construction-rooms.md).

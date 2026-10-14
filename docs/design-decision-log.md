@@ -1,5 +1,14 @@
 # Design Decision Log
 
+## 2026-10-14 — Specify the first two-view and founding-survival contract
+
+- Use distinct typed Colony and Surface coordinates under stable region identities; preserve the existing Colony integer-centre convention and local A* implementation.
+- Keep one authoritative ant record and one region residency. A capacity-one entrance transaction performs physical approach, exact-once residency commit and rollback-safe representation handoff.
+- Switch Colony/World cameras and input manually while preserving per-view camera state; switching never pauses, orders or teleports.
+- Keep both first regions loaded on the accepted clock. Cross-view autonomous jobs are WV-D and unloaded simulation is WV-F.
+- Use finite non-regenerating seed/freshwater sources for the first slice, direct consumption without storage, recoverable extraction output, a non-solid one-unit water payload/cache and safe natural rest.
+- Recommend, but do not yet approve, a `64×64` initial Surface, `32×32` candidate Surface chunks and natural rest at half the constructed recovery rate.
+
 ## 2026-10-14 — Separate extraction output from collection and transport
 
 - Successful Soil/Stone excavation always creates physical loose output and never adds it directly to the excavator's inventory.
@@ -62,6 +71,10 @@ This log summarises approved decisions. It does not approve unresolved details o
 | 14 Oct 2026 | Edit the record-owned work matrix without interrupting active work | Player and developer interfaces share one priority authority; changes influence subsequent selection and do not alter skills, clock state or overrides |
 | 14 Oct 2026 | Preserve custom art sources and gate runtime binding on visual and semantic review | Prepared 32-pixel candidates stay separate by view; no composite Colony tile or unverified edge becomes gameplay presentation by assumption |
 | 14 Oct 2026 | Separate extraction from pickup and hauling | Excavation always commits loose output at the excavated cell; inventory transfer occurs only through later physical collection |
+| 14 Oct 2026 | Use typed region locations and one capacity-one entrance transaction | Colony and Surface coordinates cannot mix; transition commit is idempotent and rollback preserves the source ant |
+| 14 Oct 2026 | Keep manual view switching separate from ant travel and simulation | Cameras remember independent poses while both loaded regions continue on one clock |
+| 14 Oct 2026 | Bootstrap survival from finite natural sources and safe natural rest | Starting storage/sleeping construction improves logistics but is not required to remain alive |
+| 14 Oct 2026 | Represent extracted water as one recoverable liquid unit, not a solid material drop | Source, cache, inventory and Water Storage ownership must conserve exactly one unit through interruption |
 
 ## Open decisions
 
@@ -74,8 +87,11 @@ This log summarises approved decisions. It does not approve unresolved details o
 - Queen-death colony outcome.
 - Combat, equipment, enemy behavior, and defence detail.
 - Save format, procedural generation rules, and chunk streaming lifecycle.
-- Surface terrain/coordinate rules, nest-entrance behavior and cross-view route costing.
-- Loaded-hidden and unloaded-chunk simulation fidelity, cadence and reconciliation.
+- Final bounded Surface dimensions, origin, cell scale, chunk dimensions, obstacle/diagonal rules and scene packaging.
+- Entrance animation/duration, retry timing and presentation; capacity one, physical approach and atomic rollback are fixed.
+- Seed parcel stacking, water-cache naming/art, natural-rest rate and initial source discovery presentation.
+- Cross-view autonomous route selection/cost policy beyond the specified local-plus-entrance composition.
+- Unloaded-chunk simulation fidelity, cadence and reconciliation (WV-F); loaded-hidden regions use full shared-clock simulation.
 - Final need rates, skill curve, decay, and interaction values.
 
 ## Adding an entry

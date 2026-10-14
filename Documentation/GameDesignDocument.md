@@ -13,6 +13,8 @@
 
 Both small starting regions should initially remain loaded and share the accepted clock, autonomy and authoritative ant records. Unloaded-region simulation, larger surface chunks, predators, cross-view autonomous work, production bootstrap and brood remain future separately approved milestones. The Mara/Pip/Tala development test scene remains intact.
 
+The implementation-ready technical contract is `WorldViewTechnicalSpecification.md`. Its typed region/location boundaries, capacity-one entrance transaction, single-residency guarantee, manual camera/input lifecycle, finite-source accounting, recoverable one-unit liquid payload, natural-rest validation, failure matrix and WV-B/WV-C acceptance gates are authoritative technical refinements of these decisions. Its explicitly labelled recommendations still require the approvals listed in that document; it does not authorise runtime work.
+
 
 ## Approved founding-colony survival direction — 14 October 2026
 
@@ -88,15 +90,11 @@ World View is a large, continuous, chunk-based surface environment presented fro
 
 The colony creates reasons to visit the surface; the surface returns resources, knowledge and risk to the colony. Early cross-view play should remain narrow: leave through a known nest entrance, explore a small nearby surface, forage or collect a supported resource, and return through an entrance with the same ant and inventory. Later expansion may add distant environments, multiple entrances, predators, rival colonies and longer autonomous logistics routes. Each extension requires its own scoped design and acceptance criteria.
 
-### Unresolved design questions
+### Resolved WV-A foundations and remaining decisions
 
-1. Surface terrain representation, cell scale, elevation/obstacle rules and the relationship between authored and generated chunks.
-2. Nest-entrance discovery, construction, capacity, obstruction and multiple-entrance routing rules.
-3. Whether view switching follows the last selected ant, remembers separate cameras, or uses another player-navigation rule.
-4. Cross-view order interruption, reservation lifetime and failure handling when an entrance or destination becomes unavailable.
-5. Simulation fidelity, update cadence and catch-up limits for ants and jobs in unloaded chunks.
-6. Persistence/versioning for surface chunks, region residency, transitions and partially completed cross-view routes.
-7. Initial surface resources, foraging actions and return-to-colony value for the first playable slice.
+WV-A resolves one known pre-authored entrance, capacity one, manual view switching with independent remembered cameras, physical approach travel, atomic single residency, both initial regions loaded on one clock, finite nearby seed/freshwater, direct consumption, a recoverable one-unit liquid payload and safe natural rest. View switching is presentation only and never moves an ant.
+
+Remaining approvals are narrower: final bounded Surface dimensions/origin/layout, candidate Surface chunk and obstacle rules, authored scene packaging, entrance animation/timing, initial source discovery presentation, seed stacking, water-cache presentation, natural-rest rate, any revised restoration values and eventual save/version format. Cross-view autonomous work is WV-D; unloaded simulation is WV-F.
 
 Ant Game's player experience follows **Pause → Plan → Play → Observe → Adjust**. The normal player interface must be distinct from developer testing controls, using RimWorld as a reference for understandable colony management rather than copying its world model. The game's side-view excavatable terrain, climbing ants, permanent Background and functional background conversions remain distinct.
 
