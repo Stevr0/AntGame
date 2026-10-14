@@ -1,5 +1,14 @@
 # Ant Colony Development Roadmap
 
+## Approved WV-A entry contract — 14 October 2026
+
+**WV-A is next as DOCUMENTATION-ONLY TECHNICAL SPECIFICATION, not runtime work.** Approved decisions: one pre-authored bidirectional one-ant-at-a-time entrance; manual Colony/World camera switching with separate remembered cameras; ants physically approach entrance before transition; finite seeds and freshwater near the entrance; provisional one-unit liquid payload using existing inventory accounting; safe natural resting with constructed Sleeping backgrounds faster. These decisions do not authorise Unity scenes, scripts, prefabs, world generation or movement changes.
+
+**WV-A specification deliverables:** typed region/local coordinate contract and entrance endpoint mapping; source/destination transition validation, atomic ownership handoff, capacity and retries; manual view-switch/input/camera behaviour; one clock and simultaneously loaded starting regions; local vs cross-region navigation responsibilities; source discovery, extraction, direct consumption and exact physical seed/water accounting (including a non-lossy liquid drop/transfer policy); safe natural resting definition; deterministic failure/test cases; design-question register and staged WV-B / WV-C implementation acceptance criteria.
+
+**Later:** WV-B constructs only one small bounded surface with one entrance and same-ant round trip; WV-C1 introduces finite natural consumption/discovery; WV-C2 introduces extracting and hauling surface resources including water, subject to WV-A approvals. Preserve Colony View and development fixture baselines. Brood, broad streaming/unloaded simulation, hazards and more entrances remain deferred.
+
+
 ## Approved founding-colony survival specification — 14 October 2026
 
 **Design agreed; not implemented.** New-game start will be one founding queen without prebuilt Food/Water/Sleeping/Material Storage or Nursery areas. Natural food/water sources permit direct eating/drinking, and safe natural ground permits baseline rest. Constructed storage/sleeping improves organisation and efficiency; functional Background 1:1 capacities and later room-quality enhancements remain. Foraging is discovery; extraction generates loose physical output; hauling transports it. Keep three-ant development fixtures unchanged.

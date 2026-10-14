@@ -1,5 +1,19 @@
 # ANT COLONY
 
+## Approved WV-A two-view foundation decisions — 14 October 2026
+
+> **DESIGN APPROVED; NO WORLD VIEW RUNTIME IMPLEMENTED OR AUTHORISED.** This section resolves six initial WV-A gameplay/technical choices; precise coordinate, scene, routing, water-container and persistence details remain subjects for the documentation-only WV-A specification.
+
+1. **Initial entrance:** One pre-authored, bidirectional nest entrance links one explicit Colony View endpoint with one World View endpoint. Transition capacity is one ant at a time. Additional entrances and player-built entrances are deferred.
+2. **Player view switching:** Manual Colony View / World View selection, remembering separate camera positions. Changing camera/view changes presentation and input context only; it must not teleport ants, restart a region or pause the shared simulation.
+3. **Physical ant travel:** An ant travels through its current region to the entrance before a validated transition to the other region. The same authoritative ant, needs, skills, job and inventory persist; a failed transition must leave recoverable state with no double residency or duplicated materials.
+4. **Initial natural sustenance:** The first small surface will contain finite seed and freshwater sources near the entrance. Foraging discovers sources, extraction produces physical recoverable output; direct consumption at a source is allowed without constructing storage.
+5. **Provisional water transport:** One unit of physically accounted liquid payload may use existing ant inventory/transfer accounting as an initial simplification. Water extraction, containment, recovery/drop semantics and source/storage transactions require explicit design in WV-A/WV-C; do not silently treat water like a loose Stone block or invent containers.
+6. **Natural rest:** Ants may rest at safe accessible natural positions before sleeping facilities exist. Constructed Sleeping Background provides a dedicated one-ant spot with faster recovery; quality-room bonuses remain future work.
+
+Both small starting regions should initially remain loaded and share the accepted clock, autonomy and authoritative ant records. Unloaded-region simulation, larger surface chunks, predators, cross-view autonomous work, production bootstrap and brood remain future separately approved milestones. The Mara/Pip/Tala development test scene remains intact.
+
+
 ## Approved founding-colony survival direction — 14 October 2026
 
 > **APPROVED DESIGN; IMPLEMENTATION DEFERRED.** This supersedes any assumption that a new founding colony starts with prebuilt food, water or sleeping fixtures. The three-ant development scene remains a testing fixture.
