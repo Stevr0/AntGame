@@ -1,5 +1,10 @@
 # Technical Architecture
 
+## WV-A approved inputs (documentation-only) — 14 October 2026
+
+WV-A must specify but must not implement: one paired, pre-authored bidirectional entrance with capacity one ant; manual Colony/World presentation switch with independent remembered cameras; physical approach to entrance followed by a validated atomic single-ant residency/representation handoff; both initially small regions loaded and subject to one existing simulation clock; finite nearby seed/freshwater source records; provisional one-unit liquid payload reusing existing inventory ownership transactions; safe natural rest with constructed Sleeping tile recovery advantage. Region identities, coordinates, entrance occupancy/arrival, cross-region route status, timeout/retry and liquid physical conservation require detailed specifications rather than guessed implementation. No World View runtime exists from this decision.
+
+
 ## Project shape
 
 - Unity `6000.3.8f1`
