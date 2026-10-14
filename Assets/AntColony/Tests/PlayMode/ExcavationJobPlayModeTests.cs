@@ -29,30 +29,38 @@ namespace AntColony.Tests.PlayMode
         }
 
         [UnityTest]
-        public IEnumerator AutonomousAntCompletesRealExcavationAndPicksUpOutput()
+        public IEnumerator AutonomousAntCompletesExcavationAndLeavesLooseOutput()
         {
             yield return LoadScene();
             AntGameDevelopmentWorldHost host = FindHost();
             AntSelectionCommandController controller = host.SelectionController;
             // Remove synthetic demand so this assertion exercises the real job path.
             host.ColonyJobRegistry.RemoveWhere(_ => true);
+            int initialSoil = host.MaterialDrops.GetQuantity(
+                ExcavatedMaterialType.Soil);
             Assert.That(controller.TryDesignateExcavation(
                 AntGameDevelopmentWorldHost.ExcavationSoilFixture, out _), Is.True);
             controller.SetAutonomousColonyWorkEnabled(true);
             float timeout = Time.time + 35f;
-            while (controller.SelectableAnts.All(
-                    ant => ant.Record.Inventory.TotalQuantity == 0) && Time.time < timeout)
+            WorldTileCellData cell;
+            host.WorldData.GetCell(AntGameDevelopmentWorldHost.ExcavationSoilFixture,
+                out cell);
+            while (cell.HasSolidTile && Time.time < timeout)
+            {
                 yield return null;
-            SelectableGridAnt excavator = controller.SelectableAnts.Single(
-                ant => ant.Record.Inventory.TotalQuantity > 0);
-            Assert.That(excavator.Record.Inventory.OccupiedSlots.Single().ResourceTypeId,
-                Is.EqualTo(MaterialResourceCatalog.GetStableId(
-                    ExcavatedMaterialType.Soil)));
-            Assert.That(excavator.Record.Inventory.TotalQuantity, Is.EqualTo(1));
-            host.WorldData.GetCell(
-                AntGameDevelopmentWorldHost.ExcavationSoilFixture,
-                out WorldTileCellData cell);
+                host.WorldData.GetCell(
+                    AntGameDevelopmentWorldHost.ExcavationSoilFixture, out cell);
+            }
             Assert.That(cell.HasSolidTile, Is.False);
+            Assert.That(controller.SelectableAnts.All(
+                ant => ant.Record.Inventory.TotalQuantity == 0), Is.True);
+            Assert.That(host.MaterialDrops.GetQuantity(ExcavatedMaterialType.Soil),
+                Is.EqualTo(initialSoil + 1));
+            Assert.That(host.MaterialDrops.TryFindAtCell(
+                AntGameDevelopmentWorldHost.ExcavationSoilFixture,
+                out WorldMaterialDrop drop), Is.True);
+            Assert.That(drop.Material, Is.EqualTo(ExcavatedMaterialType.Soil));
+            Assert.That(drop.Quantity, Is.EqualTo(1));
             Assert.That(host.ExcavationDesignations.Designations.Single().State,
                 Is.EqualTo(ExcavationDesignationState.Completed));
         }

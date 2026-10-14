@@ -16,7 +16,7 @@ Milestones through 3.3D are accepted, and 3.4A extends that foundation with phys
 - Evaluations inspect at most 32 candidates per priority, are staggered, and back off for 2/4/8 seconds on failure.
 - `SyntheticColonyJobOrder` remains as a regression fixture. Real designations use `ExcavationJobOrder` through the same registry, selector, motor, adjacency, priority and interruption seams.
 - Excavate mode accepts eligible foreground Solids by world coordinate, supports bounded area drags, and blocks ordinary selection/orders while active.
-- Soil and Stone completion uses a stable job-keyed transaction. Output enters the excavator's inventory when possible, with any remainder becoming a recoverable drop. Output failure preserves the Solid; successful removal preserves Background and refreshes one visual/collision/navigation locality.
+- Soil and Stone extraction uses a stable job-keyed transaction. The complete yield always becomes loose output at the excavated cell; excavation never mutates inventory or assigns hauling. Output failure preserves the Solid; successful removal preserves Background and refreshes one visual/collision/navigation locality.
 - Work takes a provisional four simulation hours, uses Rested and relevant-skill speed, and awards proportional XP only for committed progress.
 - Player orders and critical survival pause work and release ownership while preserving progress. Ordinary survival waits for active work.
 - Explicit player pickup reserves one loose drop quantity and travels through the same shared navigation/adjacency seam. This is an order, not an autonomous Hauling job.
@@ -26,6 +26,8 @@ Milestones through 3.3D are accepted, and 3.4A extends that foundation with phys
 - Background Conversion designations create real Construction jobs. The exclusive builder uses inventory first, otherwise reserves reachable storage/drop material, stages it at the site, performs timed work and commits the Background transaction.
 - A construction builder with no usable inventory capacity temporarily unloads unnecessary cargo through a reusable recovery operation: closest reachable reserved storage first, validated recoverable current-anchor drop second, then automatic resumption of the same job. Critical survival and player orders may interrupt this state safely.
 - Construction interruption preserves progress, carried material and staged material. Cancellation releases reservations and exposes staged material as a recoverable drop.
+
+Foraging is reserved for discovering resource locations, Extraction for physically removing resources, Hauling for collecting and transporting existing loose material, and Construction for builder-owned gathering/staging plus work. These terms do not add or rename runtime work categories in 3.5B.
 
 Milestones 3.4A, 3.4B and 3.4C are manually accepted. Milestone 3.4D is **Implemented — Pending Manual Acceptance**. Its global player-facing matrix lists active authoritative ant records whether or not their Colony View visual is loaded. Excavation, Construction and Hauling are the only functional columns because only those categories have real executors. Cells display mapped skills and edit the existing record-owned 1–4/Disabled values; developer diagnostics read the same values.
 

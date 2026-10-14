@@ -1,5 +1,13 @@
 # Design Decision Log
 
+## 2026-10-14 — Separate extraction output from collection and transport
+
+- Successful Soil/Stone excavation always creates physical loose output and never adds it directly to the excavator's inventory.
+- The excavated cell is the authoritative output location. Existing compatible same-cell stacks fill first, followed by at most one new bounded stack; an unrepresentable yield leaves the Solid intact.
+- Foraging discovers resources, Extraction removes them, Hauling collects and transports loose resources, and Construction retains builder-owned self-supply from inventory, storage or drops.
+- Excavation does not require storage, unload inventory or assign a hauling job. The accepted hauling scheduler and construction reservation/conservation rules remain unchanged.
+- This supersedes the 12 October excavation auto-pickup rule without changing stack limits, recipes or wider World View scope.
+
 ## 2026-10-14 — Keep designation preview and first Colony art binding presentation-only
 
 - Excavation and construction registries expose non-mutating cell evaluation used by both preview and commit, preventing duplicated terrain/occupancy rules.
@@ -53,6 +61,7 @@ This log summarises approved decisions. It does not approve unresolved details o
 | 14 Oct 2026 | Present only work categories with real autonomous executors in the player matrix | Excavation, Construction and Hauling are editable; metadata-only and future categories remain developer-only until implemented |
 | 14 Oct 2026 | Edit the record-owned work matrix without interrupting active work | Player and developer interfaces share one priority authority; changes influence subsequent selection and do not alter skills, clock state or overrides |
 | 14 Oct 2026 | Preserve custom art sources and gate runtime binding on visual and semantic review | Prepared 32-pixel candidates stay separate by view; no composite Colony tile or unverified edge becomes gameplay presentation by assumption |
+| 14 Oct 2026 | Separate extraction from pickup and hauling | Excavation always commits loose output at the excavated cell; inventory transfer occurs only through later physical collection |
 
 ## Open decisions
 

@@ -12,7 +12,7 @@ using UnityEngine.SceneManagement;
 
 namespace AntColony.Tests.EditMode
 {
-    /// <summary>Focused authoritative-data checks for Milestone 3.3C.</summary>
+    /// <summary>Focused authoritative-data checks for material handling.</summary>
     public sealed class InventoryMaterialHandlingTests
     {
         private const string ScenePath =
@@ -135,43 +135,42 @@ namespace AntColony.Tests.EditMode
         }
 
         [Test]
-        public void ExcavationPlacesYieldInInventoryWhenCapacityExists()
+        public void ExcavationWithEmptyInventoryCreatesLooseDropOnly()
         {
-            CreateExcavationWorld(1, out ChunkedWorldData world,
+            WorldMaterialDropRegistry drops = CreateExcavationWorld(1,
+                out ChunkedWorldData world,
                 out ExcavationWorldTransaction transaction);
             AntRecord ant = CreateRecord("excavator");
 
             Assert.That(transaction.TryCommit("excavate.full", Vector2Int.zero,
-                "solid.test", new AntInventoryMaterialDestination(ant.Inventory),
-                out ExcavationOutputResult output, out string error), Is.True, error);
-            Assert.That(output.InventoryQuantity, Is.EqualTo(1));
-            Assert.That(output.DroppedQuantity, Is.Zero);
-            Assert.That(ant.Inventory.TotalQuantity, Is.EqualTo(1));
+                "solid.test", out WorldMaterialDrop drop,
+                out string error), Is.True, error);
+            Assert.That(drop.WorldCell, Is.EqualTo(Vector2Int.zero));
+            Assert.That(drop.Quantity, Is.EqualTo(1));
+            Assert.That(drops.GetQuantity(ExcavatedMaterialType.Soil), Is.EqualTo(1));
+            Assert.That(ant.Inventory.TotalQuantity, Is.Zero);
             Assert.That(world.GetCell(Vector2Int.zero, out WorldTileCellData cell),
                 Is.EqualTo(WorldCellQueryResult.Available));
             Assert.That(cell.HasSolidTile, Is.False);
         }
 
         [Test]
-        public void ExcavationSplitsYieldBetweenInventoryAndWorldWithoutLoss()
+        public void ExcavationWithPartialInventoryLeavesInventoryUnchanged()
         {
-            WorldMaterialDropRegistry drops = CreateExcavationWorld(12,
+            WorldMaterialDropRegistry drops = CreateExcavationWorld(1,
                 out _, out ExcavationWorldTransaction transaction);
-            AntRecord ant = CreateRecord("split");
+            AntRecord ant = CreateRecord("partial");
             Assert.That(ant.Inventory.TryAdd("material.soil", 5, 10, false,
                 out _, out _), Is.True);
 
-            Assert.That(transaction.TryCommit("excavate.split", Vector2Int.zero,
-                "solid.test", new AntInventoryMaterialDestination(ant.Inventory),
-                out ExcavationOutputResult output, out string error), Is.True, error);
-            Assert.That(output.InventoryQuantity, Is.EqualTo(5));
-            Assert.That(output.DroppedQuantity, Is.EqualTo(7));
-            Assert.That(ant.Inventory.TotalQuantity +
-                drops.GetQuantity(ExcavatedMaterialType.Soil), Is.EqualTo(17));
+            Assert.That(transaction.TryCommit("excavate.partial", Vector2Int.zero,
+                "solid.test", out _, out string error), Is.True, error);
+            Assert.That(ant.Inventory.TotalQuantity, Is.EqualTo(5));
+            Assert.That(drops.GetQuantity(ExcavatedMaterialType.Soil), Is.EqualTo(1));
         }
 
         [Test]
-        public void FullInventoryFallsBackToWorldAndStableKeyIsIdempotent()
+        public void ExcavationWithFullInventoryCreatesDropAndStableKeyIsIdempotent()
         {
             WorldMaterialDropRegistry drops = CreateExcavationWorld(1,
                 out _, out ExcavationWorldTransaction transaction);
@@ -179,13 +178,28 @@ namespace AntColony.Tests.EditMode
             ant.Inventory.TryAdd("material.soil", 10, 10, false, out _, out _);
 
             Assert.That(transaction.TryCommit("excavate.fallback", Vector2Int.zero,
-                "solid.test", new AntInventoryMaterialDestination(ant.Inventory),
-                out ExcavationOutputResult output, out string error), Is.True, error);
-            Assert.That(output.InventoryQuantity, Is.Zero);
+                "solid.test", out _, out string error), Is.True, error);
+            Assert.That(ant.Inventory.TotalQuantity, Is.EqualTo(10));
             Assert.That(drops.GetQuantity(ExcavatedMaterialType.Soil), Is.EqualTo(1));
             Assert.That(transaction.TryCommit("excavate.fallback", Vector2Int.zero,
-                "solid.test", new AntInventoryMaterialDestination(ant.Inventory),
-                out _, out _), Is.False);
+                "solid.test", out _, out _), Is.False);
+        }
+
+        [Test]
+        public void ExcavationMergesCompatibleDropThenCreatesOneBoundedStack()
+        {
+            WorldMaterialDropRegistry drops = CreateExcavationWorld(4,
+                out _, out ExcavationWorldTransaction transaction);
+            Assert.That(drops.TryAdd("existing", ExcavatedMaterialType.Soil, 7,
+                Vector2Int.zero, out _, out string setupError), Is.True, setupError);
+
+            Assert.That(transaction.TryCommit("excavate.merge", Vector2Int.zero,
+                "solid.test", out WorldMaterialDrop result,
+                out string error), Is.True, error);
+            Assert.That(drops.Count, Is.EqualTo(2));
+            Assert.That(drops.GetQuantity(ExcavatedMaterialType.Soil), Is.EqualTo(11));
+            Assert.That(result.Quantity, Is.EqualTo(1));
+            Assert.That(result.WorldCell, Is.EqualTo(Vector2Int.zero));
         }
 
         [Test]
@@ -194,15 +208,10 @@ namespace AntColony.Tests.EditMode
             WorldMaterialDropRegistry drops = CreateExcavationWorld(11,
                 out ChunkedWorldData world,
                 out ExcavationWorldTransaction transaction);
-            AntRecord ant = CreateRecord("unrepresentable");
-            ant.Inventory.TryAdd("material.stone", 10, 10, false, out _, out _);
-
             Assert.That(transaction.TryCommit("excavate.invalid", Vector2Int.zero,
-                "solid.test", new AntInventoryMaterialDestination(ant.Inventory),
-                out _, out _), Is.False);
+                "solid.test", out _, out _), Is.False);
             world.GetCell(Vector2Int.zero, out WorldTileCellData cell);
             Assert.That(cell.HasSolidTile, Is.True);
-            Assert.That(ant.Inventory.TotalQuantity, Is.EqualTo(10));
             Assert.That(drops.Count, Is.Zero);
         }
 

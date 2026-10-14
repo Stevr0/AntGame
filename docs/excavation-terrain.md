@@ -26,7 +26,7 @@ These Background/Solid semantics must be preserved for Colony View when World Vi
 - Local refresh and navigation invalidation seams for controlled development mutations.
 - Natural Earth/Stone grip, Prepared speed, and non-grippable Sky behavior.
 
-Milestone 3.3B connected these foundations to player designations and autonomous excavation work. Milestone 3.3C connects committed yield to the excavator's inventory with a recoverable loose-drop fallback. Milestone 3.3D lets ants deliver those physical materials into filtered one-slot Material Storage Background tiles.
+Milestone 3.3B connected these foundations to player designations and autonomous excavation work. Milestone 3.3C added personal inventory and explicit physical pickup/drop transfer; its historical automatic excavation pickup was superseded by Milestone 3.5B. Excavation now always leaves committed yield loose. Milestone 3.3D lets ants deliver those physical materials into filtered one-slot Material Storage Background tiles.
 
 Milestone 3.4A adds player-designated Background conversion. Completion consumes builder-staged Soil/Stone, preserves foreground Solid occupancy, refreshes the Background Tilemap and invalidates local navigation through the existing mutation seam.
 
@@ -40,9 +40,11 @@ Right-click in Excavation mode cancels only an excavation designation under the 
 
 Excavate mode creates registry-owned jobs for eligible foreground Solid cells. Autonomous ants select them through the accepted priority/path-cost rules, reserve exclusively, reach a valid adjacent anchor and make incremental progress. Safe interruption retains progress. Completion removes only the foreground Solid and preserves the Background.
 
-The stable job-keyed transaction prepares material ownership before terrain removal. Yield fills the excavator's compatible inventory capacity first; any remainder becomes a recoverable world drop. Inventory-only, drop-only and split output all commit once. A failed output preparation leaves the Solid intact, and retries cannot duplicate yield. The affected visual/collision cell and local navigation are refreshed after commit.
+The stable job-keyed transaction preflights the complete loose output before terrain removal. The excavator's inventory and storage availability are deliberately irrelevant. Yield first merges into compatible partial stacks at the excavated authoritative cell, then may create one new bounded stack there. The logical drop model permits multiple traversable stacks on a cell, so this is always the preferred/current placement; no alternate-cell search is needed. A failed or unrepresentable output leaves the Solid intact, and retries cannot duplicate yield. Successful commit preserves Background, refreshes the affected visual/collision cell and invalidates local navigation.
 
 Loose Soil and Stone stacks have stable identity, quantity, cell and provisional maximum stack 10. A selected ant can right-click a drop, reserve an eligible quantity, navigate adjacent and pick it up. Developer Only controls can drop a selected carried quantity at the ant's current valid anchor. Compatible same-cell stacks merge; failed or cancelled transfers preserve material and release reservations.
+
+Foraging means discovering or identifying resources. Extraction means physically removing them and producing loose material. Hauling is the separate pickup/transport activity. Construction remains builder-owned self-supply from carried inventory, storage or loose drops. Excavation never assigns hauling automatically, and a no-storage colony simply retains recoverable loose output.
 
 Material Storage remains physical rather than a global wallet. Each functional Background cell owns one compatible stack and incoming reservation. Autonomous haulers reserve source and destination, carry partial loads through personal inventory, and deposit only after reaching a valid adjacent anchor. Already-carried material produces an owner-only self-deposit task.
 

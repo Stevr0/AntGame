@@ -41,26 +41,6 @@ namespace AntColony.World
         public int MaximumStack { get; }
     }
 
-    public interface IExcavationInventoryDestination
-    {
-        int GetAvailableCapacity(ExcavatedMaterialType material, int maximumStack);
-        void Commit(ExcavatedMaterialType material, int quantity, int maximumStack);
-    }
-
-    public readonly struct ExcavationOutputResult
-    {
-        public ExcavationOutputResult(int inventoryQuantity, int droppedQuantity,
-            WorldMaterialDrop drop)
-        {
-            InventoryQuantity = inventoryQuantity;
-            DroppedQuantity = droppedQuantity;
-            Drop = drop;
-        }
-        public int InventoryQuantity { get; }
-        public int DroppedQuantity { get; }
-        public WorldMaterialDrop Drop { get; }
-    }
-
     /// <summary>Authoritative loose-material data with bounded stack merging.</summary>
     public sealed class WorldMaterialDropRegistry
     {
@@ -113,14 +93,6 @@ namespace AntColony.World
             ExcavatedMaterialType material, int quantity, Vector2Int cell,
             int maximumStack)
         {
-            // Inventory-only excavation still consumes its transaction key, but it
-            // must not touch an unrelated compatible stack already at this cell.
-            if (quantity == 0)
-            {
-                committedOutputKeys.Add(key);
-                return default;
-            }
-
             WorldMaterialDrop last = default;
             int remaining = quantity;
             var keys = new List<string>(drops.Keys);
@@ -277,8 +249,8 @@ namespace AntColony.World
     }
 
     /// <summary>
-    /// Atomic excavation output boundary. Every fallible inventory/drop check is
-    /// completed before foreground removal, then prepared ownership is committed.
+    /// Atomic excavation output boundary. Every fallible loose-drop check is
+    /// completed before foreground removal, then the prepared output is committed.
     /// </summary>
     public sealed class ExcavationWorldTransaction
     {
@@ -297,47 +269,33 @@ namespace AntColony.World
         public bool TryCommit(string ownershipKey, Vector2Int cell,
             string expectedSolidMaterialId, out WorldMaterialDrop drop, out string error)
         {
-            bool succeeded = TryCommit(ownershipKey, cell, expectedSolidMaterialId,
-                null, out ExcavationOutputResult output, out error);
-            drop = output.Drop;
-            return succeeded;
-        }
-
-        public bool TryCommit(string ownershipKey, Vector2Int cell,
-            string expectedSolidMaterialId, IExcavationInventoryDestination inventory,
-            out ExcavationOutputResult output, out string error)
-        {
-            output = default;
+            drop = default;
             if (world.GetCell(cell, out WorldTileCellData cellData) !=
                     WorldCellQueryResult.Available || !cellData.HasSolidTile ||
                 !string.Equals(cellData.SolidMaterialId, expectedSolidMaterialId,
                     StringComparison.Ordinal) ||
                 !world.TryGetSolidMaterialDefinition(cellData.SolidMaterialId,
                     out SolidTileMaterialDefinition definition) ||
-                !definition.IsExcavatable)
+                !definition.IsExcavatable ||
+                definition.ExcavatedMaterial == ExcavatedMaterialType.None ||
+                definition.ExcavationYield <= 0)
             {
                 error = "The designated foreground Solid is no longer excavatable.";
                 return false;
             }
             int maximumStack = MaterialResourceCatalog.ProvisionalMaximumStack;
-            int inventoryQuantity = inventory == null ? 0 : Math.Min(
-                definition.ExcavationYield,
-                inventory.GetAvailableCapacity(definition.ExcavatedMaterial, maximumStack));
-            int droppedQuantity = definition.ExcavationYield - inventoryQuantity;
             if (!drops.CanCommitOutput(ownershipKey, definition.ExcavatedMaterial,
-                    droppedQuantity, cell, maximumStack, droppedQuantity > 0,
+                    definition.ExcavationYield, cell, maximumStack, true,
                     out error)) return false;
             if (world.RemoveSolidMaterial(cell) != WorldCellMutationResult.Success)
             {
                 error = "The foreground Solid could not be removed.";
                 return false;
             }
-            if (inventoryQuantity > 0)
-                inventory.Commit(definition.ExcavatedMaterial, inventoryQuantity,
-                    maximumStack);
-            WorldMaterialDrop drop = drops.CommitOutput(ownershipKey,
-                definition.ExcavatedMaterial, droppedQuantity, cell, maximumStack);
-            output = new ExcavationOutputResult(inventoryQuantity, droppedQuantity, drop);
+            // Extraction always leaves physical material in the world. Pickup and
+            // transport remain explicit hauling responsibilities after this commit.
+            drop = drops.CommitOutput(ownershipKey, definition.ExcavatedMaterial,
+                definition.ExcavationYield, cell, maximumStack);
             terrainCommitted?.Invoke(cell);
             error = string.Empty;
             return true;

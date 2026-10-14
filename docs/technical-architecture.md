@@ -71,6 +71,8 @@ flowchart TB
 
 `AntColony.World` owns chunks, Background/Solid material definitions, loose material drops, physical Material Storage slots, the atomic excavation commit, classification, clearance, capability, pathfinding data, and scheduling. Visual and collision Tilemaps project that data through `AntColony.WorldPresentation`; they do not own stored quantities.
 
+Milestone 3.5B narrows the atomic excavation boundary to terrain plus loose output. It validates the Solid and preflights the entire definition yield in `WorldMaterialDropRegistry` before removing foreground, then commits the prepared same-cell merge/new-stack result under the stable job key. `AntInventory` is not a destination or prerequisite of extraction. Pickup, autonomous storage hauling and construction self-supply continue through their existing independent reservation/transfer operations.
+
 ### Art assets and presentation boundary
 
 Custom art is organised under `Assets/_AntGame/Art/Colony` and `Assets/_AntGame/Art/World`, with preserved originals separated from prepared candidate sprites. `Tools/Art/prepare_tilesets.py` records measured extraction rectangles and generates deterministic 32-pixel libraries; the resulting sprite names describe source position only.

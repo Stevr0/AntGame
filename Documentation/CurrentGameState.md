@@ -1,5 +1,55 @@
 # Ant Colony Current Game State
 
+## Current implemented milestone — 3.5B Excavation Output & Loose Resource Handling (14 October 2026)
+
+**Implemented — Pending Manual Acceptance.** Successful Soil and Stone excavation now always creates the material definition's quantity as a physical loose world drop. Excavation never adds output to the excavator's inventory, never requires inventory capacity or storage, and never assigns a follow-up hauling job. The accepted excavation progress, skill/Rested modifiers, XP, shared job ownership, foreground-only mutation, Background preservation, Tilemap/collision refresh and navigation invalidation remain unchanged.
+
+`ExcavationWorldTransaction` first validates the target Solid and preflights the complete yield against `WorldMaterialDropRegistry`. Output is placed at the excavated authoritative world cell: compatible partial stacks at that cell fill first, then at most one new stack is created under the stable excavation-job key. Multiple traversable logical stacks may share a cell, so the present implementation does not need an alternate-cell search. If a configured yield cannot fit the existing bounded representation or failure injection rejects creation, terrain is not removed. Once preflight succeeds, foreground removal and the non-fallible prepared drop commit occur once; repeated completion cannot duplicate output.
+
+Hauling remains a separate existing activity: eligible ants may later reserve a loose stack, collect within personal capacity, transport it to compatible reserved Material Storage and deposit it. With no storage or Hauling disabled, output remains loose and recoverable without a pickup/drop loop. Construction retains accepted builder self-supply from existing carried inventory, compatible storage or loose drops, including direct collection of excavation output, multiple trips, exclusive reservations, exact consumption and cancellation recovery.
+
+Terminology is now explicit: **Foraging** discovers resource locations; **Extraction** physically removes a resource and leaves loose output; **Hauling** picks up and transports already-extracted material; **Construction** personally gathers and stages its required physical material before work.
+
+### 3.5B automated verification
+
+- Focused Edit Mode: **96/96 passed** (excavation, inventory/material handling, hauling, construction and Colony presentation).
+- Focused Play Mode: **14/14 passed** (excavation, hauling, construction and Colony presentation).
+- Complete graphics-enabled Edit Mode: **514/514 passed**.
+- Complete Play Mode: **67/67 passed**.
+- All four runs reported zero failures and zero skips. Unity compilation completed successfully. The strict documentation build is recorded with the final repository checks.
+
+### Exact 3.5B manual Unity Play Mode acceptance
+
+1. Open `Assets/AntColony/Scenes/AntGameDevelopment.unity` and enter Play Mode; confirm the in-game simulation starts paused.
+2. Confirm the player HUD remains separate from the hidden Developer Mode panel.
+3. Select an ant whose inventory is empty.
+4. Designate the Soil excavation fixture.
+5. Press Play and observe the ant reach an adjacent work position and excavate.
+6. Confirm the foreground Soil disappears and loose Soil remains at the excavation cell.
+7. Confirm the excavator's inventory is unchanged.
+8. Reset, excavate the Stone fixture, and confirm loose Stone with unchanged inventory.
+9. Reset, use Developer Mode to fill the chosen excavator's inventory, then designate excavation.
+10. Confirm excavation completes without unloading and output remains loose.
+11. Confirm excavation succeeds without creating or requiring compatible storage.
+12. With Hauling enabled, confirm another eligible ant can reserve and collect the new loose output.
+13. Confirm that ant transports the material to compatible Material Storage and deposits the exact quantity.
+14. Reset, disable Hauling, excavate, and confirm output remains loose without a pickup/drop loop.
+15. Re-enable Hauling and confirm the unchanged loose output becomes eligible for normal collection.
+16. Designate a functional Background conversion that requires Soil.
+17. Confirm its builder can reserve and collect loose excavation Soil directly without storage first.
+18. Confirm the builder stages and consumes exactly the recipe quantity before the conversion completes.
+19. Stage material at another construction site, cancel it, and confirm the exact quantity remains recoverable.
+20. Compare inventory, loose-drop, storage and staged totals through the flow; confirm no loss or duplication.
+21. Cancel an excavation before completion, confirm no output, and re-designate the same still-solid cell successfully.
+22. Confirm 3.5A hover, live drag, persistent designation outlines and right-click cancellation remain aligned and functional.
+23. Pause and resume during excavation and hauling; confirm progress, ownership, reservations and material remain preserved while paused.
+24. Repeat representative excavation/hauling flows at 1×, 2× and 3× and confirm equivalent simulation outcomes.
+25. Confirm ants still navigate correctly around the changed terrain and fall only under the accepted movement rules.
+26. Reset the world and confirm the original deterministic terrain, empty ant inventories and two authored loose-drop fixtures return.
+27. Confirm the Unity Console is free of errors and warnings introduced by this milestone.
+
+Manual acceptance is not complete until the user confirms these observations. Milestone 3.5A remains independently **Implemented — Pending Manual Acceptance**; 3.5B does not change its art mappings, preview geometry or visual acceptance status.
+
 ## Current implemented milestone — 3.5A Colony View Presentation, Tile Preview & Art Integration (14 October 2026)
 
 **Implemented — Pending Manual Acceptance.** Excavation and Background Conversion now show a bounded, per-cell hover/drag preview above terrain. The presentation draws an explicit translucent fill and four screen-space border edges over the exact projected world-cell rectangle, rather than depending on the active IMGUI box skin. The alignment correction derives that rectangle from `WorldTileCoordinates.CellToWorldPosition` plus half the authoritative cell size: integer world coordinates are cell centres, matching the authored Grid's `(-0.5, -0.5)` transform and one-unit Tilemap cells. The earlier implementation incorrectly treated the integer coordinate as the lower-left corner, shifting every overlay half a world unit up and right. Excavation uses an amber border with a small `X`, valid construction uses a green border with `+`, invalid targets use red `!`, and existing compatible designations use a muted `≡` marker. Committed pending/active jobs retain a subtle full-cell border; cancelled and completed jobs do not render. The preview asks the authoritative designation registry for each cell's state and reason, and never mutates terrain, creates work, or creates per-tile GameObjects.
@@ -396,7 +446,7 @@ Material Storage is pre-authored for this slice; ants cannot construct or conver
 
 Every `AntRecord` owns one plain-C# `AntInventory`, so inventory survives visual replacement and remains independent of selection, navigation and UI. Soil and Stone use stable resource IDs and a provisional maximum stack of **10**. Compatible material first fills compatible partial stacks, then empty natural slots. Hauling determines natural slot count: levels 0–19 grant one slot; 20–39 two; 40–59 three; 60–79 four; and 80–100 five. Caste and Strength do not affect this value. If inactivity decay reduces capacity below occupied slot count, existing stacks remain intact and recoverable, while new additions are refused until usage is again within natural capacity.
 
-`ExcavationWorldTransaction` now prepares inventory and loose-drop output before foreground removal. A complete yield enters the excavator's inventory when it fits; no capacity creates a recoverable drop; partial capacity splits the yield explicitly. The stable job output key is consumed once even for inventory-only output, preventing retry duplication. If the required output cannot be represented, the foreground Solid remains intact. The accepted Background preservation, projection refresh, collision update, navigation invalidation, progress and XP rules remain unchanged.
+Historical 3.3C behavior sent excavation output to inventory first. Milestone 3.5B supersedes that path: `ExcavationWorldTransaction` now preflights the full loose-drop yield before foreground removal and never mutates the excavator's inventory. The stable job output key prevents retry duplication. If the required output cannot be represented, the foreground Solid remains intact. The accepted Background preservation, projection refresh, collision update, navigation invalidation, progress and XP rules remain unchanged.
 
 Loose `WorldMaterialDrop` data now includes maximum stack size, compatible same-cell merging, partial removal and a single-owner pickup reservation. A selected active ant can right-click a drop, navigate through the existing grid motor to the least-cost valid adjacent anchor, revalidate capacity and transfer its reserved quantity. Cancellation, replacement, failure, disable/death handling and world replacement release the reservation. Developer Only selected-ant controls can add/fill/remove test material, drop a selected quantity at the ant's valid current anchor, or reset only that ant's inventory. All successful pickup/drop operations remove from one authoritative owner and add the same quantity to the other; failed operations preserve the source.
 
@@ -417,8 +467,8 @@ The deterministic development scene contains a four-unit Soil drop and a three-u
 1. Mara, Pip and Tala retain their identities.
 2. Each ant has its own visible inventory.
 3. All ants initially have one carrying slot.
-4. Excavating Soil adds Soil to the excavator's inventory.
-5. Excavating Stone adds Stone to the excavator's inventory.
+4. Historical 3.3C acceptance: excavating Soil added Soil to the excavator's inventory; 3.5B supersedes this with loose Soil output.
+5. Historical 3.3C acceptance: excavating Stone added Stone to the excavator's inventory; 3.5B supersedes this with loose Stone output.
 6. Multiple identical resources stack correctly.
 7. Incompatible resources occupy separate slots.
 8. A full inventory causes excavation output to drop physically.
@@ -494,7 +544,7 @@ The development scene adds reachable Soil and Stone blocks, a three-block area, 
 25. Camera pan/zoom and UI blocking work.
 26. Unity Console remains free of relevant errors or warnings.
 
-At the 3.3B checkpoint, all excavated output became a loose drop because inventory and pickup were not yet implemented. Milestone 3.3C supersedes those limitations with personal inventory, stacking and explicit transfers; hauling, stockpiles, construction, Surface Preparation, equipment, save/load, world streaming and multiplayer remain absent. Yield, duration and skill speed are provisional; material hardness has no effect yet.
+At the 3.3B checkpoint, all excavated output became a loose drop because inventory and pickup were not yet implemented. Milestone 3.3C added personal inventory, stacking and explicit transfers and historically added automatic excavation pickup. Milestone 3.5B deliberately restores loose-only extraction while preserving those later pickup, hauling, storage and construction systems. Yield, duration and skill speed remain provisional; material hardness has no effect yet.
 
 ## Latest accepted milestone — 3.3A Colony Job Designation & Priority Foundation (13 October 2026)
 

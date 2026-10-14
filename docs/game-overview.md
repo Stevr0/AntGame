@@ -1,6 +1,6 @@
 # Game Overview
 
-Milestone 3.4C is manually accepted. Milestone 3.4D is **Implemented — Pending Manual Acceptance**. The development game opens paused at Day 1 08:00 with an authored uGUI player HUD and a global Work screen where priorities for active colony ants can be inspected and changed. The matrix uses authoritative records and exposes only implemented Excavation, Construction and Hauling work. Developer IMGUI starts hidden and remains deliberately accessible through F12 without replacing the player interface.
+Milestone 3.5B is **Implemented — Pending Manual Acceptance**; 3.5A remains separately pending visual acceptance. Excavation now always leaves physical Soil/Stone output loose at the excavated cell, independent of the worker's inventory and storage. Hauling performs later pickup/transport, while builders may collect those drops directly. The development game opens paused at Day 1 08:00 with an authored uGUI player HUD and a global Work screen where priorities for active colony ants can be inspected and changed. Developer IMGUI starts hidden and remains deliberately accessible through F12 without replacing the player interface.
 
 Accepted Milestone 3.4A permits player-designated conversion of exposed Background into Prepared, Nursery, Sleeping, Food Storage, Water Storage or Material Storage tiles. A Construction-priority ant personally supplies physical Soil/Stone, stages it at the site and performs timed work. Doors, rooms, brood and production remain future work.
 
@@ -43,7 +43,7 @@ The integrated `AntGameDevelopment.unity` scene is a deterministic development e
 
 Normal gameplay uses the authored player HUD. Development controls remain grouped in one compact top IMGUI toolbar: Ant, Needs, Skills, Jobs, Resources, World and Debug share a single bounded scrollable expansion area. Developer Mode starts hidden, can be opened deliberately with F12 or its separate reopen control, and can close without changing the clock or autonomy. One uGUI/IMGUI input boundary prevents either interface from issuing world commands or moving the camera through pointer leakage.
 
-Milestones through 3.3C are accepted. Milestone 3.3D implements physical Material Storage and autonomous loose-drop/self-deposit hauling with full automated verification, while its 30-step manual Play Mode checklist remains pending. Construction, brood, room quality, combat, persistence, and a finished onboarding flow are not implemented.
+Milestones 3.3D and 3.4A are accepted, providing physical storage/hauling and functional Background construction with builder self-supply. Milestone 3.5B changes only excavation output ownership and has complete automated verification; its 27-step manual checklist is pending. Brood, room quality, combat, persistence, and a finished onboarding flow are not implemented.
 
 ## Scope boundaries
 

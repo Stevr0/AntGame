@@ -11,7 +11,7 @@
 | Physical Eat, Drink, and Rest | Approved vertical slice | Implemented | Accepted in Play Mode |
 | Two-layer terrain and Tilemap projection | Approved | Implemented | Accepted milestones |
 | Grid navigation | Approved foundation | Production integration implemented | 2.4D manual acceptance remains pending |
-| Excavation gameplay | Approved | Implemented | Accepted in Play Mode |
+| Excavation gameplay | Approved loose-output rule | 3.5B implemented | Automated passed; revised manual acceptance pending |
 | Personal inventory and explicit material pickup/drop | Approved slice | Complete | Automated and manual accepted |
 | Material Storage and autonomous Soil/Stone hauling | Approved slice | Complete | Automated and manual accepted |
 | Construction and functional conversion | Approved slice with provisional recipes | Complete | Automated and manual accepted |
@@ -38,6 +38,7 @@ The accepted 3.4C player HUD provides roster selection, shared ant inspection, t
 ## Physical-world principles
 
 - Terrain, resources, capacity, and work should exist at world locations rather than as unexplained global counters.
+- Extraction always produces loose physical output; pickup and transport are separate Hauling actions.
 - Ants must navigate to a valid adjacent interaction position before acting.
 - The constructing ant is responsible for gathering and delivering its own materials, including multiple trips.
 - Valid partial work survives safe interruptions.

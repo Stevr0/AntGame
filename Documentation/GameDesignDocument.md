@@ -1,5 +1,18 @@
 # ANT COLONY
 
+## Approved resource acquisition separation — 14 October 2026
+
+> **Status: APPROVED AND IMPLEMENTED BY MILESTONE 3.5B; MANUAL ACCEPTANCE PENDING.** This decision supersedes every older excavation auto-pickup, inventory-first and inventory-capacity-gated rule retained later in this document as historical context.
+
+- **Foraging** discovers or identifies resources and their locations; it does not collect them automatically.
+- **Extraction** mines, harvests or otherwise removes an identified resource. Successful Colony View Soil or Stone excavation always creates the defined quantity as a physical, recoverable loose world drop at the excavated authoritative cell. It never adds output directly to the excavator's inventory, regardless of available capacity or storage.
+- **Hauling** reserves, picks up and transports already-extracted physical material through the existing inventory and Material Storage rules. Excavation completion does not assign a hauling job.
+- **Construction** remains builder-owned self-supply. The builder may personally gather required material from existing inventory, compatible storage or a recoverable loose drop; material need not pass through storage first.
+- Output preparation and foreground removal are one exact-once transaction. A stable job key prevents duplicate output; if the configured yield cannot be represented safely under the existing bounded stack rules, the foreground Solid remains unchanged.
+- Excavation output uses the excavated cell, first filling compatible same-cell loose stacks to their existing maximum and then creating at most one new bounded stack there. The current logical drop model permits multiple traversable stacks at one cell, so no alternate-cell search is necessary. A future world representation that rejects that placement must use an already validated bounded fallback or preserve the terrain and fail without material loss.
+
+This separation applies to future World View extraction as a design rule, but it does not authorise World View terrain, navigation, foraging AI or new resource types.
+
 ## Milestone status update — 14 October 2026
 
 **3.4C Player Colony HUD & Developer UI Separation is MANUALLY ACCEPTED.** All 13 grouped Unity manual checks passed, including resolution checks and clean Console. This confirms the current Colony View player uGUI, shared simulation controls and optional developer IMGUI; it does not authorise or implement World View, entrances, surface resources or cross-view routes. The separate art foundation awaits visual acceptance.
@@ -159,7 +172,7 @@ Before another gameplay milestone, perform a **read-only architecture/code-to-de
 
 ### Physical materials and inventories
 
-- Excavation produces physical resources. On successful excavation, the excavating ant **automatically picks up** the resulting item or amount **if its available inventory capacity permits**; otherwise the resource **drops physically at a valid recoverable world position**. Neither action can silently destroy or duplicate resources. Placement when the work cell becomes blocked or full must have deterministic safe fallback rules (**TBD**).
+- Excavation produces physical resources under the 14 October 2026 rule above: successful output is always a recoverable loose world drop and never an automatic inventory transfer. Neither extraction nor later pickup can silently destroy or duplicate resources.
 - One inventory slot may hold a **stack of identical compatible items**. Stack maximum per material is **TBD**. Early carrying limits use **slot count only**, not a weight or mass simulation. The existing concept of Hauling skill increasing carrying slots remains a balancing/design constraint to be reconciled with stacks and later saddlebags.
 - Resources retain physical locations and quantities in world drops, ant inventory, storage tiles and delivered construction-site materials. The colony may display aggregated totals, but totals are **derived views**, not teleportable resources.
 - Add **Material Storage Background** as a functional tile. As with other functional storage, one tile grants **one physical storage slot** (a compatible stack). Optional player-configured material filters can restrict accepted resource types. Food and Water Storage remain distinct shared stockpile types. Stored items are physical and require adjacency to deposit/withdraw.
@@ -405,7 +418,7 @@ Colony View presents a live, camera-aligned per-cell hover and bounded-drag prev
 
 Cancellation releases the job reservation but does not remove the foreground Solid or reverse physically completed excavation. A cancelled designation on a still-eligible Solid may be designated again repeatedly under the same stable cell identity; active duplicates and completed jobs remain protected. Background Conversion follows the same cancellation/re-designation presentation contract, while staged construction material must remain physically conserved through recoverable loose output.
 
-For the first playable resource model, excavating one resource-bearing foreground Solid Tile produces one transportable item representing that material (for example Soil or Stone). The excavating ant places the item into its personal inventory rather than destroying or automatically depositing it. Each item occupies one slot and does not stack. An excavation that would produce an item must not complete unless the resulting item can be safely accommodated; cargo must never silently disappear. The ant can subsequently deliver the item to storage, place it, or supply it to a construction or Surface Preparation job. An initial known deposit point may be used as a simple storage destination; player-designated storage zones are future work.
+For the current resource model, excavating one resource-bearing foreground Solid Tile produces the material definition's quantity of Soil or Stone as a loose stack at the excavated cell. The excavator's inventory is not part of completion. A later explicit or autonomous Hauling action may reserve and collect that stack; a builder may also collect it directly for self-supply. Excavation must not complete if its physical loose output cannot be represented safely.
 
 When excavation work completes:
 
@@ -424,10 +437,10 @@ Excavation never removes or destroys a Background Tile and never automatically m
 | Access | Workers can only dig Solid Tiles with a reachable exposed face. |
 | Job ownership | A Solid Tile excavation job is reserved by at most one worker at a time. |
 | Excavation | Work progresses over time, potentially modified by excavation skill later. |
-| Excavated cargo | One resource-bearing Solid Tile yields one item, added to the excavating ant's inventory after a valid completion; no stacking. |
+| Excavated cargo | One resource-bearing Solid Tile yields its defined quantity as a physical loose stack at the excavated cell; the excavator's inventory is unchanged. |
 | Hauling | Ants transport carried tile-derived resources or objects to storage or to applicable work sites. |
 | Deposit | A known surface storage point is acceptable initially; player-designated zones later. |
-| Full inventory | Do not complete an item-producing excavation without a free slot or a separately approved safe transfer; redirect to unloading first. |
+| Full inventory | Inventory capacity is irrelevant to extraction; a full ant can excavate without unloading because output remains loose. |
 | Failure recovery | If path or dig location becomes invalid, release reservation and retry another valid order. |
 
 ### 5.1 Surface Preparation
@@ -487,7 +500,7 @@ Every ant begins with **one personal inventory slot**, and the number of slots i
 | 80–100 | 5 |
 
 - Each slot holds exactly one tile-derived resource or transportable object; **items do not stack** in the initial model.
-- Excavated items remain in the excavating ant's inventory until stored, placed, delivered for use or otherwise transferred by an approved interaction.
+- Excavated items remain loose until a separate pickup, hauling or builder self-supply interaction transfers them into an inventory.
 - Resource transport, storage, placement and consumption must conserve items. Background preparation may use carried or delivered Stone to create a completed grippable background.
 - If Hauling skill decays across a capacity threshold, carried items are **never destroyed**. Existing cargo is temporarily retained even if occupied slots exceed the new effective capacity; the ant cannot collect additional items until occupancy falls below its current capacity.
 - The one-item-per-slot rule also applies to transportable objects in the first playable colony. Larger-object capacity rules are deliberately deferred.

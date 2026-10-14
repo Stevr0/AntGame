@@ -4,27 +4,6 @@ using UnityEngine;
 
 namespace AntColony.Commands
 {
-    public sealed class AntInventoryMaterialDestination : IExcavationInventoryDestination
-    {
-        private readonly AntInventory inventory;
-        public AntInventoryMaterialDestination(AntInventory inventory) =>
-            this.inventory = inventory;
-
-        public int GetAvailableCapacity(ExcavatedMaterialType material,
-            int maximumStack) => inventory?.GetAvailableCapacity(
-                MaterialResourceCatalog.GetStableId(material), maximumStack) ?? 0;
-
-        public void Commit(ExcavatedMaterialType material, int quantity, int maximumStack)
-        {
-            string resourceId = MaterialResourceCatalog.GetStableId(material);
-            if (quantity > 0 && (inventory == null || !inventory.TryAdd(
-                    resourceId, quantity, maximumStack, false,
-                    out int added, out _) || added != quantity))
-                throw new System.InvalidOperationException(
-                    "A prepared excavation inventory commit unexpectedly failed.");
-        }
-    }
-
     public enum MaterialPickupPhase
     {
         Travelling,

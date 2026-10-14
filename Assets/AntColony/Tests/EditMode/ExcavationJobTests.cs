@@ -198,9 +198,11 @@ namespace AntColony.Tests.EditMode
             AntRecord ant = CreateRecord("worker");
             ExcavationJobOrder order = CreateOrder(host, ant,
                 AntGameDevelopmentWorldHost.ExcavationSoilFixture);
+            int dropsBeforePartialWork = host.MaterialDrops.Count;
             Assert.That(order.TryBegin(order.ApproachCell), Is.True);
             order.Advance(1d, 1d);
             Assert.That(order.Job.Progress, Is.EqualTo(0.25d).Within(0.001d));
+            Assert.That(host.MaterialDrops.Count, Is.EqualTo(dropsBeforePartialWork));
             Assert.That(ant.Skills.Get(AntSkillId.Excavation).TotalExperience,
                 Is.EqualTo(5d).Within(0.001d));
             order.Cancel("test interruption");

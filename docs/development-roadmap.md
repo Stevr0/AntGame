@@ -1,8 +1,10 @@
 # Development Roadmap
 
-## Current implementation — Milestone 3.5A
+## Current implementation — Milestone 3.5B
 
-**Implemented — Pending Manual Acceptance (14 October 2026).** Colony View designation previews, compatible right-click cancellation and the first allow-listed Soil/Stone custom-art projection are implemented. 3.4E congestion recovery, World View runtime, seamless autotiling and wider art replacement remain out of scope.
+**Implemented — Pending Manual Acceptance (14 October 2026).** Soil and Stone excavation now always creates exact-once loose output at the excavated authoritative cell, independent of excavator inventory and storage. Existing hauling remains the separate collection/storage activity, and construction retains direct builder self-supply from inventory, storage or drops. Focused verification passed 96/96 Edit and 14/14 Play; complete verification passed 514/514 Edit and 67/67 Play. The 27-step manual checklist remains pending.
+
+Milestone 3.5A also remains **Implemented — Pending Manual Acceptance** as a separate presentation/art gate. 3.5B changed no art mappings, cell projection, designation input or HUD behavior. 3.4E congestion recovery, World View runtime, new Foraging AI and new extraction types remain out of scope.
 
 This page is a concise navigation view of the authoritative `Documentation/DevelopmentRoadmap.md`. The authoritative file retains the full acceptance criteria and historical details.
 
@@ -12,9 +14,9 @@ This page is a concise navigation view of the authoritative `Documentation/Devel
 
 ## Immediate boundary
 
-**Current action:** manually verify Milestone 3.4D's 18-step Colony Management & Work Priorities checklist in `Assets/AntColony/Scenes/AntGameDevelopment.unity`.
+**Current action:** manually verify Milestone 3.5B's 27-step loose-excavation checklist in `Assets/AntColony/Scenes/AntGameDevelopment.unity`, while keeping 3.5A visual acceptance and older pending UI checklists separately tracked.
 
-Milestones 3.4B and 3.4C are manually accepted. Milestone 3.4D is **Implemented — Pending Manual Acceptance**. Its global Work matrix uses authoritative active ant records, exposes only real Excavation/Construction/Hauling executors, and edits the existing per-ant 1–4/Disabled values shared with developer diagnostics. Verification passed 7/7 focused Edit, 7/7 focused Play, 492/492 full Edit and 65/65 full Play.
+Milestones 3.4B and 3.4C are manually accepted. Milestone 3.4D remains **Implemented — Pending Manual Acceptance**. Its global Work matrix uses authoritative active ant records, exposes only real Excavation/Construction/Hauling executors, and edits the existing per-ant 1–4/Disabled values shared with developer diagnostics. Verification passed 7/7 focused Edit, 7/7 focused Play, 492/492 full Edit and 65/65 full Play.
 
 ## Current milestone state
 
@@ -43,6 +45,8 @@ Milestones 3.4B and 3.4C are manually accepted. Milestone 3.4D is **Implemented 
 | 3.4B | Unified simulation clock and normal gameplay mode | Complete |
 | 3.4C | Colony View player HUD and developer UI separation | Complete |
 | 3.4D | Colony management and work priorities UI | Implemented — Pending Manual Acceptance |
+| 3.5A | Colony View presentation, preview and first art integration | Implemented — Pending Manual Acceptance |
+| 3.5B | Loose-only excavation output and activity separation | Implemented — Pending Manual Acceptance |
 
 ## Approved World View direction
 
@@ -64,13 +68,14 @@ The authoritative prerequisites and phase boundaries are in `Documentation/Devel
 
 The numbered roadmap beyond the accepted foundation remains direction, not authorised implementation:
 
-1. Complete 3.4D manual acceptance and correct only observed matrix defects.
-2. Multiple-ant movement, local avoidance, and congestion recovery.
-3. Extend functional construction into rooms, doors and quality through separate scope.
-4. Add Nursery, brood, reproduction and colony growth through separate scope.
-5. Address population/performance scaling and persistence.
-6. Phase World View through its separately approved small-surface, cross-view and chunk-expansion milestones.
-7. Add enemy colonies, equipment, combat and defence only when approved.
-8. Complete finished-slice onboarding, objectives, save/load and polish.
+1. Complete the separate 3.5A visual and 3.5B gameplay manual acceptance checklists.
+2. Complete any still-pending earlier UI acceptance without expanding scope.
+3. Multiple-ant movement, local avoidance, and congestion recovery.
+4. Extend functional construction into rooms, doors and quality through separate scope.
+5. Add Nursery, brood, reproduction and colony growth through separate scope.
+6. Address population/performance scaling and persistence.
+7. Phase World View through its separately approved small-surface, cross-view and chunk-expansion milestones.
+8. Add enemy colonies, equipment, combat and defence only when approved.
+9. Complete finished-slice onboarding, objectives, save/load and polish.
 
 Detailed scope and acceptance criteria must be approved when each milestone begins. See [Design Decision Log](design-decision-log.md) for unresolved dependencies.

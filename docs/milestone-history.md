@@ -1,5 +1,16 @@
 # Milestone History
 
+## 14 October 2026 — 3.5B Excavation Output & Loose Resource Handling
+
+- Replaced historical inventory-first excavation output with an exact-once loose drop at the excavated authoritative cell.
+- Kept excavation independent of ant capacity and storage while preserving progression, XP, terrain refresh and navigation invalidation.
+- Preserved the separate hauling scheduler and accepted construction builder self-supply from inventory, storage or loose drops.
+- Added empty/partial/full inventory, same-cell merging and real autonomous loose-output regressions while retaining conservation/failure coverage.
+- Automated evidence: focused Edit `96/96`, focused Play `14/14`, complete graphics-enabled Edit `514/514`, complete Play `67/67`; zero failures/skips.
+- Status: **Implemented — Pending Manual Acceptance** (27 steps).
+
+Milestone 3.5A remains separately **Implemented — Pending Manual Acceptance**; this milestone changed no presentation geometry or art mappings.
+
 ## 14 October 2026 — 3.5A Colony View Presentation, Tile Preview & Art Integration
 
 - Added registry-backed hover and bounded drag previews for excavation and all six Background Conversion recipes.
@@ -80,7 +91,7 @@ This history records the strongest confirmed evidence without implying that late
 
 ### 3.3C — Ant Inventory, Automatic Excavation Pickup and Physical Material Handling
 
-**Complete.** Authoritative ant records own independent stack-based inventories; excavation output atomically enters the excavator's inventory, falls back to a recoverable world drop, or splits explicitly. Player-directed adjacent pickup and Developer Only dropping use reservations and source-to-destination conservation.
+**Complete historical milestone; its auto-pickup rule is superseded by 3.5B.** Authoritative ant records own independent stack-based inventories. At this checkpoint excavation output entered the excavator's inventory, fell back to a recoverable world drop, or split explicitly. Player-directed adjacent pickup and Developer Only dropping still use reservations and source-to-destination conservation; current excavation always leaves loose output.
 
 - Focused Edit Mode: 26/26 passed.
 - Focused Play Mode: 5/5 passed.
