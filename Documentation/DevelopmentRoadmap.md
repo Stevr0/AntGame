@@ -1,5 +1,12 @@
 # Ant Colony Development Roadmap
 
+## 3.4D accepted; proposed 3.4E — 14 October 2026
+
+**3.4D COMPLETE — manually accepted:** all 14 grouped checks passed with clean Console. Previously reported full suites 492/492 Edit Mode and 65/65 Play Mode. Only implemented Excavation, Construction and Hauling types appear in the player work matrix, bound to authoritative AntRecord priority sets. Older 3.4D pending wording is superseded.
+
+**3.4E PROPOSED NEXT — Multiple-Ant Local Avoidance & Congestion Recovery:** first inspect and reproduce narrow-passage crowding, same-cell approach, head-on passing and stalled-work cases. Extend existing movement/navigation minimally with deterministic local right-of-way, temporary wait/yield, bounded retries and recovery. Maintain completed 3.4D HUD/work matrix, 3.4B time controls and 3.4A resource conservation. Avoid new world regions, pathfinder replacement, ants passing through invalid solids, artificial teleportation, hard-blocking clutter, combat and World View runtime. Approval of detailed scope required before changes. Art visual acceptance remains pending independently.
+
+
 ## 3.4C manually accepted — 14 October 2026
 
 **COMPLETE — 3.4C Player Colony HUD & Developer UI Separation.** User confirmed 13/13 grouped HUD, colony gameplay, input and resolution manual checks and clean Console. Codex-reported full suites passed 489/489 Edit and 62/62 Play. Existing uGUI player HUD and optional F12 developer IMGUI are accepted; World View runtime has not begun. Older pending-acceptance text is historical.
