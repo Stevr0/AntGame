@@ -4,6 +4,11 @@
 
 **DESIGN APPROVED; IMPLEMENTATION PENDING.** Foraging discovers resource locations; excavation/extraction mines or removes resources and always creates recoverable loose world drops rather than auto-filling the excavator's inventory. Hauling and explicit pickups transport loose resources; builders self-supply from carried/stored/loose stock. This intentionally replaces the accepted earlier auto-pickup excavation behaviour when implemented. Existing code/test baseline may still auto-pickup until the next scoped implementation and manual acceptance. World View foraging and extraction remain future work. Preserve resource-conservation and cancel/retry guarantees. 3.5A visual acceptance remains separate and pending.
 
+## Milestone 3.4D manual acceptance — 14 October 2026
+
+**3.4D Colony Management & Work Priorities UI: COMPLETE — MANUALLY ACCEPTED.** User confirmed all 14 grouped checks covering independent Excavation/Construction/Hauling priorities, preservation of active work, authoritative ant bindings, layouts, input blocking, clock and clean Console. Codex previously reported focused 7/7 Edit and 7/7 Play, full 492/492 Edit and 65/65 Play. These were not rerun for this documentation-only update. Older pending-acceptance language is historical.
+
+**Next proposed milestone: 3.4E Multiple-Ant Local Avoidance & Congestion Recovery.** Scope must remain narrow: prevent persistent ant overlap/deadlock at close quarters while preserving authoritative grid navigation, valid climbing/falling, orders, jobs, time controls, resources and UI. No World View runtime, new navigation graph or pathfinding rewrite. This proposal is not yet implemented. Custom art foundation visual acceptance remains separate and pending.
 
 ## Current implemented milestone — 3.5A Colony View Presentation, Tile Preview & Art Integration (14 October 2026)
 

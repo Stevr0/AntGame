@@ -11,6 +11,9 @@
 - A founding queen can excavate and construct using loose drops without initial storage. Loose drops remain traversable; future concentration-dependent movement and enclosed-room quality penalties are efficiency effects, never basic progression gates.
 - Maintain exact material conservation, reservation/cancellation semantics, output placement validation and bounded fallback/retry when the preferred drop position is unavailable. Do not destroy/teleport resources or silently grant them to inventory.
 - Surface forage/discovery and resource extraction implementation details are future work under separately scoped World View milestones. This decision does not implement them or settle their UI/AI specifics.
+## Latest implementation status — 14 October 2026
+
+**Milestone 3.4D Colony Management & Work Priorities UI: manually ACCEPTED.** User confirmed 14 grouped Play Mode checks, including authoritative per-ant priority behaviour, resolution and input compatibility, ongoing jobs and clean Console. The accepted matrix exposes only Excavation, Construction and Hauling, leaving unimplemented work categories out of the normal player screen. This does not change the two-view contract. The art foundation remains pending separate manual visual acceptance.
 
 
 ## Milestone status update — 14 October 2026

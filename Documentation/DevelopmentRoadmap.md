@@ -4,6 +4,11 @@
 
 **Design approved, code pending:** all excavation and extraction output becomes physical loose drops, never automatic excavator inventory. Foraging identifies resource locations; extraction is a separate mining/removal task; hauling and construction obtain loose items via their accepted inventory/transfer transactions. Add a small independently tested implementation milestone after current 3.5A acceptance, modifying excavation output and tests without rewriting hauling, building, navigation or clocks. Verify repeated excavations, full/no inventory, no storage, accessible drop placement, conservation and regression. Surface discovery/extraction implementation remains deferred until the relevant World View phase.
 
+## 3.4D accepted; proposed 3.4E — 14 October 2026
+
+**3.4D COMPLETE — manually accepted:** all 14 grouped checks passed with clean Console. Previously reported full suites 492/492 Edit Mode and 65/65 Play Mode. Only implemented Excavation, Construction and Hauling types appear in the player work matrix, bound to authoritative AntRecord priority sets. Older 3.4D pending wording is superseded.
+
+**3.4E PROPOSED NEXT — Multiple-Ant Local Avoidance & Congestion Recovery:** first inspect and reproduce narrow-passage crowding, same-cell approach, head-on passing and stalled-work cases. Extend existing movement/navigation minimally with deterministic local right-of-way, temporary wait/yield, bounded retries and recovery. Maintain completed 3.4D HUD/work matrix, 3.4B time controls and 3.4A resource conservation. Avoid new world regions, pathfinder replacement, ants passing through invalid solids, artificial teleportation, hard-blocking clutter, combat and World View runtime. Approval of detailed scope required before changes. Art visual acceptance remains pending independently.
 
 ## 3.5A implementation status — 14 October 2026
 
