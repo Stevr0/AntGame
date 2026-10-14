@@ -4,9 +4,9 @@ This page is a concise navigation view of the authoritative `Documentation/Devel
 
 ## Immediate boundary
 
-**Current action:** manually verify Milestone 3.4A's 30-step Background Conversion and Construction checklist in `Assets/AntColony/Scenes/AntGameDevelopment.unity`.
+**Current action:** manually verify Milestone 3.4B's 30-step Unified Simulation Clock & Gameplay Mode checklist in `Assets/AntColony/Scenes/AntGameDevelopment.unity`.
 
-Milestone 3.4A is implemented with 14/14 focused Edit, 3/3 focused Play, 469/469 full Edit and 50/50 full Play passing. Builder self-supply, physical staging and Background conversion are in scope; doors, rooms, brood and production remain excluded. The UI pass and 3.3D are manually accepted.
+Milestone 3.4B is **Implemented — Pending Manual Acceptance**. The scene starts paused at Day 1 08:00, normal Play bundles survival/work/hauling, and one authoritative clock drives pause plus 1×/2×/3×. Verification passed 11/11 focused Edit, 7/7 focused Play, 485/485 full graphics-enabled Edit and 58/58 full Play. The full player uGUI HUD remains 3.4C.
 
 ## Current milestone state
 
@@ -31,13 +31,15 @@ Milestone 3.4A is implemented with 14/14 focused Edit, 3/3 focused Play, 469/469
 | 3.3B | Real excavation and loose Soil/Stone output | Complete |
 | 3.3C | Per-ant inventory and explicit physical material transfers | Complete |
 | 3.3D | Physical Material Storage and autonomous Soil/Stone hauling | Complete |
-| 3.4A | Functional Background conversion and builder self-supply | Implemented — Pending Manual Acceptance |
+| 3.4A | Functional Background conversion and builder self-supply | Complete |
+| 3.4B | Unified simulation clock and normal gameplay mode | Implemented — Pending Manual Acceptance |
 
 ## Ordered future direction
 
 The numbered roadmap beyond the accepted foundation remains direction, not authorised implementation:
 
-1. Complete 3.4A manual acceptance before defining the next narrow slice.
+1. Complete 3.4B manual acceptance.
+2. Implement 3.4C's authored player uGUI HUD only after separate approval.
 2. Multiple-ant movement, local avoidance, and congestion recovery.
 3. Autonomous worker and survival loops.
 4. Excavation, Surface Preparation, physical resources, and hauling.

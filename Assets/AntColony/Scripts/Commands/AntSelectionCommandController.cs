@@ -68,6 +68,8 @@ namespace AntColony.Commands
 
         [SerializeField] private Camera worldCamera;
         [SerializeField] private GridNavigationWorldService navigationWorld;
+        [SerializeField] private SimulationClockController simulationClock;
+        [SerializeField] private GameplayModeCoordinator gameplayModeCoordinator;
 
         private readonly List<SelectableGridAnt> selectableAnts = new();
         private readonly Dictionary<SelectableGridAnt, AutonomousSurvivalAgentState>
@@ -78,6 +80,8 @@ namespace AntColony.Commands
         private readonly ColonyJobSelectionService colonyJobSelectionService = new();
         private Rect additionalBlockedGuiRect;
         private bool hasAdditionalBlockedGuiRect;
+        private Rect timeControlBlockedGuiRect;
+        private bool hasTimeControlBlockedGuiRect;
         private string interactionMessage = "Left-click an ant to select it.";
         private int selectedDebugSkillIndex;
         private double simulationHours;
@@ -112,8 +116,12 @@ namespace AntColony.Commands
         public IReadOnlyList<SelectableGridAnt> SelectableAnts => selectableAnts;
         public SelectableGridAnt SelectedAnt { get; private set; }
         public string InteractionMessage => interactionMessage;
-        public double SimulationHours => simulationHours;
-        public double SkillSimulationHours => simulationHours;
+        public double SimulationHours => simulationClock != null
+            ? simulationClock.ElapsedHours : simulationHours;
+        public double SkillSimulationHours => SimulationHours;
+        public SimulationClockController SimulationClock => simulationClock;
+        private double CurrentSimulationSeconds => simulationClock != null
+            ? simulationClock.ElapsedSeconds : Time.unscaledTimeAsDouble;
         public bool AutonomousSurvivalEnabled { get; private set; }
         public bool AutonomousColonyWorkEnabled { get; private set; }
         public bool AutonomousHaulingEnabled { get; private set; }
@@ -189,6 +197,12 @@ namespace AntColony.Commands
             navigationWorld = sharedNavigationWorld;
             interactionWorld = sharedInteractionWorld;
             colonyJobs = sharedColonyJobs;
+        }
+
+        public void BindSimulationClock(SimulationClockController clock)
+        {
+            simulationClock = clock;
+            simulationHours = clock != null ? clock.ElapsedHours : simulationHours;
         }
 
         public void BindInteractionWorld(SurvivalInteractionWorld sharedInteractionWorld)
@@ -416,6 +430,12 @@ namespace AntColony.Commands
             hasAdditionalBlockedGuiRect = guiRect.width > 0f && guiRect.height > 0f;
         }
 
+        public void SetTimeControlUiBlocker(Rect guiRect)
+        {
+            timeControlBlockedGuiRect = guiRect;
+            hasTimeControlBlockedGuiRect = guiRect.width > 0f && guiRect.height > 0f;
+        }
+
         public bool IsScreenPointBlocked(Vector2 screenPoint)
         {
             Vector2 guiPoint = new(screenPoint.x, Screen.height - screenPoint.y);
@@ -428,6 +448,8 @@ namespace AntColony.Commands
         /// </summary>
         public bool IsGuiPointBlocked(Vector2 guiPoint)
         {
+            if (hasTimeControlBlockedGuiRect &&
+                timeControlBlockedGuiRect.Contains(guiPoint)) return true;
             if (!developmentUiVisible)
                 return DevelopmentReopenGuiRect.Contains(guiPoint);
             return DevelopmentToolbarGuiRect.Contains(guiPoint) ||
@@ -784,7 +806,7 @@ namespace AntColony.Commands
                 skill,
                 baseExperience,
                 multiplier,
-                simulationHours,
+                SimulationHours,
                 out result,
                 out message);
             interactionMessage = succeeded
@@ -828,14 +850,38 @@ namespace AntColony.Commands
             if (!AntSkillProgressionSettings.IsFinite(elapsedHours) ||
                 elapsedHours < 0d ||
                 !AntSkillProgressionSettings.IsFinite(
-                    simulationHours + elapsedHours))
+                    SimulationHours + elapsedHours))
             {
                 message = "Simulation time must be finite and non-negative.";
                 if (updateInteractionMessage) interactionMessage = message;
                 return false;
             }
 
-            double newTime = simulationHours + elapsedHours;
+            double newTime = SimulationHours + elapsedHours;
+            if (!TryAdvanceSimulationRecords(
+                    elapsedHours, newTime, updateInteractionMessage, out message))
+                return false;
+
+            if (simulationClock != null &&
+                !simulationClock.TryAdvanceDevelopmentHours(elapsedHours))
+            {
+                message = "Simulation time could not be advanced.";
+                if (updateInteractionMessage) interactionMessage = message;
+                return false;
+            }
+
+            simulationHours = newTime;
+            message = $"Developer Only: simulation time is {newTime:0.##}h.";
+            if (updateInteractionMessage) interactionMessage = message;
+            return true;
+        }
+
+        private bool TryAdvanceSimulationRecords(
+            double elapsedHours,
+            double newTime,
+            bool updateInteractionMessage,
+            out string message)
+        {
             foreach (SelectableGridAnt ant in selectableAnts)
             {
                 if (ant?.Record != null &&
@@ -862,9 +908,7 @@ namespace AntColony.Commands
             }
 
             simulationHours = newTime;
-            message =
-                $"Developer Only: simulation time is {simulationHours:0.##}h.";
-            if (updateInteractionMessage) interactionMessage = message;
+            message = string.Empty;
             return true;
         }
 
@@ -940,7 +984,7 @@ namespace AntColony.Commands
                 return false;
             }
 
-            SelectedAnt.Record.ResetSkills(simulationHours);
+            SelectedAnt.Record.ResetSkills(SimulationHours);
             message = $"Developer Only: reset {SelectedAnt.DisplayName}'s skills.";
             interactionMessage = message;
             return true;
@@ -949,6 +993,7 @@ namespace AntColony.Commands
         /// <summary>Called when the development world creates fresh records.</summary>
         public void ResetSimulationDebugClock()
         {
+            simulationClock?.ResetClock();
             simulationHours = 0d;
             nextDevelopmentDropNumber = 1;
             nextAutonomousEvaluationTime = 0d;
@@ -970,16 +1015,20 @@ namespace AntColony.Commands
 
         private void Update()
         {
-            double interactionHours = Time.deltaTime *
-                autonomousDecisionService.Settings.SimulationHoursPerRealSecond;
-            foreach (SelectableGridAnt ant in selectableAnts)
+            bool simulationRunning = simulationClock == null || simulationClock.IsRunning;
+            if (simulationRunning)
             {
-                ant?.RefreshOrderStatus(interactionHours, simulationHours);
-            }
+                double interactionHours = simulationClock != null
+                    ? simulationClock.DeltaHours
+                    : Time.deltaTime * autonomousDecisionService.Settings
+                        .SimulationHoursPerRealSecond;
+                foreach (SelectableGridAnt ant in selectableAnts)
+                    ant?.RefreshOrderStatus(interactionHours, SimulationHours);
 
-            UpdateAutonomousSimulationClock();
-            UpdateAutonomousSurvival();
-            UpdateAutonomousColonyWork();
+                UpdateAutonomousSimulationClock();
+                UpdateAutonomousSurvival();
+                UpdateAutonomousColonyWork();
+            }
 
             Mouse mouse = Mouse.current;
             if (mouse == null)
@@ -1152,7 +1201,7 @@ namespace AntColony.Commands
         {
             if (!AutonomousSurvivalEnabled || selectableAnts.Count == 0) return;
 
-            double now = Time.unscaledTimeAsDouble;
+            double now = CurrentSimulationSeconds;
             if (now < nextAutonomousEvaluationTime) return;
             autonomousEvaluationIndex %= selectableAnts.Count;
             EvaluateAutonomousSurvivalNow(
@@ -1167,14 +1216,16 @@ namespace AntColony.Commands
         private void UpdateAutonomousSimulationClock()
         {
             if (!AutonomousSurvivalEnabled && !AutonomousColonyWorkEnabled) return;
-            autonomousClockAccumulator += Time.deltaTime;
+            autonomousClockAccumulator += simulationClock != null
+                ? simulationClock.DeltaSeconds : Time.deltaTime;
             double tickSeconds = autonomousDecisionService.Settings.SimulationTickSeconds;
             if (autonomousClockAccumulator < tickSeconds) return;
             double elapsedHours = autonomousClockAccumulator *
                 autonomousDecisionService.Settings.SimulationHoursPerRealSecond;
             autonomousClockAccumulator = 0d;
-            TryAdvanceSimulationTimeInternal(
-                elapsedHours, updateInteractionMessage: false, out _);
+            TryAdvanceSimulationRecords(
+                elapsedHours, SimulationHours,
+                updateInteractionMessage: false, out _);
         }
 
         public bool EvaluateAutonomousColonyWorkNow(
@@ -1282,7 +1333,7 @@ namespace AntColony.Commands
         private void UpdateAutonomousColonyWork()
         {
             if (!AutonomousColonyWorkEnabled || selectableAnts.Count == 0) return;
-            double now = Time.unscaledTimeAsDouble;
+            double now = CurrentSimulationSeconds;
             if (now < nextWorkEvaluationTime) return;
             workEvaluationIndex %= selectableAnts.Count;
             EvaluateAutonomousColonyWorkNow(
@@ -1677,10 +1728,9 @@ namespace AntColony.Commands
                     break;
                 case DevelopmentUiCategory.Needs:
                     GUILayout.Label("NEEDS");
-                    if (GUILayout.Button(AutonomousSurvivalEnabled
-                            ? "Disable Autonomous Survival"
-                            : "Enable Autonomous Survival"))
-                        SetAutonomousSurvivalEnabled(!AutonomousSurvivalEnabled);
+                    DrawAutonomyControl(
+                        "Survival", GameplayAutonomySubsystem.Survival,
+                        AutonomousSurvivalEnabled);
                     GUILayout.Label(AutonomousSurvivalEnabled
                         ? "Autonomous clock: 1 simulation hour / real second"
                         : "Autonomous survival is disabled.");
@@ -1695,25 +1745,65 @@ namespace AntColony.Commands
                     break;
                 case DevelopmentUiCategory.Jobs:
                     GUILayout.Label("JOBS");
-                    if (GUILayout.Button(AutonomousColonyWorkEnabled
-                            ? "Disable Autonomous Colony Work"
-                            : "Enable Autonomous Colony Work"))
-                        SetAutonomousColonyWorkEnabled(!AutonomousColonyWorkEnabled);
+                    DrawAutonomyControl(
+                        "Colony Work", GameplayAutonomySubsystem.ColonyWork,
+                        AutonomousColonyWorkEnabled);
                     if (SelectedAnt != null) DrawAutonomousWorkInspection(SelectedAnt);
                     DrawColonyJobsDebugControls();
                     DrawColonyJobDiagnostics();
                     break;
                 case DevelopmentUiCategory.Resources:
                     GUILayout.Label("RESOURCES");
-                    if (GUILayout.Button(AutonomousHaulingEnabled
-                            ? "Disable Autonomous Hauling"
-                            : "Enable Autonomous Hauling"))
-                        SetAutonomousHaulingEnabled(!AutonomousHaulingEnabled);
+                    DrawAutonomyControl(
+                        "Hauling", GameplayAutonomySubsystem.Hauling,
+                        AutonomousHaulingEnabled);
                     DrawInventoryInspection(record);
                     DrawInventoryDebugControls();
                     DrawResourceDiagnostics();
                     DrawExcavationDiagnostics();
                     DrawMaterialHaulingDiagnostics();
+                    break;
+            }
+        }
+
+        private void DrawAutonomyControl(
+            string label,
+            GameplayAutonomySubsystem subsystem,
+            bool currentlyEnabled)
+        {
+            gameplayModeCoordinator ??= GetComponent<GameplayModeCoordinator>();
+            if (gameplayModeCoordinator != null)
+            {
+                GameplayAutonomyOverride value =
+                    gameplayModeCoordinator.GetOverride(subsystem);
+                string policy = value switch
+                {
+                    GameplayAutonomyOverride.FollowNormalGameplay =>
+                        "Follow Normal Gameplay",
+                    GameplayAutonomyOverride.ForcedEnabled => "Forced Enabled",
+                    _ => "Forced Disabled"
+                };
+                if (GUILayout.Button($"{label}: {policy}"))
+                    gameplayModeCoordinator.CycleOverride(subsystem);
+                GUILayout.Label($"Effective state: {(currentlyEnabled ? "On" : "Off")}");
+                return;
+            }
+
+            // Compatibility fallback for isolated test objects that do not own
+            // the scene gameplay coordinator.
+            if (!GUILayout.Button(currentlyEnabled
+                    ? $"Disable Autonomous {label}"
+                    : $"Enable Autonomous {label}")) return;
+            switch (subsystem)
+            {
+                case GameplayAutonomySubsystem.Survival:
+                    SetAutonomousSurvivalEnabled(!currentlyEnabled);
+                    break;
+                case GameplayAutonomySubsystem.ColonyWork:
+                    SetAutonomousColonyWorkEnabled(!currentlyEnabled);
+                    break;
+                default:
+                    SetAutonomousHaulingEnabled(!currentlyEnabled);
                     break;
             }
         }
@@ -1896,7 +1986,7 @@ namespace AntColony.Commands
             GUILayout.Label(
                 $"Unmet/failure: {(string.IsNullOrEmpty(state.FailureReason) ? "None" : state.FailureReason)}");
             double retryIn = System.Math.Max(
-                0d, state.NextEvaluationTime - Time.unscaledTimeAsDouble);
+                0d, state.NextEvaluationTime - CurrentSimulationSeconds);
             GUILayout.Label($"Next evaluation/retry: {retryIn:0.##}s");
         }
 
@@ -1914,7 +2004,7 @@ namespace AntColony.Commands
             GUILayout.Label($"Status: {state.Status}");
             GUILayout.Label($"Failure: {(string.IsNullOrEmpty(state.FailureReason) ? "None" : state.FailureReason)}");
             double retryIn = System.Math.Max(
-                0d, state.NextEvaluationTime - Time.unscaledTimeAsDouble);
+                0d, state.NextEvaluationTime - CurrentSimulationSeconds);
             GUILayout.Label($"Next evaluation/retry: {retryIn:0.##}s");
         }
 
@@ -2193,7 +2283,7 @@ namespace AntColony.Commands
 
             AntNeedsState needs = SelectedAnt.Record.Needs;
             GUILayout.Label("DEVELOPER ONLY — NEEDS TESTING");
-            GUILayout.Label($"Simulation time: {simulationHours:0.##}h");
+            GUILayout.Label($"Simulation time: {SimulationHours:0.##}h");
             if (GUILayout.Button("Advance 1h Simulation Time"))
             {
                 TryAdvanceSimulationTime(DebugNeedsTimeStepHours, out _);
@@ -2282,7 +2372,7 @@ namespace AntColony.Commands
             }
 
             GUILayout.Label("DEVELOPER ONLY — SKILL TESTING");
-            GUILayout.Label($"Simulation time: {simulationHours:0.##}h");
+            GUILayout.Label($"Simulation time: {SimulationHours:0.##}h");
             selectedDebugSkillIndex = GUILayout.SelectionGrid(
                 selectedDebugSkillIndex,
                 SkillDisplayNames,

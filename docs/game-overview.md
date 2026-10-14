@@ -1,6 +1,8 @@
 # Game Overview
 
-Milestone 3.4A now permits player-designated conversion of exposed Background into Prepared, Nursery, Sleeping, Food Storage, Water Storage or Material Storage tiles. A Construction-priority ant personally supplies physical Soil/Stone, stages it at the site and performs timed work. The implementation is automated but awaits the documented 30-step manual Play Mode acceptance; doors, rooms, brood and production remain future work.
+Milestone 3.4B is **Implemented — Pending Manual Acceptance**. The development game opens paused at Day 1 08:00, allows planning and direct orders without advancing the world, and runs survival, colony work and hauling together at 1×, 2× or 3× through one authoritative clock. The compact time strip is temporary; the full player uGUI HUD remains Milestone 3.4C.
+
+Accepted Milestone 3.4A permits player-designated conversion of exposed Background into Prepared, Nursery, Sleeping, Food Storage, Water Storage or Material Storage tiles. A Construction-priority ant personally supplies physical Soil/Stone, stages it at the site and performs timed work. Doors, rooms, brood and production remain future work.
 
 ## Vision
 

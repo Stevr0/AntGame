@@ -1,0 +1,168 @@
+using System.Collections;
+using AntColony.Commands;
+using AntColony.Development;
+using AntColony.World;
+using NUnit.Framework;
+using UnityEngine;
+using UnityEngine.SceneManagement;
+using UnityEngine.TestTools;
+
+namespace AntColony.Tests.PlayMode
+{
+    public sealed class SimulationClockPlayModeTests
+    {
+        [UnityTearDown]
+        public IEnumerator RestoreUnityTime()
+        {
+            Time.timeScale = 1f;
+            Time.fixedDeltaTime = 0.02f;
+            Time.maximumDeltaTime = 0.3333333f;
+            yield return null;
+        }
+
+        [UnityTest]
+        public IEnumerator SceneStartsPausedWithNormalGameplayBundleEnabled()
+        {
+            yield return LoadPausedScene();
+            AntGameDevelopmentWorldHost host = FindHost();
+
+            Assert.That(host.SimulationClock, Is.Not.Null);
+            Assert.That(host.SimulationClock.IsRunning, Is.False);
+            Assert.That(Time.timeScale, Is.Zero);
+            Assert.That(host.SelectionController.AutonomousSurvivalEnabled, Is.True);
+            Assert.That(host.SelectionController.AutonomousColonyWorkEnabled, Is.True);
+            Assert.That(host.SelectionController.AutonomousHaulingEnabled, Is.True);
+        }
+
+        [UnityTest]
+        public IEnumerator SpeedSelectionRunsAndPauseRetainsTheSelection()
+        {
+            yield return LoadPausedScene();
+            SimulationClockController clock = FindHost().SimulationClock;
+
+            clock.SetRunningSpeed(SimulationSpeed.VeryFast);
+            yield return null;
+            yield return null;
+            double elapsed = clock.ElapsedHours;
+
+            Assert.That(Time.timeScale, Is.EqualTo(3f));
+            Assert.That(elapsed, Is.GreaterThan(0d));
+            clock.Pause();
+            yield return null;
+            Assert.That(clock.SelectedSpeed, Is.EqualTo(SimulationSpeed.VeryFast));
+            Assert.That(clock.ElapsedHours, Is.EqualTo(elapsed).Within(0.000001d));
+            clock.Resume();
+            Assert.That(Time.timeScale, Is.EqualTo(3f));
+        }
+
+        [UnityTest]
+        public IEnumerator PausedDirectOrderIsAcceptedButSchedulerDoesNotExecuteIt()
+        {
+            yield return LoadPausedScene();
+            AntGameDevelopmentWorldHost host = FindHost();
+            AntSelectionCommandController controller = host.SelectionController;
+            controller.Select(controller.SelectableAnts[0]);
+            long updateBefore = host.GridNavigationScheduler.Diagnostics.UpdateIndex;
+
+            Assert.That(controller.TryIssueMoveOrder(
+                SampleWorldGenerator.GridDirectDestination), Is.True);
+            Assert.That(controller.SelectedAnt.Motor.HasPendingRequest, Is.True);
+            yield return null;
+            yield return null;
+
+            Assert.That(host.GridNavigationScheduler.Diagnostics.UpdateIndex,
+                Is.EqualTo(updateBefore));
+            Assert.That(controller.SelectedAnt.Motor.HasPendingRequest, Is.True);
+        }
+
+        [UnityTest]
+        public IEnumerator PausedDirectOrderExecutesAfterResume()
+        {
+            yield return LoadPausedScene();
+            AntGameDevelopmentWorldHost host = FindHost();
+            AntSelectionCommandController controller = host.SelectionController;
+            controller.Select(controller.SelectableAnts[0]);
+            Vector2 start = controller.SelectedAnt.Motor.Position;
+            Assert.That(controller.TryIssueMoveOrder(
+                SampleWorldGenerator.GridDirectDestination), Is.True);
+
+            host.SimulationClock.Resume();
+            float deadline = Time.realtimeSinceStartup + 5f;
+            while ((controller.SelectedAnt.Motor.Position - start).sqrMagnitude < 0.01f &&
+                   Time.realtimeSinceStartup < deadline)
+                yield return null;
+
+            Assert.That((controller.SelectedAnt.Motor.Position - start).sqrMagnitude,
+                Is.GreaterThanOrEqualTo(0.01f));
+        }
+
+        [UnityTest]
+        public IEnumerator PausePreservesNeedsAndSimulationTime()
+        {
+            yield return LoadPausedScene();
+            AntGameDevelopmentWorldHost host = FindHost();
+            double hunger = host.SelectionController.SelectableAnts[0]
+                .Record.Needs.Hunger;
+            double elapsed = host.SimulationClock.ElapsedHours;
+
+            yield return null;
+            yield return null;
+
+            Assert.That(host.SelectionController.SelectableAnts[0]
+                .Record.Needs.Hunger, Is.EqualTo(hunger));
+            Assert.That(host.SimulationClock.ElapsedHours, Is.EqualTo(elapsed));
+        }
+
+        [UnityTest]
+        public IEnumerator PauseDoesNotOverwriteDeveloperAutonomyOverride()
+        {
+            yield return LoadPausedScene();
+            AntGameDevelopmentWorldHost host = FindHost();
+            GameplayModeCoordinator mode = host.GameplayMode;
+            mode.SetOverride(
+                GameplayAutonomySubsystem.ColonyWork,
+                GameplayAutonomyOverride.ForcedDisabled);
+
+            host.SimulationClock.Resume();
+            host.SimulationClock.Pause();
+
+            Assert.That(mode.ColonyWorkOverride,
+                Is.EqualTo(GameplayAutonomyOverride.ForcedDisabled));
+            Assert.That(host.SelectionController.AutonomousColonyWorkEnabled,
+                Is.False);
+            Assert.That(host.SelectionController.AutonomousSurvivalEnabled, Is.True);
+        }
+
+        [UnityTest]
+        public IEnumerator TimeStripRemainsVisibleAndBlocksWorldInputWhenDevUiIsHidden()
+        {
+            yield return LoadPausedScene();
+            AntGameDevelopmentWorldHost host = FindHost();
+            SimulationTimeControlStrip strip =
+                Object.FindFirstObjectByType<SimulationTimeControlStrip>();
+            Assert.That(strip, Is.Not.Null);
+
+            host.SelectionController.SetDevelopmentUiVisible(false);
+            yield return null; // Lets OnGUI publish the strip's blocker rectangle.
+
+            Assert.That(host.SelectionController.IsGuiPointBlocked(
+                strip.GuiRect.center), Is.True);
+            Assert.That(host.SelectionController.DevelopmentUiVisible, Is.False);
+        }
+
+        private static IEnumerator LoadPausedScene()
+        {
+            yield return SceneManager.LoadSceneAsync(
+                "AntGameDevelopment", LoadSceneMode.Single);
+            yield return null;
+        }
+
+        private static AntGameDevelopmentWorldHost FindHost()
+        {
+            AntGameDevelopmentWorldHost host =
+                Object.FindFirstObjectByType<AntGameDevelopmentWorldHost>();
+            Assert.That(host, Is.Not.Null);
+            return host;
+        }
+    }
+}

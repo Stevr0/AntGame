@@ -2,6 +2,18 @@
 
 This history records the strongest confirmed evidence without implying that later code reran every earlier checklist.
 
+## 14 October 2026
+
+### 3.4B — Unified Simulation Clock & Gameplay Mode
+
+**Implemented — Pending Manual Acceptance.** A scene-owned Day 1 08:00 clock provides pause and 1×/2×/3× time, with one normal gameplay policy for survival, colony work and hauling. Pause gates simulation progression, navigation scheduling and physics without cancelling preserved work. Planning, selection, direct orders, priorities and camera controls remain available. A temporary independent time strip supports acceptance while the full player uGUI HUD remains deferred to 3.4C.
+
+- Focused Edit Mode: 11/11 passed.
+- Focused Play Mode: 7/7 passed.
+- Complete graphics-enabled Edit Mode: 485/485 passed.
+- Complete Play Mode: 58/58 passed.
+- Manual Play Mode checklist: 30 steps pending.
+
 ## 13 October 2026
 
 ### 3.4A — Functional Background Conversion and Construction Jobs

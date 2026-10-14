@@ -910,6 +910,9 @@ GameObject:
   - component: {fileID: 1640459241}
   - component: {fileID: 1640459240}
   - component: {fileID: 1640459239}
+  - component: {fileID: 1640459243}
+  - component: {fileID: 1640459244}
+  - component: {fileID: 1640459245}
   m_Layer: 0
   m_Name: World Bootstrap
   m_TagString: Untagged
@@ -948,6 +951,8 @@ MonoBehaviour:
   collisionRenderer: {fileID: 1315235432}
   navigationWorldService: {fileID: 1640459241}
   selectionController: {fileID: 1640459240}
+  simulationClock: {fileID: 1640459243}
+  gameplayModeCoordinator: {fileID: 1640459244}
   primaryGridAntPrefab: {fileID: 8780482087862192995, guid: 9d1b0a4c6e334f3791bb2fa3ecdf2168, type: 3}
   autonomousAntPrefab: {fileID: 8780482087862192995, guid: 1b98327c58cc4e1428aaefb4a3340693, type: 3}
   preferredSpawnX: -12
@@ -970,6 +975,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: AntColony.Commands::AntColony.Commands.AntSelectionCommandController
   worldCamera: {fileID: 1150130534}
   navigationWorld: {fileID: 1640459241}
+  simulationClock: {fileID: 1640459243}
+  gameplayModeCoordinator: {fileID: 1640459244}
 --- !u!114 &1640459241
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -984,6 +991,48 @@ MonoBehaviour:
   m_EditorClassIdentifier: AntColony.Navigation::AntColony.Navigation.GridNavigationWorldService
   nodeBudgetPerUpdate: 128
   nodesPerRequestSlice: 8
+  simulationClock: {fileID: 1640459243}
+--- !u!114 &1640459243
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1640459238}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 82d18e1de4c74dfe8b62c9e40e6e8fa1, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: AntColony.World::AntColony.World.SimulationClockController
+  simulationHoursPerRealSecond: 1
+--- !u!114 &1640459244
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1640459238}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d11a82f956904069b4b5f64f00e3f3a1, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: AntColony.Commands::AntColony.Commands.GameplayModeCoordinator
+  simulationClock: {fileID: 1640459243}
+  commandController: {fileID: 1640459240}
+--- !u!114 &1640459245
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1640459238}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e27db1132c8245d2a10d1904bb174b64, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: AntColony.Commands::AntColony.Commands.SimulationTimeControlStrip
+  simulationClock: {fileID: 1640459243}
+  commandController: {fileID: 1640459240}
 --- !u!4 &1640459242
 Transform:
   m_ObjectHideFlags: 0

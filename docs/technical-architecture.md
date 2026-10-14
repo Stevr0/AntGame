@@ -28,6 +28,8 @@ flowchart TB
   end
 
   subgraph Rules[Rules and shared services]
+    CLOCK[SimulationClockController]
+    MODE[GameplayModeCoordinator]
     CAP[Clearance and movement capability]
     MAP[GridNavigationMap]
     SCH[GridNavigationScheduler]
@@ -43,6 +45,9 @@ flowchart TB
   end
 
   WD --> CAP --> MAP --> SCH --> GWS --> MOTOR
+  CLOCK --> GWS
+  CLOCK --> CTRL
+  MODE --> CTRL
   WD --> TILE
   AR --> BIND --> CTRL
   CTRL --> MOTOR
@@ -82,7 +87,13 @@ When construction needs inventory capacity, `InventoryCapacityRecoveryOperation`
 
 `AntGameDevelopmentWorldHost` assembles the deterministic integrated test world. It is a focused authored coordinator, not a global production manager. Developer controls and diagnostics expose authoritative state for acceptance checks.
 
+`SimulationClockController` is the scene-owned runtime time authority. It starts at Day 1 08:00 paused, exposes read-only elapsed seconds/hours/day-time, and supplies bounded simulation deltas at 1×/2×/3×. Unity `Time.timeScale` stops fixed-step physics; the original `timeScale`, `fixedDeltaTime` and `maximumDeltaTime` are captured and restored. Fixed and maximum deltas stay at their project baselines, so faster speeds produce more fixed steps per real second rather than changing the physics step size. Each unscaled frame contribution is capped by `maximumDeltaTime` to avoid unbounded catch-up.
+
+`GameplayModeCoordinator` owns only normal-gameplay policy: survival, colony work and hauling follow one enabled bundle unless Developer Mode forces a subsystem on or off. It never owns orders and never changes clock state. `GridNavigationWorldService` and the command controller use explicit clock references to stop scheduler and gameplay progress while paused. Camera movement remains intentionally unscaled.
+
 `AntSelectionCommandController` owns the shared IMGUI toolbar state and central pointer hit test. It draws Ant, Needs, Skills, Jobs and Resources. The existing `DevelopmentWorldInspector` draws World or Debug into the same calculated panel rectangle, never a second side panel. Exactly one category can be expanded; every expansion is internally scrollable and bounded to the current Game view. `DevelopmentCameraController` consults the same hit test for wheel and middle-drag input, while keyboard camera controls remain independent.
+
+For 3.4B only, `SimulationTimeControlStrip` is a compact independent IMGUI surface that remains visible when developer UI is hidden and publishes its responsive rectangle to the same input blocker. The authored production uGUI player HUD remains 3.4C; the temporary strip does not establish a new permanent UI framework.
 
 ## Scene flow
 

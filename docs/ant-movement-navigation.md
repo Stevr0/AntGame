@@ -28,6 +28,8 @@ flowchart LR
 
 `GridNavigationWorldService` is the per-world owner of the shared map and bounded scheduler. `GridNavigationMotor` exposes the narrow destination, cancellation, and status boundary used by selection and survival interactions. The command layer does not implement a competing movement system.
 
+Milestone 3.4B binds the service to the scene simulation clock. While paused, the scheduler consumes no request/node budget and fixed-step motors, climbing and Rigidbody2D falling do not run because `Time.timeScale` is zero. Pending requests and active routes remain owned and resume unchanged. The original `fixedDeltaTime` and `maximumDeltaTime` remain constant at 1×/2×/3× and are restored after the clock component is disabled or destroyed.
+
 ## Implemented milestones
 
 | Area | Status | Evidence summary |

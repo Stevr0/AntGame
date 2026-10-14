@@ -2,7 +2,7 @@
 
 ## Approved player gameplay and interface direction — 14 October 2026
 
-> **Status: APPROVED DESIGN, NOT YET IMPLEMENTED.** This section is authoritative for the next simulation/UI milestones and supersedes earlier contradictory suggestions. Existing production features and the accepted developer test harness must be preserved.
+> **Status: 3.4B IMPLEMENTED — PENDING MANUAL ACCEPTANCE; 3.4C UI DESIGN APPROVED, NOT YET IMPLEMENTED.** This section remains authoritative and supersedes earlier contradictory suggestions. Existing production features and the accepted developer test harness remain preserved.
 
 Ant Game's player experience follows **Pause → Plan → Play → Observe → Adjust**. The normal player interface must be distinct from developer testing controls, using RimWorld as a reference for understandable colony management rather than copying its world model. The game's side-view excavatable terrain, climbing ants, permanent Background and functional background conversions remain distinct.
 

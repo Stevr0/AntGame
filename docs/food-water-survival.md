@@ -41,6 +41,8 @@ Milestone 3.2B physical Eat, Drink, and Rest interactions and Milestone 3.2C aut
 
 Eat reserves and consumes one `resource.food.development` unit after one simulation hour and restores 40 Hunger. Drink consumes one `resource.water.development` unit after one simulation hour and restores 50 Thirst. Rest recovers Fatigue over time and completes at the accepted Rested threshold. Interaction time advances at one simulation hour per real-time second in the development scene.
 
+Milestone 3.4B routes needs, interactions, autonomous evaluation and retry/backoff through the authoritative simulation clock. Pause advances none of them and preserves any existing survival reservation. Running 1×/2×/3× changes simulated time per real second without changing the provisional per-simulation-hour rates above.
+
 ### Validation status
 
 - Focused Edit Mode: 25/25 passed.

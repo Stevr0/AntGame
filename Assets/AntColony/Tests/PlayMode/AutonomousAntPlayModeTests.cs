@@ -225,6 +225,7 @@ namespace AntColony.Tests.PlayMode
         {
             SceneManager.LoadScene(SceneName, LoadSceneMode.Single);
             yield return null;
+            PlayModeSimulationTestUtility.Resume();
             yield return new WaitForFixedUpdate();
         }
 

@@ -86,6 +86,7 @@ namespace AntColony.Tests.PlayMode
         {
             yield return SceneManager.LoadSceneAsync(SceneName, LoadSceneMode.Single);
             yield return null;
+            PlayModeSimulationTestUtility.Resume();
         }
 
         private static AntGameDevelopmentWorldHost FindHost() =>

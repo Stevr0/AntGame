@@ -12,6 +12,7 @@ namespace AntColony.Navigation
     {
         [SerializeField, Min(1)] private int nodeBudgetPerUpdate = 128;
         [SerializeField, Min(1)] private int nodesPerRequestSlice = 8;
+        [SerializeField] private SimulationClockController simulationClock;
 
         public ChunkedWorldData WorldData { get; private set; }
         public GridNavigationMap Map { get; private set; }
@@ -22,6 +23,11 @@ namespace AntColony.Navigation
         public int InitializationCount { get; private set; }
         public int NodeBudgetPerUpdate => nodeBudgetPerUpdate;
         public int NodesPerRequestSlice => nodesPerRequestSlice;
+
+        public void BindSimulationClock(SimulationClockController clock)
+        {
+            simulationClock = clock;
+        }
 
         /// <summary>
         /// Creates shared navigation for the supplied authoritative world. Calling
@@ -86,6 +92,7 @@ namespace AntColony.Navigation
 
         private void Update()
         {
+            if (simulationClock != null && !simulationClock.IsRunning) return;
             Scheduler?.ProcessUpdate(
                 nodeBudgetPerUpdate,
                 nodesPerRequestSlice);

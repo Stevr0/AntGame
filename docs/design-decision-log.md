@@ -33,6 +33,9 @@ This log summarises approved decisions. It does not approve unresolved details o
 | 13 Oct 2026 | Implement 3.4A construction as builder-owned self-supply over existing authorities | Construction uses the shared job registry/navigation and physical inventory, storage and drop ownership; staged material remains cell-owned and no crafting wallet or second scheduler is introduced |
 | 13 Oct 2026 | Automatically recover task inventory capacity without discarding resources | Retain task material, prefer physically reached reserved storage, fall back to a validated recoverable drop, then resume the interrupted executor through a reusable operation |
 | 13 Oct 2026 | Treat loose-resource clutter as a future soft penalty | Loose drops remain traversable and never hard-block progression; future movement and enclosed-room quality penalties have provisional thresholds and values |
+| 14 Oct 2026 | Use one scene-owned simulation clock with paused, 1×, 2× and 3× states | Gameplay time, AI deadlines and navigation share one authority; physics uses time scale while fixed-step settings remain constant and are restored |
+| 14 Oct 2026 | Keep normal gameplay policy separate from pause | Play enables survival, colony work and hauling together; pausing preserves orders, reservations, progress and materials instead of toggling subsystems |
+| 14 Oct 2026 | Accept direct orders and planning edits while paused | Current single-order replacement/cancellation semantics apply immediately, but movement, work, transfers and timers wait for resume |
 
 ## Open decisions
 

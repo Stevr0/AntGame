@@ -16,6 +16,8 @@ namespace AntColony.Development
     [RequireComponent(
         typeof(GridNavigationWorldService),
         typeof(AntSelectionCommandController))]
+    [RequireComponent(typeof(SimulationClockController))]
+    [RequireComponent(typeof(GameplayModeCoordinator))]
     public sealed class AntGameDevelopmentWorldHost : MonoBehaviour, IWorldDataProvider
     {
         [Header("Deterministic sample")]
@@ -46,6 +48,8 @@ namespace AntColony.Development
         [Header("Primary grid ant")]
         [SerializeField] private GridNavigationWorldService navigationWorldService;
         [SerializeField] private AntSelectionCommandController selectionController;
+        [SerializeField] private SimulationClockController simulationClock;
+        [SerializeField] private GameplayModeCoordinator gameplayModeCoordinator;
         [SerializeField] private GridNavigationMotor primaryGridAntPrefab;
 
         [Header("Legacy 2.4A comparison ant")]
@@ -86,6 +90,8 @@ namespace AntColony.Development
             navigationWorldService;
         public AntSelectionCommandController SelectionController =>
             selectionController;
+        public SimulationClockController SimulationClock => simulationClock;
+        public GameplayModeCoordinator GameplayMode => gameplayModeCoordinator;
         public GridNavigationMap GridNavigationMap => navigationWorldService?.Map;
         public GridNavigationScheduler GridNavigationScheduler =>
             navigationWorldService?.Scheduler;
@@ -134,6 +140,10 @@ namespace AntColony.Development
         {
             navigationWorldService ??= GetComponent<GridNavigationWorldService>();
             selectionController ??= GetComponent<AntSelectionCommandController>();
+            simulationClock ??= GetComponent<SimulationClockController>();
+            gameplayModeCoordinator ??= GetComponent<GameplayModeCoordinator>();
+            navigationWorldService?.BindSimulationClock(simulationClock);
+            selectionController?.BindSimulationClock(simulationClock);
             RebuildWorld();
         }
 
@@ -190,6 +200,7 @@ namespace AntColony.Development
             ExcavationTransaction = new ExcavationWorldTransaction(
                 WorldData, MaterialDrops, OnExcavationCommitted);
             navigationWorldService ??= GetComponent<GridNavigationWorldService>();
+            navigationWorldService?.BindSimulationClock(simulationClock);
             if (navigationWorldService == null ||
                 !navigationWorldService.Initialize(
                     generatedWorld.WorldData,
@@ -237,7 +248,8 @@ namespace AntColony.Development
 
         private void Update()
         {
-            ProcessStaggeredRequests();
+            if (simulationClock == null || simulationClock.IsRunning)
+                ProcessStaggeredRequests();
 
             if (destinationMarkerRenderer == null || autonomousAnt == null ||
                 !destinationMarkerRenderer.gameObject.activeSelf)
@@ -898,6 +910,10 @@ namespace AntColony.Development
             collisionRenderer = terrainCollisionRenderer;
             navigationWorldService = sharedNavigationWorld;
             selectionController ??= GetComponent<AntSelectionCommandController>();
+            simulationClock ??= GetComponent<SimulationClockController>();
+            gameplayModeCoordinator ??= GetComponent<GameplayModeCoordinator>();
+            navigationWorldService?.BindSimulationClock(simulationClock);
+            selectionController?.BindSimulationClock(simulationClock);
             primaryGridAntPrefab = gridAntPrefab;
             autonomousAntPrefab = antPrefab;
             destinationMarker = marker;

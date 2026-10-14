@@ -1,10 +1,61 @@
 # Ant Colony Current Game State
 
-## Latest acceptance and approved next direction — 14 October 2026
+## Current implemented milestone — 3.4B Unified Simulation Clock & Gameplay Mode (14 October 2026)
 
 **Milestone 3.4A Functional Background Conversion & Construction Jobs: MANUALLY ACCEPTED.** User confirmed 3.4A Play Mode testing accepted, including the inventory-capacity recovery correction. Codex previously reported focused construction 19/19 Edit and 4/4 Play; full 474/474 Edit and 51/51 Play after that correction. These suites were not rerun for this documentation-only update. Earlier "pending manual acceptance" passages below are retained as historical milestone records.
 
-**UI & game-loop architecture audit: read-only, completed.** Approved next implementation is **Milestone 3.4B — Unified Simulation Clock & Gameplay Mode** (not yet implemented). Normal play should begin paused; direct orders authored while paused queue for execution on resume without world-time advancement; Unity uGUI is selected for future production HUD while current IMGUI becomes optional developer UI; show only implemented work types; temporarily retain Mara/Pip/Tala; alerts notify without automatic pause. Gameplay Play activates survival, colony work and hauling together; 1×/2×/3× speed and pause must use one authoritative clock and preserve work/ownership state. 3.4C will implement the full player HUD. This passage does not claim 3.4B or 3.4C functionality exists.
+**Status: Implemented — Pending Manual Acceptance.** The scene-owned `SimulationClockController` is now the sole runtime authority for paused/running state, 1×/2×/3× speed, elapsed simulation seconds/hours and the Day 1 08:00 calendar origin. New sessions begin paused. Pause retains the selected speed; resume restores it. `Time.timeScale` stops fixed-step movement, climbing and falling, while the clock gates navigation scheduling, autonomous evaluation, needs/skill ticks, interactions, work, transfers and retry deadlines. The project baseline `Time.fixedDeltaTime` and `Time.maximumDeltaTime` remain constant at every speed and are restored with the original time scale when the controller is disabled or destroyed. Clock catch-up is capped by `Time.maximumDeltaTime` per frame.
+
+`GameplayModeCoordinator` applies one normal-gameplay bundle for Autonomous Survival, Colony Work and Hauling. Pause never calls those subsystem setters, so active routes, orders, job ownership, reservations, work progress and physical materials remain intact. Developer controls expose each subsystem as Follow Normal Gameplay, Forced Enabled or Forced Disabled without changing clock state. Existing direct setters remain usable by isolated tests.
+
+The temporary bottom-centre `SimulationTimeControlStrip` shows day/time, Play/Pause, 1×/2×/3× and running state independently of the seven-category developer toolbar. Its responsive rectangle participates in the shared world-input blocker. Camera input stays unscaled and available while paused. Direct orders, cancellation, priority changes and excavation/construction designation authoring remain available while paused; execution waits for resume.
+
+### 3.4B automated verification
+
+- Focused Edit Mode clock suite: **11/11 passed**.
+- Focused Play Mode integration suite: **7/7 passed**.
+- Complete graphics-enabled Edit Mode suite: **485/485 passed**.
+- Complete Play Mode suite: **58/58 passed**.
+- Runtime and test assemblies compile cleanly through Unity and its generated Roslyn response files.
+
+### Exact 3.4B manual Unity Play Mode acceptance
+
+**Pending:** complete these checks in `Assets/AntColony/Scenes/AntGameDevelopment.unity`; do not mark 3.4B complete until the user confirms them.
+
+1. Launch the development scene and confirm the simulation starts paused.
+2. Confirm Mara, Pip and Tala remain present.
+3. Confirm the day/time readout and Play/Pause, 1×, 2× and 3× controls are visible.
+4. Designate excavation before pressing Play.
+5. Designate construction before pressing Play.
+6. Issue a direct move order while paused and confirm it is displayed.
+7. Confirm no ant moves while paused.
+8. Confirm no needs change while paused.
+9. Press Play and confirm all normal-gameplay autonomy is active.
+10. Confirm excavation begins without separately enabling jobs.
+11. Confirm hauling functions without separately enabling hauling.
+12. Confirm construction functions without separately enabling work.
+13. Confirm survival needs are handled without separately enabling survival.
+14. Pause during excavation and confirm progress freezes.
+15. Pause during construction and confirm progress freezes.
+16. Pause during movement and falling and confirm positions freeze.
+17. Resume and confirm preserved activities continue.
+18. Test 1×, 2× and 3×.
+19. Confirm speed changes simulation outcomes over real time rather than only changing the UI label.
+20. Test a critical need through pause and resume.
+21. Test the accepted full-inventory construction recovery scenario through pause and resume.
+22. Interrupt and resume a construction job and confirm ownership/progress behavior remains safe.
+23. Check resource totals before and after pause/resume for loss or duplication.
+24. Confirm pending navigation requests do not advance while paused.
+25. Use Developer Mode's Follow/Forced Enabled/Forced Disabled autonomy overrides for isolated tests and confirm they do not change pause state.
+26. Hide Developer Mode and confirm the time controls remain visible.
+27. Change work priorities and author excavation/construction designations while paused.
+28. Confirm the time strip blocks underlying world clicks while camera movement and zoom still work.
+29. Reset/reload the scene and confirm the deterministic Day 1 08:00 paused state returns.
+30. Confirm the Unity Console contains no relevant errors or warnings.
+
+### 3.4B known limitations
+
+The time strip is deliberately temporary IMGUI, not the authored production uGUI HUD. There is no roster, player priority matrix, alert system, general command queue, save/load, multiplayer, doors, rooms, brood or new gameplay content. The development controller still coordinates several simulation consumers; further UI/controller extraction belongs to 3.4C or a later focused architecture pass.
 
 
 ## Current implemented milestone — 3.4A Functional Background Conversion & Construction Jobs (13 October 2026)
