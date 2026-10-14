@@ -1,5 +1,9 @@
 # Ant Colony Development Roadmap
 
+## WV-B1 entrance reuse defect — correction awaiting validation (14 October 2026)
+
+The entrance correctly released capacity, but completed local movement did not update residency occupancy, leaving a moved Surface or Colony ant recorded on the arrival cell. The coordinator now synchronises completed same-region movement through a region-preserving residency API; genuine occupied arrivals still fail safely, and released transaction IDs cannot be replayed. Focused Edit and Play regression cases were added and all affected assemblies compile. Unity test execution and the repeatable two-ant Play Mode checklist remain pending because an interactive Editor owns the project lock. WV-B1 stays open; no WV-C or later work is authorised.
+
 ## WV-B1 implementation — awaiting validation (14 October 2026)
 
 WV-B1 is implemented as the first runtime slice of the approved two-view architecture. It provides distinct `ColonyCell`/`SurfaceCell` destinations and stable region/entrance IDs; one authoritative ant residency per `AntId`; a deterministic bounded `64×64` Surface with fixed obstacles and a `32×32` future partition seam; dedicated top-down Surface A* and kinematic movement; two independently retained cameras with exclusive input contexts; and one bidirectional, capacity-one physical-approach entrance transaction with pause guard, revision guard, idempotence and rollback.

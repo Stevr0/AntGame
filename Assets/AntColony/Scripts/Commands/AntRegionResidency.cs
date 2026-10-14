@@ -45,6 +45,30 @@ namespace AntColony.Commands
             return true;
         }
 
+        /// <summary>
+        /// Records completed local movement without allowing this API to change
+        /// region ownership. Entrance transactions remain the only region-change
+        /// authority.
+        /// </summary>
+        public bool TryRelocate(AntId antId, int expectedRevision,
+            RegionDestination location, out AntResidency updated)
+        {
+            updated = default;
+            if (!entries.TryGetValue(antId, out AntResidency current) ||
+                current.Revision != expectedRevision ||
+                current.RegionId != location.RegionId ||
+                current.Location.Kind != location.Kind)
+                return false;
+            if (current.Location.Equals(location))
+            {
+                updated = current;
+                return true;
+            }
+            updated = new AntResidency(antId, location, current.Revision + 1);
+            entries[antId] = updated;
+            return true;
+        }
+
         public bool TryRestore(AntResidency residency, int expectedRevision)
         {
             if (!entries.TryGetValue(residency.AntId, out AntResidency current) ||

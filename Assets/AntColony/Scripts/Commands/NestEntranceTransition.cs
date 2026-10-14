@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using AntColony.Ants;
 using AntColony.World;
 
@@ -56,6 +57,7 @@ namespace AntColony.Commands
     {
         private readonly AntRegionResidencyRegistry residencies;
         private readonly NestEntranceDefinition definition;
+        private readonly HashSet<TransitionId> releasedTransitionIds = new();
         private EntranceTransition owner;
 
         public NestEntranceTransitionService(AntRegionResidencyRegistry residencies,
@@ -64,15 +66,23 @@ namespace AntColony.Commands
 
         public EntranceTransition Owner => owner;
         public EntranceAvailability Availability { get; set; } = EntranceAvailability.Open;
+        public bool IsReserved => owner != null && !owner.IsTerminal;
+        public string CapacityStatus => Availability != EntranceAvailability.Open
+            ? Availability.ToString()
+            : IsReserved
+                ? $"Reserved by {owner.AntId}."
+                : "Available.";
 
         public bool TryRequest(AntId antId, TransitionId transitionId,
             out EntranceTransition transition)
         {
             transition = null;
+            if (releasedTransitionIds.Contains(transitionId)) return false;
+            if (owner != null && owner.Id.Equals(transitionId) &&
+                owner.AntId.Equals(antId))
+            { transition = owner; return true; }
             if (owner != null && !owner.IsTerminal)
             {
-                if (owner.Id.Equals(transitionId) && owner.AntId.Equals(antId))
-                { transition = owner; return true; }
                 return false;
             }
             if (Availability != EntranceAvailability.Open ||
@@ -156,7 +166,11 @@ namespace AntColony.Commands
         }
 
         public void ReleaseTerminal()
-        { if (owner != null && owner.IsTerminal) owner = null; }
+        {
+            if (owner == null || !owner.IsTerminal) return;
+            releasedTransitionIds.Add(owner.Id);
+            owner = null;
+        }
 
         private bool Fail(string status)
         { owner.State = EntranceTransitionState.Failed; owner.Status = status; return false; }

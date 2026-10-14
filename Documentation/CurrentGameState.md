@@ -1,5 +1,24 @@
 # Ant Colony Current Game State
 
+## WV-B1 entrance reuse correction — 14 October 2026
+
+**Implemented — Awaiting Unity test execution and manual acceptance.** Investigation confirmed that entrance capacity was released correctly after terminal transitions. The defect was stale local occupancy: after a Surface ant moved away from `(6,4)`, `SurfaceNavigationMotor.CurrentCell` changed but `AntRegionResidencyRegistry` still recorded the ant at the arrival cell. The next transition therefore failed destination occupancy validation indefinitely. The same stale-location risk existed after moving away from the Colony arrival.
+
+The coordinator now records completed local Surface and Colony movement back into the same-region residency location, while excluding the ant currently owned by an active transition so approach revisions remain transaction-controlled. `TryRelocate` cannot change region ownership. Genuine arrival occupancy still fails safely with `Destination is unavailable or occupied`; no ant is displaced. Terminal ownership release now retains released transition IDs so a stale request ID cannot be replayed after capacity becomes available. The entrance exposes `Available`, `Reserved`, blocked and unavailable status through its capacity state.
+
+Regression coverage now models Ant A entering, a correctly blocked Ant B while A remains on the arrival, Ant A moving clear, Ant B reusing the entrance, distinct Surface residencies, both return trips, released capacity and replay rejection. A Play Mode regression drives the same two-ant sequence through the authored development scene in both directions. All affected assemblies compile with Unity's Roslyn response files. Unity test execution is pending because an interactive Unity Editor currently owns the project lock; this correction is not reported as test-passed from compilation alone.
+
+### Entrance reuse manual verification
+
+1. Start `AntGameDevelopment` with two Colony ants available.
+2. Send Ant A through **Use Nest Entrance** and manually switch to World View after arrival.
+3. Without moving Ant A from the Surface arrival, request Ant B and confirm the transition fails safely with an occupied/unavailable destination message; both ants remain valid.
+4. Move Ant A away from Surface `(6,4)` with a right-click order.
+5. Return to Colony View, send Ant B through, then confirm both distinct ants exist in World View.
+6. Move Ant B away from `(6,4)`, send Ant A back to Colony, and move Ant A away from Colony `(0,-8)`.
+7. Send Ant B back to Colony and confirm the entrance remains available afterward.
+8. Confirm identities, needs, skills and inventories are unchanged, no two ants share an arrival, no visual is duplicated or lost, pause still blocks commit, and the Console remains clean.
+
 ## WV-B1 two-view runtime — 14 October 2026
 
 **Status: Implemented — Awaiting Validation.** The development scene now loads the accepted Colony world and a deterministic `64×64` top-down Surface at the same time. The Surface has fixed authored obstacle bands, hard bounds, an explicit founding entrance, temporary colour-block presentation, and a dedicated deterministic eight-direction A* whose diagonals require both adjacent cardinal cells to be open. `SurfaceNavigationMotor` is kinematic and advances only from the existing `SimulationClockController`; pause supplies no movement or transition commit delta.

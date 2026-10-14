@@ -1,4 +1,6 @@
+using System;
 using System.Collections;
+using AntColony.Commands;
 using AntColony.Development;
 using AntColony.Navigation;
 using AntColony.PlayerUI;
@@ -7,6 +9,7 @@ using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
+using Object = UnityEngine.Object;
 
 namespace AntColony.Tests.PlayMode
 {
@@ -63,6 +66,82 @@ namespace AntColony.Tests.PlayMode
             Assert.That(views.Residencies.Count, Is.EqualTo(residents));
             Assert.That(host.SimulationClock.ElapsedSeconds, Is.GreaterThanOrEqualTo(elapsed));
             Assert.That(host.SimulationClock.SelectedSpeed, Is.EqualTo(SimulationSpeed.Normal));
+        }
+
+        [UnityTest]
+        public IEnumerator EntranceCanBeReusedAfterEachArrivalCellIsCleared()
+        {
+            yield return SceneManager.LoadSceneAsync("AntGameDevelopment",
+                LoadSceneMode.Single);
+            yield return null;
+            AntGameDevelopmentWorldHost host =
+                Object.FindFirstObjectByType<AntGameDevelopmentWorldHost>();
+            TwoViewWorldCoordinator views = host.TwoViewWorld;
+            SelectableGridAnt antA = host.SelectionController.SelectableAnts[0];
+            SelectableGridAnt antB = host.SelectionController.SelectableAnts[1];
+            host.SimulationClock.Resume();
+
+            Assert.That(views.TryUseEntrance(antA), Is.True);
+            yield return WaitFor(() => views.Residencies.IsInRegion(
+                antA.Record.Id, AntRegionIds.Surface), 12f,
+                "Ant A did not reach the Surface.");
+            Assert.That(views.Entrance.IsReserved, Is.False);
+
+            SurfaceNavigationMotor surfaceA =
+                antA.GetComponent<SurfaceNavigationMotor>();
+            Assert.That(surfaceA.MoveTo(new SurfaceCell(10, 4)), Is.True);
+            yield return WaitFor(() => surfaceA.HasArrived, 6f,
+                "Ant A did not clear the Surface arrival.");
+            yield return null;
+            Assert.That(views.Residencies.TryGet(antA.Record.Id,
+                out AntResidency movedA), Is.True);
+            Assert.That(movedA.Location.SurfaceCell,
+                Is.EqualTo(new SurfaceCell(10, 4)));
+
+            views.SwitchView(DevelopmentWorldView.Colony);
+            Assert.That(views.TryUseEntrance(antB), Is.True);
+            yield return WaitFor(() => views.Residencies.IsInRegion(
+                antB.Record.Id, AntRegionIds.Surface), 12f,
+                "Ant B could not reuse the Surface-bound entrance.");
+            Assert.That(views.Residencies.TryGet(antB.Record.Id,
+                out AntResidency arrivedB), Is.True);
+            Assert.That(movedA.AntId, Is.EqualTo(antA.Record.Id));
+            Assert.That(arrivedB.AntId, Is.EqualTo(antB.Record.Id));
+            Assert.That(movedA.Location, Is.Not.EqualTo(arrivedB.Location));
+
+            SurfaceNavigationMotor surfaceB =
+                antB.GetComponent<SurfaceNavigationMotor>();
+            Assert.That(surfaceB.MoveTo(new SurfaceCell(11, 4)), Is.True);
+            yield return WaitFor(() => surfaceB.HasArrived, 6f,
+                "Ant B did not clear the Surface arrival.");
+            yield return null;
+
+            views.SwitchView(DevelopmentWorldView.Surface);
+            Assert.That(views.TryUseEntrance(antA), Is.True);
+            yield return WaitFor(() => views.Residencies.IsInRegion(
+                antA.Record.Id, AntRegionIds.Colony), 12f,
+                "Ant A did not return to the Colony.");
+            Assert.That(antA.IssueMoveOrder(new Vector2Int(-5, -8)), Is.True);
+            yield return WaitFor(() => antA.Motor.HasArrived, 8f,
+                "Ant A did not clear the Colony arrival.");
+            yield return null;
+
+            views.SwitchView(DevelopmentWorldView.Surface);
+            Assert.That(views.TryUseEntrance(antB), Is.True);
+            yield return WaitFor(() => views.Residencies.IsInRegion(
+                antB.Record.Id, AntRegionIds.Colony), 12f,
+                "Ant B could not reuse the Colony-bound entrance.");
+            Assert.That(views.Entrance.IsReserved, Is.False);
+            Assert.That(views.Residencies.Count, Is.EqualTo(3));
+        }
+
+        private static IEnumerator WaitFor(Func<bool> predicate, float timeout,
+            string failureMessage)
+        {
+            float deadline = Time.realtimeSinceStartup + timeout;
+            while (!predicate() && Time.realtimeSinceStartup < deadline)
+                yield return null;
+            Assert.That(predicate(), Is.True, failureMessage);
         }
     }
 }

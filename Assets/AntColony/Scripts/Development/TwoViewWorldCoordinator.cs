@@ -75,6 +75,7 @@ namespace AntColony.Development
         private void Update()
         {
             if (host == null) return;
+            SynchronizeCompletedLocalMovement();
             AdvanceTransition();
             if (CurrentView == DevelopmentWorldView.Surface)
                 HandleSurfaceInput();
@@ -111,7 +112,7 @@ namespace AntColony.Development
                 $"transition.{ant.Record.Id.Value}.{residency.Revision + 1}");
             if (!entrance.TryRequest(ant.Record.Id, transitionId,
                     out activeTransition))
-            { status = "Nest entrance is unavailable or already reserved."; return false; }
+            { status = $"Nest entrance: {entrance.CapacityStatus}"; return false; }
 
             bool accepted;
             if (residency.RegionId == AntRegionIds.Colony)
@@ -156,6 +157,44 @@ namespace AntColony.Development
             status = activeTransition.Status;
             if (committed || activeTransition.IsTerminal)
                 entrance.ReleaseTerminal();
+        }
+
+        /// <summary>
+        /// Keeps occupancy authority aligned with completed local movement. The
+        /// active transition owns its ant's approach update, so it is excluded
+        /// until the transaction reaches a terminal state.
+        /// </summary>
+        private void SynchronizeCompletedLocalMovement()
+        {
+            foreach (SelectableGridAnt ant in host.SelectionController.SelectableAnts)
+            {
+                if (ant?.Record == null ||
+                    (activeTransition != null && !activeTransition.IsTerminal &&
+                     activeTransition.AntId.Equals(ant.Record.Id)) ||
+                    !residencies.TryGet(ant.Record.Id, out AntResidency residency))
+                    continue;
+
+                RegionDestination location;
+                if (residency.RegionId == AntRegionIds.Surface &&
+                    surfaceMotors.TryGetValue(ant, out SurfaceNavigationMotor surface) &&
+                    surface.enabled && surface.HasArrived)
+                {
+                    location = RegionDestination.Surface(
+                        AntRegionIds.Surface, surface.CurrentCell);
+                }
+                else if (residency.RegionId == AntRegionIds.Colony &&
+                    ant.Motor.enabled && ant.Motor.HasArrived)
+                {
+                    Vector2Int cell = WorldTileCoordinates.WorldPositionToCell(
+                        ant.Motor.Position);
+                    location = RegionDestination.Colony(
+                        AntRegionIds.Colony, new ColonyCell(cell.x, cell.y));
+                }
+                else continue;
+
+                residencies.TryRelocate(ant.Record.Id, residency.Revision,
+                    location, out _);
+            }
         }
 
         private bool ValidateDestination(RegionDestination destination)

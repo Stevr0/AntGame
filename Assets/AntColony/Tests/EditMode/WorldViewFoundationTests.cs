@@ -153,6 +153,90 @@ namespace AntColony.Tests.EditMode
             Assert.That(registry.IsInRegion(ant, AntRegionIds.Colony), Is.True);
         }
 
+        [Test]
+        public void EntranceReusesCapacityAfterAntMovesClearInBothDirections()
+        {
+            var antA = new AntId("ant-reuse-a");
+            var antB = new AntId("ant-reuse-b");
+            AntRegionResidencyRegistry registry = CreateResidencies(antA, antB);
+            NestEntranceTransitionService service = CreateEntrance(registry);
+
+            var outboundA = new TransitionId("reuse-outbound-a");
+            Assert.That(service.TryRequest(antA, outboundA, out _), Is.True);
+            Assert.That(service.MarkApproachComplete(outboundA), Is.True);
+            Assert.That(service.TryCommit(outboundA, true,
+                destination => IsDestinationFree(registry, destination, antA,
+                    antA, antB),
+                _ => true), Is.True);
+            service.ReleaseTerminal();
+            Assert.That(service.IsReserved, Is.False);
+            Assert.That(service.CapacityStatus, Is.EqualTo("Available."));
+            Assert.That(service.TryRequest(antA, outboundA, out _), Is.False,
+                "A released transaction ID must not be replayed.");
+
+            var blockedB = new TransitionId("reuse-blocked-b");
+            Assert.That(service.TryRequest(antB, blockedB, out _), Is.True);
+            Assert.That(service.MarkApproachComplete(blockedB), Is.True);
+            Assert.That(service.TryCommit(blockedB, true,
+                destination => IsDestinationFree(registry, destination, antB,
+                    antA, antB),
+                _ => true), Is.False,
+                "Ant A still occupies the Surface arrival cell.");
+            Assert.That(registry.IsInRegion(antB, AntRegionIds.Colony), Is.True);
+            service.ReleaseTerminal();
+
+            Assert.That(registry.TryGet(antA, out AntResidency surfaceA), Is.True);
+            Assert.That(registry.TryRelocate(antA, surfaceA.Revision,
+                RegionDestination.Surface(AntRegionIds.Surface,
+                    new SurfaceCell(10, 10)), out surfaceA), Is.True);
+
+            var outboundB = new TransitionId("reuse-outbound-b");
+            Assert.That(service.TryRequest(antB, outboundB, out _), Is.True);
+            Assert.That(service.MarkApproachComplete(outboundB), Is.True);
+            Assert.That(service.TryCommit(outboundB, true,
+                destination => IsDestinationFree(registry, destination, antB,
+                    antA, antB),
+                _ => true), Is.True);
+            service.ReleaseTerminal();
+
+            Assert.That(registry.TryGet(antA, out surfaceA), Is.True);
+            Assert.That(registry.TryGet(antB, out AntResidency surfaceB), Is.True);
+            Assert.That(surfaceA.AntId, Is.EqualTo(antA));
+            Assert.That(surfaceB.AntId, Is.EqualTo(antB));
+            Assert.That(surfaceA.RegionId, Is.EqualTo(AntRegionIds.Surface));
+            Assert.That(surfaceB.RegionId, Is.EqualTo(AntRegionIds.Surface));
+            Assert.That(surfaceA.Location, Is.Not.EqualTo(surfaceB.Location));
+
+            Assert.That(registry.TryRelocate(antB, surfaceB.Revision,
+                RegionDestination.Surface(AntRegionIds.Surface,
+                    new SurfaceCell(11, 10)), out surfaceB), Is.True);
+            var returnA = new TransitionId("reuse-return-a");
+            Assert.That(service.TryRequest(antA, returnA, out _), Is.True);
+            Assert.That(service.MarkApproachComplete(returnA), Is.True);
+            Assert.That(service.TryCommit(returnA, true,
+                destination => IsDestinationFree(registry, destination, antA,
+                    antA, antB),
+                _ => true), Is.True);
+            service.ReleaseTerminal();
+
+            Assert.That(registry.TryGet(antA, out AntResidency colonyA), Is.True);
+            Assert.That(registry.TryRelocate(antA, colonyA.Revision,
+                RegionDestination.Colony(AntRegionIds.Colony,
+                    new ColonyCell(-5, -8)), out _), Is.True);
+            var returnB = new TransitionId("reuse-return-b");
+            Assert.That(service.TryRequest(antB, returnB, out _), Is.True);
+            Assert.That(service.MarkApproachComplete(returnB), Is.True);
+            Assert.That(service.TryCommit(returnB, true,
+                destination => IsDestinationFree(registry, destination, antB,
+                    antA, antB),
+                _ => true), Is.True);
+            service.ReleaseTerminal();
+
+            Assert.That(registry.IsInRegion(antA, AntRegionIds.Colony), Is.True);
+            Assert.That(registry.IsInRegion(antB, AntRegionIds.Colony), Is.True);
+            Assert.That(service.IsReserved, Is.False);
+        }
+
         private static AntRegionResidencyRegistry CreateResidencies(params AntId[] ants)
         {
             var registry = new AntRegionResidencyRegistry();
@@ -174,6 +258,21 @@ namespace AntColony.Tests.EditMode
             Assert.That(service.TryRequest(ant, id, out _), Is.True);
             Assert.That(service.MarkApproachComplete(id), Is.True);
             Assert.That(service.TryCommit(id, true, _ => true, _ => true), Is.True);
+        }
+
+        private static bool IsDestinationFree(
+            AntRegionResidencyRegistry registry,
+            RegionDestination destination,
+            AntId movingAnt,
+            params AntId[] knownAnts)
+        {
+            foreach (AntId ant in knownAnts)
+            {
+                if (ant.Equals(movingAnt)) continue;
+                if (registry.TryGet(ant, out AntResidency residency) &&
+                    residency.Location.Equals(destination)) return false;
+            }
+            return true;
         }
     }
 }
