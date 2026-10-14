@@ -1,0 +1,19 @@
+{
+    "name": "AntColony.PlayerUI",
+    "rootNamespace": "AntColony.PlayerUI",
+    "references": [
+        "AntColony.Ants",
+        "AntColony.Commands",
+        "AntColony.Navigation",
+        "AntColony.World"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

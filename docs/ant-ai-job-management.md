@@ -27,7 +27,7 @@ Milestones through 3.3D are accepted, and 3.4A extends that foundation with phys
 - A construction builder with no usable inventory capacity temporarily unloads unnecessary cargo through a reusable recovery operation: closest reachable reserved storage first, validated recoverable current-anchor drop second, then automatic resumption of the same job. Critical survival and player orders may interrupt this state safely.
 - Construction interruption preserves progress, carried material and staged material. Cancellation releases reservations and exposes staged material as a recoverable drop.
 
-Milestone 3.4A is manually accepted. Milestone 3.4B is **Implemented — Pending Manual Acceptance**: normal Play enables survival, colony work and hauling together, while Developer Mode exposes explicit Follow Normal Gameplay, Forced Enabled and Forced Disabled overrides. Pause is orthogonal to those policy choices and never cancels orders or releases reservations.
+Milestones 3.4A and 3.4B are manually accepted. Milestone 3.4C is **Implemented — Pending Manual Acceptance**: the player HUD exposes authoritative work status, progress, assignment/failure information, physical resource ownership and Colony View designation/cancellation without requiring Developer Mode. Normal Play still enables survival, colony work and hauling together; pause remains orthogonal and never cancels orders or releases reservations.
 
 ## Future decision flow
 

@@ -1,6 +1,6 @@
 # Game Overview
 
-Milestone 3.4B is **Implemented — Pending Manual Acceptance**. The development game opens paused at Day 1 08:00, allows planning and direct orders without advancing the world, and runs survival, colony work and hauling together at 1×, 2× or 3× through one authoritative clock. The compact time strip is temporary; the full player uGUI HUD remains Milestone 3.4C.
+Milestone 3.4C is **Implemented — Pending Manual Acceptance**. The development game opens paused at Day 1 08:00 with an authored uGUI player HUD: authoritative Mara/Pip/Tala roster and inspector, global Play/Pause and 1×/2×/3× controls, physical resource ownership, readable work status, and Colony View excavation/construction/cancellation tools. Developer IMGUI starts hidden and remains deliberately accessible through F12 without replacing the player interface.
 
 Accepted Milestone 3.4A permits player-designated conversion of exposed Background into Prepared, Nursery, Sleeping, Food Storage, Water Storage or Material Storage tiles. A Construction-priority ant personally supplies physical Soil/Stone, stages it at the site and performs timed work. Doors, rooms, brood and production remain future work.
 
@@ -40,7 +40,7 @@ The integrated `AntGameDevelopment.unity` scene is a deterministic development e
 - physical one-slot Material Storage tiles with Soil, Stone and general filters;
 - developer diagnostics and deterministic fixtures.
 
-Development controls are grouped in one compact top IMGUI toolbar. Ant, Needs, Skills, Jobs, Resources, World and Debug share a single bounded scrollable expansion area, so panels cannot overlap. Hide All leaves a small reopen control, and the centralized UI hit test prevents panel interaction from issuing world commands.
+Normal gameplay uses the authored player HUD. Development controls remain grouped in one compact top IMGUI toolbar: Ant, Needs, Skills, Jobs, Resources, World and Debug share a single bounded scrollable expansion area. Developer Mode starts hidden, can be opened deliberately with F12 or its separate reopen control, and can close without changing the clock or autonomy. One uGUI/IMGUI input boundary prevents either interface from issuing world commands or moving the camera through pointer leakage.
 
 Milestones through 3.3C are accepted. Milestone 3.3D implements physical Material Storage and autonomous loose-drop/self-deposit hauling with full automated verification, while its 30-step manual Play Mode checklist remains pending. Construction, brood, room quality, combat, persistence, and a finished onboarding flow are not implemented.
 

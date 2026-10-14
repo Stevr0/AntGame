@@ -8,9 +8,9 @@ This page is a concise navigation view of the authoritative `Documentation/Devel
 
 ## Immediate boundary
 
-**Current action:** manually verify Milestone 3.4B's 30-step Unified Simulation Clock & Gameplay Mode checklist in `Assets/AntColony/Scenes/AntGameDevelopment.unity`.
+**Current action:** manually verify Milestone 3.4C's 31-step Colony View Player HUD & Developer UI Separation checklist in `Assets/AntColony/Scenes/AntGameDevelopment.unity`.
 
-Milestone 3.4B is **Implemented — Pending Manual Acceptance**. The scene starts paused at Day 1 08:00, normal Play bundles survival/work/hauling, and one authoritative clock drives pause plus 1×/2×/3×. Verification passed 11/11 focused Edit, 7/7 focused Play, 485/485 full graphics-enabled Edit and 58/58 full Play. The full player uGUI HUD remains 3.4C.
+Milestone 3.4B is manually accepted. Milestone 3.4C is **Implemented — Pending Manual Acceptance**. Its authored uGUI HUD uses authoritative ant/clock/job/resource state, exposes only Colony View terrain tools, keeps developer IMGUI hidden but available, and centralises pointer ownership across uGUI, IMGUI, world commands and camera mouse input. Verification passed 12/12 focused Edit, 13/13 focused Play, 489/489 full graphics-enabled Edit and 62/62 full Play.
 
 ## Current milestone state
 
@@ -36,7 +36,8 @@ Milestone 3.4B is **Implemented — Pending Manual Acceptance**. The scene start
 | 3.3C | Per-ant inventory and explicit physical material transfers | Complete |
 | 3.3D | Physical Material Storage and autonomous Soil/Stone hauling | Complete |
 | 3.4A | Functional Background conversion and builder self-supply | Complete |
-| 3.4B | Unified simulation clock and normal gameplay mode | Implemented — Pending Manual Acceptance |
+| 3.4B | Unified simulation clock and normal gameplay mode | Complete |
+| 3.4C | Colony View player HUD and developer UI separation | Implemented — Pending Manual Acceptance |
 
 ## Approved World View direction
 
@@ -58,16 +59,13 @@ The authoritative prerequisites and phase boundaries are in `Documentation/Devel
 
 The numbered roadmap beyond the accepted foundation remains direction, not authorised implementation:
 
-1. Complete 3.4B manual acceptance.
-2. Implement 3.4C's authored player uGUI HUD only after separate approval.
-3. Multiple-ant movement, local avoidance, and congestion recovery.
-4. Autonomous worker and survival loops.
-5. Excavation, Surface Preparation, physical resources, and hauling.
-6. Functional construction, rooms, doors, and quality.
-7. Nursery, brood, reproduction, and colony growth.
-8. Population/performance scaling and persistence.
-9. Phase World View through its separately approved small-surface, cross-view and chunk-expansion milestones.
-10. Enemy colonies, equipment, combat, and defence.
-11. Finished-slice onboarding, objectives, save/load, and polish.
+1. Complete 3.4C manual acceptance and correct only observed HUD defects.
+2. Multiple-ant movement, local avoidance, and congestion recovery.
+3. Extend functional construction into rooms, doors and quality through separate scope.
+4. Add Nursery, brood, reproduction and colony growth through separate scope.
+5. Address population/performance scaling and persistence.
+6. Phase World View through its separately approved small-surface, cross-view and chunk-expansion milestones.
+7. Add enemy colonies, equipment, combat and defence only when approved.
+8. Complete finished-slice onboarding, objectives, save/load and polish.
 
 Detailed scope and acceptance criteria must be approved when each milestone begins. See [Design Decision Log](design-decision-log.md) for unresolved dependencies.

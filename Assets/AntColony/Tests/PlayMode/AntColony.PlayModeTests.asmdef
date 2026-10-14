@@ -6,7 +6,8 @@
         "AntColony.World",
         "AntColony.Navigation",
         "AntColony.Commands",
-        "AntColony.Development"
+        "AntColony.Development",
+        "AntColony.PlayerUI"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

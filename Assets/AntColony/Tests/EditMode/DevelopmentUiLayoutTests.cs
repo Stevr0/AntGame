@@ -77,6 +77,7 @@ namespace AntColony.Tests.EditMode
         [Test]
         public void VisibleUiBlocksToolbarSummaryAndOnlyTheActivePanel()
         {
+            controller.SetDevelopmentUiVisible(true);
             Assert.That(controller.IsGuiPointBlocked(
                 controller.DevelopmentToolbarGuiRect.center), Is.True);
             Assert.That(controller.IsGuiPointBlocked(

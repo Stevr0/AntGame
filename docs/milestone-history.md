@@ -4,6 +4,16 @@ This history records the strongest confirmed evidence without implying that late
 
 ## 14 October 2026
 
+### 3.4C — Colony View Player HUD & Developer UI Separation
+
+**Implemented — Pending Manual Acceptance.** An authored uGUI Canvas and reusable roster-entry prefab present authoritative ant records, selected shared/current-view data, the one global clock, physical resource ownership and readable current work. Colony View Select, Excavate, six functional Background recipes and safe area cancellation delegate to existing gameplay APIs. Developer IMGUI starts hidden, retains all seven categories and opens separately through F12/reopen control. One EventSystem/GraphicRaycaster boundary combines with existing IMGUI hit testing so UI clicks, scroll and designation drags do not leak into world or camera input. No World View runtime was added.
+
+- Focused Edit Mode: 12/12 passed.
+- Focused Play Mode: 13/13 passed.
+- Complete graphics-enabled Edit Mode: 489/489 passed.
+- Complete Play Mode: 62/62 passed.
+- Manual Play Mode checklist: 31 steps pending.
+
 ### Custom tileset art foundation
 
 **Implemented — Pending Manual Acceptance.** Preserved `1254x1254` RGBA Colony and World sources, deterministic aspect-preserving 32-pixel preparation, 170 named candidate sprites and Unity import metadata were added without changing terrain bindings or gameplay. No candidate is certified seamless; Tile assets and palettes remain gated on manual visual and semantic review.

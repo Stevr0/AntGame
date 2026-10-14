@@ -290,6 +290,7 @@ namespace AntColony.Tests.EditMode
             Assert.That(first.Motor.PendingRequestId, Is.EqualTo(request));
             Assert.That(first.FailureReason, Does.Contain("No traversable"));
 
+            controller.SetDevelopmentUiVisible(true);
             Rect playerPanel = controller.PlayerPanelGuiRect;
             Vector2 guiPoint = playerPanel.center;
             Vector2 screenPoint = new(guiPoint.x, Screen.height - guiPoint.y);

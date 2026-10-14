@@ -40,6 +40,8 @@ This log summarises approved decisions. It does not approve unresolved details o
 | 14 Oct 2026 | Preserve one ant identity and simulation across both views | Stats, skills, needs, inventory and jobs remain shared; changing view or region cannot duplicate an ant |
 | 14 Oct 2026 | Connect regions through explicit nest entrances while both continue simulating | Cross-view travel must compose local routes and a controlled transition; switching presentation does not pause the hidden region |
 | 14 Oct 2026 | Introduce World View from one small playable surface and expand chunks incrementally | Large continuous exploration remains the target, while unloaded chunks eventually use bounded lightweight simulation rather than full physics |
+| 14 Oct 2026 | Separate the authored player uGUI HUD from retained developer IMGUI | Global roster, ant, resource and clock presentation reads existing authorities; Colony View commands remain contextual, while developer tools start hidden and open independently |
+| 14 Oct 2026 | Route player uGUI hit testing into the existing world-input boundary | One EventSystem and GraphicRaycaster block selection, designation and camera mouse leakage without making gameplay commands depend on uGUI classes |
 | 14 Oct 2026 | Preserve custom art sources and gate runtime binding on visual and semantic review | Prepared 32-pixel candidates stay separate by view; no composite Colony tile or unverified edge becomes gameplay presentation by assumption |
 
 ## Open decisions
