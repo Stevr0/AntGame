@@ -105,6 +105,10 @@ The roster reads authoritative records and uses a narrow compatibility adapter t
 
 The command toolbar declares only `PlayerViewContext.Colony`. Its Select, Excavate, Background conversion and cancellation actions delegate to accepted APIs. Area cancellation invokes construction and excavation registries, so staged construction material follows the existing recoverable-drop transaction. No view manager, World View state, surface input or shared world-coordinate abstraction was added.
 
+Milestone 3.4D adds a global `ColonyManagementView` and reusable authored work-priority row. The view enumerates active `AntRecord` entries and writes their existing `AntWorkPrioritySet` through a narrow command API that also schedules the next ordinary work evaluation. It does not select the ant, require a loaded visual, cancel active work or own job-choice logic. Rows may consult a loaded `SelectableGridAnt` only for current activity text. The player matrix exposes only Excavation, Construction and Hauling because those categories have real executors; developer diagnostics retain the full catalog over the same underlying values.
+
+The management overlay remains inside the existing Canvas and EventSystem. Its full-screen raycast target protects priority clicks and scrolling from world/camera input. An optional keyboard-focus boundary consumes Escape for the modal before Colony View designation cancellation, without coupling command logic to uGUI types. Opening the overlay never owns or changes simulation-clock state.
+
 ## Approved two-view target architecture
 
 > **Design boundary — not implemented.** The responsibilities below describe constraints for future milestones. They deliberately avoid committing to final component or class names. Current runtime ownership above remains the implemented architecture.

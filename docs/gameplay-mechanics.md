@@ -15,7 +15,8 @@
 | Personal inventory and explicit material pickup/drop | Approved slice | Complete | Automated and manual accepted |
 | Material Storage and autonomous Soil/Stone hauling | Approved slice | Complete | Automated and manual accepted |
 | Construction and functional conversion | Approved slice with provisional recipes | Complete | Automated and manual accepted |
-| Colony View player HUD | Approved 3.4C slice | Implemented | Automated passed; manual pending |
+| Colony View player HUD | Approved 3.4C slice | Complete | Automated and manual accepted |
+| Colony work-priority matrix | Approved 3.4D slice | Implemented | Automated passed; manual pending |
 | Colony priorities and autonomous jobs | Approved design | Implemented foundation | Accepted in Play Mode |
 | Brood and reproduction | Approved design | Not implemented | Not tested |
 | Rooms, doors, and quality bonuses | Approved design | Not implemented | Not tested |
@@ -32,7 +33,7 @@ The approved player-facing model has three states:
 
 Current implementation supports selection plus temporary Move, Eat, Drink, Rest and material Pickup orders, along with autonomous survival, colony work selection and autonomous hauling. It does not yet implement explicit forced-work orders or Draft Mode. The old WASD `PlayerMovementInput` path is retained strictly as a developer movement regression tool.
 
-The authored 3.4C player HUD provides roster selection, shared ant inspection, the global simulation clock, physical-resource ownership, readable job state and Colony View Select/Excavate/Build/Cancel tools without opening Developer Mode. The six Build choices are the existing functional Background recipes only. World View input, cross-view travel, the full priority matrix, alerts and Draft Mode remain future work.
+The accepted 3.4C player HUD provides roster selection, shared ant inspection, the global simulation clock, physical-resource ownership, readable job state and Colony View Select/Excavate/Build/Cancel tools without opening Developer Mode. The six Build choices are the existing functional Background recipes only. Milestone 3.4D adds the global Excavation/Construction/Hauling priority matrix over authoritative ant records. World View input, cross-view travel, alerts and Draft Mode remain future work.
 
 ## Physical-world principles
 

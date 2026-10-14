@@ -62,6 +62,8 @@ namespace AntColony.EditorTools
             "Assets/AntColony/Prefabs/UI/PlayerHud.prefab";
         private const string AntRosterEntryPrefabPath =
             "Assets/AntColony/Prefabs/UI/AntRosterEntry.prefab";
+        private const string WorkPriorityRowPrefabPath =
+            "Assets/AntColony/Prefabs/UI/WorkPriorityRow.prefab";
 
         [MenuItem("Ant Colony/Build Integrated Development World")]
         public static void BuildIntegratedDevelopmentWorld()
@@ -110,6 +112,8 @@ namespace AntColony.EditorTools
                 "Ant selection and command controller is missing.");
             Require(playerHud != null && host.PlayerHud == playerHud,
                 "The authored player HUD is missing or not bound to the host.");
+            Require(playerHud.ColonyManagement != null,
+                "The global Colony Management screen is missing from the HUD.");
             Require(FindAll<Canvas>(scene).Length == 1,
                 "The scene must contain exactly one player HUD Canvas.");
             Require(FindAll<EventSystem>(scene).Length == 1,
@@ -373,6 +377,8 @@ namespace AntColony.EditorTools
             Require(font != null, "Unity's built-in UI font is unavailable.");
             AntRosterEntryView rosterEntryPrefab =
                 CreateAntRosterEntryPrefab(font);
+            WorkPriorityRowView workPriorityRowPrefab =
+                CreateWorkPriorityRowPrefab(font);
 
             GameObject root = new(
                 "PlayerHud",
@@ -391,7 +397,7 @@ namespace AntColony.EditorTools
             scaler.matchWidthOrHeight = 0.5f;
 
             AntRosterView roster = CreateRosterPanel(
-                root.transform, font, rosterEntryPrefab);
+                root.transform, font, rosterEntryPrefab, out Button workButton);
             SimulationControlsView clock = CreateClockPanel(root.transform, font);
             SelectedAntInspectorView inspector =
                 CreateInspectorPanel(root.transform, font);
@@ -399,9 +405,11 @@ namespace AntColony.EditorTools
                 CreateResourcePanel(root.transform, font);
             ColonyJobStatusView jobs = CreateJobPanel(root.transform, font);
             ColonyViewCommandBar commands = CreateCommandPanel(root.transform, font);
+            ColonyManagementView management = CreateManagementPanel(
+                root.transform, font, workButton, workPriorityRowPrefab);
             root.GetComponent<PlayerHudController>().Configure(
                 root.GetComponent<GraphicRaycaster>(), roster, inspector, clock,
-                commands, resources, jobs);
+                commands, resources, jobs, management);
 
             GameObject saved = PrefabUtility.SaveAsPrefabAsset(root, PlayerHudPrefabPath);
             UnityEngine.Object.DestroyImmediate(root);
@@ -448,12 +456,55 @@ namespace AntColony.EditorTools
                 .GetComponent<AntRosterEntryView>();
         }
 
+        private static WorkPriorityRowView CreateWorkPriorityRowPrefab(Font font)
+        {
+            GameObject root = new(
+                "WorkPriorityRow", typeof(RectTransform), typeof(Image),
+                typeof(LayoutElement), typeof(HorizontalLayoutGroup),
+                typeof(WorkPriorityRowView));
+            root.GetComponent<Image>().color = new Color32(55, 48, 41, 248);
+            root.GetComponent<LayoutElement>().preferredHeight = 70f;
+            HorizontalLayoutGroup layout = root.GetComponent<HorizontalLayoutGroup>();
+            layout.padding = new RectOffset(8, 8, 6, 6);
+            layout.spacing = 6f;
+            layout.childControlWidth = false;
+            layout.childControlHeight = true;
+            layout.childForceExpandWidth = false;
+            layout.childForceExpandHeight = true;
+
+            Text identity = CreateText(root.transform, "Identity", font, 14,
+                TextAnchor.MiddleLeft, new Color32(242, 226, 190, 255));
+            identity.gameObject.AddComponent<LayoutElement>().preferredWidth = 160f;
+            Text activity = CreateText(root.transform, "Activity", font, 12,
+                TextAnchor.MiddleLeft, new Color32(220, 211, 192, 255));
+            activity.horizontalOverflow = HorizontalWrapMode.Wrap;
+            activity.gameObject.AddComponent<LayoutElement>().preferredWidth = 300f;
+
+            var buttons = new Button[3];
+            var labels = new Text[3];
+            string[] names = { "Excavation", "Construction", "Hauling" };
+            for (int index = 0; index < buttons.Length; index++)
+            {
+                buttons[index] = CreateButton(root.transform, names[index],
+                    "Priority 3\nSkill 0", font, 180f, out labels[index], 12);
+                buttons[index].GetComponent<LayoutElement>().preferredHeight = 56f;
+            }
+            root.GetComponent<WorkPriorityRowView>().Configure(
+                identity, activity, buttons, labels);
+
+            GameObject saved = PrefabUtility.SaveAsPrefabAsset(
+                root, WorkPriorityRowPrefabPath);
+            UnityEngine.Object.DestroyImmediate(root);
+            Require(saved != null, "Unity could not save the work-priority row prefab.");
+            return saved.GetComponent<WorkPriorityRowView>();
+        }
+
         private static AntRosterView CreateRosterPanel(Transform parent, Font font,
-            AntRosterEntryView entryPrefab)
+            AntRosterEntryView entryPrefab, out Button workButton)
         {
             GameObject panel = CreatePanel(parent, "Ant Roster",
                 new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(0f, 1f),
-                new Vector2(8f, -8f), new Vector2(264f, 246f));
+                new Vector2(8f, -8f), new Vector2(264f, 286f));
             VerticalLayoutGroup layout = panel.AddComponent<VerticalLayoutGroup>();
             layout.padding = new RectOffset(8, 8, 8, 8);
             layout.spacing = 4f;
@@ -471,6 +522,8 @@ namespace AntColony.EditorTools
             }
             AntRosterView view = panel.AddComponent<AntRosterView>();
             view.Configure(entries);
+            workButton = CreateButton(panel.transform, "Colony Management",
+                "Work priorities", font, 244f, out _, 13);
             return view;
         }
 
@@ -536,7 +589,7 @@ namespace AntColony.EditorTools
         {
             GameObject panel = CreatePanel(parent, "Colony Resources",
                 new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(0f, 1f),
-                new Vector2(8f, -262f), new Vector2(430f, 84f));
+                new Vector2(8f, -302f), new Vector2(430f, 84f));
             Text content = CreateText(panel.transform, "Content", font, 13,
                 TextAnchor.MiddleLeft, new Color32(224, 216, 198, 255));
             SetRect(content.rectTransform, Vector2.zero, Vector2.one,
@@ -551,7 +604,7 @@ namespace AntColony.EditorTools
         {
             GameObject panel = CreatePanel(parent, "Colony Work Status",
                 new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(0f, 1f),
-                new Vector2(8f, -354f), new Vector2(430f, 162f));
+                new Vector2(8f, -394f), new Vector2(430f, 162f));
             Text content = CreateText(panel.transform, "Content", font, 12,
                 TextAnchor.UpperLeft, new Color32(224, 216, 198, 255));
             content.horizontalOverflow = HorizontalWrapMode.Wrap;
@@ -609,6 +662,98 @@ namespace AntColony.EditorTools
             ColonyViewCommandBar view = panel.AddComponent<ColonyViewCommandBar>();
             view.Configure(select, excavate, build, cancel, menu,
                 recipeButtons, recipeLabels, status);
+            return view;
+        }
+
+        private static ColonyManagementView CreateManagementPanel(
+            Transform parent, Font font, Button openButton,
+            WorkPriorityRowView rowPrefab)
+        {
+            GameObject overlay = new(
+                "Colony Management", typeof(RectTransform), typeof(Image),
+                typeof(ColonyManagementView));
+            overlay.transform.SetParent(parent, false);
+            SetRect(overlay.GetComponent<RectTransform>(), Vector2.zero, Vector2.one,
+                Vector2.zero, Vector2.zero);
+            overlay.GetComponent<Image>().color = new Color32(15, 12, 10, 205);
+
+            GameObject panel = CreatePanel(overlay.transform, "Work Priority Matrix",
+                new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f),
+                new Vector2(0.5f, 0.5f), Vector2.zero,
+                new Vector2(1120f, 620f));
+            Text title = CreateText(panel.transform, "Title", font, 22,
+                TextAnchor.MiddleLeft, new Color32(242, 226, 190, 255));
+            title.text = "COLONY MANAGEMENT · WORK";
+            SetRect(title.rectTransform, new Vector2(0f, 1f), Vector2.one,
+                new Vector2(20f, -56f), new Vector2(-150f, -12f));
+            Button closeButton = CreateButton(panel.transform, "Close", "Close",
+                font, 110f, out _);
+            SetRect(closeButton.GetComponent<RectTransform>(),
+                new Vector2(1f, 1f), Vector2.one,
+                new Vector2(-130f, -52f), new Vector2(-20f, -16f));
+
+            Text explanation = CreateText(panel.transform, "Priority Explanation",
+                font, 13, TextAnchor.MiddleLeft,
+                new Color32(220, 211, 192, 255));
+            explanation.text =
+                "Priority 1 is highest; 4 is lowest. Disabled categories are skipped. " +
+                "Skills affect efficiency, not priority.";
+            SetRect(explanation.rectTransform, new Vector2(0f, 1f), Vector2.one,
+                new Vector2(20f, -92f), new Vector2(-20f, -60f));
+
+            GameObject header = CreateHorizontalGroup(panel.transform, "Headers");
+            SetRect(header.GetComponent<RectTransform>(), new Vector2(0f, 1f),
+                Vector2.one, new Vector2(20f, -132f), new Vector2(-20f, -96f));
+            string[] headers = { "ANT", "CURRENT ACTIVITY", "EXCAVATION",
+                "CONSTRUCTION", "HAULING" };
+            float[] widths = { 160f, 300f, 180f, 180f, 180f };
+            for (int index = 0; index < headers.Length; index++)
+            {
+                Text label = CreateLayoutText(header.transform, headers[index],
+                    font, 12, 34f);
+                label.gameObject.GetComponent<LayoutElement>().preferredWidth = widths[index];
+            }
+
+            GameObject viewport = new(
+                "Viewport", typeof(RectTransform), typeof(Image), typeof(Mask));
+            viewport.transform.SetParent(panel.transform, false);
+            viewport.GetComponent<Image>().color = new Color32(29, 25, 22, 255);
+            viewport.GetComponent<Mask>().showMaskGraphic = true;
+            SetRect(viewport.GetComponent<RectTransform>(), Vector2.zero, Vector2.one,
+                new Vector2(20f, 70f), new Vector2(-20f, -136f));
+
+            GameObject content = new(
+                "Rows", typeof(RectTransform), typeof(VerticalLayoutGroup),
+                typeof(ContentSizeFitter));
+            content.transform.SetParent(viewport.transform, false);
+            RectTransform contentRect = content.GetComponent<RectTransform>();
+            SetRect(contentRect, new Vector2(0f, 1f), Vector2.one,
+                Vector2.zero, Vector2.zero);
+            contentRect.pivot = new Vector2(0.5f, 1f);
+            VerticalLayoutGroup rowLayout = content.GetComponent<VerticalLayoutGroup>();
+            rowLayout.spacing = 4f;
+            rowLayout.childControlHeight = true;
+            rowLayout.childForceExpandHeight = false;
+            ContentSizeFitter fitter = content.GetComponent<ContentSizeFitter>();
+            fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+
+            ScrollRect scroll = panel.AddComponent<ScrollRect>();
+            scroll.viewport = viewport.GetComponent<RectTransform>();
+            scroll.content = contentRect;
+            scroll.horizontal = false;
+            scroll.vertical = true;
+            scroll.movementType = ScrollRect.MovementType.Clamped;
+            scroll.scrollSensitivity = 24f;
+
+            Text feedback = CreateText(panel.transform, "Feedback", font, 12,
+                TextAnchor.MiddleLeft, new Color32(218, 186, 124, 255));
+            SetRect(feedback.rectTransform, Vector2.zero, Vector2.right,
+                new Vector2(20f, 18f), new Vector2(-20f, 58f));
+
+            ColonyManagementView view = overlay.GetComponent<ColonyManagementView>();
+            view.Configure(openButton, closeButton, overlay, contentRect,
+                rowPrefab, feedback);
+            overlay.SetActive(false);
             return view;
         }
 

@@ -25,6 +25,12 @@ namespace AntColony.Commands
         bool IsScreenPointBlocked(Vector2 screenPoint);
     }
 
+    /// <summary>Optional keyboard-focus boundary for modal player UI.</summary>
+    public interface IPlayerUiKeyboardBlocker
+    {
+        bool ConsumesEscape { get; }
+    }
+
     /// <summary>Mutually exclusive sections in the development toolbar.</summary>
     public enum DevelopmentUiCategory
     {
@@ -1104,6 +1110,12 @@ namespace AntColony.Commands
             if (keyboard?.f12Key.wasPressedThisFrame == true)
                 SetDevelopmentUiVisible(!developmentUiVisible);
 
+            bool escapeConsumed = playerUiInputBlocker is IPlayerUiKeyboardBlocker keyboardBlocker &&
+                keyboardBlocker.ConsumesEscape;
+            if (keyboard?.escapeKey.wasPressedThisFrame == true &&
+                !escapeConsumed && DesignationMode != WorldDesignationMode.None)
+                SetDesignationMode(WorldDesignationMode.None);
+
             Mouse mouse = Mouse.current;
             if (mouse == null)
             {
@@ -1111,9 +1123,6 @@ namespace AntColony.Commands
             }
 
             Vector2 screenPoint = mouse.position.ReadValue();
-            if (keyboard?.escapeKey.wasPressedThisFrame == true &&
-                DesignationMode != WorldDesignationMode.None)
-                SetDesignationMode(WorldDesignationMode.None);
 
             if (DesignationMode != WorldDesignationMode.None)
             {
@@ -1528,10 +1537,28 @@ namespace AntColony.Commands
                 message = "Select a bound ant before changing work priorities.";
                 return false;
             }
-            bool changed = SelectedAnt.Record.WorkPriorities.TrySet(
-                category, priority, out message);
+            return TrySetWorkPriority(
+                SelectedAnt.Record, category, priority, out message);
+        }
+
+        /// <summary>
+        /// Updates the existing record-owned matrix without selecting or loading
+        /// the ant and without interrupting work already in progress.
+        /// </summary>
+        public bool TrySetWorkPriority(
+            AntRecord record,
+            AntWorkCategory category,
+            AntWorkPriority priority,
+            out string message)
+        {
+            if (record == null)
+            {
+                message = "Choose an active colony ant before changing priorities.";
+                return false;
+            }
+            bool changed = record.WorkPriorities.TrySet(category, priority, out message);
             if (changed)
-                message = $"{SelectedAnt.DisplayName}: {category} priority is {priority}.";
+                message = $"{record.DisplayName}: {category} priority is {priority}.";
             interactionMessage = message;
             nextWorkEvaluationTime = 0d;
             return changed;

@@ -8,9 +8,9 @@ This page is a concise navigation view of the authoritative `Documentation/Devel
 
 ## Immediate boundary
 
-**Current action:** manually verify Milestone 3.4C's 31-step Colony View Player HUD & Developer UI Separation checklist in `Assets/AntColony/Scenes/AntGameDevelopment.unity`.
+**Current action:** manually verify Milestone 3.4D's 18-step Colony Management & Work Priorities checklist in `Assets/AntColony/Scenes/AntGameDevelopment.unity`.
 
-Milestone 3.4B is manually accepted. Milestone 3.4C is **Implemented — Pending Manual Acceptance**. Its authored uGUI HUD uses authoritative ant/clock/job/resource state, exposes only Colony View terrain tools, keeps developer IMGUI hidden but available, and centralises pointer ownership across uGUI, IMGUI, world commands and camera mouse input. Verification passed 12/12 focused Edit, 13/13 focused Play, 489/489 full graphics-enabled Edit and 62/62 full Play.
+Milestones 3.4B and 3.4C are manually accepted. Milestone 3.4D is **Implemented — Pending Manual Acceptance**. Its global Work matrix uses authoritative active ant records, exposes only real Excavation/Construction/Hauling executors, and edits the existing per-ant 1–4/Disabled values shared with developer diagnostics. Verification passed 7/7 focused Edit, 7/7 focused Play, 492/492 full Edit and 65/65 full Play.
 
 ## Current milestone state
 
@@ -37,7 +37,8 @@ Milestone 3.4B is manually accepted. Milestone 3.4C is **Implemented — Pending
 | 3.3D | Physical Material Storage and autonomous Soil/Stone hauling | Complete |
 | 3.4A | Functional Background conversion and builder self-supply | Complete |
 | 3.4B | Unified simulation clock and normal gameplay mode | Complete |
-| 3.4C | Colony View player HUD and developer UI separation | Implemented — Pending Manual Acceptance |
+| 3.4C | Colony View player HUD and developer UI separation | Complete |
+| 3.4D | Colony management and work priorities UI | Implemented — Pending Manual Acceptance |
 
 ## Approved World View direction
 
@@ -59,7 +60,7 @@ The authoritative prerequisites and phase boundaries are in `Documentation/Devel
 
 The numbered roadmap beyond the accepted foundation remains direction, not authorised implementation:
 
-1. Complete 3.4C manual acceptance and correct only observed HUD defects.
+1. Complete 3.4D manual acceptance and correct only observed matrix defects.
 2. Multiple-ant movement, local avoidance, and congestion recovery.
 3. Extend functional construction into rooms, doors and quality through separate scope.
 4. Add Nursery, brood, reproduction and colony growth through separate scope.

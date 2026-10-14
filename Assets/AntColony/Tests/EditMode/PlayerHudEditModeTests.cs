@@ -43,6 +43,8 @@ namespace AntColony.Tests.EditMode
                 Has.Length.EqualTo(1));
             Assert.That(prefab.GetComponentsInChildren<ColonyResourceSummaryView>(true),
                 Has.Length.EqualTo(1));
+            Assert.That(prefab.GetComponentsInChildren<ColonyManagementView>(true),
+                Has.Length.EqualTo(1));
         }
 
         [Test]

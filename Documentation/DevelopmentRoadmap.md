@@ -4,13 +4,15 @@
 
 **Implemented — Pending Manual Acceptance.** Custom Colony and World source sheets are preserved separately and a repeatable tool prepares 32-pixel candidate libraries with Unity import metadata. This does not replace current development visuals, create World View gameplay or alter terrain behavior. Next art step: complete the documented Unity Sprite Editor and edge-repeat review, then approve semantic layer separation before creating production Tile assets and separate Colony/World palettes.
 
-## 3.4C implementation status — 14 October 2026
+## 3.4D implementation status — 14 October 2026
 
 **3.4B — ACCEPTED.** Unified simulation clock and gameplay mode passed user manual acceptance: 20/20 grouped checks, normal gameplay, pause/resume, developer overrides and clean Console. Earlier Codex-reported tests: 11/11 focused Edit, 7/7 focused Play, 485/485 complete Edit (graphics-enabled), 58/58 complete Play. No rerun for these docs. Any older 3.4B pending status below is superseded.
 
-**3.4C — IMPLEMENTED, PENDING MANUAL ACCEPTANCE: Player Colony HUD & Developer UI Separation.** One authored uGUI Canvas and reusable roster-entry prefab bind directly to authoritative ant records, the shared simulation clock, accepted designation/job APIs and physical resource owners. The Colony View command bar exposes Select, Excavate, the six implemented Background recipes and bounded cancellation. Developer IMGUI starts hidden, remains independently operable through F12/reopen control, and shares a coherent uGUI/IMGUI pointer boundary with world and camera input. The old time strip is suppressed. Verification passed 12/12 focused Edit, 13/13 focused Play, 489/489 complete graphics-enabled Edit and 62/62 complete Play. Manual acceptance remains pending.
+**3.4C — ACCEPTED.** The user confirmed manual acceptance before authorising 3.4D. Its recorded automated evidence remains 12/12 focused Edit, 13/13 focused Play, 489/489 complete graphics-enabled Edit and 62/62 complete Play.
 
-**Smallest next step:** complete the 31-step 3.4C Play Mode checklist and address only observed HUD usability or layout defects. After acceptance, scope multiple-ant local avoidance and congestion recovery separately; do not begin World View runtime work.
+**3.4D — IMPLEMENTED, PENDING MANUAL ACCEPTANCE: Colony Management & Work Priorities UI.** One global scrollable matrix on the existing HUD lists active authoritative ant records, current activity and mapped skills. Only real autonomous executors are functional columns: Excavation, Construction and Hauling. Priority 1–4/Disabled changes write the existing per-ant `AntWorkPrioritySet`, affect subsequent autonomous selection, preserve active work and remain shared with developer diagnostics. Verification passed 7/7 focused Edit, 7/7 focused Play, 492/492 complete Edit and 65/65 complete Play.
+
+**Smallest next step:** complete the 18-step 3.4D Play Mode checklist and address only observed matrix usability or layout defects. After acceptance, scope multiple-ant local avoidance and congestion recovery separately; do not begin World View runtime work.
 
 
 ## Accepted baseline and UI transition roadmap — 14 October 2026
@@ -19,7 +21,7 @@
 
 **3.4B — IMPLEMENTED, PENDING MANUAL ACCEPTANCE: Unified Simulation Clock & Gameplay Mode.** The development scene now begins at Day 1 08:00 paused, uses one authoritative pause/1×/2×/3× clock, and activates survival, colony work and hauling as one normal-gameplay bundle. Physics, navigation scheduling, autonomous evaluation, retry time, needs, skills, interactions, work and transfers stop without cancelling preserved state. Orders, designation/cancellation, priorities, selection and camera control remain available while paused. A compact independent time strip supports acceptance; the existing seven-category developer toolbar retains explicit Follow/Forced On/Forced Off autonomy overrides. Verification passed 11/11 focused Edit, 7/7 focused Play, 485/485 full graphics-enabled Edit and 58/58 full Play.
 
-**3.4C — IMPLEMENTED, PENDING MANUAL ACCEPTANCE: Player Colony HUD.** The authored uGUI Canvas provides authoritative roster/inspection, global time controls, physical resource ownership, job feedback, and Colony View excavation/conversion/cancellation. Existing IMGUI development tooling remains separate and hidden by default. Mara, Pip and Tala remain the temporary test population. Full work priorities, alerts and contextual menus remain deferred.
+**3.4C — ACCEPTED: Player Colony HUD.** The authored uGUI Canvas provides authoritative roster/inspection, global time controls, physical resource ownership, job feedback, and Colony View excavation/conversion/cancellation. Existing IMGUI development tooling remains separate and hidden by default. Mara, Pip and Tala remain the temporary test population. Alerts and contextual menus remain deferred; the work-priority matrix is now implemented by 3.4D.
 
 **Subsequent scoped milestones:** All-ant work priorities, information/alerts/storage UX, contextual right-click work orders and incremental controller responsibility separation. Keep doors, rooms, brood, production, combat and larger game features deferred. The approved eventual starting ant remains one founding queen; three ants are only the development fixture.
 

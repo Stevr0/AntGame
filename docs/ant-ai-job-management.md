@@ -27,7 +27,9 @@ Milestones through 3.3D are accepted, and 3.4A extends that foundation with phys
 - A construction builder with no usable inventory capacity temporarily unloads unnecessary cargo through a reusable recovery operation: closest reachable reserved storage first, validated recoverable current-anchor drop second, then automatic resumption of the same job. Critical survival and player orders may interrupt this state safely.
 - Construction interruption preserves progress, carried material and staged material. Cancellation releases reservations and exposes staged material as a recoverable drop.
 
-Milestones 3.4A and 3.4B are manually accepted. Milestone 3.4C is **Implemented — Pending Manual Acceptance**: the player HUD exposes authoritative work status, progress, assignment/failure information, physical resource ownership and Colony View designation/cancellation without requiring Developer Mode. Normal Play still enables survival, colony work and hauling together; pause remains orthogonal and never cancels orders or releases reservations.
+Milestones 3.4A, 3.4B and 3.4C are manually accepted. Milestone 3.4D is **Implemented — Pending Manual Acceptance**. Its global player-facing matrix lists active authoritative ant records whether or not their Colony View visual is loaded. Excavation, Construction and Hauling are the only functional columns because only those categories have real executors. Cells display mapped skills and edit the existing record-owned 1–4/Disabled values; developer diagnostics read the same values.
+
+Changing a matrix value resets subsequent autonomous evaluation but never cancels an active job, changes a skill, pauses simulation or changes a developer autonomy override. Current activity and real failure/waiting text are displayed where the existing agent/job state exposes them. Surface Preparation, Foraging, Production, Combat and Brood Care stay out of the functional player matrix until real executors exist.
 
 ## Future decision flow
 

@@ -5,7 +5,8 @@
         "AntColony.Ants",
         "AntColony.Commands",
         "AntColony.Navigation",
-        "AntColony.World"
+        "AntColony.World",
+        "Unity.InputSystem"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

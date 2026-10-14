@@ -19,7 +19,8 @@ namespace AntColony.PlayerUI
     /// ant, clock, job, terrain, inventory, or resource state.
     /// </summary>
     [DisallowMultipleComponent]
-    public sealed class PlayerHudController : MonoBehaviour, IPlayerUiInputBlocker
+    public sealed class PlayerHudController : MonoBehaviour, IPlayerUiInputBlocker,
+        IPlayerUiKeyboardBlocker
     {
         [SerializeField] private GraphicRaycaster graphicRaycaster;
         [SerializeField] private AntRosterView antRoster;
@@ -28,6 +29,7 @@ namespace AntColony.PlayerUI
         [SerializeField] private ColonyViewCommandBar commandBar;
         [SerializeField] private ColonyResourceSummaryView resourceSummary;
         [SerializeField] private ColonyJobStatusView jobStatus;
+        [SerializeField] private ColonyManagementView colonyManagement;
 
         private readonly List<RaycastResult> raycastResults = new();
 
@@ -39,6 +41,10 @@ namespace AntColony.PlayerUI
         public ColonyViewCommandBar CommandBar => commandBar;
         public ColonyResourceSummaryView ResourceSummary => resourceSummary;
         public ColonyJobStatusView JobStatus => jobStatus;
+        public ColonyManagementView ColonyManagement => colonyManagement;
+        public bool ConsumesEscape => colonyManagement != null &&
+            (colonyManagement.IsOpen ||
+             colonyManagement.EscapeConsumedFrame == Time.frameCount);
 
         /// <summary>Called by the existing scene host after its authorities exist.</summary>
         public void Bind(
@@ -66,6 +72,7 @@ namespace AntColony.PlayerUI
                 constructionDesignations);
             jobStatus?.Bind(antRegistry, constructionDesignations,
                 excavationDesignations);
+            colonyManagement?.Bind(antRegistry, commandController);
             IsReady = antRegistry != null;
         }
 
@@ -94,7 +101,8 @@ namespace AntColony.PlayerUI
             SimulationControlsView controls,
             ColonyViewCommandBar colonyCommandBar,
             ColonyResourceSummaryView resources,
-            ColonyJobStatusView jobs)
+            ColonyJobStatusView jobs,
+            ColonyManagementView management)
         {
             graphicRaycaster = raycaster;
             antRoster = roster;
@@ -103,6 +111,7 @@ namespace AntColony.PlayerUI
             commandBar = colonyCommandBar;
             resourceSummary = resources;
             jobStatus = jobs;
+            colonyManagement = management;
         }
     }
 }

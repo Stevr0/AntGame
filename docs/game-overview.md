@@ -1,6 +1,6 @@
 # Game Overview
 
-Milestone 3.4C is **Implemented — Pending Manual Acceptance**. The development game opens paused at Day 1 08:00 with an authored uGUI player HUD: authoritative Mara/Pip/Tala roster and inspector, global Play/Pause and 1×/2×/3× controls, physical resource ownership, readable work status, and Colony View excavation/construction/cancellation tools. Developer IMGUI starts hidden and remains deliberately accessible through F12 without replacing the player interface.
+Milestone 3.4C is manually accepted. Milestone 3.4D is **Implemented — Pending Manual Acceptance**. The development game opens paused at Day 1 08:00 with an authored uGUI player HUD and a global Work screen where priorities for active colony ants can be inspected and changed. The matrix uses authoritative records and exposes only implemented Excavation, Construction and Hauling work. Developer IMGUI starts hidden and remains deliberately accessible through F12 without replacing the player interface.
 
 Accepted Milestone 3.4A permits player-designated conversion of exposed Background into Prepared, Nursery, Sleeping, Food Storage, Water Storage or Material Storage tiles. A Construction-priority ant personally supplies physical Soil/Stone, stages it at the site and performs timed work. Doors, rooms, brood and production remain future work.
 
@@ -34,6 +34,7 @@ The integrated `AntGameDevelopment.unity` scene is a deterministic development e
 - authoritative two-layer world data and Tilemap projection;
 - whole-body clearance, Background grip, gravity, and grid navigation;
 - three selectable ants with persistent identity, attributes, skills, needs, priorities, and personal inventories;
+- a global work-priority matrix over authoritative ant records, including records without a loaded Colony View visual;
 - independent movement orders through the production grid motor;
 - explicit physical Eat, Drink, Rest, material Pickup and Developer Only Drop interactions;
 - autonomous survival, synthetic jobs, real foreground excavation and autonomous hauling;

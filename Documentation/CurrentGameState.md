@@ -10,13 +10,48 @@ No candidate is gameplay-bound and none is claimed seamless. Production Tile ass
 
 **Milestone 3.4B Unified Simulation Clock & Gameplay Mode: COMPLETE — MANUALLY ACCEPTED.** User confirmed all 20 grouped manual Unity Play Mode checks covering ordinary colony gameplay, pause/resume integrity, developer overrides, and clean Console. Codex reported focused 11/11 Edit and 7/7 Play; full graphics-enabled 485/485 Edit and 58/58 Play passed before manual acceptance. This documentation-only change did not rerun tests. Earlier 3.4B pending-acceptance text below is historical.
 
-**Milestone 3.4C Player Colony HUD & Developer UI Separation: Implemented — Pending Manual Acceptance.** The authored uGUI HUD now exposes the accepted Colony View loop without developer controls. It binds Mara, Pip and Tala to authoritative `AntRecord` identities, presents shared needs/skills/inventory/job data separately from Colony View position/navigation, uses the one 3.4B clock, and exposes Select, Excavate, the six existing functional Background recipes, and safe designation cancellation. Read-only resource totals keep stored, carried, loose and staged ownership separate.
+**Milestone 3.4C Player Colony HUD & Developer UI Separation: COMPLETE — MANUALLY ACCEPTED.** The user confirmed 3.4C acceptance before authorising 3.4D. The authored uGUI HUD exposes the accepted Colony View loop without developer controls and retains its recorded 12/12 focused Edit, 13/13 focused Play, 489/489 complete Edit and 62/62 complete Play evidence.
+
+**Milestone 3.4D Colony Management & Work Priorities UI: Implemented — Pending Manual Acceptance.** The existing HUD now opens a global scrollable Work matrix derived from active authoritative `AntRecord` entries. Excavation, Construction and Hauling are the only functional columns because they are the only categories with real autonomous executors. Each cell writes the record-owned 1–4/Disabled value, displays the mapped skill level and immediately refreshes without selecting or loading the ant.
+
+The matrix displays current authoritative activity, active category/priority and supported failure or waiting text. Priority edits reset subsequent autonomous evaluation but do not cancel active work, alter skill levels, mutate Developer overrides or pause the clock. The retained developer priority controls observe the same `AntWorkPrioritySet`. The modal uses the existing Canvas, EventSystem and raycast boundary; Escape closes it before cancelling a Colony View tool, and matrix scroll/click input remains blocked from the world camera and commands.
+
+Automated verification passed **7/7 focused Edit Mode**, **7/7 focused Play Mode**, **492/492 complete Edit Mode**, and **65/65 complete Play Mode**.
+
+## Current implemented milestone — 3.4D Colony Management (14 October 2026)
+
+### Exact 3.4D manual Unity Play Mode acceptance
+
+**Pending:** perform these checks in `Assets/AntColony/Scenes/AntGameDevelopment.unity`; keep 3.4D at **Implemented — Pending Manual Acceptance** until the user confirms them.
+
+1. Open the management screen.
+2. Confirm Mara, Pip and Tala appear.
+3. View their current skill levels.
+4. Set different Excavation priorities.
+5. Set different Construction priorities.
+6. Set different Hauling priorities.
+7. Disable a supported work type for one ant.
+8. Confirm another ant can still perform that work.
+9. Change priorities while paused.
+10. Resume and observe subsequent job selection.
+11. Confirm active tasks are not unexpectedly cancelled.
+12. Close and reopen the screen.
+13. Confirm data remains unchanged.
+14. Open Developer Mode and inspect the same priorities.
+15. Test 1280×720, 1920×1080 and 2560×1080.
+16. Confirm no UI click leakage or camera-scroll conflicts.
+17. Verify Play/Pause and speed controls remain functional.
+18. Confirm the Unity Console is clear.
+
+### Known limitations
+
+Surface Preparation remains hidden because no real autonomous executor exists. Foraging, Production, Combat and Brood Care likewise remain developer/future categories. The matrix has no work areas, queues, automatic roles, alerts or persistence. It can edit an unloaded ant record, but does not invent region residency or cross-view selection. Visual layout at all three target resolutions and live job-choice observation remain pending manual acceptance.
 
 Developer IMGUI remains intact but starts hidden and opens deliberately through the centre-top **Developer Mode (F12)** control or F12. The player HUD remains active while it is open. uGUI raycasting feeds the existing central input boundary, while IMGUI retains its bounded hit rectangles; world commands, designation drags and camera mouse controls therefore stop over either interface. The temporary `SimulationTimeControlStrip` has been removed from the authored scene.
 
 Automated verification passed **12/12 focused Edit Mode**, **13/13 focused Play Mode**, **489/489 complete graphics-enabled Edit Mode**, and **62/62 complete Play Mode**. A separate headless full-Edit attempt crashed inside Unity's test runner without results; the required graphics-enabled retry passed. Manual Play Mode acceptance below remains outstanding.
 
-## Current implemented milestone — 3.4C Colony View Player HUD (14 October 2026)
+## Accepted milestone — 3.4C Colony View Player HUD (14 October 2026)
 
 ### Authored Canvas and responsibility boundary
 
@@ -26,7 +61,7 @@ The HUD's global surfaces are the roster, selected shared ant record, simulation
 
 ### Exact 3.4C manual Unity Play Mode acceptance
 
-**Pending:** perform these checks in `Assets/AntColony/Scenes/AntGameDevelopment.unity`; keep 3.4C at **Implemented — Pending Manual Acceptance** until the user confirms them.
+**Accepted:** the user confirmed this checklist before authorising Milestone 3.4D. It remains below as acceptance history.
 
 1. Open the development scene.
 2. Confirm Day 1, 08:00 paused start.
@@ -62,7 +97,7 @@ The HUD's global surfaces are the roster, selected shared ant record, simulation
 
 ### Known limitations
 
-The roster compatibility adapter can select only an ant with a currently loaded Colony View representation; registered unloaded/future-region ants remain displayable but cannot yet be focused. Region residency and cross-view selection are deliberately absent. There is no full work-priority matrix, colony alert system, contextual order menu, World View toolset, save/load or production bootstrap. Layout at the three target resolutions still requires manual visual acceptance.
+The roster compatibility adapter can select only an ant with a currently loaded Colony View representation; registered unloaded/future-region ants remain displayable but cannot yet be focused. Region residency and cross-view selection are deliberately absent. There is no colony alert system, contextual order menu, World View toolset, save/load or production bootstrap.
 
 
 ## Current implemented milestone — 3.4B Unified Simulation Clock & Gameplay Mode (14 October 2026)

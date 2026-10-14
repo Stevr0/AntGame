@@ -4,12 +4,12 @@
 
 **3.4B Unified Simulation Clock & Gameplay Mode is manually ACCEPTED.** All 20 grouped Unity Play Mode acceptance checks passed, including normal autonomous gameplay, pause/resume safety, developer override compatibility and clean Console. This status update does not change the approved mechanics or the earlier six design decisions.
 
-**3.4C Player Colony HUD & Developer UI Separation is the next implementation milestone, not yet complete.** Unity uGUI is the player-facing interface; optional IMGUI remains reserved for developer tests. The player must be able to run the existing excavation → physical materials → storage/hauling → builder-supplied Background conversion loop without opening developer panels. Mara/Pip/Tala remain temporary test ants and the single founding-queen start remains a future progression task.
+**3.4C Player Colony HUD & Developer UI Separation is manually ACCEPTED.** Milestone 3.4D now implements the approved global colony work-priority matrix over the same authoritative ant records; its manual acceptance remains pending. Unity uGUI is the player-facing interface and optional IMGUI remains reserved for developer tests. Mara/Pip/Tala remain temporary test ants and the single founding-queen start remains a future progression task.
 
 
 ## Approved player gameplay and interface direction — 14 October 2026
 
-> **Status: 3.4B IMPLEMENTED — PENDING MANUAL ACCEPTANCE; 3.4C UI DESIGN APPROVED, NOT YET IMPLEMENTED.** This section remains authoritative and supersedes earlier contradictory suggestions. Existing production features and the accepted developer test harness remain preserved.
+> **Status: 3.4B and 3.4C MANUALLY ACCEPTED; 3.4D IMPLEMENTED — PENDING MANUAL ACCEPTANCE.** This section remains authoritative and supersedes earlier contradictory suggestions. Existing production features and the accepted developer test harness remain preserved.
 
 ## Approved two-view gameplay architecture — 14 October 2026
 

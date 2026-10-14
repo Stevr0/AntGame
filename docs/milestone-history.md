@@ -4,15 +4,25 @@ This history records the strongest confirmed evidence without implying that late
 
 ## 14 October 2026
 
+### 3.4D — Colony Management & Work Priorities UI
+
+**Implemented — Pending Manual Acceptance.** A global scrollable matrix on the existing player Canvas lists every active authoritative colony record, caste, mapped skills and current activity. Excavation, Construction and Hauling provide 1–4/Disabled controls over the existing `AntWorkPrioritySet`; unimplemented categories remain absent. Edits affect subsequent autonomous selection without cancelling active work, changing skills, pausing the clock or altering developer overrides. The same state remains visible to developer diagnostics, and unloaded records remain manageable without inventing region residency.
+
+- Focused Edit Mode: 7/7 passed.
+- Focused Play Mode: 7/7 passed.
+- Complete Edit Mode: 492/492 passed.
+- Complete Play Mode: 65/65 passed.
+- Manual Play Mode checklist: 18 steps pending.
+
 ### 3.4C — Colony View Player HUD & Developer UI Separation
 
-**Implemented — Pending Manual Acceptance.** An authored uGUI Canvas and reusable roster-entry prefab present authoritative ant records, selected shared/current-view data, the one global clock, physical resource ownership and readable current work. Colony View Select, Excavate, six functional Background recipes and safe area cancellation delegate to existing gameplay APIs. Developer IMGUI starts hidden, retains all seven categories and opens separately through F12/reopen control. One EventSystem/GraphicRaycaster boundary combines with existing IMGUI hit testing so UI clicks, scroll and designation drags do not leak into world or camera input. No World View runtime was added.
+**Complete — Manually Accepted.** An authored uGUI Canvas and reusable roster-entry prefab present authoritative ant records, selected shared/current-view data, the one global clock, physical resource ownership and readable current work. Colony View Select, Excavate, six functional Background recipes and safe area cancellation delegate to existing gameplay APIs. Developer IMGUI starts hidden, retains all seven categories and opens separately through F12/reopen control. One EventSystem/GraphicRaycaster boundary combines with existing IMGUI hit testing so UI clicks, scroll and designation drags do not leak into world or camera input. No World View runtime was added.
 
 - Focused Edit Mode: 12/12 passed.
 - Focused Play Mode: 13/13 passed.
 - Complete graphics-enabled Edit Mode: 489/489 passed.
 - Complete Play Mode: 62/62 passed.
-- Manual Play Mode checklist: 31 steps pending.
+- Manual Play Mode checklist: accepted before 3.4D authorisation.
 
 ### Custom tileset art foundation
 
