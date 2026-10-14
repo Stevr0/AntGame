@@ -2,6 +2,8 @@
 
 Movement and navigation are the most extensively implemented and tested foundations in the project. They deliberately separate world truth, movement capability, route planning, and motor execution.
 
+All implemented rules on this page currently describe the side-on underground **Colony View**. World View is approved future design and must not be inferred as already sharing these local movement or navigation rules.
+
 ## Authoritative rules
 
 - Every resident coordinate has one Background Tile and at most one foreground Solid Tile.
@@ -51,9 +53,23 @@ Milestone 3.4B binds the service to the scene simulation clock. While paused, th
 - The older `AntSurfaceMotor` and `PlayerMovementInput` course remains for regression testing. It is not the normal control model.
 - The original movement prototype still has pending ceiling, complete-corner-route, Auto Step-Over, and camera-follow completion work; that does not invalidate the accepted grid-navigation milestones.
 
+## Future World View navigation
+
+World View will use top-down surface movement over its own explicit coordinate and chunk space. It may use different local connections, obstacles and movement presentation from Colony View. The established underground grounded/gripping/climbing/falling rules remain valid in Colony View and must not be simplified to make both views use one local motor or path graph.
+
+Cross-view travel must eventually compose:
+
+1. a Colony View route to a valid nest entrance;
+2. one controlled residency/representation transition; and
+3. a World View route from the paired surface entrance.
+
+The same authoritative ant, inventory, needs, job and reservation state continues through all three stages. Only one live movement representation may own the ant at a time. Autonomous job selection will eventually need bounded cross-view reachability and cost information, but the precise cost model, entrance capacity, route caching and failure recovery are unresolved.
+
+Hidden loaded regions continue using the shared simulation clock. Future unloaded chunks require reduced-fidelity travel and job simulation rather than full physics or per-frame path execution. The reconciliation rules for an ant that returns to a loaded chunk must be deterministic and must not duplicate distance, work, resources or elapsed needs.
+
 ## Future acceptance
 
-Dynamic excavation and functional conversion must locally invalidate affected navigation data. Future agents must use the same route and motor rules; they cannot teleport, fly through unsupported space, or bypass clearance because a task system requested it.
+Dynamic excavation and functional conversion must locally invalidate affected Colony View navigation data. Future Colony View agents must use the same route and motor rules; they cannot teleport, fly through unsupported space, or bypass clearance because a task system requested it. Future World View agents require equally explicit surface rules, while cross-view travel must pass through a valid entrance rather than bypassing either local navigation system.
 
 <div class="screenshot-slot">
 Future diagram or screenshot: grid anchors, prepared-speed region, falling transition, and an invalidated route after terrain mutation.

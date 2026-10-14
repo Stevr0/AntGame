@@ -10,6 +10,36 @@
 
 **Subsequent scoped milestones:** All-ant work priorities, information/alerts/storage UX, contextual right-click work orders and incremental controller responsibility separation. Keep doors, rooms, brood, production, combat and larger game features deferred. The approved eventual starting ant remains one founding queen; three ants are only the development fixture.
 
+## Approved future milestone family — Colony View and World View
+
+**Design status: approved direction; no World View milestone is implemented or authorised for coding.** Colony View is the existing side-on underground game. World View is a future top-down, continuous chunk-based surface game connected through nest entrances. Both views share persistent ants and one simulation timeline. Detailed scope and acceptance criteria must be approved separately for every phase below.
+
+### Prerequisites
+
+Before the first playable World View slice:
+
+- preserve the existing Colony View terrain, movement, construction, logistics and simulation-clock baselines;
+- keep ant identity, stats, skills, needs, inventory and jobs independent from a particular visual or movement representation;
+- approve explicit region/coordinate ownership and a nest-entrance transition contract;
+- define how only one live representation may own an ant at a time;
+- define separate local-navigation responsibilities and the boundary for composing cross-view routes;
+- establish deterministic persistence/residency rules before relying on unloaded surface chunks; and
+- keep the first surface course small enough to validate travel, return and conservation before expanding generation or population scale.
+
+### Proposed phased milestones
+
+| Phase | Proposed outcome | Depends on | Explicitly deferred |
+| --- | --- | --- | --- |
+| **WV-A — Two-view technical specification** | Approve region identity, coordinate-space boundaries, entrance mapping, transition invariants, simulation residency and validation strategy. Documentation/prototypes only unless separately authorised. | Current persistent ant identity and unified simulation clock | Playable surface, procedural expansion, enemies |
+| **WV-B — Small playable surface foundation** | One bounded top-down surface area, one known nest entrance, camera/view switching and local surface traversal by the same persistent ant. Colony View continues simulating. | WV-A; stable Colony View regressions; single-owner ant representation | General streaming, autonomous cross-view jobs, predators, rival colonies |
+| **WV-C — Surface foraging loop** | A narrow physical surface resource interaction, inventory-conserving collection and return through the entrance to Colony View. | WV-B; approved surface resource and transfer rules | Large biomes, combat, multiple colonies |
+| **WV-D — Autonomous cross-view work** | Jobs can select and execute composed routes through entrances while preserving ownership, reservations, needs and cancellation semantics. | WV-C; cross-region route and failure policy; scheduler budgets | Unbounded job search, global path graph assumptions |
+| **WV-E — Incremental chunk expansion** | Add surface chunks/environments gradually, with persistence and bounded loading around the initial playable area. | WV-D; chunk save/version rules; performance evidence | Whole-world generation in one step |
+| **WV-F — Lightweight unloaded simulation** | Deterministic reduced-fidelity progress for ants/jobs in unloaded chunks, reconciled safely when chunks reload. | WV-E; approved fidelity/catch-up rules and save support | Full offscreen physics or frame-by-frame navigation |
+| **WV-G — Surface threats and wider ecology** | Incremental predators, rival colonies and environmental interactions after exploration/logistics are stable. | Earlier World View phases plus separately approved combat/ecology design | Any unapproved enemy or combat scope |
+
+The phases intentionally begin with one small playable surface and expand outward. They do not require Colony View and World View to share one terrain schema or one local pathfinding graph; they require shared ant truth, explicit transitions and compatible job/navigation contracts.
+
 
 ## Current milestone — 3.4A Functional Background Conversion & Construction Jobs
 

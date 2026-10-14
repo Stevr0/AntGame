@@ -6,7 +6,7 @@ Accepted Milestone 3.4A permits player-designated conversion of exposed Backgrou
 
 ## Vision
 
-Ant Colony is a single-player, scrollable and zoomable 2D side-view colony simulation. The intended world is procedural, persistent, chunk-loaded, and destructible. The player manages a colony at strategic scale while issuing explicit orders to persistent individual ants.
+Ant Colony is a single-player, scrollable and zoomable 2D colony simulation with two interconnected perspectives. **Colony View** is the existing side-on underground space for excavation, construction, storage, brood and colony activity. **World View** is an approved but unimplemented top-down surface space for exploration, foraging, resource collection and later environmental threats. The intended world is persistent and chunk-based, while individual ants remain authoritative across both views.
 
 The game should remain small enough to finish. Depth comes from physical work, individual needs and skills, shared terrain rules, and colony logistics rather than from a large collection of disconnected systems.
 
@@ -23,6 +23,7 @@ The player guides a founding queen and, later, a growing colony through excavati
 5. Authorise brood and support it until new workers mature.
 6. Assign work through colony priorities or temporary explicit orders.
 7. Expand while maintaining individual survival and preparing for hostile encounters.
+8. Travel through nest entrances to explore a small nearby surface, collect useful resources and return to the colony.
 
 Only the foundations of this loop exist today. See [Gameplay Mechanics](gameplay-mechanics.md) for the system-by-system status.
 
@@ -50,6 +51,7 @@ Milestones through 3.3C are accepted. Milestone 3.3D implements physical Materia
 - The earlier continuous-input movement course remains a developer regression fixture, not the intended normal-play control scheme.
 - Numerical balance is provisional unless the GDD explicitly marks it approved.
 - Future ideas are not an implementation checklist and require a separately authorised milestone.
+- World View, nest transitions, cross-view jobs and unloaded-chunk simulation are approved design only; no surface gameplay is currently implemented.
 
 ## Related pages
 

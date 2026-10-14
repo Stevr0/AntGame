@@ -34,19 +34,36 @@ Milestone 3.4B is **Implemented — Pending Manual Acceptance**. The scene start
 | 3.4A | Functional Background conversion and builder self-supply | Complete |
 | 3.4B | Unified simulation clock and normal gameplay mode | Implemented — Pending Manual Acceptance |
 
+## Approved World View direction
+
+World View is approved design but is not implemented or authorised for coding. It will add a top-down surface connected to the side-on Colony View through nest entrances. Persistent ants and the simulation clock are shared; switching views must not duplicate ants or stop the hidden region.
+
+The proposed delivery order is:
+
+1. approve two-view coordinate, residency, entrance, navigation and persistence contracts;
+2. build one small bounded surface and one entrance transition;
+3. add a narrow physical surface-foraging and return loop;
+4. add bounded autonomous cross-view jobs;
+5. expand surface chunks and environments incrementally;
+6. add lightweight unloaded-chunk simulation; and
+7. consider predators, rival colonies and wider ecology only through later approved scopes.
+
+The authoritative prerequisites and phase boundaries are in `Documentation/DevelopmentRoadmap.md`.
+
 ## Ordered future direction
 
 The numbered roadmap beyond the accepted foundation remains direction, not authorised implementation:
 
 1. Complete 3.4B manual acceptance.
 2. Implement 3.4C's authored player uGUI HUD only after separate approval.
-2. Multiple-ant movement, local avoidance, and congestion recovery.
-3. Autonomous worker and survival loops.
-4. Excavation, Surface Preparation, physical resources, and hauling.
-5. Functional construction, rooms, doors, and quality.
-6. Nursery, brood, reproduction, and colony growth.
-7. Population/performance scaling and persistence.
-8. Enemy colonies, equipment, combat, and defence.
-9. Finished-slice onboarding, objectives, save/load, and polish.
+3. Multiple-ant movement, local avoidance, and congestion recovery.
+4. Autonomous worker and survival loops.
+5. Excavation, Surface Preparation, physical resources, and hauling.
+6. Functional construction, rooms, doors, and quality.
+7. Nursery, brood, reproduction, and colony growth.
+8. Population/performance scaling and persistence.
+9. Phase World View through its separately approved small-surface, cross-view and chunk-expansion milestones.
+10. Enemy colonies, equipment, combat, and defence.
+11. Finished-slice onboarding, objectives, save/load, and polish.
 
 Detailed scope and acceptance criteria must be approved when each milestone begins. See [Design Decision Log](design-decision-log.md) for unresolved dependencies.

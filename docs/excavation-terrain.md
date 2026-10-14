@@ -1,8 +1,8 @@
 # Excavation and Terrain
 
-## Two-layer world model
+## Colony View two-layer world model
 
-The world foundation is implemented. Each cell in a resident 32×32 chunk contains exactly one permanent Background Material and zero or one foreground Solid Material. Missing chunks are unavailable rather than silently generated during a query.
+The implemented terrain foundation belongs to the underground **Colony View**. Each cell in a resident 32×32 chunk contains exactly one permanent Background Material and zero or one foreground Solid Material. Missing chunks are unavailable rather than silently generated during a query.
 
 The two layers have different responsibilities:
 
@@ -12,6 +12,8 @@ The two layers have different responsibilities:
 | Foreground Solid | Blocking/excavatable material and supporting geometry | Removed only by a completed eligible excavation transaction |
 
 Visual Tilemaps and the collision-only Tilemap are projections of authoritative world data. The visual layers do not own gameplay state.
+
+These Background/Solid semantics must be preserved for Colony View when World View is added. They are not automatically the terrain schema for the future top-down surface.
 
 ## Implemented terrain foundations
 
@@ -42,9 +44,18 @@ Material Storage remains physical rather than a global wallet. Each functional B
 
 Preparation is now one 3.4A resource-backed Background conversion target. It costs a provisional one Soil and four simulation work hours. It does not unlock natural climbing: intact exposed Earth and Stone are already grippable. Prepared Background retains the provisional `1.25x` travel-speed benefit. Final balance remains unresolved.
 
+## Future World View terrain
+
+> **Approved direction, not implementation.** World View will be a top-down, continuous chunk-based surface. Its terrain representation, obstacle/elevation rules, chunk data and local mutation model still require a separately approved specification.
+
+The first surface slice must be a small playable area around a known nest entrance. It should prove surface presentation, traversal, a narrow collection/return loop and persistent state before additional chunks or environments are introduced. Read-only queries must not generate missing surface chunks or treat unloaded space as empty, matching the existing conservative availability rule without requiring both views to share the same tile layers.
+
+Nest entrances map explicit Colony View locations to explicit World View locations. Excavation near an underground entrance and surface changes near its paired exit will eventually need coordinated validity rules, but entrance construction, blockage and relocation behavior remain unresolved.
+
 ## Not implemented
 
 - Procedural generation, durable chunk streaming, or save/load.
+- World View surface terrain, nest-entrance transitions and cross-view terrain persistence.
 - Resource crafting, demolition, rooms and door construction.
 
 See [Ant Movement and Navigation](ant-movement-navigation.md) for mutation response and [Colony Construction and Rooms](colony-construction-rooms.md) for functional Background conversion.

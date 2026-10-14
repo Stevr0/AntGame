@@ -36,6 +36,10 @@ This log summarises approved decisions. It does not approve unresolved details o
 | 14 Oct 2026 | Use one scene-owned simulation clock with paused, 1×, 2× and 3× states | Gameplay time, AI deadlines and navigation share one authority; physics uses time scale while fixed-step settings remain constant and are restored |
 | 14 Oct 2026 | Keep normal gameplay policy separate from pause | Play enables survival, colony work and hauling together; pausing preserves orders, reservations, progress and materials instead of toggling subsystems |
 | 14 Oct 2026 | Accept direct orders and planning edits while paused | Current single-order replacement/cancellation semantics apply immediately, but movement, work, transfers and timers wait for resume |
+| 14 Oct 2026 | Use interconnected Colony View and World View perspectives | Underground colony management remains side-on; future surface exploration and foraging use a top-down view |
+| 14 Oct 2026 | Preserve one ant identity and simulation across both views | Stats, skills, needs, inventory and jobs remain shared; changing view or region cannot duplicate an ant |
+| 14 Oct 2026 | Connect regions through explicit nest entrances while both continue simulating | Cross-view travel must compose local routes and a controlled transition; switching presentation does not pause the hidden region |
+| 14 Oct 2026 | Introduce World View from one small playable surface and expand chunks incrementally | Large continuous exploration remains the target, while unloaded chunks eventually use bounded lightweight simulation rather than full physics |
 
 ## Open decisions
 
@@ -48,6 +52,8 @@ This log summarises approved decisions. It does not approve unresolved details o
 - Queen-death colony outcome.
 - Combat, equipment, enemy behavior, and defence detail.
 - Save format, procedural generation rules, and chunk streaming lifecycle.
+- Surface terrain/coordinate rules, nest-entrance behavior and cross-view route costing.
+- Loaded-hidden and unloaded-chunk simulation fidelity, cadence and reconciliation.
 - Final need rates, skill curve, decay, and interaction values.
 
 ## Adding an entry

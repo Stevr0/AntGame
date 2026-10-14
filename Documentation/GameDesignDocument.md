@@ -4,6 +4,48 @@
 
 > **Status: 3.4B IMPLEMENTED — PENDING MANUAL ACCEPTANCE; 3.4C UI DESIGN APPROVED, NOT YET IMPLEMENTED.** This section remains authoritative and supersedes earlier contradictory suggestions. Existing production features and the accepted developer test harness remain preserved.
 
+## Approved two-view gameplay architecture — 14 October 2026
+
+> **Status: APPROVED DESIGN, NOT IMPLEMENTED.** This section defines the intended relationship between the existing underground game and a future surface game. It does not authorise a World View implementation milestone, select final technical class names, or claim that cross-view travel, surface terrain, streaming or offscreen simulation exists.
+
+Ant Game has two interconnected perspectives over one persistent colony simulation:
+
+| Perspective | Presentation | Primary responsibilities |
+| --- | --- | --- |
+| **Colony View** | Existing 2D side-on underground view | Excavation, construction, room designation, brood management, storage and other colony activities |
+| **World View** | Future 2D top-down surface view | Exploration, surface foraging, resource collection and, later, predators, rival colonies and wider environmental interactions |
+
+### Colony View
+
+Colony View preserves the established permanent-Background/optional-Solid terrain model and its grounded, gripping, climbing and falling movement rules. It remains the detailed nest-management space: the player shapes underground terrain, constructs functional colony areas, manages physical storage and eventually supports rooms and brood. Adding World View must not flatten or replace these side-on terrain and locomotion rules.
+
+### World View
+
+World View is a large, continuous, chunk-based surface environment presented from above. Its local terrain representation and top-down movement rules may differ from Colony View and require a separately approved specification. The first playable World View milestone must deliberately use a small bounded surface area; additional chunks, biomes and interactions expand incrementally only after the small-area loop is stable. Predators, rival colonies and broader environmental systems remain later design direction, not part of the initial surface slice.
+
+### Shared ants and simulation
+
+- An ant is one persistent individual across both views. Identity, colony, caste, attributes, skills, needs, inventory, lifecycle and job information remain authoritative and must not be copied into view-specific records.
+- View-specific visuals and movement representations are projections of that shared ant. A transition must move one ant between region residencies without creating a second authoritative or live representation.
+- Nest entrances connect specific underground and surface locations. They are the required boundary for ordinary cross-view travel rather than an unexplained teleport between unrelated coordinates.
+- Switching the player's camera/view changes presentation and input context, not the simulation clock. Both regions continue simulating while the player observes either view.
+- Autonomous work must eventually be able to plan through an entrance and execute a route composed of local Colony View travel, a transition, and local World View travel.
+- Loaded regions may use their full local simulation. Future unloaded chunks require a deterministic lightweight simulation policy that preserves important ant, need, inventory, job and travel outcomes without pretending to run full physics or frame-by-frame navigation.
+
+### Cross-view gameplay loop
+
+The colony creates reasons to visit the surface; the surface returns resources, knowledge and risk to the colony. Early cross-view play should remain narrow: leave through a known nest entrance, explore a small nearby surface, forage or collect a supported resource, and return through an entrance with the same ant and inventory. Later expansion may add distant environments, multiple entrances, predators, rival colonies and longer autonomous logistics routes. Each extension requires its own scoped design and acceptance criteria.
+
+### Unresolved design questions
+
+1. Surface terrain representation, cell scale, elevation/obstacle rules and the relationship between authored and generated chunks.
+2. Nest-entrance discovery, construction, capacity, obstruction and multiple-entrance routing rules.
+3. Whether view switching follows the last selected ant, remembers separate cameras, or uses another player-navigation rule.
+4. Cross-view order interruption, reservation lifetime and failure handling when an entrance or destination becomes unavailable.
+5. Simulation fidelity, update cadence and catch-up limits for ants and jobs in unloaded chunks.
+6. Persistence/versioning for surface chunks, region residency, transitions and partially completed cross-view routes.
+7. Initial surface resources, foraging actions and return-to-colony value for the first playable slice.
+
 Ant Game's player experience follows **Pause → Plan → Play → Observe → Adjust**. The normal player interface must be distinct from developer testing controls, using RimWorld as a reference for understandable colony management rather than copying its world model. The game's side-view excavatable terrain, climbing ants, permanent Background and functional background conversions remain distinct.
 
 ### Approved decisions
@@ -31,7 +73,7 @@ A shared authoritative simulation clock should replace gameplay use of unscaled 
 
 **Game Design Document | Version 3.6 — order-based control, 12 October 2026**
 
-Working title • Unity 6 • Single-player • 2D side-view • PC-first prototype
+Working title • Unity 6 • Single-player • interconnected 2D side-on and top-down views • PC-first prototype
 
 Design intent: Build a small, finishable colony simulation in which individual ants matter. The player directs excavation and assigns work; ants physically perform tasks and develop through experience.
 
@@ -41,7 +83,7 @@ Design intent: Build a small, finishable colony simulation in which individual a
 
 ### Vision and control
 
-- Ant Game is a single-player, scrollable/zoomable 2D side-view colony simulation in a procedural, persistent, chunk-loaded destructible world. Players can manage colony-wide assignments **or directly select and control any adult ant**, including the founding queen; other ants remain autonomous.
+- Ant Game is a single-player, scrollable/zoomable 2D colony simulation with a side-on underground Colony View and a future top-down surface World View in one persistent chunk-based world. Players can manage colony-wide assignments **or directly select and control any adult ant**, including the founding queen; other ants remain autonomous.
 - Manual and AI control use the same movement, excavation, hauling, survival and combat rules. Manually performed tasks receive a modest explicit productivity bonus (percentage and eligible actions **TBD**); that bonus must not duplicate rewards or permit impossible actions.
 - Each ant is a persistent individual with stats, skills, equipment, health, energy, hunger and thirst. All ordinary work skills start at 0 and improve through practice, not fixed classes. Roles affect autonomous job priorities, not normal task eligibility. Retain previously approved 0–100 and above-50 skill-decay conventions until explicitly revised.
 - Individual ant death is permanent. The fate of the colony after queen death remains undecided.
@@ -91,6 +133,7 @@ Design intent: Build a small, finishable colony simulation in which individual a
 8. Job scheduler priorities, nearest-by-path destination choice, interruption/recovery and direct-control takeover.
 9. Manual productivity bonus scope/value and effect stacking with skills, equipment and room-quality bonuses.
 10. Queen death/colony continuity, ant equipment/inventory, combat and enemy-colony progression.
+11. World View surface terrain and coordinate model, nest-entrance rules, cross-view routing and unloaded-chunk simulation fidelity.
 
 ### Implementation guardrail
 
