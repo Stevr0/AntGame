@@ -72,6 +72,23 @@ namespace AntColony.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator CancelledSolidCanBeDesignatedAgainInTheRunningScene()
+        {
+            yield return LoadScene();
+            AntGameDevelopmentWorldHost host = FindHost();
+            Vector2Int cell = AntGameDevelopmentWorldHost.ExcavationSoilFixture;
+            Assert.That(host.SelectionController.TryDesignateExcavation(cell,
+                out string error), Is.True, error);
+            Assert.That(host.SelectionController.TryCancelExcavation(cell,
+                out error), Is.True, error);
+            Assert.That(host.SelectionController.TryDesignateExcavation(cell,
+                out error), Is.True, error);
+            yield return null;
+            Assert.That(host.ExcavationDesignations.Designations.Single().State,
+                Is.EqualTo(ExcavationDesignationState.Pending));
+        }
+
+        [UnityTest]
         public IEnumerator WorldResetRestoresIndependentEmptyInventoriesAndDropFixtures()
         {
             yield return LoadScene();

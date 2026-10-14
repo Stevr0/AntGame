@@ -6,6 +6,13 @@
 
 **3.4E PROPOSED NEXT — Multiple-Ant Local Avoidance & Congestion Recovery:** first inspect and reproduce narrow-passage crowding, same-cell approach, head-on passing and stalled-work cases. Extend existing movement/navigation minimally with deterministic local right-of-way, temporary wait/yield, bounded retries and recovery. Maintain completed 3.4D HUD/work matrix, 3.4B time controls and 3.4A resource conservation. Avoid new world regions, pathfinder replacement, ants passing through invalid solids, artificial teleportation, hard-blocking clutter, combat and World View runtime. Approval of detailed scope required before changes. Art visual acceptance remains pending independently.
 
+## 3.5A implementation status — 14 October 2026
+
+**Implemented — Pending Manual Acceptance.** The 3.5A acceptance corrections provide explicit camera-aligned full-cell fills and borders for hover, live drag and persistent pending/active excavation and construction designations. The alignment follow-up now projects the authoritative integer-centred cell bounds (`centre ± 0.5`) instead of incorrectly treating the cell coordinate as its lower-left corner. This matches the authored one-unit Tilemap Grid offset by `(-0.5, -0.5)` at every camera position, zoom and supported resolution. UI-blocked pointer entry clears and abandons a drag. Cancelled stable cell jobs can be replaced repeatedly, reservations are released, completed excavation remains terminal, and repeated construction cancellation retains exact staged-material recovery. The accepted custom Soil/Stone Tilemap mapping and all gameplay timings, costs and authorities are unchanged. Prepared/functional Background art, decoration, composite-cavity separation and seamless autotiling remain deferred. Milestone 3.4E congestion recovery remains explicitly parked.
+
+Alignment verification: focused presentation Edit Mode **18/18**, complete graphics-enabled Edit Mode **513/513**, and complete Play Mode **67/67** passed. Projection coverage includes the three requested resolutions, camera pan, and minimum/default/maximum zoom. Sprite inspection confirmed centred pivots, 32 PPU, 32×32 source rects and a full-cell Soil alpha footprint, so no art mapping changed. Manual visual/gameplay acceptance remains pending.
+
+The smallest subsequent presentation milestone should be a manual seam/readability acceptance and, only for failed mappings, production-ready independent Background/Solid replacement art. It must not expand into World View runtime, surface movement or new gameplay systems.
 
 ## 3.4C manually accepted — 14 October 2026
 

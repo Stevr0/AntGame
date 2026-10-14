@@ -402,6 +402,32 @@
   
   
     <li class="md-nav__item">
+      <a href="../art-foundation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Art Foundation
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../colony-construction-rooms/" class="md-nav__link">
         
   
@@ -519,10 +545,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_11" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_12" >
         
           
-          <label class="md-nav__link" for="__nav_11" id="__nav_11_label" tabindex="">
+          <label class="md-nav__link" for="__nav_12" id="__nav_12_label" tabindex="">
             
   
   
@@ -540,8 +566,8 @@
           </label>
         
         
-          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_11_label" aria-expanded="false">
-            <label class="md-nav__title" for="__nav_11">
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_12_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_12">
               <span class="md-nav__icon md-icon"></span>
               
   
@@ -732,6 +758,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#2026-10-14-keep-designation-preview-and-first-colony-art-binding-presentation-only" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        2026-10-14 — Keep designation preview and first Colony art binding presentation-only
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#approved-decisions" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -801,6 +838,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#2026-10-14-keep-designation-preview-and-first-colony-art-binding-presentation-only" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        2026-10-14 — Keep designation preview and first Colony art binding presentation-only
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#approved-decisions" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -867,6 +915,14 @@
 
 
 <h1 id="design-decision-log">Design Decision Log<a class="headerlink" href="#design-decision-log" title="Permanent link">&para;</a></h1>
+<h2 id="2026-10-14-keep-designation-preview-and-first-colony-art-binding-presentation-only">2026-10-14 — Keep designation preview and first Colony art binding presentation-only<a class="headerlink" href="#2026-10-14-keep-designation-preview-and-first-colony-art-binding-presentation-only" title="Permanent link">&para;</a></h2>
+<ul>
+<li>Excavation and construction registries expose non-mutating cell evaluation used by both preview and commit, preventing duplicated terrain/occupancy rules.</li>
+<li>The command controller owns only a bounded transient preview and consumes compatible-tool right-click before normal context orders.</li>
+<li>Existing cancellation APIs remain responsible for ownership, reservation and staged-material recovery.</li>
+<li>Only <code>Colony_R02_C01</code> (Soil/Earth) and <code>Colony_R04_C01</code> (Stone) are allow-listed; Background variants are darker visual tints, all mapped Tiles are collider-free, and no seamless/autotile acceptance is implied.</li>
+<li>Composite cavities, decorations, Prepared/functional Background art and World View runtime remain deferred.</li>
+</ul>
 <p>This log summarises approved decisions. It does not approve unresolved details or replace the GDD.</p>
 <h2 id="approved-decisions">Approved decisions<a class="headerlink" href="#approved-decisions" title="Permanent link">&para;</a></h2>
 <table>
@@ -963,6 +1019,116 @@
 <td>Keep 3.2B interactions narrow and location-owned</td>
 <td>No generic inventory, global stockpile, or autonomous job authority is implied</td>
 </tr>
+<tr>
+<td>13 Oct 2026</td>
+<td>Implement 3.3A work as synthetic registry-owned jobs</td>
+<td>Validate priority, path-cost, ownership and interruption seams without implying real excavation, construction or hauling</td>
+</tr>
+<tr>
+<td>13 Oct 2026</td>
+<td>Commit 3.3B excavation output and foreground removal as one boundary</td>
+<td>A resource-bearing Solid remains intact on output failure, and stable job keys prevent duplicate loose output</td>
+</tr>
+<tr>
+<td>13 Oct 2026</td>
+<td>Keep 3.3C inventory on <code>AntRecord</code> with Hauling-based natural slots</td>
+<td>Visual rebinding cannot lose cargo; capacity decay retains overflow and blocks additions instead of deleting resources</td>
+</tr>
+<tr>
+<td>13 Oct 2026</td>
+<td>Use a provisional Soil/Stone stack maximum of 10 for 3.3C</td>
+<td>Stacking and partial transfer can be tested without claiming final material balance</td>
+</tr>
+<tr>
+<td>13 Oct 2026</td>
+<td>Keep 3.3D storage physical and cell-owned</td>
+<td>Each Material Storage Background tile owns one filtered stack and reservation rather than contributing to a global wallet</td>
+</tr>
+<tr>
+<td>13 Oct 2026</td>
+<td>Award 5 provisional Hauling XP per committed stored unit</td>
+<td>Travel, reservation, pickup and cancellation cannot farm XP; Rested and hydration rules still apply</td>
+</tr>
+<tr>
+<td>13 Oct 2026</td>
+<td>Reorganise development IMGUI into one mutually exclusive top toolbar</td>
+<td>Existing controls remain in place without overlapping side panels or a UI Toolkit migration; one shared hit test blocks world and camera mouse input over UI</td>
+</tr>
+<tr>
+<td>13 Oct 2026</td>
+<td>Implement 3.4A construction as builder-owned self-supply over existing authorities</td>
+<td>Construction uses the shared job registry/navigation and physical inventory, storage and drop ownership; staged material remains cell-owned and no crafting wallet or second scheduler is introduced</td>
+</tr>
+<tr>
+<td>13 Oct 2026</td>
+<td>Automatically recover task inventory capacity without discarding resources</td>
+<td>Retain task material, prefer physically reached reserved storage, fall back to a validated recoverable drop, then resume the interrupted executor through a reusable operation</td>
+</tr>
+<tr>
+<td>13 Oct 2026</td>
+<td>Treat loose-resource clutter as a future soft penalty</td>
+<td>Loose drops remain traversable and never hard-block progression; future movement and enclosed-room quality penalties have provisional thresholds and values</td>
+</tr>
+<tr>
+<td>14 Oct 2026</td>
+<td>Use one scene-owned simulation clock with paused, 1×, 2× and 3× states</td>
+<td>Gameplay time, AI deadlines and navigation share one authority; physics uses time scale while fixed-step settings remain constant and are restored</td>
+</tr>
+<tr>
+<td>14 Oct 2026</td>
+<td>Keep normal gameplay policy separate from pause</td>
+<td>Play enables survival, colony work and hauling together; pausing preserves orders, reservations, progress and materials instead of toggling subsystems</td>
+</tr>
+<tr>
+<td>14 Oct 2026</td>
+<td>Accept direct orders and planning edits while paused</td>
+<td>Current single-order replacement/cancellation semantics apply immediately, but movement, work, transfers and timers wait for resume</td>
+</tr>
+<tr>
+<td>14 Oct 2026</td>
+<td>Use interconnected Colony View and World View perspectives</td>
+<td>Underground colony management remains side-on; future surface exploration and foraging use a top-down view</td>
+</tr>
+<tr>
+<td>14 Oct 2026</td>
+<td>Preserve one ant identity and simulation across both views</td>
+<td>Stats, skills, needs, inventory and jobs remain shared; changing view or region cannot duplicate an ant</td>
+</tr>
+<tr>
+<td>14 Oct 2026</td>
+<td>Connect regions through explicit nest entrances while both continue simulating</td>
+<td>Cross-view travel must compose local routes and a controlled transition; switching presentation does not pause the hidden region</td>
+</tr>
+<tr>
+<td>14 Oct 2026</td>
+<td>Introduce World View from one small playable surface and expand chunks incrementally</td>
+<td>Large continuous exploration remains the target, while unloaded chunks eventually use bounded lightweight simulation rather than full physics</td>
+</tr>
+<tr>
+<td>14 Oct 2026</td>
+<td>Separate the authored player uGUI HUD from retained developer IMGUI</td>
+<td>Global roster, ant, resource and clock presentation reads existing authorities; Colony View commands remain contextual, while developer tools start hidden and open independently</td>
+</tr>
+<tr>
+<td>14 Oct 2026</td>
+<td>Route player uGUI hit testing into the existing world-input boundary</td>
+<td>One EventSystem and GraphicRaycaster block selection, designation and camera mouse leakage without making gameplay commands depend on uGUI classes</td>
+</tr>
+<tr>
+<td>14 Oct 2026</td>
+<td>Present only work categories with real autonomous executors in the player matrix</td>
+<td>Excavation, Construction and Hauling are editable; metadata-only and future categories remain developer-only until implemented</td>
+</tr>
+<tr>
+<td>14 Oct 2026</td>
+<td>Edit the record-owned work matrix without interrupting active work</td>
+<td>Player and developer interfaces share one priority authority; changes influence subsequent selection and do not alter skills, clock state or overrides</td>
+</tr>
+<tr>
+<td>14 Oct 2026</td>
+<td>Preserve custom art sources and gate runtime binding on visual and semantic review</td>
+<td>Prepared 32-pixel candidates stay separate by view; no composite Colony tile or unverified edge becomes gameplay presentation by assumption</td>
+</tr>
 </tbody>
 </table>
 <h2 id="open-decisions">Open decisions<a class="headerlink" href="#open-decisions" title="Permanent link">&para;</a></h2>
@@ -970,12 +1136,14 @@
 <li>Exact ordered-work productivity bonus and eligible actions.</li>
 <li>Job categories, interrupt thresholds, and explicit-order precedence.</li>
 <li>Drafted-ant survival intervention.</li>
-<li>Resource stack sizes, recipes, work durations, and final carrying balance.</li>
+<li>Final resource stack sizes, recipes, work durations, and carrying balance.</li>
 <li>Room enclosure algorithm, door behavior, and quality formulas.</li>
 <li>Brood stages, timing, feeding thresholds, mortality, and overflow policy.</li>
 <li>Queen-death colony outcome.</li>
 <li>Combat, equipment, enemy behavior, and defence detail.</li>
 <li>Save format, procedural generation rules, and chunk streaming lifecycle.</li>
+<li>Surface terrain/coordinate rules, nest-entrance behavior and cross-view route costing.</li>
+<li>Loaded-hidden and unloaded-chunk simulation fidelity, cadence and reconciliation.</li>
 <li>Final need rates, skill curve, decay, and interaction values.</li>
 </ul>
 <h2 id="adding-an-entry">Adding an entry<a class="headerlink" href="#adding-an-entry" title="Permanent link">&para;</a></h2>

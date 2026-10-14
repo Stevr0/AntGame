@@ -1,5 +1,13 @@
 # Design Decision Log
 
+## 2026-10-14 — Keep designation preview and first Colony art binding presentation-only
+
+- Excavation and construction registries expose non-mutating cell evaluation used by both preview and commit, preventing duplicated terrain/occupancy rules.
+- The command controller owns only a bounded transient preview and consumes compatible-tool right-click before normal context orders.
+- Existing cancellation APIs remain responsible for ownership, reservation and staged-material recovery.
+- Only `Colony_R02_C01` (Soil/Earth) and `Colony_R04_C01` (Stone) are allow-listed; Background variants are darker visual tints, all mapped Tiles are collider-free, and no seamless/autotile acceptance is implied.
+- Composite cavities, decorations, Prepared/functional Background art and World View runtime remain deferred.
+
 This log summarises approved decisions. It does not approve unresolved details or replace the GDD.
 
 ## Approved decisions

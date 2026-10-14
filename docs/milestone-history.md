@@ -1,5 +1,13 @@
 # Milestone History
 
+## 14 October 2026 — 3.5A Colony View Presentation, Tile Preview & Art Integration
+
+- Added registry-backed hover and bounded drag previews for excavation and all six Background Conversion recipes.
+- Added compatible-only right-click cancellation without changing Select-mode orders or the existing Cancel tool.
+- Bound reviewed Soil/Earth and Stone candidates through existing collider-free Tile assets; deferred composites, decorations and unverified semantic mappings.
+- Automated evidence: focused Edit `11/11`, complete graphics-enabled Edit `503/503`, complete Play `65/65`, art validator, deterministic preparation, strict docs build and diff check passed.
+- Status: **Implemented — Pending Manual Acceptance**.
+
 This history records the strongest confirmed evidence without implying that later code reran every earlier checklist.
 
 ## 14 October 2026

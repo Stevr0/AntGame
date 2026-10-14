@@ -508,6 +508,32 @@
   
   
     <li class="md-nav__item">
+      <a href="../art-foundation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Art Foundation
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../colony-construction-rooms/" class="md-nav__link">
         
   
@@ -625,10 +651,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_11" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_12" >
         
           
-          <label class="md-nav__link" for="__nav_11" id="__nav_11_label" tabindex="">
+          <label class="md-nav__link" for="__nav_12" id="__nav_12_label" tabindex="">
             
   
   
@@ -646,8 +672,8 @@
           </label>
         
         
-          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_11_label" aria-expanded="false">
-            <label class="md-nav__title" for="__nav_11">
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_12_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_12">
               <span class="md-nav__icon md-icon"></span>
               
   
@@ -952,7 +978,7 @@
 <td>Physical Eat, Drink, and Rest</td>
 <td>Approved vertical slice</td>
 <td>Implemented</td>
-<td>Automated passed; manual pending</td>
+<td>Accepted in Play Mode</td>
 </tr>
 <tr>
 <td>Two-layer terrain and Tilemap projection</td>
@@ -967,22 +993,46 @@
 <td>2.4D manual acceptance remains pending</td>
 </tr>
 <tr>
-<td>Excavation gameplay and soil logistics</td>
-<td>Approved direction</td>
-<td>Not implemented</td>
-<td>Not tested</td>
+<td>Excavation gameplay</td>
+<td>Approved</td>
+<td>Implemented</td>
+<td>Accepted in Play Mode</td>
+</tr>
+<tr>
+<td>Personal inventory and explicit material pickup/drop</td>
+<td>Approved slice</td>
+<td>Complete</td>
+<td>Automated and manual accepted</td>
+</tr>
+<tr>
+<td>Material Storage and autonomous Soil/Stone hauling</td>
+<td>Approved slice</td>
+<td>Complete</td>
+<td>Automated and manual accepted</td>
 </tr>
 <tr>
 <td>Construction and functional conversion</td>
-<td>Approved direction</td>
-<td>Only authored development fixtures</td>
-<td>Gameplay not tested</td>
+<td>Approved slice with provisional recipes</td>
+<td>Complete</td>
+<td>Automated and manual accepted</td>
+</tr>
+<tr>
+<td>Colony View player HUD</td>
+<td>Approved 3.4C slice</td>
+<td>Complete</td>
+<td>Automated and manual accepted</td>
+</tr>
+<tr>
+<td>Colony work-priority matrix</td>
+<td>Approved 3.4D slice</td>
+<td>Implemented</td>
+<td>Automated passed; manual pending</td>
 </tr>
 <tr>
 <td>Colony priorities and autonomous jobs</td>
 <td>Approved design</td>
-<td>Not implemented</td>
-<td>Not tested</td>
+<td>Implemented foundation</td>
+<td>Accepted in Play Mode</td>
 </tr>
 <tr>
 <td>Brood and reproduction</td>
@@ -1017,7 +1067,8 @@
 <li><strong>Temporary explicit order:</strong> the player requests a specific task. Completion, cancellation, or invalidation returns the ant to autonomy.</li>
 <li><strong>Draft Mode:</strong> a future persistent tactical state for move, attack, hold, defend-area, retreat, and group control.</li>
 </ul>
-<p>Current implementation supports selection plus temporary Move, Eat, Drink, and Rest orders. It does not yet implement the general autonomous job system or Draft Mode. The old WASD <code>PlayerMovementInput</code> path is retained strictly as a developer movement regression tool.</p>
+<p>Current implementation supports selection plus temporary Move, Eat, Drink, Rest and material Pickup orders, along with autonomous survival, colony work selection and autonomous hauling. It does not yet implement explicit forced-work orders or Draft Mode. The old WASD <code>PlayerMovementInput</code> path is retained strictly as a developer movement regression tool.</p>
+<p>The accepted 3.4C player HUD provides roster selection, shared ant inspection, the global simulation clock, physical-resource ownership, readable job state and Colony View Select/Excavate/Build/Cancel tools without opening Developer Mode. The six Build choices are the existing functional Background recipes only. Milestone 3.4D adds the global Excavation/Construction/Hauling priority matrix over authoritative ant records. World View input, cross-view travel, alerts and Draft Mode remain future work.</p>
 <h2 id="physical-world-principles">Physical-world principles<a class="headerlink" href="#physical-world-principles" title="Permanent link">&para;</a></h2>
 <ul>
 <li>Terrain, resources, capacity, and work should exist at world locations rather than as unexplained global counters.</li>
@@ -1026,7 +1077,7 @@
 <li>Valid partial work survives safe interruptions.</li>
 <li>Reservations prevent duplicate consumption and must be released on cancellation or failure.</li>
 </ul>
-<p>The current 3.2B interaction slice proves those principles only for location-owned food, water, and sleeping reservations. It is not a generic inventory or job framework.</p>
+<p>The current systems prove these principles through location-owned food/water, sleeping reservations, real excavation, per-ant inventory, reserved loose-drop pickup and cell-owned Material Storage. Material remains in exactly one authoritative inventory, world drop or storage stack; no global resource wallet exists.</p>
 <h2 id="progression-and-failure">Progression and failure<a class="headerlink" href="#progression-and-failure" title="Permanent link">&para;</a></h2>
 <p>Skills improve through successful work. Hunger, thirst, fatigue, and health create survival pressure. Individual ant death is intended to be permanent, but actual death and corpse gameplay are not implemented. The colony outcome after queen death remains unresolved.</p>
 <h2 id="related-pages">Related pages<a class="headerlink" href="#related-pages" title="Permanent link">&para;</a></h2>

@@ -78,10 +78,17 @@ namespace AntColony.Commands
                 error = "The colony job category is invalid.";
                 return false;
             }
-            if (jobs.ContainsKey(id))
+            if (jobs.TryGetValue(id, out ColonyJob existingById))
             {
-                error = $"Job ID {id} already exists.";
-                return false;
+                // Designation IDs are deliberately stable per world cell. A
+                // cancelled designation may therefore be authored again, but
+                // completed work remains terminal and cannot be resurrected.
+                if (existingById.Status != ColonyJobStatus.Cancelled)
+                {
+                    error = $"Job ID {id} already exists.";
+                    return false;
+                }
+                jobs.Remove(id);
             }
             foreach (ColonyJob existing in jobs.Values)
             {

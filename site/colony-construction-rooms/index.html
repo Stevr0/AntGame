@@ -14,7 +14,7 @@
       
       
       
-        <link rel="prev" href="../excavation-terrain/">
+        <link rel="prev" href="../art-foundation/">
       
       
         <link rel="next" href="../food-water-survival/">
@@ -401,6 +401,32 @@
       
   
   
+  
+  
+    <li class="md-nav__item">
+      <a href="../art-foundation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Art Foundation
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
     
   
   
@@ -480,6 +506,17 @@
     <span class="md-ellipsis">
       <span class="md-typeset">
         Functional Backgrounds
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#implemented-builder-workflow" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Implemented builder workflow
       </span>
     </span>
   </a>
@@ -614,10 +651,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_11" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_12" >
         
           
-          <label class="md-nav__link" for="__nav_11" id="__nav_11_label" tabindex="">
+          <label class="md-nav__link" for="__nav_12" id="__nav_12_label" tabindex="">
             
   
   
@@ -635,8 +672,8 @@
           </label>
         
         
-          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_11_label" aria-expanded="false">
-            <label class="md-nav__title" for="__nav_11">
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_12_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_12">
               <span class="md-nav__icon md-icon"></span>
               
   
@@ -836,6 +873,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#implemented-builder-workflow" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Implemented builder workflow
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#rooms-and-doors" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -892,7 +940,7 @@
 
 <h1 id="colony-construction-and-rooms">Colony Construction and Rooms<a class="headerlink" href="#colony-construction-and-rooms" title="Permanent link">&para;</a></h1>
 <h2 id="approved-construction-model">Approved construction model<a class="headerlink" href="#approved-construction-model" title="Permanent link">&para;</a></h2>
-<p>Construction is physical, location-based work. Functional colony tiles are created by converting exposed Background cells after required materials are gathered and consumed. Recipes and balance remain unapproved.</p>
+<p>Construction is physical, location-based work. Milestone 3.4A implements conversion of exposed Background cells after required materials are gathered and consumed. Recipes and balance remain provisional.</p>
 <p>The ant performing construction must personally gather and deliver its own materials, including multiple trips. A separate hauler must not silently complete the builder's supply responsibility. Reservations prevent double allocation; cancelling construction leaves unused delivered or reserved materials physical and recoverable.</p>
 <h2 id="functional-backgrounds">Functional Backgrounds<a class="headerlink" href="#functional-backgrounds" title="Permanent link">&para;</a></h2>
 <p>Approved functions include:</p>
@@ -906,7 +954,13 @@
 <li>burial</li>
 </ul>
 <p>Each functional Background tile provides one unit of base capacity. Material Storage uses one tile per inventory slot and may later support optional filters. Function and locomotion remain separate properties: a functional tile can still be traversable and grippable.</p>
-<p>Milestone 3.2B authors Food Storage, Water Storage, and Sleeping cells as deterministic development fixtures. They replace the function/material of existing Background cells, remain traversable at <code>1.0x</code> speed, and expose exactly one slot each. This validates direct interactions, not general construction, conversion, or room gameplay.</p>
+<p>Milestone 3.4A can construct Prepared, Nursery, Sleeping, Food Storage, Water Storage and Material Storage Background. Functional results expose one empty capacity unit; Nursery is capacity-only because brood remains excluded. Function, presentation and navigation refresh from the authoritative Background transaction.</p>
+<h2 id="implemented-builder-workflow">Implemented builder workflow<a class="headerlink" href="#implemented-builder-workflow" title="Permanent link">&para;</a></h2>
+<p>The selected conversion becomes a Construction job in the shared registry. Its reserved builder uses compatible carried material first, otherwise reserves the closest reachable compatible Material Storage or loose drop, collects into personal inventory, stages the material at the site and repeats if necessary. Timed work uses Construction skill and Rested modifiers. Completion consumes staged material exactly once and changes only the Background. Interruption preserves progress and physical ownership; designation cancellation exposes staged material as a recoverable loose drop.</p>
+<p>If the builder lacks inventory capacity, it retains material needed by this construction job and unloads unnecessary stacks. It first reserves the closest reachable compatible Material Storage and travels there before depositing only enough to free capacity. With no reachable capacity, it creates a validated recoverable drop at its current anchor. The same construction order then resumes. Bounded failure and interruption release only pending reservations; they do not erase cargo, staged material, progress or job ownership.</p>
+<p>Loose drops remain traversable and cannot by themselves prevent ordinary progression. Future clutter concentration may slow movement and loose resources may reduce cleanliness or quality in enclosed rooms, while stored material is excluded. Those thresholds and penalties are provisional and are not implemented in 3.4A.</p>
+<p>Current provisional recipes cost one Soil for Prepared, Nursery, Sleeping, Food Storage or Material Storage, and one Stone for Water Storage. Base duration is four simulation hours.</p>
+<p>Milestone 3.5A previews the selected recipe over a bounded hover/drag rectangle by calling the construction registry's non-mutating authoritative validation. Valid cells are green, invalid/occupied cells red and existing conversions muted with a separate symbol. Right-click in Background Conversion mode invokes the existing cancellation transaction for only that cell, so staged material still becomes a recoverable loose drop and no movement order leaks through.</p>
 <h2 id="rooms-and-doors">Rooms and doors<a class="headerlink" href="#rooms-and-doors" title="Permanent link">&para;</a></h2>
 <p>The approved design allows mixed-use spaces. Enclosure is not required for base tile function, but an enclosed specialised room may earn quality or efficiency bonuses. Every opening into an enclosed room requires a door. Exact enclosure detection, door rules, scoring, mixed-use penalties, and quality formulas remain unresolved.</p>
 <h2 id="status">Status<a class="headerlink" href="#status" title="Permanent link">&para;</a></h2>
@@ -924,23 +978,23 @@
 </tr>
 <tr>
 <td>Authored Food/Water/Sleeping fixtures</td>
-<td>Implemented; 3.2B manual acceptance pending</td>
+<td>Implemented and accepted</td>
 </tr>
 <tr>
-<td>Physical resource reservation seam</td>
-<td>Implemented narrowly for Eat/Drink</td>
+<td>Physical construction reservations and staging</td>
+<td>Implemented in 3.4A</td>
 </tr>
 <tr>
 <td>Material Storage</td>
-<td>Approved design only</td>
+<td>Implemented and accepted in 3.3D</td>
 </tr>
 <tr>
 <td>Construction jobs and builder self-supply</td>
-<td>Approved design only</td>
+<td>Implemented — manual acceptance pending</td>
 </tr>
 <tr>
 <td>Conversion progress and cancellation recovery</td>
-<td>Planned, not implemented</td>
+<td>Implemented — manual acceptance pending</td>
 </tr>
 <tr>
 <td>Room enclosure, doors, and quality</td>
@@ -990,7 +1044,7 @@ Future screenshot: functional Background overlays, room boundary, door openings,
       <nav class="md-footer__inner md-grid" aria-label="Footer" >
         
           
-          <a href="../excavation-terrain/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Excavation and Terrain">
+          <a href="../art-foundation/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Art Foundation">
             <div class="md-footer__button md-icon">
               
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
@@ -1000,7 +1054,7 @@ Future screenshot: functional Background overlays, room boundary, door openings,
                 Previous
               </span>
               <div class="md-ellipsis">
-                Excavation and Terrain
+                Art Foundation
               </div>
             </div>
           </a>

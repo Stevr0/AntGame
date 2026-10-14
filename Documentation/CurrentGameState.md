@@ -6,6 +6,43 @@
 
 **Next proposed milestone: 3.4E Multiple-Ant Local Avoidance & Congestion Recovery.** Scope must remain narrow: prevent persistent ant overlap/deadlock at close quarters while preserving authoritative grid navigation, valid climbing/falling, orders, jobs, time controls, resources and UI. No World View runtime, new navigation graph or pathfinding rewrite. This proposal is not yet implemented. Custom art foundation visual acceptance remains separate and pending.
 
+## Current implemented milestone — 3.5A Colony View Presentation, Tile Preview & Art Integration (14 October 2026)
+
+**Implemented — Pending Manual Acceptance.** Excavation and Background Conversion now show a bounded, per-cell hover/drag preview above terrain. The presentation draws an explicit translucent fill and four screen-space border edges over the exact projected world-cell rectangle, rather than depending on the active IMGUI box skin. The alignment correction derives that rectangle from `WorldTileCoordinates.CellToWorldPosition` plus half the authoritative cell size: integer world coordinates are cell centres, matching the authored Grid's `(-0.5, -0.5)` transform and one-unit Tilemap cells. The earlier implementation incorrectly treated the integer coordinate as the lower-left corner, shifting every overlay half a world unit up and right. Excavation uses an amber border with a small `X`, valid construction uses a green border with `+`, invalid targets use red `!`, and existing compatible designations use a muted `≡` marker. Committed pending/active jobs retain a subtle full-cell border; cancelled and completed jobs do not render. The preview asks the authoritative designation registry for each cell's state and reason, and never mutates terrain, creates work, or creates per-tile GameObjects.
+
+Hover and bounded drag preview update every frame, including while simulation is paused because designation authoring remains a player command. Entering blocked UI clears the preview and abandons the pending drag, so releasing over UI cannot commit a world designation. Right-click while Excavation or Background Conversion is active consumes the world click and calls only that tool's authoritative cancellation API. Normal Select-mode right-click orders are unchanged.
+
+Cancelled cell-stable job IDs may now be replaced by a fresh job, while active, paused and completed IDs remain protected. Cancellation releases any reservation, retains the cancelled job's recorded progress for diagnostics, and leaves the foreground Solid untouched. A still-eligible Solid can therefore repeat `Available → Designated → Cancelled → Designated` without limit; completed excavation cannot be cancelled or re-created. Construction follows the same re-designation rule. Its existing staged-material recovery remains conservative and now uses a distinct transaction key for every cancellation cycle so repeated cycles cannot suppress or duplicate a recovered drop.
+
+The first custom Colony art mapping is intentionally narrow. `Colony_R02_C01` supplies Soil foreground and darker Natural Earth Background Tiles; `Colony_R04_C01` supplies Stone foreground and darker Natural Stone Background Tiles. All four Tile assets remain collider-free. Prepared and functional Backgrounds retain their clear temporary colours because the candidate sheet does not contain a verified independent semantic match. World data, collision, navigation, material generation and excavation rules are unchanged.
+
+### 3.5A automated verification
+
+- Focused alignment Edit Mode: **18/18 passed**, including authoritative Tilemap/overlay centre agreement and projection at `1280×720`, `1920×1080`, and `2560×1080` across camera pan and minimum/default/maximum zoom.
+- Complete graphics-enabled Edit Mode: **513/513 passed**.
+- Complete Play Mode: **67/67 passed**.
+- Updated Unity art validation passed for all 170 prepared candidates, import settings, the four allow-listed runtime mappings and collider-free Tile configuration.
+- Deterministic art preparation `--verify-only`, strict Zensical documentation build and `git diff --check` passed. A separate headless full-Edit attempt crashed inside Unity's Tilemap renderer during the existing graphics-backed pixel test; the authoritative complete result is the subsequent graphics-enabled 503/503 pass.
+
+### Exact 3.5A manual Unity Play Mode acceptance
+
+1. In Excavation mode, hover an eligible Soil or Stone Solid and confirm an amber border aligned to the full tile.
+2. Move across several tiles and confirm the border follows the pointer while eligible and ineligible colours remain distinct.
+3. Left-click an eligible Solid and confirm a persistent amber border plus a small `X`.
+4. Right-click that cell and confirm its marker and border disappear without issuing a movement order.
+5. Left-click the same still-solid cell and confirm it can be designated again.
+6. Repeat cancellation and re-designation five times.
+7. Hold left mouse and drag across mixed cells; confirm every bounded cell updates continuously before release.
+8. Release over non-UI world space and confirm eligible cells become persistent designations; release a second drag over UI and confirm nothing commits.
+9. Cancel one cell and confirm adjacent designations remain pending.
+10. Pause and resume; confirm hover/designation authoring remains responsive and committed state is preserved while work execution stays paused.
+11. In Background Conversion, verify green hover, live drag, red invalid and muted existing-designation previews.
+12. Cancel and re-designate an eligible construction cell.
+13. Stage construction material, cancel, and confirm reservations release and exactly the staged quantity becomes a physical loose drop with no duplication.
+14. Verify all HUD/modal input blocking, camera zoom, and `1280×720`, `1920×1080`, and `2560×1080` layouts.
+15. Confirm a clean Unity Console and unchanged movement, clock, job, HUD and accepted Soil/Stone art behaviour.
+
+Known limitations: the source sheet has no verified independent Prepared or functional Background art; composite cavities, exposed edges, roots, fungi and decorations remain unbound; `Colony_R02_C01` and `Colony_R04_C01` repeat safely as full-cell textures but visible tile seams remain possible and no seamless/autotile claim is made. Manual acceptance remains pending.
 
 ## Latest acceptance — 3.4C Player Colony HUD & Developer UI Separation (14 October 2026)
 
@@ -16,7 +53,7 @@
 
 **Implemented — Pending Manual Acceptance.** Original `1254x1254` RGBA Colony and World tilesets are preserved under `Assets/_AntGame/Art/<View>/Source`. A deterministic preparation tool produces 100 Colony and 70 World position-named `32x32` candidate sprites with Multiple-sprite, 32 PPU, Point, uncompressed, no-mipmap import metadata. The extraction uses measured variable source rectangles and aspect-preserving square padding rather than blind 32x32 source slicing.
 
-No candidate is gameplay-bound and none is claimed seamless. Production Tile assets and palettes are deferred because several Colony cells combine Background, Solid, cavity edge and decoration visuals, while World props have variable footprints. Existing terrain definitions, Tilemaps, collision, excavation, navigation, ant locomotion and scenes are unchanged. See `Documentation/ArtDirection.md` for source hashes, limitations and the manual Unity inspection checklist.
+This foundation status is superseded only by the narrow 3.5A visual mapping above: two reviewed Colony candidates now feed four existing natural Soil/Stone Tile assets. No candidate is claimed seamless, and wider production palettes remain deferred because several Colony cells combine Background, Solid, cavity edge and decoration visuals while World props have variable footprints. Gameplay terrain definitions, collision, excavation, navigation and ant locomotion remain unchanged. See `Documentation/ArtDirection.md` for the allow-list, source hashes, limitations and manual Unity inspection checklist.
 
 ## Latest acceptance — 14 October 2026
 

@@ -2,7 +2,7 @@
 
 ## Status
 
-**Implemented — Pending Manual Acceptance (14 October 2026).** The repository now preserves the two original source sheets and includes deterministic 32-pixel candidate libraries with Unity import metadata. This is an art-foundation milestone only: no candidate is assigned to a gameplay material, Tile asset, Tile Palette, scene, collider or navigation rule.
+**Milestone 3.5A implemented — Pending Manual Acceptance (14 October 2026).** The repository preserves both originals and deterministic candidate libraries. A deliberately small Colony allow-list is now assigned to four existing visual Tile assets; no sprite owns collision, navigation or material rules.
 
 ## Visual direction and palette
 
@@ -55,7 +55,20 @@ Colony View keeps its established two-layer model:
 - prepared or functional Background conversion changes only the Background; and
 - visual Tilemaps remain projections of world data, never gameplay authority.
 
-The source includes soil, stone, grass/surface edges, dark cavity compositions, roots, fungi, rocks and other decorations. Many cells combine a dark cavity, exposed edge and surrounding terrain in one image. Those composites cannot safely represent the existing independent Background and Solid layers without further art separation. They remain candidates and are not wired into `WorldTilemapRenderer`, material definitions, collision, excavation or navigation.
+The source includes soil, stone, grass/surface edges, dark cavity compositions, roots, fungi, rocks and other decorations. Many cells combine a dark cavity, exposed edge and surrounding terrain in one image. Those composites cannot safely represent the existing independent Background and Solid layers without further art separation.
+
+### Reviewed Colony candidate classification
+
+| Classification | Candidates | Runtime decision |
+| --- | --- | --- |
+| Full-cell/repeatable terrain surfaces | `R02_C01–C10`, `R08_C01–C10` | Only `R02_C01` is allow-listed now; repetition is visually coherent but not certified seamless. |
+| Foreground Solid artwork | `R01_C01–C10`, `R04_C01–C05` | `R04_C01` is allow-listed for Stone. Surface/edge variants need authored adjacency rules. |
+| Independent Background artwork | None verified | Natural Earth/Stone use darker tints of the two full-cell allow-listed textures. Prepared and functional types retain temporary visuals. |
+| Decorative overlays | `R05_C01–C06`, `R06_C01–C05`, `R07_C01–C10` | Deferred; roots, fungi, small rocks and props must not become terrain truth. |
+| Composite illustrations requiring separation | `R03_C01–C10`, `R04_C06–C10`, `R05_C07–C10`, `R06_C06–C10`, `R09_C01–C10`, `R10_C01–C10` | Deferred because cavity, edge, Solid and decoration pixels are combined. |
+| Unusable/not yet verified | Every candidate except `R02_C01` and `R04_C01` for its stated mapping | Kept in the library. No silent Tile binding or seamless claim. |
+
+`Colony_R02_C01` maps to `Solid_Soil` and a darker `Background_UnpreparedEarth`. `Colony_R04_C01` maps to `Solid_Stone` and a darker `Background_UnpreparedStone`. The existing Tile assets retain stable GUIDs and `Collider Type: None`.
 
 ## World View conventions
 
@@ -65,14 +78,14 @@ No World View scene, Tilemap, Tile Palette, terrain authority, traversal, explor
 
 ## Tile assets and palettes
 
-No production `Tile` assets or Tile Palettes are committed yet. This is deliberate:
+Only the four existing natural Soil/Stone Tile assets above are custom-art bound. A general production palette remains deferred because:
 
 1. edge inspection has not demonstrated seamless repetition;
 2. several Colony candidates combine visual layers that the runtime owns separately;
 3. the World props need reviewed footprints and pivots; and
-4. choosing a sprite for `Background_UnpreparedEarth`, `Solid_Soil` or another material would change current scene presentation before visual acceptance.
+4. functional Backgrounds need distinct, honest art rather than misleading reuse.
 
-After manual approval, create separate **Colony Terrain**, **Colony Decoration** and **World Terrain** palettes. Create Tile assets only for accepted semantic mappings, keep their collider type `None`, and continue using the dedicated collision Tilemap driven by authoritative Solid data.
+After manual approval, create separate **Colony Terrain**, **Colony Decoration** and **World Terrain** palettes only where they improve authored workflows. Keep visual Tile collider type `None` and continue using the dedicated collision Tilemap driven by authoritative Solid data.
 
 ## Known limitations and future artwork
 
@@ -90,7 +103,8 @@ Automated validation completed on 14 October 2026:
 
 - deterministic preparation reported 170 candidates and `--verify-only` passed;
 - Unity `6000.3.8f1` imported all four textures and the Editor validator confirmed dimensions, sprite counts and documented import settings;
-- Unity batch validation exited with code 0;
+- Unity batch validation exited with code 0 and verified the four allow-listed runtime mappings remain collider-free;
+- focused 3.5A Edit Mode passed `11/11`, complete graphics-enabled Edit Mode passed `503/503`, and complete Play Mode passed `65/65`;
 - the strict Zensical documentation build reported `No issues found`; and
 - these checks did not exercise appearance, seams or gameplay camera readability.
 
@@ -98,8 +112,8 @@ Automated validation completed on 14 October 2026:
 2. Open each prepared texture and confirm Sprite Mode Multiple, PPU 32, Point filtering, no compression and no mipmaps.
 3. Open Sprite Editor and confirm all named rectangles are exactly `32x32` with no overlap.
 4. Inspect prepared sprites at 1x, 2x and normal gameplay camera zoom for lost detail and coloured fringe artefacts.
-5. Place representative candidates on a temporary, non-gameplay Tilemap and test repeated horizontal and vertical edges; record failures rather than assuming seamlessness.
-6. Compare candidate meaning against Background/Solid ownership before creating any production Tile assets.
-7. Confirm the existing development scene, terrain visuals, collision, excavation, navigation and ant locomotion are unchanged.
+5. Inspect repeated `Colony_R02_C01` and `Colony_R04_C01` mappings horizontally and vertically; record visible seams rather than assuming seamlessness.
+6. Confirm no candidate outside the documented allow-list is silently bound to a gameplay Tile.
+7. Confirm Soil/Stone foreground and darker natural Background presentation changed as documented while collision, excavation, navigation and ant locomotion remain unchanged.
 
 Visual acceptance remains pending until those checks are performed in Unity.

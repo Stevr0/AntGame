@@ -404,6 +404,32 @@
   
   
     <li class="md-nav__item">
+      <a href="../art-foundation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Art Foundation
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../colony-construction-rooms/" class="md-nav__link">
         
   
@@ -519,15 +545,15 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#physical-interactions" class="md-nav__link">
+  <a href="#physical-interactions-and-autonomy" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        Physical interactions
+        Physical interactions and autonomy
       </span>
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Physical interactions">
+    <nav class="md-nav" aria-label="Physical interactions and autonomy">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -637,10 +663,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_11" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_12" >
         
           
-          <label class="md-nav__link" for="__nav_11" id="__nav_11_label" tabindex="">
+          <label class="md-nav__link" for="__nav_12" id="__nav_12_label" tabindex="">
             
   
   
@@ -658,8 +684,8 @@
           </label>
         
         
-          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_11_label" aria-expanded="false">
-            <label class="md-nav__title" for="__nav_11">
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_12_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_12">
               <span class="md-nav__icon md-icon"></span>
               
   
@@ -865,15 +891,15 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#physical-interactions" class="md-nav__link">
+  <a href="#physical-interactions-and-autonomy" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        Physical interactions
+        Physical interactions and autonomy
       </span>
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Physical interactions">
+    <nav class="md-nav" aria-label="Physical interactions and autonomy">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -1003,8 +1029,8 @@
 </tbody>
 </table>
 <p>The work multiplier is exposed for future jobs and does not alter navigation speed. Zero Health pauses ordinary survival advancement but does not yet create death or corpse gameplay.</p>
-<h2 id="physical-interactions">Physical interactions<a class="headerlink" href="#physical-interactions" title="Permanent link">&para;</a></h2>
-<p>Milestone 3.2B implements explicit player-issued Eat, Drink, and Rest interactions:</p>
+<h2 id="physical-interactions-and-autonomy">Physical interactions and autonomy<a class="headerlink" href="#physical-interactions-and-autonomy" title="Permanent link">&para;</a></h2>
+<p>Milestone 3.2B physical Eat, Drink, and Rest interactions and Milestone 3.2C autonomous survival are complete:</p>
 <ul>
 <li>Food and water quantities belong to specific functional Background cells.</li>
 <li>Resource and sleeping reservations belong to stable ant identities.</li>
@@ -1012,8 +1038,13 @@
 <li>Arrival revalidates location and function before interaction.</li>
 <li>Cancellation, replacement, failure, inactive/deceased state, and world reset release reservations.</li>
 <li>Changing selection does not cancel another ant's valid order.</li>
+<li>Autonomous ants seek Hunger/Thirst at 50 or below and Rest at Fatigue 60 or above.</li>
+<li>Critical Thirst, Hunger, and Fatigue use deterministic precedence and may safely interrupt work/player orders only after a viable physical target is confirmed.</li>
+<li>Ordinary needs use normalized urgency and hysteresis, and do not interrupt active colony work.</li>
+<li>Failed searches use bounded retry backoff rather than per-frame path requests.</li>
 </ul>
 <p>Eat reserves and consumes one <code>resource.food.development</code> unit after one simulation hour and restores 40 Hunger. Drink consumes one <code>resource.water.development</code> unit after one simulation hour and restores 50 Thirst. Rest recovers Fatigue over time and completes at the accepted Rested threshold. Interaction time advances at one simulation hour per real-time second in the development scene.</p>
+<p>Milestone 3.4B routes needs, interactions, autonomous evaluation and retry/backoff through the authoritative simulation clock. Pause advances none of them and preserves any existing survival reservation. Running 1×/2×/3× changes simulated time per real second without changing the provisional per-simulation-hour rates above.</p>
 <h3 id="validation-status">Validation status<a class="headerlink" href="#validation-status" title="Permanent link">&para;</a></h3>
 <ul>
 <li>Focused Edit Mode: 25/25 passed.</li>
@@ -1021,10 +1052,10 @@
 <li>Complete graphics-enabled Edit Mode: 340/340 passed.</li>
 <li>Complete Play Mode: 26/26 passed.</li>
 <li>Unity compilation and structural scene validation passed.</li>
-<li>The exact 20-step manual Play Mode checklist remains pending, so 3.2B is <strong>Implemented — Pending Manual Acceptance</strong>.</li>
+<li>The 3.2B and 3.2C manual checklists are accepted through their recorded milestone transitions.</li>
 </ul>
 <h2 id="not-implemented">Not implemented<a class="headerlink" href="#not-implemented" title="Permanent link">&para;</a></h2>
-<p>Autonomous survival behavior, gathering, hauling, general inventories, cooking, food varieties, spoilage, water production, containers, permanent beds, colony-wide stock accounting, death, corpses, and save/load are outside the current slice.</p>
+<p>Gathering, hauling, general inventories, cooking, food varieties, spoilage, water production, containers, permanent beds, colony-wide stock accounting, death, corpses, and save/load remain outside the current slice. Milestone 3.3B produces only loose Soil/Stone world drops; it does not produce or transport survival supplies.</p>
 <p>See <a href="../development-roadmap/">Development Roadmap</a> before extending this system.</p>
 
 

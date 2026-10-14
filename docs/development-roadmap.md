@@ -1,5 +1,9 @@
 # Development Roadmap
 
+## Current implementation — Milestone 3.5A
+
+**Implemented — Pending Manual Acceptance (14 October 2026).** Colony View designation previews, compatible right-click cancellation and the first allow-listed Soil/Stone custom-art projection are implemented. 3.4E congestion recovery, World View runtime, seamless autotiling and wider art replacement remain out of scope.
+
 This page is a concise navigation view of the authoritative `Documentation/DevelopmentRoadmap.md`. The authoritative file retains the full acceptance criteria and historical details.
 
 ## Parallel art foundation

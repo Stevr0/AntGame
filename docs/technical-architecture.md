@@ -77,6 +77,8 @@ Custom art is organised under `Assets/_AntGame/Art/Colony` and `Assets/_AntGame/
 
 Candidate sprites do not own or imply material identity. Colony art must be separated into Background, optional foreground Solid, exposed-edge and decoration responsibilities before binding to the existing Tilemap projection. Collision stays on the dedicated collision Tilemap. World art remains an unbound future-view library until its terrain and coordinate authority are approved.
 
+Milestone 3.5A binds only reviewed full-cell `Colony_R02_C01` and `Colony_R04_C01` sprites through the existing Soil/Stone visual Tile assets. Darker Tile colours distinguish the corresponding natural Background projections. Tile colliders remain `None`; the dedicated collision Tilemap continues to read only authoritative Solid definitions.
+
 ### Navigation
 
 One `GridNavigationWorldService` owns the shared navigation map and bounded scheduler for a world. Each `GridNavigationMotor` owns only its agent request and execution state. Command and interaction systems call the narrow motor API.
@@ -104,6 +106,8 @@ The roster reads authoritative records and uses a narrow compatibility adapter t
 `AntSelectionCommandController` retains accepted command and developer-IMGUI behavior, but no longer acts as the player HUD. It starts Developer Mode hidden and opens through F12 or the separate centre-top reopen control. `DevelopmentWorldInspector` still owns World/Debug developer panels and all seven categories remain available. The controller accepts only an `IPlayerUiInputBlocker` read-only hit test; the uGUI implementation uses the one EventSystem and `GraphicRaycaster`, while existing IMGUI rectangles protect developer controls. Selection, context orders, designation drag start/release and camera mouse input all consult the combined boundary. The temporary `SimulationTimeControlStrip` is no longer authored in the development scene.
 
 The command toolbar declares only `PlayerViewContext.Colony`. Its Select, Excavate, Background conversion and cancellation actions delegate to accepted APIs. Area cancellation invokes construction and excavation registries, so staged construction material follows the existing recoverable-drop transaction. No view manager, World View state, surface input or shared world-coordinate abstraction was added.
+
+Milestone 3.5A keeps preview state presentation-only inside `AntSelectionCommandController`. Each hovered or bounded drag cell is classified by the same excavation/construction registry validation used by commit. IMGUI draws the bounded overlay without per-cell GameObjects. Active-tool right-click is consumed before contextual orders and delegates to only the compatible registry cancellation API.
 
 Milestone 3.4D adds a global `ColonyManagementView` and reusable authored work-priority row. The view enumerates active `AntRecord` entries and writes their existing `AntWorkPrioritySet` through a narrow command API that also schedules the next ordinary work evaluation. It does not select the ant, require a loaded visual, cancel active work or own job-choice logic. Rows may consult a loaded `SelectableGridAnt` only for current activity text. The player matrix exposes only Excavation, Construction and Hauling because those categories have real executors; developer diagnostics retain the full catalog over the same underlying values.
 

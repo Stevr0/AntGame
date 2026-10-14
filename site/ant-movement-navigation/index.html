@@ -457,6 +457,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#future-world-view-navigation" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Future World View navigation
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#future-acceptance" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -490,6 +501,32 @@
     
   
   Excavation and Terrain
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../art-foundation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Art Foundation
 
     
   </span>
@@ -625,10 +662,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_11" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_12" >
         
           
-          <label class="md-nav__link" for="__nav_11" id="__nav_11_label" tabindex="">
+          <label class="md-nav__link" for="__nav_12" id="__nav_12_label" tabindex="">
             
   
   
@@ -646,8 +683,8 @@
           </label>
         
         
-          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_11_label" aria-expanded="false">
-            <label class="md-nav__title" for="__nav_11">
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_12_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_12">
               <span class="md-nav__icon md-icon"></span>
               
   
@@ -869,6 +906,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#future-world-view-navigation" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Future World View navigation
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#future-acceptance" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -914,6 +962,7 @@
 
 <h1 id="ant-movement-and-navigation">Ant Movement and Navigation<a class="headerlink" href="#ant-movement-and-navigation" title="Permanent link">&para;</a></h1>
 <p>Movement and navigation are the most extensively implemented and tested foundations in the project. They deliberately separate world truth, movement capability, route planning, and motor execution.</p>
+<p>All implemented rules on this page currently describe the side-on underground <strong>Colony View</strong>. World View is approved future design and must not be inferred as already sharing these local movement or navigation rules.</p>
 <h2 id="authoritative-rules">Authoritative rules<a class="headerlink" href="#authoritative-rules" title="Permanent link">&para;</a></h2>
 <ul>
 <li>Every resident coordinate has one Background Tile and at most one foreground Solid Tile.</li>
@@ -935,6 +984,7 @@
   S --&gt; G[GridNavigationMotor]
   G --&gt; V[Ant visual and status]</code></pre>
 <p><code>GridNavigationWorldService</code> is the per-world owner of the shared map and bounded scheduler. <code>GridNavigationMotor</code> exposes the narrow destination, cancellation, and status boundary used by selection and survival interactions. The command layer does not implement a competing movement system.</p>
+<p>Milestone 3.4B binds the service to the scene simulation clock. While paused, the scheduler consumes no request/node budget and fixed-step motors, climbing and Rigidbody2D falling do not run because <code>Time.timeScale</code> is zero. Pending requests and active routes remain owned and resume unchanged. The original <code>fixedDeltaTime</code> and <code>maximumDeltaTime</code> remain constant at 1×/2×/3× and are restored after the clock component is disabled or destroyed.</p>
 <h2 id="implemented-milestones">Implemented milestones<a class="headerlink" href="#implemented-milestones" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
@@ -995,8 +1045,18 @@
 <li>The older <code>AntSurfaceMotor</code> and <code>PlayerMovementInput</code> course remains for regression testing. It is not the normal control model.</li>
 <li>The original movement prototype still has pending ceiling, complete-corner-route, Auto Step-Over, and camera-follow completion work; that does not invalidate the accepted grid-navigation milestones.</li>
 </ul>
+<h2 id="future-world-view-navigation">Future World View navigation<a class="headerlink" href="#future-world-view-navigation" title="Permanent link">&para;</a></h2>
+<p>World View will use top-down surface movement over its own explicit coordinate and chunk space. It may use different local connections, obstacles and movement presentation from Colony View. The established underground grounded/gripping/climbing/falling rules remain valid in Colony View and must not be simplified to make both views use one local motor or path graph.</p>
+<p>Cross-view travel must eventually compose:</p>
+<ol>
+<li>a Colony View route to a valid nest entrance;</li>
+<li>one controlled residency/representation transition; and</li>
+<li>a World View route from the paired surface entrance.</li>
+</ol>
+<p>The same authoritative ant, inventory, needs, job and reservation state continues through all three stages. Only one live movement representation may own the ant at a time. Autonomous job selection will eventually need bounded cross-view reachability and cost information, but the precise cost model, entrance capacity, route caching and failure recovery are unresolved.</p>
+<p>Hidden loaded regions continue using the shared simulation clock. Future unloaded chunks require reduced-fidelity travel and job simulation rather than full physics or per-frame path execution. The reconciliation rules for an ant that returns to a loaded chunk must be deterministic and must not duplicate distance, work, resources or elapsed needs.</p>
 <h2 id="future-acceptance">Future acceptance<a class="headerlink" href="#future-acceptance" title="Permanent link">&para;</a></h2>
-<p>Dynamic excavation and functional conversion must locally invalidate affected navigation data. Future agents must use the same route and motor rules; they cannot teleport, fly through unsupported space, or bypass clearance because a task system requested it.</p>
+<p>Dynamic excavation and functional conversion must locally invalidate affected Colony View navigation data. Future Colony View agents must use the same route and motor rules; they cannot teleport, fly through unsupported space, or bypass clearance because a task system requested it. Future World View agents require equally explicit surface rules, while cross-view travel must pass through a valid entrance rather than bypassing either local navigation system.</p>
 <div class="screenshot-slot">
 Future diagram or screenshot: grid anchors, prepared-speed region, falling transition, and an invalidated route after terrain mutation.
 </div>

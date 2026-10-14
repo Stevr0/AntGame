@@ -150,6 +150,7 @@ namespace AntColony.Commands
         private readonly WorldMaterialDropRegistry drops;
         private readonly Dictionary<Vector2Int, ConstructionDesignation> byCell = new();
         private readonly Dictionary<ColonyJobId, ConstructionDesignation> byJob = new();
+        private readonly Dictionary<Vector2Int, int> cancellationGenerations = new();
 
         public ConstructionDesignationRegistry(ChunkedWorldData world,
             GridNavigationMap map, ColonyJobRegistry jobs,
@@ -169,52 +170,69 @@ namespace AntColony.Commands
         public IEnumerable<ConstructionDesignation> Designations => byCell.Values;
         public int Count => byCell.Count;
 
-        public bool TryDesignate(Vector2Int cell, string targetMaterialId,
-            out ConstructionDesignation designation, out string error)
+        /// <summary>
+        /// Evaluates one conversion target without reserving work or materials.
+        /// The commit path calls this same method before it creates the job.
+        /// </summary>
+        public DesignationPreviewState EvaluateCell(Vector2Int cell,
+            string targetMaterialId, out string reason)
         {
-            designation = null;
             if (!recipes.TryGet(targetMaterialId, out ConstructionRecipe recipe))
             {
-                error = "The selected Background conversion has no recipe.";
-                return false;
+                reason = "The selected Background conversion has no recipe.";
+                return DesignationPreviewState.Invalid;
             }
             if (byCell.TryGetValue(cell, out ConstructionDesignation existing) &&
                 existing.State is not ConstructionDesignationState.Cancelled)
             {
-                error = $"An active Background conversion already exists at {cell}.";
-                return false;
+                reason = $"An active Background conversion already exists at {cell}.";
+                return DesignationPreviewState.ExistingDesignation;
             }
             if (world.GetCell(cell, out WorldTileCellData data) !=
                     WorldCellQueryResult.Available)
             {
-                error = "Background conversion requires a resident world cell.";
-                return false;
+                reason = "Background conversion requires a resident world cell.";
+                return DesignationPreviewState.Invalid;
             }
             if (data.HasSolidTile)
             {
-                error = "Covered foreground Solid cells cannot be converted.";
-                return false;
+                reason = "Covered foreground Solid cells cannot be converted.";
+                return DesignationPreviewState.Invalid;
             }
             if (data.BackgroundMaterialId == targetMaterialId)
             {
-                error = "The cell already has the selected Background type.";
-                return false;
+                reason = "The cell already has the selected Background type.";
+                return DesignationPreviewState.Invalid;
             }
             if (!recipe.AcceptsSource(data.BackgroundMaterialId))
             {
-                error = "The current Background does not satisfy this recipe.";
-                return false;
+                reason = "The current Background does not satisfy this recipe.";
+                return DesignationPreviewState.Invalid;
             }
             if (!HasAdjacentAnchor(cell))
             {
-                error = "Background conversion requires an accessible adjacent work cell.";
-                return false;
+                reason = "Background conversion requires an accessible adjacent work cell.";
+                return DesignationPreviewState.Invalid;
             }
             if (IsOccupied(cell))
             {
-                error = "Occupied functional Background capacity cannot be converted.";
-                return false;
+                reason = "Occupied functional Background capacity cannot be converted.";
+                return DesignationPreviewState.Invalid;
             }
+
+            reason = $"Eligible for {recipe.Result.DisplayName}.";
+            return DesignationPreviewState.Valid;
+        }
+
+        public bool TryDesignate(Vector2Int cell, string targetMaterialId,
+            out ConstructionDesignation designation, out string error)
+        {
+            designation = null;
+            if (EvaluateCell(cell, targetMaterialId, out error) !=
+                DesignationPreviewState.Valid) return false;
+
+            recipes.TryGet(targetMaterialId, out ConstructionRecipe recipe);
+            world.GetCell(cell, out WorldTileCellData data);
 
             ColonyJobId id = new($"construction.{cell.x}.{cell.y}");
             if (!jobs.TryAdd(id, AntWorkCategory.Construction, cell,
@@ -262,10 +280,14 @@ namespace AntColony.Commands
                     error = "The staged construction material type is invalid.";
                     return false;
                 }
-                if (!drops.TryAdd($"construction.cancelled.{cell.x}.{cell.y}",
+                int generation = cancellationGenerations.TryGetValue(cell,
+                    out int previousGeneration) ? previousGeneration + 1 : 1;
+                if (!drops.TryAdd(
+                        $"construction.cancelled.{cell.x}.{cell.y}.{generation}",
                         material, designation.Site.DeliveredQuantity, cell,
                         out _, out error))
                     return false;
+                cancellationGenerations[cell] = generation;
                 designation.Site.CommitConsumption(
                     designation.Site.DeliveredQuantity);
             }

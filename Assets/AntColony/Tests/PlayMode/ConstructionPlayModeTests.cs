@@ -81,6 +81,26 @@ namespace AntColony.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator CancelledConstructionCanBeDesignatedAgain()
+        {
+            yield return LoadScene();
+            AntGameDevelopmentWorldHost host = FindHost();
+            Vector2Int site = new(11, SampleWorldGenerator.MainPassageY);
+            ConstructionRecipe recipe = host.ConstructionRecipes.Recipes.Single(
+                item => item.Result.Function == BackgroundFunction.Sleeping);
+            Assert.That(host.ConstructionDesignations.TryDesignate(site,
+                recipe.Result.StableMaterialId, out _, out string error), Is.True, error);
+            Assert.That(host.ConstructionDesignations.TryCancel(site, out error),
+                Is.True, error);
+            Assert.That(host.ConstructionDesignations.TryDesignate(site,
+                recipe.Result.StableMaterialId, out ConstructionDesignation replacement,
+                out error), Is.True, error);
+            yield return null;
+            Assert.That(replacement.State,
+                Is.EqualTo(ConstructionDesignationState.Pending));
+        }
+
+        [UnityTest]
         public IEnumerator FullInventoryUnloadIsSafelyInterruptedByPlayerOrder()
         {
             yield return LoadScene();

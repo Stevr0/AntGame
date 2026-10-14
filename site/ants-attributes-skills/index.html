@@ -426,6 +426,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#implemented-personal-inventory" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Implemented personal inventory
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#planned-individuality" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -496,6 +507,32 @@
     
   
   Excavation and Terrain
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../art-foundation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Art Foundation
 
     
   </span>
@@ -631,10 +668,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_11" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_12" >
         
           
-          <label class="md-nav__link" for="__nav_11" id="__nav_11_label" tabindex="">
+          <label class="md-nav__link" for="__nav_12" id="__nav_12_label" tabindex="">
             
   
   
@@ -652,8 +689,8 @@
           </label>
         
         
-          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_11_label" aria-expanded="false">
-            <label class="md-nav__title" for="__nav_11">
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_12_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_12">
               <span class="md-nav__icon md-icon"></span>
               
   
@@ -870,6 +907,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#implemented-personal-inventory" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Implemented personal inventory
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#planned-individuality" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -926,7 +974,7 @@
 
 <h1 id="ants-attributes-and-skills">Ants, Attributes and Skills<a class="headerlink" href="#ants-attributes-and-skills" title="Permanent link">&para;</a></h1>
 <h2 id="implemented-identity-model">Implemented identity model<a class="headerlink" href="#implemented-identity-model" title="Permanent link">&para;</a></h2>
-<p>Each ant is represented by one authoritative plain-C# <code>AntRecord</code>. Stable <code>AntId</code> and <code>ColonyId</code> values, caste, attributes, lifecycle, skills, and needs belong to the record rather than to the visual GameObject. <code>AntEntityBinding</code> connects a runtime visual to an existing record, while a visual-claim registry prevents duplicate live representations.</p>
+<p>Each ant is represented by one authoritative plain-C# <code>AntRecord</code>. Stable <code>AntId</code> and <code>ColonyId</code> values, caste, attributes, lifecycle, skills, needs, work priorities and personal inventory belong to the record rather than to the visual GameObject. <code>AntEntityBinding</code> connects a runtime visual to an existing record, while a visual-claim registry prevents duplicate live representations.</p>
 <p>The deterministic development ants are:</p>
 <table>
 <thead>
@@ -984,6 +1032,9 @@
 <li>Needs and Rested modifiers can multiply a valid XP award without changing stored base progression rules.</li>
 </ul>
 <p>These values are development placeholders. The foundation is implemented and automated-tested; its manual acceptance was recorded through the approved transition to milestone 3.2A.</p>
+<h2 id="implemented-personal-inventory">Implemented personal inventory<a class="headerlink" href="#implemented-personal-inventory" title="Permanent link">&para;</a></h2>
+<p>Each Queen or Worker record owns an independent stack-based inventory. Natural slot capacity is based only on current Hauling level: one slot at 0–19, two at 20–39, three at 40–59, four at 60–79 and five at 80–100. Soil and Stone provisionally stack to 10. Compatible additions merge before opening another slot; incompatible resources never share a slot.</p>
+<p>If Hauling decay lowers capacity, occupied overflow remains intact and recoverable. New additions are blocked until occupied usage is within the reduced capacity. Inventory survives visual rebinding and selection changes. Equipment slots, weight, saddlebags and final balance are not implemented.</p>
 <h2 id="planned-individuality">Planned individuality<a class="headerlink" href="#planned-individuality" title="Permanent link">&para;</a></h2>
 <p>The approved design expects equipment, permanent death, work efficiency from skills, and persistent individual histories. Roles will affect autonomous priorities rather than lock ants out of normal skills. Exact attribute formulas, equipment effects, ageing, and save serialization remain unresolved or unimplemented.</p>
 <h2 id="boundaries">Boundaries<a class="headerlink" href="#boundaries" title="Permanent link">&para;</a></h2>

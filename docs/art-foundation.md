@@ -1,6 +1,6 @@
 # Art Foundation
 
-The custom Colony and World tilesets are now preserved and prepared as separate candidate libraries. This pass establishes source control, repeatable extraction and Unity import settings without changing gameplay presentation.
+The custom Colony and World tilesets are preserved and prepared as separate candidate libraries. Milestone 3.5A additionally binds two reviewed full-cell Colony candidates through four existing visual Tile assets without changing gameplay authority.
 
 ## Direction
 
@@ -26,11 +26,12 @@ World View remains approved future design only. Its regular top `7x10` terrain b
 
 ## Limitations
 
-- No candidate has passed a seamless-edge acceptance test.
+- `Colony_R02_C01` now presents Soil/Natural Earth and `Colony_R04_C01` presents Stone/Natural Stone; Background variants use darker Tile colours.
+- These mappings are reviewed full-cell textures but have not passed seamless-edge acceptance.
 - Rounded borders, dark gutters and coloured edge artefacts remain visible in places.
 - The one-time reduction from `1254x1254` source sheets to 32-pixel candidates loses fine detail.
 - Colony art still needs semantic layer separation; World props need individual extraction.
-- Production Tile assets and Colony/World Tile Palettes are deferred until visual and semantic review.
+- Wider production mapping and Colony/World Tile Palettes are deferred until visual and semantic review.
 
 Automated preparation verification, Unity import validation and the strict documentation build pass. Visual, seamless-edge and gameplay-camera acceptance remain manual.
 

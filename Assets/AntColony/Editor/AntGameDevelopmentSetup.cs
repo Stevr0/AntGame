@@ -48,6 +48,8 @@ namespace AntColony.EditorTools
             "Assets/AntColony/Art/WorldTiles/Solid_Soil.asset";
         private const string StoneTilePath =
             "Assets/AntColony/Art/WorldTiles/Solid_Stone.asset";
+        private const string ColonyPreparedArtPath =
+            "Assets/_AntGame/Art/Colony/Prepared/Colony_Tile_Candidates_32.png";
         private const string StoneMaterialPath =
             "Assets/AntColony/Data/WorldMaterials/Solid_Stone.asset";
         private const string CollisionTilePath =
@@ -162,6 +164,10 @@ namespace AntColony.EditorTools
         private static void CreateAssetsAndScene()
         {
             Sprite whitePixelSprite = GetOrCreateWhitePixelSprite();
+            // These two full-cell candidates are the deliberately small 3.5A
+            // allow-list. Composite cavities and decorative edges remain unbound.
+            Sprite colonySoilSprite = LoadColonySprite("Colony_R02_C01");
+            Sprite colonyStoneSprite = LoadColonySprite("Colony_R04_C01");
             Sprite antSprite = AssetDatabase.LoadAllAssetsAtPath(AntSpritePath)
                 .OfType<Sprite>()
                 .FirstOrDefault();
@@ -178,13 +184,13 @@ namespace AntColony.EditorTools
                 Tile.ColliderType.None);
             GetOrCreateTile(
                 EarthTilePath,
-                whitePixelSprite,
-                new Color32(81, 68, 57, 255),
+                colonySoilSprite,
+                new Color32(112, 99, 88, 255),
                 Tile.ColliderType.None);
             GetOrCreateTile(
                 StoneBackgroundTilePath,
-                whitePixelSprite,
-                new Color32(67, 76, 86, 255),
+                colonyStoneSprite,
+                new Color32(105, 112, 121, 255),
                 Tile.ColliderType.None);
             GetOrCreateTile(
                 PreparedTilePath,
@@ -203,13 +209,13 @@ namespace AntColony.EditorTools
                 new Color32(232, 143, 174, 255), Tile.ColliderType.None);
             GetOrCreateTile(
                 SoilTilePath,
-                whitePixelSprite,
-                new Color32(152, 99, 66, 255),
+                colonySoilSprite,
+                Color.white,
                 Tile.ColliderType.None);
             Tile stoneTile = GetOrCreateTile(
                 StoneTilePath,
-                whitePixelSprite,
-                new Color32(115, 126, 137, 255),
+                colonyStoneSprite,
+                Color.white,
                 Tile.ColliderType.None);
             SolidTileMaterialDefinition stoneSolid = GetOrCreateSolidMaterial(
                 StoneMaterialPath,
@@ -1044,6 +1050,16 @@ namespace AntColony.EditorTools
             tile.colliderType = colliderType;
             EditorUtility.SetDirty(tile);
             return tile;
+        }
+
+        private static Sprite LoadColonySprite(string spriteName)
+        {
+            Sprite sprite = AssetDatabase.LoadAllAssetsAtPath(ColonyPreparedArtPath)
+                .OfType<Sprite>()
+                .FirstOrDefault(candidate => candidate.name == spriteName);
+            Require(sprite != null,
+                $"Approved Colony art candidate is missing: {spriteName}.");
+            return sprite;
         }
 
         private static Sprite GetOrCreateWhitePixelSprite()
