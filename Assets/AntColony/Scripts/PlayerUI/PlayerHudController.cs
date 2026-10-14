@@ -8,10 +8,11 @@ using UnityEngine.UI;
 
 namespace AntColony.PlayerUI
 {
-    /// <summary>The only view context implemented by Milestone 3.4C.</summary>
+    /// <summary>Player-facing camera/input contexts loaded by WV-B1.</summary>
     public enum PlayerViewContext
     {
-        Colony
+        Colony,
+        World
     }
 
     /// <summary>
@@ -33,7 +34,8 @@ namespace AntColony.PlayerUI
 
         private readonly List<RaycastResult> raycastResults = new();
 
-        public PlayerViewContext CurrentView => PlayerViewContext.Colony;
+        public PlayerViewContext CurrentView { get; private set; } =
+            PlayerViewContext.Colony;
         public bool IsReady { get; private set; }
         public AntRosterView AntRoster => antRoster;
         public SelectedAntInspectorView SelectedAntInspector => selectedAntInspector;
@@ -91,6 +93,14 @@ namespace AntColony.PlayerUI
             raycastResults.Clear();
             graphicRaycaster.Raycast(pointer, raycastResults);
             return raycastResults.Count > 0;
+        }
+
+        /// <summary>Updates presentation only; simulation and orders are untouched.</summary>
+        public void SetViewContext(PlayerViewContext view)
+        {
+            CurrentView = view;
+            if (commandBar != null)
+                commandBar.gameObject.SetActive(view == PlayerViewContext.Colony);
         }
 
         /// <summary>Used by the scene authoring utility to wire prefab references.</summary>

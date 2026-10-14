@@ -1,8 +1,12 @@
 # Development Roadmap
 
+## WV-B1 runtime gate
+
+**Implemented — Awaiting Validation (14 October 2026).** Typed residency, a deterministic `64×64` Surface, dedicated Surface navigation, manual remembered cameras and one capacity-one physical-approach entrance are running in the existing development scene. Focused verification passed 8/8 Edit and 2/2 Play; complete Play passed 69/69. Complete headless Edit regression was interrupted by a Unity rendered-pixel crash and is not counted as passed. Finish the manual checklist and broad graphics-enabled regression before accepting WV-B1; do not start WV-C/WV-D.
+
 ## WV-A documentation gate
 
-**Complete as documentation; no runtime implementation authorised (14 October 2026).** The approved two-view foundation now has typed region/coordinate, entrance transaction, residency, view lifecycle, shared-clock, natural-source, water-conservation, natural-rest, failure and test contracts. The recommended next approval is WV-B1: one bounded deterministic Surface, manual remembered cameras, Surface-local movement and one safe capacity-one round trip. WV-C1/C2 resources, WV-D autonomous cross-view work and WV-F unloaded simulation remain separate later scopes. See [World View Foundation](world-view-foundation.md).
+**Complete as the approved documentation baseline (14 October 2026).** The two-view foundation defines typed region/coordinate, entrance transaction, residency, view lifecycle, shared-clock, natural-source, water-conservation, natural-rest, failure and test contracts. WV-B1 implements only the first region/navigation/view/entrance slice. WV-C1/C2 resources, WV-D autonomous cross-view work and WV-F unloaded simulation remain separate later scopes. See [World View Foundation](world-view-foundation.md).
 
 ## Current implementation — Milestone 3.5B
 

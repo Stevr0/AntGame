@@ -2,7 +2,7 @@
 
 ## Status
 
-**WV-A documentation complete; no World View runtime is implemented or authorised.** The authoritative detailed contract is `Documentation/WorldViewTechnicalSpecification.md`. This page summarises it for the development wiki. The GDD remains the design authority and the roadmap controls implementation approval.
+**WV-B1 implemented; validation remains incomplete.** Focused Edit/Play and complete Play suites pass, while complete graphics-capable Edit regression and manual acceptance remain outstanding. The authoritative detailed contract is `Documentation/WorldViewTechnicalSpecification.md`. Runtime now covers typed regions/residency, one bounded Surface, manual cameras, Surface-local movement and one entrance. Natural resources, rest, extraction, autonomous cross-view routing, streaming and unloaded simulation remain deferred.
 
 The accepted foundation is one bounded top-down Surface region, one pre-authored bidirectional entrance with capacity one, manual remembered Colony/World cameras, physical ant approach travel, finite nearby seed/freshwater, one-unit recoverable liquid carriage and safe natural rest. Both starting regions remain loaded on the one simulation clock.
 
@@ -16,7 +16,18 @@ The accepted foundation is one bounded top-down Surface region, one pre-authored
 - `PlayerHudController` is presentation-only and can gain a narrow view selector without owning simulation.
 - `AntGameDevelopmentWorldHost` and Mara/Pip/Tala remain untouched regression content.
 
-Current runtime has no ant residency record, Surface terrain/motor, view coordinator, entrance transition, natural source, liquid payload or cross-view route.
+WV-B1 adds `AntRegionResidencyRegistry`, `SurfaceWorldData`, `SurfacePathfinder`, `SurfaceNavigationMotor`, `NestEntranceTransitionService` and `TwoViewWorldCoordinator`. It still has no natural source, liquid payload, cross-view route planner or unloaded-region model.
+
+## Implemented WV-B1 fixture and controls
+
+- Surface bounds are `64×64` logical cells from `(0,0)` through `(63,63)` with a future-only `32×32` partition size.
+- Fixed obstacle rectangles provide alternate deterministic routes. Diagonals require both adjacent cardinal cells to be traversable.
+- **Colony View** and **World View** select one camera/input context while both regions remain loaded. Each camera object retains its own position and zoom.
+- In World View, left-click selects a Surface-resident ant and right-click orders a valid Surface cell. Colony designation tools are hidden and their pointer conversion is disabled.
+- **Use Nest Entrance** reserves `entrance.founding-nest.001` for the selected ant. Each local motor reaches its typed approach before residency can commit.
+- The implementation preserves one existing bound GameObject and switches its active local motor during handoff. Residency and binding identity remain authoritative; activation failure rolls back to the source.
+
+Focused Unity verification passed 8/8 Edit Mode and 2/2 Play Mode; complete Play Mode passed 69/69. The manual checklist remains in `Documentation/CurrentGameState.md`.
 
 ## Regions, residency and entrance
 

@@ -1,6 +1,14 @@
 # Ant Colony Development Roadmap
 
-## WV-A technical specification complete — documentation only (14 October 2026)
+## WV-B1 implementation — awaiting validation (14 October 2026)
+
+WV-B1 is implemented as the first runtime slice of the approved two-view architecture. It provides distinct `ColonyCell`/`SurfaceCell` destinations and stable region/entrance IDs; one authoritative ant residency per `AntId`; a deterministic bounded `64×64` Surface with fixed obstacles and a `32×32` future partition seam; dedicated top-down Surface A* and kinematic movement; two independently retained cameras with exclusive input contexts; and one bidirectional, capacity-one physical-approach entrance transaction with pause guard, revision guard, idempotence and rollback.
+
+Focused verification passed **8/8 Edit Mode** and **2/2 Play Mode**; the complete Play Mode regression passed **69/69**. A complete headless Edit Mode regression attempt reached an existing rendered-pixel test path and the Unity process crashed after `Failed to set the active render target`; it produced no complete result and is not counted as passed. Manual Unity Play Mode acceptance also remains pending, so the milestone status is **Implemented — Awaiting Validation**.
+
+Next action is WV-B1 acceptance only: execute the checklist in `CurrentGameState.md`, rerun broad graphics-enabled regressions where available, and correct any WV-B1 defect found. Do not begin WV-C1/C2 resources, WV-D cross-view autonomy, streaming, unloaded simulation or further entrances without approval.
+
+## WV-A technical specification complete — documentation baseline (14 October 2026)
 
 `WorldViewTechnicalSpecification.md` now defines the approved typed region and coordinate contracts, one-ant entrance transaction, ant residency/representation handoff, manual view/camera lifecycle, local-navigation boundaries, shared-clock behavior, finite seed/freshwater records, direct consumption, extraction conservation, one-unit recoverable water payload, natural rest, founding-queen bootstrap, failure recovery and acceptance strategy. Read-only inspection confirmed useful existing seams and current single-Colony assumptions. No Unity scripts, scenes, prefabs, ScriptableObjects, terrain, art bindings or tests were changed.
 

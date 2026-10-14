@@ -100,6 +100,7 @@ namespace AntColony.Development
         public SimulationClockController SimulationClock => simulationClock;
         public GameplayModeCoordinator GameplayMode => gameplayModeCoordinator;
         public PlayerHudController PlayerHud => playerHud;
+        public TwoViewWorldCoordinator TwoViewWorld { get; private set; }
         public GridNavigationMap GridNavigationMap => navigationWorldService?.Map;
         public GridNavigationScheduler GridNavigationScheduler =>
             navigationWorldService?.Scheduler;
@@ -153,6 +154,9 @@ namespace AntColony.Development
             navigationWorldService?.BindSimulationClock(simulationClock);
             selectionController?.BindSimulationClock(simulationClock);
             RebuildWorld();
+            TwoViewWorld = GetComponent<TwoViewWorldCoordinator>();
+            if (TwoViewWorld == null)
+                TwoViewWorld = gameObject.AddComponent<TwoViewWorldCoordinator>();
         }
 
         /// <summary>Recreates the bounded world and then refreshes both projections.</summary>

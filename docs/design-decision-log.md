@@ -1,5 +1,13 @@
 # Design Decision Log
 
+## 2026-10-14 — Implement WV-B1 with a reversible loaded-representation adapter
+
+- Approve the proposed `64×64` Surface, `(0,0)` logical origin, one-unit cells, `32×32` future partition seam, fixed obstacles and no-corner-cut diagonal movement for WV-B1.
+- Keep both regions and one GameObject/binding per development ant loaded. A handoff switches the enabled local motor only after one guarded destination-region commit; failure restores the recorded source approach. This is a replaceable adapter for future unloading, not a change in authority.
+- Use two camera objects so position/zoom memory is independent by construction. Only the active camera and local pointer context are enabled; switching does not touch orders, residency or clock state.
+- Keep accepted Colony grip/falling unchanged and add no gravity to Surface movement. The WV-B1 prompt's conflicting broad gravity sentence does not supersede the approved WV-A local-navigation contract.
+- Defer every resource, natural-rest, foraging, extraction, autonomous cross-view, streaming, persistence and additional-entrance system.
+
 ## 2026-10-14 — Specify the first two-view and founding-survival contract
 
 - Use distinct typed Colony and Surface coordinates under stable region identities; preserve the existing Colony integer-centre convention and local A* implementation.

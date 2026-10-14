@@ -1,6 +1,12 @@
 # Technical Architecture
 
-## WV-A approved inputs (documentation-only) — 14 October 2026
+## WV-B1 implemented two-view boundary — 14 October 2026
+
+WV-B1 implements the typed and transactional subset of WV-A. `AntColony.World` owns region/cell value types plus bounded Surface data/A*; `AntColony.Navigation` owns the clock-driven kinematic Surface motor; `AntColony.Commands` owns exactly-one residency and the capacity-one entrance transaction; `AntColony.Development` composes both loaded regions, two cameras and explicit input contexts. `AntRecord`, `AntRegistry`, `AntEntityBinding`, the Colony world/navigation stack and `SimulationClockController` remain the existing authorities.
+
+The development adapter keeps the same bound GameObject across regions and switches local motors after residency commit. This is intentionally reversible and prevents a second live binding; it does not make the visual authoritative. Surface activation failure restores source residency and pose. No second clock, generic coordinate conversion, cross-region A*, resource authority or streaming system was introduced.
+
+## WV-A approved inputs (documentation baseline) — 14 October 2026
 
 WV-A must specify but must not implement: one paired, pre-authored bidirectional entrance with capacity one ant; manual Colony/World presentation switch with independent remembered cameras; physical approach to entrance followed by a validated atomic single-ant residency/representation handoff; both initially small regions loaded and subject to one existing simulation clock; finite nearby seed/freshwater source records; provisional one-unit liquid payload reusing existing inventory ownership transactions; safe natural rest with constructed Sleeping tile recovery advantage. Region identities, coordinates, entrance occupancy/arrival, cross-region route status, timeout/retry and liquid physical conservation require detailed specifications rather than guessed implementation. No World View runtime exists from this decision.
 

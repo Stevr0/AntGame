@@ -2,7 +2,13 @@
 
 Movement and navigation are the most extensively implemented and tested foundations in the project. They deliberately separate world truth, movement capability, route planning, and motor execution.
 
-All implemented rules on this page currently describe the side-on underground **Colony View**. World View is approved future design and must not be inferred as already sharing these local movement or navigation rules.
+The established grip/support/falling rules describe the side-on underground **Colony View**. WV-B1 now also implements a separate top-down Surface navigator; the two local graphs and coordinate types are not interchangeable.
+
+## WV-B1 Surface-local movement
+
+`SurfaceWorldData` owns a bounded deterministic `64×64` obstacle grid, independently of `ChunkedWorldData`. `SurfacePathfinder` performs bounded deterministic A* over `SurfaceCell`: cardinal and diagonal steps are allowed, but a diagonal is rejected unless both adjacent cardinal cells are open. `SurfaceNavigationMotor` follows those cells kinematically from the shared simulation-clock delta, so pause freezes it and 1×/2×/3× remain compatible. It has no gravity, grip, excavation or falling states.
+
+`TwoViewWorldCoordinator` accepts Surface pointer conversion only while World View is active. Colony orders are rejected for Surface residents, and Colony designation input is disabled in World View. Entrance travel asks only the source region's local motor to reach its typed approach cell; there is no autonomous cross-region pathfinder in WV-B1.
 
 ## Authoritative rules
 

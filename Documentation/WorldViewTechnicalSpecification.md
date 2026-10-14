@@ -1,5 +1,15 @@
 # Ant Colony WV-A — Two-View Technical Specification
 
+## WV-B1 implementation record — 14 October 2026
+
+**Implemented — Awaiting Validation.** WV-B1 approves and implements the proposed `64×64` Surface extent, logical origin `(0,0)`, one-unit cell scale, `32×32` future partition dimension, fixed obstacle-only fixture and eight-direction traversal with the documented no-corner-cut rule. Full chunk streaming is not implemented.
+
+The runtime contracts use explicit readonly structs rather than the illustrative records shown below, preserving the same type separation. The initial scene packaging is a narrow coordinator attached to the existing development host: it keeps both regions loaded, creates temporary Surface presentation and a second camera, and does not rebuild Colony data. The first entrance uses Colony approach/arrival `(-1,-8)` / `(0,-8)` and Surface approach/arrival `(5,4)` / `(6,4)`.
+
+One reversible deviation from the section 7 illustration is intentional: WV-B1 retains the same already-bound GameObject across a handoff and switches between disabled/enabled local motors instead of destroying and instantiating separate projections. This prevents duplicate live bindings while preserving the required authority order: residency revision commits first, representation activation is validated second, and failure restores source residency/pose. A future unload boundary may replace this adapter without changing `AntRecord`, residency or entrance contracts.
+
+Surface movement has no gravity. Existing Colony grip/falling remains unchanged under the authoritative local-navigation rule in section 9; the later prompt sentence suggesting removal from both regions was treated as conflicting with the approved specification and was not used to rewrite accepted Colony behavior.
+
 **Status:** Approved technical design, documentation only — 14 October 2026
 
 **Runtime status:** Not implemented and not authorised for implementation

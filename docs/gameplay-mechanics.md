@@ -17,8 +17,8 @@
 | Construction and functional conversion | Approved slice with provisional recipes | Complete | Automated and manual accepted |
 | Colony View player HUD | Approved 3.4C slice | Complete | Automated and manual accepted |
 | Colony work-priority matrix | Approved 3.4D slice | Implemented | Automated passed; manual pending |
-| Two-view region/entrance contract | Approved WV-A specification | Documentation only | Link/build validation only; no Unity runtime tests |
-| World View, natural sources and cross-view travel | Approved phased direction | Not implemented | Not tested |
+| Two-view region/entrance contract | WV-B1 | Implemented | 8/8 focused Edit and 2/2 focused Play; manual pending |
+| World View resources and autonomous cross-view work | Later WV-C/WV-D | Not implemented | Not tested |
 | Colony priorities and autonomous jobs | Approved design | Implemented foundation | Accepted in Play Mode |
 | Brood and reproduction | Approved design | Not implemented | Not tested |
 | Rooms, doors, and quality bonuses | Approved design | Not implemented | Not tested |
@@ -35,7 +35,7 @@ The approved player-facing model has three states:
 
 Current implementation supports selection plus temporary Move, Eat, Drink, Rest and material Pickup orders, along with autonomous survival, colony work selection and autonomous hauling. It does not yet implement explicit forced-work orders or Draft Mode. The old WASD `PlayerMovementInput` path is retained strictly as a developer movement regression tool.
 
-The accepted 3.4C player HUD provides roster selection, shared ant inspection, the global simulation clock, physical-resource ownership, readable job state and Colony View Select/Excavate/Build/Cancel tools without opening Developer Mode. The six Build choices are the existing functional Background recipes only. Milestone 3.4D adds the global Excavation/Construction/Hauling priority matrix over authoritative ant records. World View input, cross-view travel, alerts and Draft Mode remain future work.
+The accepted 3.4C player HUD provides roster selection, shared ant inspection, the global simulation clock, physical-resource ownership, readable job state and Colony View Select/Excavate/Build/Cancel tools without opening Developer Mode. WV-B1 adds a small development view/entrance strip, hides Colony commands in World View and provides Surface selection/right-click movement. It does not add Surface resources, cross-view jobs, alerts or Draft Mode.
 
 ## Physical-world principles
 

@@ -1,5 +1,9 @@
 # Ant AI and Job Management
 
+## WV-B1 region boundary
+
+WV-B1 does not add autonomous cross-view routing or Surface jobs. Existing survival and Colony-work evaluators continue to advance persistent ant needs from the shared clock, but they issue Colony-local navigation/work only when the ant's authoritative residency is the Colony region. A Surface-resident ant can receive direct player Surface movement or a manual entrance request; it cannot accidentally claim a Colony `Vector2Int` destination from the inactive view. Existing Colony jobs and reservations are not reset by camera switching or representation handoff.
+
 ## Approved job model
 
 Future autonomous work uses a per-ant matrix of priorities `1–4` plus **Disabled**. The highest eligible priority wins before the closest reachable job by path cost. Skills change efficiency; they do not override player-assigned priority.

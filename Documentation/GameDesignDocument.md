@@ -1,8 +1,18 @@
 # ANT COLONY
 
+## WV-B1 two-view foundation — 14 October 2026
+
+> **IMPLEMENTED — AWAITING VALIDATION.** WV-B1 adds the first bounded top-down Surface, manual Colony/World presentation switching, Surface-local movement and one physical capacity-one nest transition. It deliberately adds no Surface resources, foraging, procedural generation, cross-view autonomous work, unloaded simulation or additional entrances.
+
+`AntRecord` remains authoritative for identity, needs, skills and inventory. A separate residency registry owns one typed Colony or Surface location for each ant. The development fixture keeps Mara, Pip and Tala and the existing Colony world loaded; changing the camera does not move an ant, reset its state or alter the simulation clock. The Surface is a deterministic `64×64` logical grid with a `32×32` future partition seam and fixed temporary obstacles.
+
+The first entrance is `entrance.founding-nest.001`, with capacity one. A selected ant travels through its current local navigator to the authored approach cell before an idempotent residency transaction can commit. Pause prevents commit; invalid/occupied destinations and representation activation failure retain or restore source residency. WV-B1 reuses the same bound development GameObject while switching its enabled local motor instead of destroying and recreating a projection. This is a narrow reversible implementation choice; the stable ant record, binding claim and residency—not the GameObject—remain authoritative.
+
+The authoritative WV-A rule that Colony navigation retains its accepted grip and falling behavior still applies. WV-B1 adds no gravity or falling to Surface movement and does not refactor Colony movement.
+
 ## Approved WV-A two-view foundation decisions — 14 October 2026
 
-> **DESIGN APPROVED; NO WORLD VIEW RUNTIME IMPLEMENTED OR AUTHORISED.** This section resolves six initial WV-A gameplay/technical choices; precise coordinate, scene, routing, water-container and persistence details remain subjects for the documentation-only WV-A specification.
+> **DESIGN HISTORY:** WV-A approved this contract before WV-B1 runtime implementation. WV-B1 now implements only the typed regions, bounded Surface, cameras, local movement and one entrance. Resource, rest, cross-view autonomy and persistence portions remain deferred.
 
 1. **Initial entrance:** One pre-authored, bidirectional nest entrance links one explicit Colony View endpoint with one World View endpoint. Transition capacity is one ant at a time. Additional entrances and player-built entrances are deferred.
 2. **Player view switching:** Manual Colony View / World View selection, remembering separate camera positions. Changing camera/view changes presentation and input context only; it must not teleport ants, restart a region or pause the shared simulation.

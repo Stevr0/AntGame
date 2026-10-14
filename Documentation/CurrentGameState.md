@@ -1,5 +1,46 @@
 # Ant Colony Current Game State
 
+## WV-B1 two-view runtime — 14 October 2026
+
+**Status: Implemented — Awaiting Validation.** The development scene now loads the accepted Colony world and a deterministic `64×64` top-down Surface at the same time. The Surface has fixed authored obstacle bands, hard bounds, an explicit founding entrance, temporary colour-block presentation, and a dedicated deterministic eight-direction A* whose diagonals require both adjacent cardinal cells to be open. `SurfaceNavigationMotor` is kinematic and advances only from the existing `SimulationClockController`; pause supplies no movement or transition commit delta.
+
+`RegionId`, `EntranceId`, `TransitionId`, `ColonyCell`, `SurfaceCell` and the discriminated `RegionDestination` prevent coordinate-space interchange. `AntRegionResidencyRegistry` owns exactly one location and revision per ant. Mara, Pip and Tala keep their existing `AntRecord` and `AntEntityBinding`. The initial implementation keeps one bound GameObject per ant and switches its enabled Colony/Surface local motor during handoff; GameObject lifecycle is not the residency transaction.
+
+`TwoViewWorldCoordinator` creates two persistent camera objects. The visible **Colony View**, **World View** and **Use Nest Entrance** controls switch only camera/input context or request entrance travel. Each camera naturally retains its own transform and orthographic size. Colony designation/right-click conversion is disabled in World View; Surface clicks use only `SurfaceCell`. Both regions and motors stay loaded, and hidden-region movement/needs continue from the one clock.
+
+The founding entrance links Colony approach `(-1,-8)` / arrival `(0,-8)` to Surface approach `(5,4)` / arrival `(6,4)`. A request reserves the capacity-one entrance, runs the source-local path, records the reached source approach, waits there while paused, revalidates the destination/occupancy, commits one destination-region change, activates the destination motor, and releases terminal ownership. Cancellation before commit preserves source residency. Activation failure rolls residency back to the recorded approach and restores the source representation. Replay of a completed transition does not apply another region change.
+
+### WV-B1 automated verification
+
+- Unity C# compilation: all affected World, Navigation, Commands, PlayerUI, Development, Edit test and Play test assemblies compiled with Unity's Roslyn response files.
+- Focused Edit Mode: **8/8 passed** (fixture/bounds, deterministic paths, corner restriction, single residency/revision, capacity/pause/idempotence, cancellation/rollback, unavailable/blocked endpoints and round trips).
+- Focused Play Mode: **2/2 passed** (shared-clock pause/movement and loaded-scene view/camera/residency invariants).
+- Complete Play Mode: **69/69 passed**, zero failures/skips.
+- Complete headless Edit Mode: **not passed**. Unity crashed in the existing rendered-pixel path after `Failed to set the active render target`; no result XML was produced. This is recorded as an execution failure, not an accepted regression result.
+
+### Exact WV-B1 manual Unity Play Mode acceptance
+
+**Pending:** open `Assets/AntColony/Scenes/AntGameDevelopment.unity` and complete all checks before marking WV-B1 complete.
+
+1. Enter Play Mode and confirm Colony terrain, Mara/Pip/Tala and the existing HUD load without Console errors.
+2. Select a Colony ant and right-click a valid Colony cell; confirm ordinary Colony movement still works.
+3. Use **World View** and confirm the green `64×64` top-down Surface, dark fixed obstacles and gold entrance marker are visible.
+4. Pan with WASD/arrow keys or middle-drag and zoom with the wheel. Switch to Colony, move/zoom its camera, then switch both ways and confirm each pose/zoom is retained independently.
+5. Confirm switching views alone does not move an ant, issue/cancel work, change pause/speed, reset needs/inventory or change residency.
+6. In World View, left-click a Surface-resident ant and right-click open terrain. Confirm it routes around obstacles, rejects obstacle/out-of-bounds targets and cannot cut a blocked diagonal corner.
+7. In Colony View, select an ant and press **Use Nest Entrance**. Observe physical travel to `(-1,-8)`; do not switch the camera automatically.
+8. Pause before arrival/commit and confirm movement and the handoff stop. Resume at 1×, 2× and 3× and confirm shared-clock movement responds.
+9. After arrival, switch manually to World View and confirm the same named ant appears at `(6,4)` with unchanged identity, needs, skills and inventory.
+10. Select that ant in World View, press **Use Nest Entrance**, observe travel to `(5,4)`, then switch manually to Colony and confirm return at `(0,-8)`.
+11. Repeat a round trip, switch views repeatedly during travel, and confirm no duplicate visual, missing ant, extra residency commit or cancelled travel.
+12. Attempt a second ant while the entrance is reserved and confirm it cannot take ownership. Cancel/disable the travelling ant before commit where practical and confirm safe source retention/release.
+13. Confirm Colony Excavate/Build/Cancel tools are unavailable in World View, then return to Colony and verify excavation and construction still function.
+14. Confirm Colony jobs/reservations remain valid, hidden-region simulation continues, and the Unity Console has no new errors or exceptions.
+
+### WV-B1 known boundaries
+
+Temporary Surface visuals and the view/entrance strip are development presentation, not production art or final HUD layout. Surface residency is in-memory only. No Surface resources, natural rest, foraging, extraction, water, automatic cross-view routes, streaming, unloaded simulation, save/load, hazards, combat, brood, procedural generation or additional entrances are present. The repository has no `docs/roadmap.md`; the established wiki roadmap is `docs/development-roadmap.md`, which was updated instead of creating a competing page.
+
 ## WV-A two-view architecture specification — 14 October 2026
 
 **DOCUMENTED, NOT IMPLEMENTED:** `WorldViewTechnicalSpecification.md` is the implementation-ready contract for the future Colony/World connection. It specifies distinct typed coordinate spaces, stable region/entrance/source identities, one authoritative ant residency, a capacity-one idempotent transition with rollback, manual camera/input switching, shared-clock loaded-region behavior, finite sources, exact-once food/water interactions, a recoverable one-unit liquid payload, natural rest and WV-B/WV-C acceptance tests.

@@ -18,6 +18,10 @@ namespace AntColony.Development
         [SerializeField] private float maximumOrthographicSize = 64f;
         [SerializeField] private Vector3 homePosition = new(0f, 0f, -10f);
         [SerializeField] private float homeOrthographicSize = 30f;
+        [SerializeField] private bool inputEnabled = true;
+        [SerializeField] private bool constrainPosition;
+        [SerializeField] private Vector2 minimumPosition = new(-64f, -64f);
+        [SerializeField] private Vector2 maximumPosition = new(64f, 64f);
 
         private Camera controlledCamera;
         private Vector2 previousMousePosition;
@@ -28,6 +32,7 @@ namespace AntColony.Development
         public float TargetOrthographicSize => targetOrthographicSize;
         public float MinimumOrthographicSize => minimumOrthographicSize;
         public float MaximumOrthographicSize => maximumOrthographicSize;
+        public bool InputEnabled => inputEnabled;
 
         private void Awake()
         {
@@ -56,6 +61,7 @@ namespace AntColony.Development
 
         private void Update()
         {
+            if (!inputEnabled) return;
             Keyboard keyboard = Keyboard.current;
             Mouse mouse = Mouse.current;
             if (keyboard != null)
@@ -115,6 +121,7 @@ namespace AntColony.Development
                 float worldUnitsPerPixel =
                     controlledCamera.orthographicSize * 2f / Screen.height;
                 transform.position -= (Vector3)(delta * worldUnitsPerPixel);
+                ClampPosition();
             }
 
             previousMousePosition = mousePosition;
@@ -134,6 +141,7 @@ namespace AntColony.Development
 
             transform.position += (Vector3)direction.normalized *
                 panSpeed * unscaledDeltaTime;
+            ClampPosition();
         }
 
         /// <summary>
@@ -180,6 +188,38 @@ namespace AntColony.Development
             controlledCamera.orthographicSize = homeOrthographicSize;
             targetOrthographicSize = homeOrthographicSize;
             zoomVelocity = 0f;
+            ClampPosition();
+        }
+
+        public void ConfigureHome(Vector3 position, float orthographicSize)
+        {
+            homePosition = position;
+            homeOrthographicSize = Mathf.Clamp(orthographicSize,
+                minimumOrthographicSize, maximumOrthographicSize);
+        }
+
+        public void SetInputEnabled(bool enabled)
+        {
+            inputEnabled = enabled;
+            previousMousePosition = Mouse.current != null
+                ? Mouse.current.position.ReadValue() : Vector2.zero;
+        }
+
+        public void ConfigureBounds(Vector2 minimum, Vector2 maximum)
+        {
+            minimumPosition = Vector2.Min(minimum, maximum);
+            maximumPosition = Vector2.Max(minimum, maximum);
+            constrainPosition = true;
+            ClampPosition();
+        }
+
+        private void ClampPosition()
+        {
+            if (!constrainPosition) return;
+            Vector3 position = transform.position;
+            position.x = Mathf.Clamp(position.x, minimumPosition.x, maximumPosition.x);
+            position.y = Mathf.Clamp(position.y, minimumPosition.y, maximumPosition.y);
+            transform.position = position;
         }
 
         /// <summary>Returns a bounded, device-independent number of scroll steps.</summary>

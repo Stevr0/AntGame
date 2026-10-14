@@ -133,6 +133,8 @@ namespace AntColony.Commands
         private DevelopmentUiCategory expandedDevelopmentCategory;
         private Vector2 developmentPanelScrollPosition;
         private IPlayerUiInputBlocker playerUiInputBlocker;
+        private AntRegionResidencyRegistry regionResidencies;
+        private bool worldInputEnabled = true;
 
         public IReadOnlyList<SelectableGridAnt> SelectableAnts => selectableAnts;
         public SelectableGridAnt SelectedAnt { get; private set; }
@@ -166,6 +168,7 @@ namespace AntColony.Commands
         public string PreviewDiagnostic { get; private set; } = string.Empty;
         public event Action<SelectableGridAnt> SelectionChanged;
         public bool DevelopmentUiVisible => developmentUiVisible;
+        public bool WorldInputEnabled => worldInputEnabled;
         public DevelopmentUiCategory ExpandedDevelopmentCategory =>
             expandedDevelopmentCategory;
         public Rect DevelopmentToolbarGuiRect => CalculateToolbarRect(
@@ -212,6 +215,21 @@ namespace AntColony.Commands
         public void BindPlayerUiInputBlocker(IPlayerUiInputBlocker blocker)
         {
             playerUiInputBlocker = blocker;
+        }
+
+        public void BindRegionResidencies(AntRegionResidencyRegistry residencies)
+        {
+            regionResidencies = residencies;
+        }
+
+        /// <summary>
+        /// Enables Colony-specific pointer conversion. Simulation and order
+        /// advancement continue while World View owns pointer input.
+        /// </summary>
+        public void SetWorldInputEnabled(bool enabled)
+        {
+            worldInputEnabled = enabled;
+            if (!enabled) CancelDesignationDragPreview();
         }
 
         public void ToggleDevelopmentCategory(DevelopmentUiCategory category)
@@ -489,14 +507,14 @@ namespace AntColony.Commands
         {
             if (hasTimeControlBlockedGuiRect &&
                 timeControlBlockedGuiRect.Contains(guiPoint)) return true;
+            if (hasAdditionalBlockedGuiRect &&
+                additionalBlockedGuiRect.Contains(guiPoint)) return true;
             if (!developmentUiVisible)
                 return DevelopmentReopenGuiRect.Contains(guiPoint);
             return DevelopmentToolbarGuiRect.Contains(guiPoint) ||
                 DevelopmentSummaryGuiRect.Contains(guiPoint) ||
                 expandedDevelopmentCategory != DevelopmentUiCategory.None &&
-                    DevelopmentPanelGuiRect.Contains(guiPoint) ||
-                (hasAdditionalBlockedGuiRect &&
-                    additionalBlockedGuiRect.Contains(guiPoint));
+                    DevelopmentPanelGuiRect.Contains(guiPoint);
         }
 
         public bool TrySelectAtWorldPoint(Vector2 worldPoint)
@@ -894,6 +912,13 @@ namespace AntColony.Commands
                 interactionMessage = "Pickup ignored: select an active ant first.";
                 return false;
             }
+
+            if (!IsColonyResident(SelectedAnt))
+            {
+                interactionMessage =
+                    "Move ignored: selected ant is not resident in Colony View.";
+                return false;
+            }
             Vector2Int start = WorldTileCoordinates.WorldPositionToCell(
                 SelectedAnt.Motor.Position);
             if (!SurvivalInteractionOrder.TryMeasureApproach(
@@ -1207,6 +1232,11 @@ namespace AntColony.Commands
                 SetDesignationMode(WorldDesignationMode.None);
 
             Mouse mouse = Mouse.current;
+            if (!worldInputEnabled)
+            {
+                ClearDesignationPreview();
+                return;
+            }
             if (mouse == null)
             {
                 ClearDesignationPreview();
@@ -1280,6 +1310,7 @@ namespace AntColony.Commands
             double currentTimeSeconds)
         {
             if (!AutonomousSurvivalEnabled || ant?.Record == null ||
+                !IsColonyResident(ant) ||
                 !autonomousStates.TryGetValue(ant, out AutonomousSurvivalAgentState state))
                 return false;
 
@@ -1429,6 +1460,7 @@ namespace AntColony.Commands
             double currentTimeSeconds)
         {
             if (!AutonomousColonyWorkEnabled || ant?.Record == null ||
+                !IsColonyResident(ant) ||
                 colonyJobs == null || navigationWorld?.Map == null ||
                 !autonomousWorkStates.TryGetValue(
                     ant, out AutonomousWorkAgentState state))
@@ -1546,6 +1578,12 @@ namespace AntColony.Commands
                 return true;
             return AutonomousHaulingEnabled &&
                 (!plan.InventoryOwner.IsValid || plan.InventoryOwner.Equals(ant.Id));
+        }
+
+        private bool IsColonyResident(SelectableGridAnt ant)
+        {
+            return ant?.Record != null && (regionResidencies == null ||
+                regionResidencies.IsInRegion(ant.Record.Id, AntRegionIds.Colony));
         }
 
         /// <summary>
