@@ -71,6 +71,12 @@ flowchart TB
 
 `AntColony.World` owns chunks, Background/Solid material definitions, loose material drops, physical Material Storage slots, the atomic excavation commit, classification, clearance, capability, pathfinding data, and scheduling. Visual and collision Tilemaps project that data through `AntColony.WorldPresentation`; they do not own stored quantities.
 
+### Art assets and presentation boundary
+
+Custom art is organised under `Assets/_AntGame/Art/Colony` and `Assets/_AntGame/Art/World`, with preserved originals separated from prepared candidate sprites. `Tools/Art/prepare_tilesets.py` records measured extraction rectangles and generates deterministic 32-pixel libraries; the resulting sprite names describe source position only.
+
+Candidate sprites do not own or imply material identity. Colony art must be separated into Background, optional foreground Solid, exposed-edge and decoration responsibilities before binding to the existing Tilemap projection. Collision stays on the dedicated collision Tilemap. World art remains an unbound future-view library until its terrain and coordinate authority are approved.
+
 ### Navigation
 
 One `GridNavigationWorldService` owns the shared navigation map and bounded scheduler for a world. Each `GridNavigationMotor` owns only its agent request and execution state. Command and interaction systems call the narrow motor API.

@@ -4,6 +4,10 @@ This history records the strongest confirmed evidence without implying that late
 
 ## 14 October 2026
 
+### Custom tileset art foundation
+
+**Implemented — Pending Manual Acceptance.** Preserved `1254x1254` RGBA Colony and World sources, deterministic aspect-preserving 32-pixel preparation, 170 named candidate sprites and Unity import metadata were added without changing terrain bindings or gameplay. No candidate is certified seamless; Tile assets and palettes remain gated on manual visual and semantic review.
+
 ### 3.4B — Unified Simulation Clock & Gameplay Mode
 
 **Implemented — Pending Manual Acceptance.** A scene-owned Day 1 08:00 clock provides pause and 1×/2×/3× time, with one normal gameplay policy for survival, colony work and hauling. Pause gates simulation progression, navigation scheduling and physics without cancelling preserved work. Planning, selection, direct orders, priorities and camera controls remain available. A temporary independent time strip supports acceptance while the full player uGUI HUD remains deferred to 3.4C.

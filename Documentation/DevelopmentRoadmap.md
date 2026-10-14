@@ -1,5 +1,9 @@
 # Ant Colony Development Roadmap
 
+## Parallel art foundation — 14 October 2026
+
+**Implemented — Pending Manual Acceptance.** Custom Colony and World source sheets are preserved separately and a repeatable tool prepares 32-pixel candidate libraries with Unity import metadata. This does not replace current development visuals, create World View gameplay or alter terrain behavior. Next art step: complete the documented Unity Sprite Editor and edge-repeat review, then approve semantic layer separation before creating production Tile assets and separate Colony/World palettes.
+
 ## 3.4B acceptance and next milestone — 14 October 2026
 
 **3.4B — ACCEPTED.** Unified simulation clock and gameplay mode passed user manual acceptance: 20/20 grouped checks, normal gameplay, pause/resume, developer overrides and clean Console. Earlier Codex-reported tests: 11/11 focused Edit, 7/7 focused Play, 485/485 complete Edit (graphics-enabled), 58/58 complete Play. No rerun for these docs. Any older 3.4B pending status below is superseded.

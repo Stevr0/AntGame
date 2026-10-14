@@ -2,6 +2,10 @@
 
 This page is a concise navigation view of the authoritative `Documentation/DevelopmentRoadmap.md`. The authoritative file retains the full acceptance criteria and historical details.
 
+## Parallel art foundation
+
+**Implemented — Pending Manual Acceptance.** The custom source sheets and separate 32-pixel Colony/World candidate libraries are committed with deterministic extraction and import settings. They are not gameplay-bound or certified seamless. Manual Sprite Editor, camera-scale and repeated-edge review precedes production Tile assets and palettes; World View gameplay remains deferred.
+
 ## Immediate boundary
 
 **Current action:** manually verify Milestone 3.4B's 30-step Unified Simulation Clock & Gameplay Mode checklist in `Assets/AntColony/Scenes/AntGameDevelopment.unity`.

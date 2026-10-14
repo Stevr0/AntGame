@@ -1,5 +1,11 @@
 # Ant Colony Current Game State
 
+## Art foundation — 14 October 2026
+
+**Implemented — Pending Manual Acceptance.** Original `1254x1254` RGBA Colony and World tilesets are preserved under `Assets/_AntGame/Art/<View>/Source`. A deterministic preparation tool produces 100 Colony and 70 World position-named `32x32` candidate sprites with Multiple-sprite, 32 PPU, Point, uncompressed, no-mipmap import metadata. The extraction uses measured variable source rectangles and aspect-preserving square padding rather than blind 32x32 source slicing.
+
+No candidate is gameplay-bound and none is claimed seamless. Production Tile assets and palettes are deferred because several Colony cells combine Background, Solid, cavity edge and decoration visuals, while World props have variable footprints. Existing terrain definitions, Tilemaps, collision, excavation, navigation, ant locomotion and scenes are unchanged. See `Documentation/ArtDirection.md` for source hashes, limitations and the manual Unity inspection checklist.
+
 ## Latest acceptance — 14 October 2026
 
 **Milestone 3.4B Unified Simulation Clock & Gameplay Mode: COMPLETE — MANUALLY ACCEPTED.** User confirmed all 20 grouped manual Unity Play Mode checks covering ordinary colony gameplay, pause/resume integrity, developer overrides, and clean Console. Codex reported focused 11/11 Edit and 7/7 Play; full graphics-enabled 485/485 Edit and 58/58 Play passed before manual acceptance. This documentation-only change did not rerun tests. Earlier 3.4B pending-acceptance text below is historical.
