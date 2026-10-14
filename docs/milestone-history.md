@@ -4,6 +4,20 @@ This history records the strongest confirmed evidence without implying that late
 
 ## 14 October 2026
 
+### 3.4C — Colony View Player HUD & Developer UI Separation
+
+**Implemented — Pending Manual Acceptance.** An authored uGUI Canvas and reusable roster-entry prefab present authoritative ant records, selected shared/current-view data, the one global clock, physical resource ownership and readable current work. Colony View Select, Excavate, six functional Background recipes and safe area cancellation delegate to existing gameplay APIs. Developer IMGUI starts hidden, retains all seven categories and opens separately through F12/reopen control. One EventSystem/GraphicRaycaster boundary combines with existing IMGUI hit testing so UI clicks, scroll and designation drags do not leak into world or camera input. No World View runtime was added.
+
+- Focused Edit Mode: 12/12 passed.
+- Focused Play Mode: 13/13 passed.
+- Complete graphics-enabled Edit Mode: 489/489 passed.
+- Complete Play Mode: 62/62 passed.
+- Manual Play Mode checklist: 31 steps pending.
+
+### Custom tileset art foundation
+
+**Implemented — Pending Manual Acceptance.** Preserved `1254x1254` RGBA Colony and World sources, deterministic aspect-preserving 32-pixel preparation, 170 named candidate sprites and Unity import metadata were added without changing terrain bindings or gameplay. No candidate is certified seamless; Tile assets and palettes remain gated on manual visual and semantic review.
+
 ### 3.4B — Unified Simulation Clock & Gameplay Mode
 
 **Implemented — Pending Manual Acceptance.** A scene-owned Day 1 08:00 clock provides pause and 1×/2×/3× time, with one normal gameplay policy for survival, colony work and hauling. Pause gates simulation progression, navigation scheduling and physics without cancelling preserved work. Planning, selection, direct orders, priorities and camera controls remain available. A temporary independent time strip supports acceptance while the full player uGUI HUD remains deferred to 3.4C.

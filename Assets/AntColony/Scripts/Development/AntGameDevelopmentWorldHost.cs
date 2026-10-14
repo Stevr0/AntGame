@@ -3,6 +3,7 @@ using System.Linq;
 using AntColony.Ants;
 using AntColony.Commands;
 using AntColony.Navigation;
+using AntColony.PlayerUI;
 using AntColony.World;
 using AntColony.WorldPresentation;
 using UnityEngine;
@@ -52,6 +53,9 @@ namespace AntColony.Development
         [SerializeField] private GameplayModeCoordinator gameplayModeCoordinator;
         [SerializeField] private GridNavigationMotor primaryGridAntPrefab;
 
+        [Header("Authored player HUD")]
+        [SerializeField] private PlayerHudController playerHud;
+
         [Header("Legacy 2.4A comparison ant")]
         [SerializeField] private AntAutonomousMotor autonomousAntPrefab;
         [SerializeField] private int preferredSpawnX = -12;
@@ -92,6 +96,7 @@ namespace AntColony.Development
             selectionController;
         public SimulationClockController SimulationClock => simulationClock;
         public GameplayModeCoordinator GameplayMode => gameplayModeCoordinator;
+        public PlayerHudController PlayerHud => playerHud;
         public GridNavigationMap GridNavigationMap => navigationWorldService?.Map;
         public GridNavigationScheduler GridNavigationScheduler =>
             navigationWorldService?.Scheduler;
@@ -243,6 +248,7 @@ namespace AntColony.Development
                 SpawnOrResetAutonomousAnt(out _);
                 SpawnOrResetSelectableGridAnts(out _);
             }
+            BindPlayerHud();
             return true;
         }
 
@@ -481,6 +487,7 @@ namespace AntColony.Development
             }
 
             gridNavigationAnt = selectableGridAnts[0];
+            BindPlayerHud();
             message =
                 $"Spawned {selectableGridAnts.Count} selectable grid ants at " +
                 $"{string.Join(", ", spawnCells)}.";
@@ -879,6 +886,7 @@ namespace AntColony.Development
             BackgroundTileMaterialDefinition prepared,
             SolidTileMaterialDefinition soil,
             SolidTileMaterialDefinition stoneSolidDefinition,
+            SolidTileMaterialDefinition blockingOnlySolidDefinition,
             WorldTilemapRenderer visualRenderer,
             WorldTerrainCollisionRenderer terrainCollisionRenderer,
             GridNavigationWorldService sharedNavigationWorld,
@@ -890,7 +898,8 @@ namespace AntColony.Development
             BackgroundTileMaterialDefinition waterStorage = null,
             BackgroundTileMaterialDefinition sleeping = null,
             BackgroundTileMaterialDefinition materialStorage = null,
-            BackgroundTileMaterialDefinition nursery = null)
+            BackgroundTileMaterialDefinition nursery = null,
+            PlayerHudController authoredPlayerHud = null)
         {
             worldSeed = seed;
             minimumChunk = authoredMinimumChunk;
@@ -904,8 +913,10 @@ namespace AntColony.Development
             sleepingBackground = sleeping;
             materialStorageBackground = materialStorage;
             nurseryBackground = nursery;
+            playerHud = authoredPlayerHud;
             soilSolid = soil;
             stoneSolid = stoneSolidDefinition;
+            blockingOnlySolid = blockingOnlySolidDefinition;
             tilemapRenderer = visualRenderer;
             collisionRenderer = terrainCollisionRenderer;
             navigationWorldService = sharedNavigationWorld;
@@ -918,6 +929,13 @@ namespace AntColony.Development
             autonomousAntPrefab = antPrefab;
             destinationMarker = marker;
             destinationMarkerRenderer = markerRenderer;
+        }
+
+        private void BindPlayerHud()
+        {
+            playerHud?.Bind(antRegistry, selectionController, simulationClock,
+                ConstructionRecipes?.Recipes, MaterialStorage, MaterialDrops,
+                ConstructionDesignations, ExcavationDesignations);
         }
 
         private bool HasRequiredReferences()

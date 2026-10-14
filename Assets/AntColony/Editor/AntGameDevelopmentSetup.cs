@@ -4,13 +4,17 @@ using AntColony.Ants;
 using AntColony.Commands;
 using AntColony.Development;
 using AntColony.Navigation;
+using AntColony.PlayerUI;
 using AntColony.World;
 using AntColony.WorldPresentation;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.InputSystem.UI;
 using UnityEngine.SceneManagement;
 using UnityEngine.Tilemaps;
+using UnityEngine.UI;
 
 namespace AntColony.EditorTools
 {
@@ -54,6 +58,10 @@ namespace AntColony.EditorTools
             "Assets/AntColony/Prefabs/Ants/AutonomousAnt.prefab";
         private const string PrimaryGridAntPrefabPath =
             "Assets/AntColony/Prefabs/Ants/PrimaryGridAnt.prefab";
+        private const string PlayerHudPrefabPath =
+            "Assets/AntColony/Prefabs/UI/PlayerHud.prefab";
+        private const string AntRosterEntryPrefabPath =
+            "Assets/AntColony/Prefabs/UI/AntRosterEntry.prefab";
 
         [MenuItem("Ant Colony/Build Integrated Development World")]
         public static void BuildIntegratedDevelopmentWorld()
@@ -91,6 +99,7 @@ namespace AntColony.EditorTools
                 FindOne<DevelopmentCameraController>(scene);
             AntSelectionCommandController selectionController =
                 FindOne<AntSelectionCommandController>(scene);
+            PlayerHudController playerHud = FindOne<PlayerHudController>(scene);
 
             Require(host != null, "Development world host is missing.");
             Require(visualRenderer != null, "World Tilemap renderer is missing.");
@@ -99,6 +108,16 @@ namespace AntColony.EditorTools
             Require(cameraController != null, "Development camera controller is missing.");
             Require(selectionController != null,
                 "Ant selection and command controller is missing.");
+            Require(playerHud != null && host.PlayerHud == playerHud,
+                "The authored player HUD is missing or not bound to the host.");
+            Require(FindAll<Canvas>(scene).Length == 1,
+                "The scene must contain exactly one player HUD Canvas.");
+            Require(FindAll<EventSystem>(scene).Length == 1,
+                "The scene must contain exactly one EventSystem.");
+            Require(FindAll<SimulationTimeControlStrip>(scene).Length == 0,
+                "The temporary 3.4B time strip must be suppressed by the player HUD.");
+            Require(!selectionController.DevelopmentUiVisible,
+                "Developer Mode must start hidden.");
             Require(host.AutonomousAntPrefab != null,
                 "Autonomous Ant prefab reference is missing.");
             Require(host.PrimaryGridAntPrefab != null,
@@ -147,6 +166,7 @@ namespace AntColony.EditorTools
                 GetOrCreateAutonomousAntPrefab(antSprite);
             GridNavigationMotor primaryGridAntPrefab =
                 GetOrCreatePrimaryGridAntPrefab(antSprite);
+            GetOrCreatePlayerHudPrefab();
             GetOrCreateTile(
                 SkyTilePath,
                 whitePixelSprite,
@@ -213,11 +233,16 @@ namespace AntColony.EditorTools
             BackgroundTileMaterialDefinition nursery =
                 LoadBackground("Background_Nursery");
             SolidTileMaterialDefinition soil = LoadSolid("Solid_Soil");
+            SolidTileMaterialDefinition blockingOnly =
+                LoadSolid("Solid_BlockingOnly");
 
             Scene scene = EditorSceneManager.NewScene(
                 NewSceneSetup.EmptyScene,
                 NewSceneMode.Single);
             GameObject sceneRoot = new("AntGameDevelopment");
+            GameObject playerHudPrefab =
+                AssetDatabase.LoadAssetAtPath<GameObject>(PlayerHudPrefabPath);
+            Require(playerHudPrefab != null, "The authored Player HUD prefab is missing.");
 
             GameObject bootstrap = new(
                 "World Bootstrap",
@@ -231,6 +256,19 @@ namespace AntColony.EditorTools
                 bootstrap.GetComponent<GridNavigationWorldService>();
             AntSelectionCommandController selectionController =
                 bootstrap.GetComponent<AntSelectionCommandController>();
+
+            GameObject eventSystemObject = new(
+                "Player UI EventSystem",
+                typeof(EventSystem),
+                typeof(InputSystemUIInputModule));
+            eventSystemObject.transform.SetParent(sceneRoot.transform, false);
+            eventSystemObject.GetComponent<InputSystemUIInputModule>()
+                .AssignDefaultActions();
+
+            PlayerHudController playerHud = ((GameObject)PrefabUtility.InstantiatePrefab(
+                playerHudPrefab, scene)).GetComponent<PlayerHudController>();
+            playerHud.name = "Player HUD";
+            playerHud.transform.SetParent(sceneRoot.transform, false);
 
             GameObject gridObject = new(
                 "World Grid",
@@ -302,6 +340,7 @@ namespace AntColony.EditorTools
                 prepared,
                 soil,
                 stoneSolid,
+                blockingOnly,
                 visualRenderer,
                 collisionRenderer,
                 navigationWorld,
@@ -313,7 +352,8 @@ namespace AntColony.EditorTools
                 waterStorage,
                 sleeping,
                 materialStorage,
-                nursery);
+                nursery,
+                playerHud);
 
             EditorSceneManager.MarkSceneDirty(scene);
             Require(EditorSceneManager.SaveScene(scene, ScenePath),
@@ -321,6 +361,352 @@ namespace AntColony.EditorTools
             AddSceneToBuildSettings();
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
+        }
+
+        private static void GetOrCreatePlayerHudPrefab()
+        {
+            const string uiFolder = "Assets/AntColony/Prefabs/UI";
+            if (!AssetDatabase.IsValidFolder(uiFolder))
+                AssetDatabase.CreateFolder("Assets/AntColony/Prefabs", "UI");
+
+            Font font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            Require(font != null, "Unity's built-in UI font is unavailable.");
+            AntRosterEntryView rosterEntryPrefab =
+                CreateAntRosterEntryPrefab(font);
+
+            GameObject root = new(
+                "PlayerHud",
+                typeof(RectTransform),
+                typeof(Canvas),
+                typeof(CanvasScaler),
+                typeof(GraphicRaycaster),
+                typeof(PlayerHudController));
+            Canvas canvas = root.GetComponent<Canvas>();
+            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            canvas.sortingOrder = 100;
+            CanvasScaler scaler = root.GetComponent<CanvasScaler>();
+            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            scaler.referenceResolution = new Vector2(1920f, 1080f);
+            scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
+            scaler.matchWidthOrHeight = 0.5f;
+
+            AntRosterView roster = CreateRosterPanel(
+                root.transform, font, rosterEntryPrefab);
+            SimulationControlsView clock = CreateClockPanel(root.transform, font);
+            SelectedAntInspectorView inspector =
+                CreateInspectorPanel(root.transform, font);
+            ColonyResourceSummaryView resources =
+                CreateResourcePanel(root.transform, font);
+            ColonyJobStatusView jobs = CreateJobPanel(root.transform, font);
+            ColonyViewCommandBar commands = CreateCommandPanel(root.transform, font);
+            root.GetComponent<PlayerHudController>().Configure(
+                root.GetComponent<GraphicRaycaster>(), roster, inspector, clock,
+                commands, resources, jobs);
+
+            GameObject saved = PrefabUtility.SaveAsPrefabAsset(root, PlayerHudPrefabPath);
+            UnityEngine.Object.DestroyImmediate(root);
+            Require(saved != null, "Unity could not save the Player HUD prefab.");
+            Require(AssetDatabase.LoadAssetAtPath<GameObject>(PlayerHudPrefabPath)
+                    .GetComponent<PlayerHudController>() != null,
+                "The saved Player HUD prefab lost its controller.");
+        }
+
+        private static AntRosterEntryView CreateAntRosterEntryPrefab(Font font)
+        {
+            GameObject root = new(
+                "AntRosterEntry",
+                typeof(RectTransform),
+                typeof(Image),
+                typeof(Button),
+                typeof(LayoutElement),
+                typeof(AntRosterEntryView));
+            root.GetComponent<RectTransform>().sizeDelta = new Vector2(244f, 62f);
+            root.GetComponent<Image>().color = new Color32(58, 50, 42, 245);
+            root.GetComponent<LayoutElement>().preferredHeight = 62f;
+
+            GameObject highlightObject = CreateStretchImage(
+                root.transform, "Selected", new Color32(189, 139, 62, 95));
+            Image highlight = highlightObject.GetComponent<Image>();
+            highlight.raycastTarget = false;
+            highlight.enabled = false;
+            Text name = CreateText(root.transform, "Name", font, 16,
+                TextAnchor.UpperLeft, new Color32(242, 226, 190, 255));
+            SetRect(name.rectTransform, Vector2.zero, Vector2.one,
+                new Vector2(8f, 31f), new Vector2(-8f, -4f));
+            Text detail = CreateText(root.transform, "Details", font, 12,
+                TextAnchor.LowerLeft, new Color32(208, 198, 177, 255));
+            SetRect(detail.rectTransform, Vector2.zero, Vector2.one,
+                new Vector2(8f, 4f), new Vector2(-8f, -27f));
+            root.GetComponent<AntRosterEntryView>().Configure(
+                root.GetComponent<Button>(), highlight, name, detail);
+
+            GameObject saved = PrefabUtility.SaveAsPrefabAsset(
+                root, AntRosterEntryPrefabPath);
+            UnityEngine.Object.DestroyImmediate(root);
+            Require(saved != null, "Unity could not save the ant roster entry prefab.");
+            return AssetDatabase.LoadAssetAtPath<GameObject>(AntRosterEntryPrefabPath)
+                .GetComponent<AntRosterEntryView>();
+        }
+
+        private static AntRosterView CreateRosterPanel(Transform parent, Font font,
+            AntRosterEntryView entryPrefab)
+        {
+            GameObject panel = CreatePanel(parent, "Ant Roster",
+                new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(0f, 1f),
+                new Vector2(8f, -8f), new Vector2(264f, 246f));
+            VerticalLayoutGroup layout = panel.AddComponent<VerticalLayoutGroup>();
+            layout.padding = new RectOffset(8, 8, 8, 8);
+            layout.spacing = 4f;
+            layout.childControlHeight = true;
+            layout.childForceExpandHeight = false;
+            CreateLayoutText(panel.transform, "COLONY ANTS", font, 15, 24f);
+            var entries = new AntRosterEntryView[3];
+            for (int index = 0; index < entries.Length; index++)
+            {
+                GameObject instance = (GameObject)PrefabUtility.InstantiatePrefab(
+                    entryPrefab.gameObject);
+                instance.name = $"Roster Entry {index + 1}";
+                instance.transform.SetParent(panel.transform, false);
+                entries[index] = instance.GetComponent<AntRosterEntryView>();
+            }
+            AntRosterView view = panel.AddComponent<AntRosterView>();
+            view.Configure(entries);
+            return view;
+        }
+
+        private static SimulationControlsView CreateClockPanel(
+            Transform parent, Font font)
+        {
+            GameObject panel = CreatePanel(parent, "Simulation Controls",
+                Vector2.one, Vector2.one, Vector2.one,
+                new Vector2(-8f, -8f), new Vector2(430f, 92f));
+            Text time = CreateText(panel.transform, "Time", font, 18,
+                TextAnchor.UpperLeft, new Color32(242, 226, 190, 255));
+            SetRect(time.rectTransform, new Vector2(0f, 1f), new Vector2(0.5f, 1f),
+                new Vector2(10f, -36f), new Vector2(-2f, -8f));
+            Text status = CreateText(panel.transform, "Status", font, 13,
+                TextAnchor.UpperRight, new Color32(208, 198, 177, 255));
+            SetRect(status.rectTransform, new Vector2(0.5f, 1f), Vector2.one,
+                new Vector2(2f, -36f), new Vector2(-10f, -8f));
+            GameObject row = CreateHorizontalGroup(panel.transform, "Controls");
+            SetRect(row.GetComponent<RectTransform>(), Vector2.zero, Vector2.right,
+                new Vector2(10f, 8f), new Vector2(-10f, 44f));
+            Button play = CreateButton(row.transform, "Play Pause", "Play", font,
+                76f, out Text playLabel);
+            Button normal = CreateButton(row.transform, "Speed 1x", "1×", font, 56f,
+                out _);
+            Button fast = CreateButton(row.transform, "Speed 2x", "2×", font, 56f,
+                out _);
+            Button veryFast = CreateButton(row.transform, "Speed 3x", "3×", font,
+                56f, out _);
+            SimulationControlsView view = panel.AddComponent<SimulationControlsView>();
+            view.Configure(time, status, play, playLabel, normal, fast, veryFast);
+            return view;
+        }
+
+        private static SelectedAntInspectorView CreateInspectorPanel(
+            Transform parent, Font font)
+        {
+            GameObject panel = CreatePanel(parent, "Selected Ant Inspector",
+                new Vector2(1f, 0.5f), new Vector2(1f, 0.5f), new Vector2(1f, 0.5f),
+                new Vector2(-8f, -22f), new Vector2(320f, 500f));
+            Text title = CreateText(panel.transform, "Title", font, 15,
+                TextAnchor.MiddleLeft, new Color32(242, 226, 190, 255));
+            title.text = "SELECTED ANT";
+            SetRect(title.rectTransform, new Vector2(0f, 1f), Vector2.one,
+                new Vector2(10f, -34f), new Vector2(-10f, -6f));
+            Text content = CreateText(panel.transform, "Content", font, 12,
+                TextAnchor.UpperLeft, new Color32(224, 216, 198, 255));
+            content.horizontalOverflow = HorizontalWrapMode.Wrap;
+            content.verticalOverflow = VerticalWrapMode.Truncate;
+            SetRect(content.rectTransform, Vector2.zero, Vector2.one,
+                new Vector2(10f, 46f), new Vector2(-10f, -38f));
+            Button cancel = CreateButton(panel.transform, "Cancel Current Order",
+                "Cancel current order", font, 180f, out _);
+            SetRect(cancel.GetComponent<RectTransform>(), new Vector2(0f, 0f),
+                new Vector2(1f, 0f), new Vector2(10f, 8f), new Vector2(-10f, 40f));
+            SelectedAntInspectorView view =
+                panel.AddComponent<SelectedAntInspectorView>();
+            view.Configure(content, cancel);
+            return view;
+        }
+
+        private static ColonyResourceSummaryView CreateResourcePanel(
+            Transform parent, Font font)
+        {
+            GameObject panel = CreatePanel(parent, "Colony Resources",
+                new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(0f, 1f),
+                new Vector2(8f, -262f), new Vector2(430f, 84f));
+            Text content = CreateText(panel.transform, "Content", font, 13,
+                TextAnchor.MiddleLeft, new Color32(224, 216, 198, 255));
+            SetRect(content.rectTransform, Vector2.zero, Vector2.one,
+                new Vector2(10f, 6f), new Vector2(-10f, -6f));
+            ColonyResourceSummaryView view =
+                panel.AddComponent<ColonyResourceSummaryView>();
+            view.Configure(content);
+            return view;
+        }
+
+        private static ColonyJobStatusView CreateJobPanel(Transform parent, Font font)
+        {
+            GameObject panel = CreatePanel(parent, "Colony Work Status",
+                new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(0f, 1f),
+                new Vector2(8f, -354f), new Vector2(430f, 162f));
+            Text content = CreateText(panel.transform, "Content", font, 12,
+                TextAnchor.UpperLeft, new Color32(224, 216, 198, 255));
+            content.horizontalOverflow = HorizontalWrapMode.Wrap;
+            content.verticalOverflow = VerticalWrapMode.Truncate;
+            SetRect(content.rectTransform, Vector2.zero, Vector2.one,
+                new Vector2(10f, 8f), new Vector2(-10f, -8f));
+            ColonyJobStatusView view = panel.AddComponent<ColonyJobStatusView>();
+            view.Configure(content);
+            return view;
+        }
+
+        private static ColonyViewCommandBar CreateCommandPanel(
+            Transform parent, Font font)
+        {
+            GameObject panel = CreatePanel(parent, "Colony View Commands",
+                new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0.5f, 0f),
+                new Vector2(0f, 8f), new Vector2(620f, 160f));
+            GameObject row = CreateHorizontalGroup(panel.transform, "Tools");
+            SetRect(row.GetComponent<RectTransform>(), new Vector2(0f, 1f),
+                Vector2.one, new Vector2(10f, -44f), new Vector2(-10f, -8f));
+            Button select = CreateButton(row.transform, "Select", "Select", font, 112f,
+                out _);
+            Button excavate = CreateButton(row.transform, "Excavate", "Excavate", font,
+                128f, out _);
+            Button build = CreateButton(row.transform, "Build", "Build", font, 112f,
+                out _);
+            Button cancel = CreateButton(row.transform, "Cancel Designation",
+                "Cancel designation", font, 170f, out _);
+
+            GameObject menu = new(
+                "Build Recipes", typeof(RectTransform), typeof(Image),
+                typeof(GridLayoutGroup));
+            menu.transform.SetParent(panel.transform, false);
+            menu.GetComponent<Image>().color = new Color32(43, 38, 33, 250);
+            GridLayoutGroup grid = menu.GetComponent<GridLayoutGroup>();
+            grid.padding = new RectOffset(4, 4, 4, 4);
+            grid.spacing = new Vector2(4f, 4f);
+            grid.cellSize = new Vector2(190f, 34f);
+            grid.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
+            grid.constraintCount = 3;
+            SetRect(menu.GetComponent<RectTransform>(), new Vector2(0.5f, 0.5f),
+                new Vector2(0.5f, 0.5f), new Vector2(-295f, -35f),
+                new Vector2(295f, 43f));
+            var recipeButtons = new Button[6];
+            var recipeLabels = new Text[6];
+            for (int index = 0; index < 6; index++)
+                recipeButtons[index] = CreateButton(menu.transform,
+                    $"Recipe {index + 1}", "Recipe", font, 190f,
+                    out recipeLabels[index], 11);
+
+            Text status = CreateText(panel.transform, "Command Status", font, 12,
+                TextAnchor.MiddleCenter, new Color32(224, 216, 198, 255));
+            SetRect(status.rectTransform, Vector2.zero, Vector2.right,
+                new Vector2(10f, 6f), new Vector2(-10f, 34f));
+            ColonyViewCommandBar view = panel.AddComponent<ColonyViewCommandBar>();
+            view.Configure(select, excavate, build, cancel, menu,
+                recipeButtons, recipeLabels, status);
+            return view;
+        }
+
+        private static GameObject CreatePanel(Transform parent, string name,
+            Vector2 anchorMin, Vector2 anchorMax, Vector2 pivot,
+            Vector2 anchoredPosition, Vector2 size)
+        {
+            GameObject panel = new(name, typeof(RectTransform), typeof(Image));
+            panel.transform.SetParent(parent, false);
+            Image image = panel.GetComponent<Image>();
+            image.color = new Color32(38, 33, 29, 235);
+            RectTransform rect = panel.GetComponent<RectTransform>();
+            rect.anchorMin = anchorMin;
+            rect.anchorMax = anchorMax;
+            rect.pivot = pivot;
+            rect.anchoredPosition = anchoredPosition;
+            rect.sizeDelta = size;
+            return panel;
+        }
+
+        private static GameObject CreateStretchImage(
+            Transform parent, string name, Color colour)
+        {
+            GameObject imageObject = new(name, typeof(RectTransform), typeof(Image));
+            imageObject.transform.SetParent(parent, false);
+            imageObject.GetComponent<Image>().color = colour;
+            SetRect(imageObject.GetComponent<RectTransform>(), Vector2.zero, Vector2.one,
+                Vector2.zero, Vector2.zero);
+            return imageObject;
+        }
+
+        private static Text CreateLayoutText(Transform parent, string value,
+            Font font, int fontSize, float height)
+        {
+            Text text = CreateText(parent, value, font, fontSize,
+                TextAnchor.MiddleLeft, new Color32(242, 226, 190, 255));
+            text.text = value;
+            LayoutElement layout = text.gameObject.AddComponent<LayoutElement>();
+            layout.preferredHeight = height;
+            return text;
+        }
+
+        private static Text CreateText(Transform parent, string name, Font font,
+            int fontSize, TextAnchor alignment, Color colour)
+        {
+            GameObject textObject = new(name, typeof(RectTransform), typeof(Text));
+            textObject.transform.SetParent(parent, false);
+            Text text = textObject.GetComponent<Text>();
+            text.font = font;
+            text.fontSize = fontSize;
+            text.alignment = alignment;
+            text.color = colour;
+            text.raycastTarget = false;
+            return text;
+        }
+
+        private static GameObject CreateHorizontalGroup(Transform parent, string name)
+        {
+            GameObject row = new(name, typeof(RectTransform), typeof(HorizontalLayoutGroup));
+            row.transform.SetParent(parent, false);
+            HorizontalLayoutGroup layout = row.GetComponent<HorizontalLayoutGroup>();
+            layout.spacing = 6f;
+            layout.childControlWidth = false;
+            layout.childControlHeight = true;
+            layout.childForceExpandWidth = false;
+            layout.childForceExpandHeight = true;
+            return row;
+        }
+
+        private static Button CreateButton(Transform parent, string name,
+            string label, Font font, float preferredWidth, out Text labelText,
+            int fontSize = 13)
+        {
+            GameObject buttonObject = new(
+                name, typeof(RectTransform), typeof(Image), typeof(Button));
+            buttonObject.transform.SetParent(parent, false);
+            Image image = buttonObject.GetComponent<Image>();
+            image.color = new Color32(77, 67, 55, 255);
+            Button button = buttonObject.GetComponent<Button>();
+            button.targetGraphic = image;
+            LayoutElement layout = buttonObject.AddComponent<LayoutElement>();
+            layout.preferredWidth = preferredWidth;
+            layout.preferredHeight = 32f;
+            labelText = CreateText(buttonObject.transform, "Label", font, fontSize,
+                TextAnchor.MiddleCenter, new Color32(242, 232, 211, 255));
+            labelText.text = label;
+            SetRect(labelText.rectTransform, Vector2.zero, Vector2.one,
+                new Vector2(4f, 2f), new Vector2(-4f, -2f));
+            return button;
+        }
+
+        private static void SetRect(RectTransform rect, Vector2 anchorMin,
+            Vector2 anchorMax, Vector2 offsetMin, Vector2 offsetMax)
+        {
+            rect.anchorMin = anchorMin;
+            rect.anchorMax = anchorMax;
+            rect.offsetMin = offsetMin;
+            rect.offsetMax = offsetMax;
         }
 
         private static Tilemap CreateVisualTilemap(

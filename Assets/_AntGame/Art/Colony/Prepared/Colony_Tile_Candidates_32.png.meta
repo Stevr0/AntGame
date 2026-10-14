@@ -1,0 +1,2704 @@
+fileFormatVersion: 2
+guid: 141be60d2503e2d99e136447110cbeba
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: 4997481848909253006
+    second: Colony_R01_C01
+  - first:
+      213: 3380675054006051882
+    second: Colony_R01_C02
+  - first:
+      213: 2694842594623011093
+    second: Colony_R01_C03
+  - first:
+      213: 3489330873079798718
+    second: Colony_R01_C04
+  - first:
+      213: 6226777212849791071
+    second: Colony_R01_C05
+  - first:
+      213: 4261171317100535502
+    second: Colony_R01_C06
+  - first:
+      213: 3571964505908847103
+    second: Colony_R01_C07
+  - first:
+      213: 4173892242679618701
+    second: Colony_R01_C08
+  - first:
+      213: 7621167165075390726
+    second: Colony_R01_C09
+  - first:
+      213: 8374525583475023347
+    second: Colony_R01_C10
+  - first:
+      213: 6395523369907069668
+    second: Colony_R02_C01
+  - first:
+      213: 8316093141629311469
+    second: Colony_R02_C02
+  - first:
+      213: 1487276306511151474
+    second: Colony_R02_C03
+  - first:
+      213: 4949936699476739734
+    second: Colony_R02_C04
+  - first:
+      213: 3371160561265434110
+    second: Colony_R02_C05
+  - first:
+      213: 8968788299817942230
+    second: Colony_R02_C06
+  - first:
+      213: 7778108491694477162
+    second: Colony_R02_C07
+  - first:
+      213: 6823297988743245392
+    second: Colony_R02_C08
+  - first:
+      213: 2357362724833846226
+    second: Colony_R02_C09
+  - first:
+      213: 7825584397953228449
+    second: Colony_R02_C10
+  - first:
+      213: 1011075900338158518
+    second: Colony_R03_C01
+  - first:
+      213: 3958169735203247220
+    second: Colony_R03_C02
+  - first:
+      213: 7329892827907538683
+    second: Colony_R03_C03
+  - first:
+      213: 6297996372998260502
+    second: Colony_R03_C04
+  - first:
+      213: 22873086549909865
+    second: Colony_R03_C05
+  - first:
+      213: 1925669882813878064
+    second: Colony_R03_C06
+  - first:
+      213: 1302613799592931578
+    second: Colony_R03_C07
+  - first:
+      213: 6886384648235514158
+    second: Colony_R03_C08
+  - first:
+      213: 5324146129507853601
+    second: Colony_R03_C09
+  - first:
+      213: 8940801064774603357
+    second: Colony_R03_C10
+  - first:
+      213: 9097084871292552745
+    second: Colony_R04_C01
+  - first:
+      213: 2419332249621489772
+    second: Colony_R04_C02
+  - first:
+      213: 3822459086691854044
+    second: Colony_R04_C03
+  - first:
+      213: 7202108776861023044
+    second: Colony_R04_C04
+  - first:
+      213: 5074089873732345102
+    second: Colony_R04_C05
+  - first:
+      213: 5358467209384116229
+    second: Colony_R04_C06
+  - first:
+      213: 3135533159094206061
+    second: Colony_R04_C07
+  - first:
+      213: 7470184372732366096
+    second: Colony_R04_C08
+  - first:
+      213: 4913366237553424033
+    second: Colony_R04_C09
+  - first:
+      213: 8754981743708431490
+    second: Colony_R04_C10
+  - first:
+      213: 8462895755959327622
+    second: Colony_R05_C01
+  - first:
+      213: 5074933745351995071
+    second: Colony_R05_C02
+  - first:
+      213: 2729392889401262502
+    second: Colony_R05_C03
+  - first:
+      213: 1817021380963179914
+    second: Colony_R05_C04
+  - first:
+      213: 6334573457620198617
+    second: Colony_R05_C05
+  - first:
+      213: 3595637923322816651
+    second: Colony_R05_C06
+  - first:
+      213: 7324176205302343488
+    second: Colony_R05_C07
+  - first:
+      213: 5970757653542973952
+    second: Colony_R05_C08
+  - first:
+      213: 1273476215878433731
+    second: Colony_R05_C09
+  - first:
+      213: 2561493875615726359
+    second: Colony_R05_C10
+  - first:
+      213: 2194919392729112152
+    second: Colony_R06_C01
+  - first:
+      213: 3753938679834427129
+    second: Colony_R06_C02
+  - first:
+      213: 8881007989000662819
+    second: Colony_R06_C03
+  - first:
+      213: 4968283183921876311
+    second: Colony_R06_C04
+  - first:
+      213: 8876687511524768191
+    second: Colony_R06_C05
+  - first:
+      213: 6436625691881356469
+    second: Colony_R06_C06
+  - first:
+      213: 4820930490520386697
+    second: Colony_R06_C07
+  - first:
+      213: 5922970648001764872
+    second: Colony_R06_C08
+  - first:
+      213: 5175234586074555950
+    second: Colony_R06_C09
+  - first:
+      213: 88989790426475037
+    second: Colony_R06_C10
+  - first:
+      213: 6110443408889232690
+    second: Colony_R07_C01
+  - first:
+      213: 3562675923459786995
+    second: Colony_R07_C02
+  - first:
+      213: 4248386630378401564
+    second: Colony_R07_C03
+  - first:
+      213: 6533173472542525931
+    second: Colony_R07_C04
+  - first:
+      213: 3275309580798863158
+    second: Colony_R07_C05
+  - first:
+      213: 7205433890201817695
+    second: Colony_R07_C06
+  - first:
+      213: 7677377683227771035
+    second: Colony_R07_C07
+  - first:
+      213: 6209196861765770625
+    second: Colony_R07_C08
+  - first:
+      213: 1258271128719644578
+    second: Colony_R07_C09
+  - first:
+      213: 3158897895978346546
+    second: Colony_R07_C10
+  - first:
+      213: 8780197884182847601
+    second: Colony_R08_C01
+  - first:
+      213: 7715410757072492218
+    second: Colony_R08_C02
+  - first:
+      213: 1120518343317030113
+    second: Colony_R08_C03
+  - first:
+      213: 3908552903295773118
+    second: Colony_R08_C04
+  - first:
+      213: 2016079963323288496
+    second: Colony_R08_C05
+  - first:
+      213: 3074212102017640432
+    second: Colony_R08_C06
+  - first:
+      213: 8252251884088293130
+    second: Colony_R08_C07
+  - first:
+      213: 7982200943016920558
+    second: Colony_R08_C08
+  - first:
+      213: 868988377654411478
+    second: Colony_R08_C09
+  - first:
+      213: 1153217447483654393
+    second: Colony_R08_C10
+  - first:
+      213: 6580942206835791390
+    second: Colony_R09_C01
+  - first:
+      213: 1961259767249622926
+    second: Colony_R09_C02
+  - first:
+      213: 7901088526825946827
+    second: Colony_R09_C03
+  - first:
+      213: 8717442133253090399
+    second: Colony_R09_C04
+  - first:
+      213: 6432887024302064320
+    second: Colony_R09_C05
+  - first:
+      213: 9083968756369561232
+    second: Colony_R09_C06
+  - first:
+      213: 3388257859460737199
+    second: Colony_R09_C07
+  - first:
+      213: 310312345062835167
+    second: Colony_R09_C08
+  - first:
+      213: 6111873546926288280
+    second: Colony_R09_C09
+  - first:
+      213: 1143238167165734635
+    second: Colony_R09_C10
+  - first:
+      213: 8326997301989726360
+    second: Colony_R10_C01
+  - first:
+      213: 3525250040966239875
+    second: Colony_R10_C02
+  - first:
+      213: 5887159657618226152
+    second: Colony_R10_C03
+  - first:
+      213: 8444014310619563180
+    second: Colony_R10_C04
+  - first:
+      213: 5531437500757871656
+    second: Colony_R10_C05
+  - first:
+      213: 3354870806930180844
+    second: Colony_R10_C06
+  - first:
+      213: 4977232093339395786
+    second: Colony_R10_C07
+  - first:
+      213: 4184054836718835922
+    second: Colony_R10_C08
+  - first:
+      213: 6707345963093371186
+    second: Colony_R10_C09
+  - first:
+      213: 5849465722403378214
+    second: Colony_R10_C10
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 0
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 100
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 32
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 0
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: 0
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 1
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 100
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: Colony_R01_C01
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 288
+        width: 32
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 8d4908886c39b9efd2203425f03bc0c9
+      internalID: 4997481848909253006
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Colony_R01_C02
+      rect:
+        serializedVersion: 2
+        x: 32
+        y: 288
+        width: 32
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: d13441cb7a35064f92256f9864bd5920
+      internalID: 3380675054006051882
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Colony_R01_C03
+      rect:
+        serializedVersion: 2
+        x: 64
+        y: 288
+        width: 32
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 4e1f22e483df27c1034d777081f17aff
+      internalID: 2694842594623011093
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Colony_R01_C04
+      rect:
+        serializedVersion: 2
+        x: 96
+        y: 288
+        width: 32
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 20de6016ffc241218ffb9f71f15db808
+      internalID: 3489330873079798718
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Colony_R01_C05
+      rect:
+        serializedVersion: 2
+        x: 128
+        y: 288
+        width: 32
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 273f9501a8a22c82a454a89b6c387b90
+      internalID: 6226777212849791071
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Colony_R01_C06
+      rect:
+        serializedVersion: 2
+        x: 160
+        y: 288
+        width: 32
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 638f566cd1d2097b9db1ab0b9b9f113f
+      internalID: 4261171317100535502
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Colony_R01_C07
+      rect:
+        serializedVersion: 2
+        x: 192
+        y: 288
+        width: 32
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 981026838e06822a2c5ab0343a64e162
+      internalID: 3571964505908847103
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Colony_R01_C08
+      rect:
+        serializedVersion: 2
+        x: 224
+        y: 288
+        width: 32
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 449557a631ba3be8ea9cf391dc01e5e5
+      internalID: 4173892242679618701
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Colony_R01_C09
+      rect:
+        serializedVersion: 2
+        x: 256
+        y: 288
+        width: 32
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: e9e02a19f6181ac9657f0a879358c40d
+      internalID: 7621167165075390726
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Colony_R01_C10
+      rect:
+        serializedVersion: 2
+        x: 288
+        y: 288
+        width: 32
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: e19d0e16a1ac06d65aa392e14ebe7b69
+      internalID: 8374525583475023347
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Colony_R02_C01
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 256
+        width: 32
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 2014e12e059f6bb5715d0c6dbd74294f
+      internalID: 6395523369907069668
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Colony_R02_C02
+      rect:
+        serializedVersion: 2
+        x: 32
+        y: 256
+        width: 32
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 8e8b3a859973940f1657a601aadc27eb
+      internalID: 8316093141629311469
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Colony_R02_C03
+      rect:
+        serializedVersion: 2
+        x: 64
+        y: 256
+        width: 32
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: e596656a6eeaaad40179f98427c6c2e3
+      internalID: 1487276306511151474
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Colony_R02_C04
+      rect:
+        serializedVersion: 2
+        x: 96
+        y: 256
+        width: 32
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a72527bb6c98bce8b4d7ea4e82b84cb0
+      internalID: 4949936699476739734
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Colony_R02_C05
+      rect:
+        serializedVersion: 2
+        x: 128
+        y: 256
+        width: 32
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a4e09a50aee902bbe8151cdb38a7670a
+      internalID: 3371160561265434110
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Colony_R02_C06
+      rect:
+        serializedVersion: 2
+        x: 160
+        y: 256
+        width: 32
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 445e92be6a317f8ba87fdc5d9951a6cd
+      internalID: 8968788299817942230
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Colony_R02_C07
+      rect:
+        serializedVersion: 2
+        x: 192
+        y: 256
+        width: 32
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 2a96d3907449d9903916bd77514fa2bd
+      internalID: 7778108491694477162
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Colony_R02_C08
+      rect:
+        serializedVersion: 2
+        x: 224
+        y: 256
+        width: 32
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 080d14342d222611858ce7e0a6440cd0
+      internalID: 6823297988743245392
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Colony_R02_C09
+      rect:
+        serializedVersion: 2
+        x: 256
+        y: 256
+        width: 32
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 616c1bc48cbd59dd1bcd6b793ff35f90
+      internalID: 2357362724833846226
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Colony_R02_C10
+      rect:
+        serializedVersion: 2
+        x: 288
+        y: 256
+        width: 32
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 7a86ddf947f59fe4940abba7acc5c048
+      internalID: 7825584397953228449
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Colony_R03_C01
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 224
+        width: 32
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 029156fdff2bf3dcd39bbd289bac24ab
+      internalID: 1011075900338158518
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Colony_R03_C02
+      rect:
+        serializedVersion: 2
+        x: 32
+        y: 224
+        width: 32
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 7e142eb876692a5ab6f9c0f86417fddf
+      internalID: 3958169735203247220
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Colony_R03_C03
+      rect:
+        serializedVersion: 2
+        x: 64
+        y: 224
+        width: 32
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 74ad733c78bdbc1b7eb57a5fa7525b55
+      internalID: 7329892827907538683
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Colony_R03_C04
+      rect:
+        serializedVersion: 2
+        x: 96
+        y: 224
+        width: 32
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: d034d9d3acc42ce87c8ce90e2948356c
+      internalID: 6297996372998260502
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Colony_R03_C05
+      rect:
+        serializedVersion: 2
+        x: 128
+        y: 224
+        width: 32
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 3d2739d0119708da1e62e5b5aa7885a1
+      internalID: 22873086549909865
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Colony_R03_C06
+      rect:
+        serializedVersion: 2
+        x: 160
+        y: 224
+        width: 32
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: f32f49eaa4d0992164917e1cab0d6a5f
+      internalID: 1925669882813878064
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Colony_R03_C07
+      rect:
+        serializedVersion: 2
+        x: 192
+        y: 224
+        width: 32
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: f81d9afc47159c3d748017c38edeaa28
+      internalID: 1302613799592931578
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Colony_R03_C08
+      rect:
+        serializedVersion: 2
+        x: 224
+        y: 224
+        width: 32
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 61aa2e1a5fb233a94767aa73d8dcbe0a
+      internalID: 6886384648235514158
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Colony_R03_C09
+      rect:
+        serializedVersion: 2
+        x: 256
+        y: 224
+        width: 32
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: bc09d43807399c7162d4739bdd56e79a
+      internalID: 5324146129507853601
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Colony_R03_C10
+      rect:
+        serializedVersion: 2
+        x: 288
+        y: 224
+        width: 32
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a144c8885c3569b43964c48aa6d208f4
+      internalID: 8940801064774603357
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Colony_R04_C01
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 192
+        width: 32
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: d28e9f1b21b3881be2ad915e30bf5095
+      internalID: 9097084871292552745
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Colony_R04_C02
+      rect:
+        serializedVersion: 2
+        x: 32
+        y: 192
+        width: 32
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c658c6c772c0dab61bad54503b4cc8ac
+      internalID: 2419332249621489772
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Colony_R04_C03
+      rect:
+        serializedVersion: 2
+        x: 64
+        y: 192
+        width: 32
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: daa2a1144604e8cd8be97e507c3fa9c4
+      internalID: 3822459086691854044
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Colony_R04_C04
+      rect:
+        serializedVersion: 2
+        x: 96
+        y: 192
+        width: 32
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 3c216cb8e0eb39db444dbe6b5dc5d7de
+      internalID: 7202108776861023044
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Colony_R04_C05
+      rect:
+        serializedVersion: 2
+        x: 128
+        y: 192
+        width: 32
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c5f2c605818790a414d2c26ed9e1e225
+      internalID: 5074089873732345102
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Colony_R04_C06
+      rect:
+        serializedVersion: 2
+        x: 160
+        y: 192
+        width: 32
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: d60222a9ad39b52044fb39f9c44ed2db
+      internalID: 5358467209384116229
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Colony_R04_C07
+      rect:
+        serializedVersion: 2
+        x: 192
+        y: 192
+        width: 32
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 8f7a61b047d41d95407e986d2356421f
+      internalID: 3135533159094206061
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Colony_R04_C08
+      rect:
+        serializedVersion: 2
+        x: 224
+        y: 192
+        width: 32
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 7d9a7f031f820d22170cfa82b080942f
+      internalID: 7470184372732366096
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Colony_R04_C09
+      rect:
+        serializedVersion: 2
+        x: 256
+        y: 192
+        width: 32
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: ea25938105ecf7567a5ceda3d5f0e21c
+      internalID: 4913366237553424033
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Colony_R04_C10
+      rect:
+        serializedVersion: 2
+        x: 288
+        y: 192
+        width: 32
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: dcc4f59be84cdf0bdd3ef985ead650d0
+      internalID: 8754981743708431490
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Colony_R05_C01
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 160
+        width: 32
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 8e1d7fea26ee789b7ab1dd91748f7fa7
+      internalID: 8462895755959327622
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Colony_R05_C02
+      rect:
+        serializedVersion: 2
+        x: 32
+        y: 160
+        width: 32
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 21a8a422096ae31b523d750a473596f9
+      internalID: 5074933745351995071
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Colony_R05_C03
+      rect:
+        serializedVersion: 2
+        x: 64
+        y: 160
+        width: 32
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 5b1fa924620ff293cdf56a40e8167b80
+      internalID: 2729392889401262502
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Colony_R05_C04
+      rect:
+        serializedVersion: 2
+        x: 96
+        y: 160
+        width: 32
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: fa9f734e9d991daf40d2a7afa37ba629
+      internalID: 1817021380963179914
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Colony_R05_C05
+      rect:
+        serializedVersion: 2
+        x: 128
+        y: 160
+        width: 32
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c4c110bd68204f2ea419d77b1a59faf3
+      internalID: 6334573457620198617
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Colony_R05_C06
+      rect:
+        serializedVersion: 2
+        x: 160
+        y: 160
+        width: 32
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 6e50d255fbf6821f98cc041133605f1f
+      internalID: 3595637923322816651
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Colony_R05_C07
+      rect:
+        serializedVersion: 2
+        x: 192
+        y: 160
+        width: 32
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 10f2e135339e4a71f2b3c1d6269fa33b
+      internalID: 7324176205302343488
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Colony_R05_C08
+      rect:
+        serializedVersion: 2
+        x: 224
+        y: 160
+        width: 32
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 6a318f754fd85c7325f590889670bb3d
+      internalID: 5970757653542973952
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Colony_R05_C09
+      rect:
+        serializedVersion: 2
+        x: 256
+        y: 160
+        width: 32
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 57810b9537eef4bfe37af2816069c0c3
+      internalID: 1273476215878433731
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Colony_R05_C10
+      rect:
+        serializedVersion: 2
+        x: 288
+        y: 160
+        width: 32
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 7c3877d94e16b9cf49d9c43d0e96290f
+      internalID: 2561493875615726359
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Colony_R06_C01
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 128
+        width: 32
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: ed079096039a12d5477eec742bddee44
+      internalID: 2194919392729112152
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Colony_R06_C02
+      rect:
+        serializedVersion: 2
+        x: 32
+        y: 128
+        width: 32
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 28ea9df6b169cd12160a5e586267be3e
+      internalID: 3753938679834427129
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Colony_R06_C03
+      rect:
+        serializedVersion: 2
+        x: 64
+        y: 128
+        width: 32
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 1a5314fada0f60dd9e3dd55022ad90e8
+      internalID: 8881007989000662819
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Colony_R06_C04
+      rect:
+        serializedVersion: 2
+        x: 96
+        y: 128
+        width: 32
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 282dac908f9aad6a61051e9f1bac6f87
+      internalID: 4968283183921876311
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Colony_R06_C05
+      rect:
+        serializedVersion: 2
+        x: 128
+        y: 128
+        width: 32
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 054508f54eab0631f035957b84a08f8b
+      internalID: 8876687511524768191
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Colony_R06_C06
+      rect:
+        serializedVersion: 2
+        x: 160
+        y: 128
+        width: 32
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 147a15620480abf5b93e76c8fe8181d9
+      internalID: 6436625691881356469
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Colony_R06_C07
+      rect:
+        serializedVersion: 2
+        x: 192
+        y: 128
+        width: 32
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 6b5e9b39b97e5a0d2e392c761ab7a38b
+      internalID: 4820930490520386697
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Colony_R06_C08
+      rect:
+        serializedVersion: 2
+        x: 224
+        y: 128
+        width: 32
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: e75f9de01465e5826e1ec7971b4e7e81
+      internalID: 5922970648001764872
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Colony_R06_C09
+      rect:
+        serializedVersion: 2
+        x: 256
+        y: 128
+        width: 32
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 7b7cf824d05d76bd9ed4f86815e740d6
+      internalID: 5175234586074555950
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Colony_R06_C10
+      rect:
+        serializedVersion: 2
+        x: 288
+        y: 128
+        width: 32
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 4bcdb0067048ef9a7d74b81a7d05789e
+      internalID: 88989790426475037
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Colony_R07_C01
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 96
+        width: 32
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 35939873bad15d4ea7b067aed55b005d
+      internalID: 6110443408889232690
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Colony_R07_C02
+      rect:
+        serializedVersion: 2
+        x: 32
+        y: 96
+        width: 32
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 611b55c1e9045f07b0fd7c196565d220
+      internalID: 3562675923459786995
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Colony_R07_C03
+      rect:
+        serializedVersion: 2
+        x: 64
+        y: 96
+        width: 32
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c28dc1188a56883ad522547ae799ddd7
+      internalID: 4248386630378401564
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Colony_R07_C04
+      rect:
+        serializedVersion: 2
+        x: 96
+        y: 96
+        width: 32
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 6d896cb52fc1b784b7ec6e4f2e554feb
+      internalID: 6533173472542525931
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Colony_R07_C05
+      rect:
+        serializedVersion: 2
+        x: 128
+        y: 96
+        width: 32
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 7738c1449f2c08b9da33b16c830c0cd7
+      internalID: 3275309580798863158
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Colony_R07_C06
+      rect:
+        serializedVersion: 2
+        x: 160
+        y: 96
+        width: 32
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: cf5358b75521fa299f34e61f5c74e61b
+      internalID: 7205433890201817695
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Colony_R07_C07
+      rect:
+        serializedVersion: 2
+        x: 192
+        y: 96
+        width: 32
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 38876638453df251707008efe86ce3e2
+      internalID: 7677377683227771035
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Colony_R07_C08
+      rect:
+        serializedVersion: 2
+        x: 224
+        y: 96
+        width: 32
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: b6aff11ffc51905cabb43a049de94a06
+      internalID: 6209196861765770625
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Colony_R07_C09
+      rect:
+        serializedVersion: 2
+        x: 256
+        y: 96
+        width: 32
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 0ef73421dd6fc06f9dcac4877a82f78a
+      internalID: 1258271128719644578
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Colony_R07_C10
+      rect:
+        serializedVersion: 2
+        x: 288
+        y: 96
+        width: 32
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 823722fa58ac6e09ee061dea3aee6bb6
+      internalID: 3158897895978346546
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Colony_R08_C01
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 64
+        width: 32
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: cd5910c39655ee6d7d666775d111c584
+      internalID: 8780197884182847601
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Colony_R08_C02
+      rect:
+        serializedVersion: 2
+        x: 32
+        y: 64
+        width: 32
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 2ea551b2e8e6bd6c33ac6d22e20eebd8
+      internalID: 7715410757072492218
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Colony_R08_C03
+      rect:
+        serializedVersion: 2
+        x: 64
+        y: 64
+        width: 32
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 82ad8e64543fb727f74d135bc6aec4a9
+      internalID: 1120518343317030113
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Colony_R08_C04
+      rect:
+        serializedVersion: 2
+        x: 96
+        y: 64
+        width: 32
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: e55e5b872e9764121c8d27951a3cab6c
+      internalID: 3908552903295773118
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Colony_R08_C05
+      rect:
+        serializedVersion: 2
+        x: 128
+        y: 64
+        width: 32
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: e5cd682dc0cd14e4f573025d57471a05
+      internalID: 2016079963323288496
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Colony_R08_C06
+      rect:
+        serializedVersion: 2
+        x: 160
+        y: 64
+        width: 32
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: d8fd07a778a001853a936e269176652d
+      internalID: 3074212102017640432
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Colony_R08_C07
+      rect:
+        serializedVersion: 2
+        x: 192
+        y: 64
+        width: 32
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 08345a5882f57a956c72da2bcd11da4a
+      internalID: 8252251884088293130
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Colony_R08_C08
+      rect:
+        serializedVersion: 2
+        x: 224
+        y: 64
+        width: 32
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 4301bf1dabfe4d9c0e17207db6415ea8
+      internalID: 7982200943016920558
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Colony_R08_C09
+      rect:
+        serializedVersion: 2
+        x: 256
+        y: 64
+        width: 32
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: e8d83ac047e042407040bddb3d39c76d
+      internalID: 868988377654411478
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Colony_R08_C10
+      rect:
+        serializedVersion: 2
+        x: 288
+        y: 64
+        width: 32
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: b221cb72860ce5da1d47e5f9a1e88544
+      internalID: 1153217447483654393
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Colony_R09_C01
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 32
+        width: 32
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: cb0bfe5333a93b362bc1e59926b4e8ca
+      internalID: 6580942206835791390
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Colony_R09_C02
+      rect:
+        serializedVersion: 2
+        x: 32
+        y: 32
+        width: 32
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 76a64fe8b7d8c92020af585f86032b72
+      internalID: 1961259767249622926
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Colony_R09_C03
+      rect:
+        serializedVersion: 2
+        x: 64
+        y: 32
+        width: 32
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 09a0cb4dbb760170aed317bed0bafb96
+      internalID: 7901088526825946827
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Colony_R09_C04
+      rect:
+        serializedVersion: 2
+        x: 96
+        y: 32
+        width: 32
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 4e07e9cf32dcc0907b5b561e51c313e7
+      internalID: 8717442133253090399
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Colony_R09_C05
+      rect:
+        serializedVersion: 2
+        x: 128
+        y: 32
+        width: 32
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 7fba30f4208a7086acbc1f494e335728
+      internalID: 6432887024302064320
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Colony_R09_C06
+      rect:
+        serializedVersion: 2
+        x: 160
+        y: 32
+        width: 32
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 60e70825977a23f4c99bafede2440b54
+      internalID: 9083968756369561232
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Colony_R09_C07
+      rect:
+        serializedVersion: 2
+        x: 192
+        y: 32
+        width: 32
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 42c996c274d847a5cc798656f257b725
+      internalID: 3388257859460737199
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Colony_R09_C08
+      rect:
+        serializedVersion: 2
+        x: 224
+        y: 32
+        width: 32
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 5c1aff3909ac9939754141576df8b660
+      internalID: 310312345062835167
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Colony_R09_C09
+      rect:
+        serializedVersion: 2
+        x: 256
+        y: 32
+        width: 32
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 331dc874c5fd61e374e3883c5f4e5378
+      internalID: 6111873546926288280
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Colony_R09_C10
+      rect:
+        serializedVersion: 2
+        x: 288
+        y: 32
+        width: 32
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 553dd14af44389e8ef5057151e57c2f0
+      internalID: 1143238167165734635
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Colony_R10_C01
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 0
+        width: 32
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 24df269114eab91f9f48aef8f638c943
+      internalID: 8326997301989726360
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Colony_R10_C02
+      rect:
+        serializedVersion: 2
+        x: 32
+        y: 0
+        width: 32
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 5e35f058dac9e8be9b4292aae3c1654e
+      internalID: 3525250040966239875
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Colony_R10_C03
+      rect:
+        serializedVersion: 2
+        x: 64
+        y: 0
+        width: 32
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: e39382c54ec8674015ac151e8b753b25
+      internalID: 5887159657618226152
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Colony_R10_C04
+      rect:
+        serializedVersion: 2
+        x: 96
+        y: 0
+        width: 32
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 75a0f272280cfafd9e11799afe3d4dda
+      internalID: 8444014310619563180
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Colony_R10_C05
+      rect:
+        serializedVersion: 2
+        x: 128
+        y: 0
+        width: 32
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: e8ae4c3ea9d5b3e6df64196a56642e54
+      internalID: 5531437500757871656
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Colony_R10_C06
+      rect:
+        serializedVersion: 2
+        x: 160
+        y: 0
+        width: 32
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: f7c87457b6fa6442e9c20f5ee87e3e02
+      internalID: 3354870806930180844
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Colony_R10_C07
+      rect:
+        serializedVersion: 2
+        x: 192
+        y: 0
+        width: 32
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: b058ebe29c5dc37161351055ed7e8147
+      internalID: 4977232093339395786
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Colony_R10_C08
+      rect:
+        serializedVersion: 2
+        x: 224
+        y: 0
+        width: 32
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 91d4f2a953bb221319d68c72b64f3757
+      internalID: 4184054836718835922
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Colony_R10_C09
+      rect:
+        serializedVersion: 2
+        x: 256
+        y: 0
+        width: 32
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 96ca169b55e774213ff0bb7d70e0b786
+      internalID: 6707345963093371186
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Colony_R10_C10
+      rect:
+        serializedVersion: 2
+        x: 288
+        y: 0
+        width: 32
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c2e7003027afec3ccef80562558e46f7
+      internalID: 5849465722403378214
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    outline: []
+    customData:
+    physicsShape: []
+    bones: []
+    spriteID: 5e97eb03825dee720800000000000000
+    internalID: 0
+    vertices: []
+    indices:
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      Colony_R01_C01: 4997481848909253006
+      Colony_R01_C02: 3380675054006051882
+      Colony_R01_C03: 2694842594623011093
+      Colony_R01_C04: 3489330873079798718
+      Colony_R01_C05: 6226777212849791071
+      Colony_R01_C06: 4261171317100535502
+      Colony_R01_C07: 3571964505908847103
+      Colony_R01_C08: 4173892242679618701
+      Colony_R01_C09: 7621167165075390726
+      Colony_R01_C10: 8374525583475023347
+      Colony_R02_C01: 6395523369907069668
+      Colony_R02_C02: 8316093141629311469
+      Colony_R02_C03: 1487276306511151474
+      Colony_R02_C04: 4949936699476739734
+      Colony_R02_C05: 3371160561265434110
+      Colony_R02_C06: 8968788299817942230
+      Colony_R02_C07: 7778108491694477162
+      Colony_R02_C08: 6823297988743245392
+      Colony_R02_C09: 2357362724833846226
+      Colony_R02_C10: 7825584397953228449
+      Colony_R03_C01: 1011075900338158518
+      Colony_R03_C02: 3958169735203247220
+      Colony_R03_C03: 7329892827907538683
+      Colony_R03_C04: 6297996372998260502
+      Colony_R03_C05: 22873086549909865
+      Colony_R03_C06: 1925669882813878064
+      Colony_R03_C07: 1302613799592931578
+      Colony_R03_C08: 6886384648235514158
+      Colony_R03_C09: 5324146129507853601
+      Colony_R03_C10: 8940801064774603357
+      Colony_R04_C01: 9097084871292552745
+      Colony_R04_C02: 2419332249621489772
+      Colony_R04_C03: 3822459086691854044
+      Colony_R04_C04: 7202108776861023044
+      Colony_R04_C05: 5074089873732345102
+      Colony_R04_C06: 5358467209384116229
+      Colony_R04_C07: 3135533159094206061
+      Colony_R04_C08: 7470184372732366096
+      Colony_R04_C09: 4913366237553424033
+      Colony_R04_C10: 8754981743708431490
+      Colony_R05_C01: 8462895755959327622
+      Colony_R05_C02: 5074933745351995071
+      Colony_R05_C03: 2729392889401262502
+      Colony_R05_C04: 1817021380963179914
+      Colony_R05_C05: 6334573457620198617
+      Colony_R05_C06: 3595637923322816651
+      Colony_R05_C07: 7324176205302343488
+      Colony_R05_C08: 5970757653542973952
+      Colony_R05_C09: 1273476215878433731
+      Colony_R05_C10: 2561493875615726359
+      Colony_R06_C01: 2194919392729112152
+      Colony_R06_C02: 3753938679834427129
+      Colony_R06_C03: 8881007989000662819
+      Colony_R06_C04: 4968283183921876311
+      Colony_R06_C05: 8876687511524768191
+      Colony_R06_C06: 6436625691881356469
+      Colony_R06_C07: 4820930490520386697
+      Colony_R06_C08: 5922970648001764872
+      Colony_R06_C09: 5175234586074555950
+      Colony_R06_C10: 88989790426475037
+      Colony_R07_C01: 6110443408889232690
+      Colony_R07_C02: 3562675923459786995
+      Colony_R07_C03: 4248386630378401564
+      Colony_R07_C04: 6533173472542525931
+      Colony_R07_C05: 3275309580798863158
+      Colony_R07_C06: 7205433890201817695
+      Colony_R07_C07: 7677377683227771035
+      Colony_R07_C08: 6209196861765770625
+      Colony_R07_C09: 1258271128719644578
+      Colony_R07_C10: 3158897895978346546
+      Colony_R08_C01: 8780197884182847601
+      Colony_R08_C02: 7715410757072492218
+      Colony_R08_C03: 1120518343317030113
+      Colony_R08_C04: 3908552903295773118
+      Colony_R08_C05: 2016079963323288496
+      Colony_R08_C06: 3074212102017640432
+      Colony_R08_C07: 8252251884088293130
+      Colony_R08_C08: 7982200943016920558
+      Colony_R08_C09: 868988377654411478
+      Colony_R08_C10: 1153217447483654393
+      Colony_R09_C01: 6580942206835791390
+      Colony_R09_C02: 1961259767249622926
+      Colony_R09_C03: 7901088526825946827
+      Colony_R09_C04: 8717442133253090399
+      Colony_R09_C05: 6432887024302064320
+      Colony_R09_C06: 9083968756369561232
+      Colony_R09_C07: 3388257859460737199
+      Colony_R09_C08: 310312345062835167
+      Colony_R09_C09: 6111873546926288280
+      Colony_R09_C10: 1143238167165734635
+      Colony_R10_C01: 8326997301989726360
+      Colony_R10_C02: 3525250040966239875
+      Colony_R10_C03: 5887159657618226152
+      Colony_R10_C04: 8444014310619563180
+      Colony_R10_C05: 5531437500757871656
+      Colony_R10_C06: 3354870806930180844
+      Colony_R10_C07: 4977232093339395786
+      Colony_R10_C08: 4184054836718835922
+      Colony_R10_C09: 6707345963093371186
+      Colony_R10_C10: 5849465722403378214
+  mipmapLimitGroupName:
+  pSDRemoveMatte: 0
+  userData: Art foundation candidate sprites; not seam-certified or gameplay-bound.
+  assetBundleName:
+  assetBundleVariant:

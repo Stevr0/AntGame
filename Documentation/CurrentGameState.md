@@ -1,10 +1,68 @@
 # Ant Colony Current Game State
 
+## Art foundation — 14 October 2026
+
+**Implemented — Pending Manual Acceptance.** Original `1254x1254` RGBA Colony and World tilesets are preserved under `Assets/_AntGame/Art/<View>/Source`. A deterministic preparation tool produces 100 Colony and 70 World position-named `32x32` candidate sprites with Multiple-sprite, 32 PPU, Point, uncompressed, no-mipmap import metadata. The extraction uses measured variable source rectangles and aspect-preserving square padding rather than blind 32x32 source slicing.
+
+No candidate is gameplay-bound and none is claimed seamless. Production Tile assets and palettes are deferred because several Colony cells combine Background, Solid, cavity edge and decoration visuals, while World props have variable footprints. Existing terrain definitions, Tilemaps, collision, excavation, navigation, ant locomotion and scenes are unchanged. See `Documentation/ArtDirection.md` for source hashes, limitations and the manual Unity inspection checklist.
+
 ## Latest acceptance — 14 October 2026
 
 **Milestone 3.4B Unified Simulation Clock & Gameplay Mode: COMPLETE — MANUALLY ACCEPTED.** User confirmed all 20 grouped manual Unity Play Mode checks covering ordinary colony gameplay, pause/resume integrity, developer overrides, and clean Console. Codex reported focused 11/11 Edit and 7/7 Play; full graphics-enabled 485/485 Edit and 58/58 Play passed before manual acceptance. This documentation-only change did not rerun tests. Earlier 3.4B pending-acceptance text below is historical.
 
-**Next: Milestone 3.4C Player Colony HUD & Developer UI Separation (not implemented).** Build an authored Unity uGUI player HUD for selectable Mara/Pip/Tala roster, selected-ant inspection, current day/time and pause/speeds, excavation and functional-background conversion designation/cancellation, useful job and resource status. Keep the existing developer IMGUI test harness available separately but hidden by default in normal gameplay. Preserve 3.4B clock, paused-order authoring and 3.4A resource conservation. Later work matrix/alerts/context menus remain deferred.
+**Milestone 3.4C Player Colony HUD & Developer UI Separation: Implemented — Pending Manual Acceptance.** The authored uGUI HUD now exposes the accepted Colony View loop without developer controls. It binds Mara, Pip and Tala to authoritative `AntRecord` identities, presents shared needs/skills/inventory/job data separately from Colony View position/navigation, uses the one 3.4B clock, and exposes Select, Excavate, the six existing functional Background recipes, and safe designation cancellation. Read-only resource totals keep stored, carried, loose and staged ownership separate.
+
+Developer IMGUI remains intact but starts hidden and opens deliberately through the centre-top **Developer Mode (F12)** control or F12. The player HUD remains active while it is open. uGUI raycasting feeds the existing central input boundary, while IMGUI retains its bounded hit rectangles; world commands, designation drags and camera mouse controls therefore stop over either interface. The temporary `SimulationTimeControlStrip` has been removed from the authored scene.
+
+Automated verification passed **12/12 focused Edit Mode**, **13/13 focused Play Mode**, **489/489 complete graphics-enabled Edit Mode**, and **62/62 complete Play Mode**. A separate headless full-Edit attempt crashed inside Unity's test runner without results; the required graphics-enabled retry passed. Manual Play Mode acceptance below remains outstanding.
+
+## Current implemented milestone — 3.4C Colony View Player HUD (14 October 2026)
+
+### Authored Canvas and responsibility boundary
+
+`PlayerHud.prefab` owns one Screen Space Overlay Canvas with scale-with-screen-size layout, one reusable `AntRosterEntry.prefab`, and focused roster, inspector, clock, command, resource and job-status presenters. `AntGameDevelopmentWorldHost` only binds existing authorities after rebuilding the deterministic scene. HUD components do not own or copy simulation state, discover ants scene-wide each frame, or introduce another clock, registry, scheduler, inventory wallet or movement system.
+
+The HUD's global surfaces are the roster, selected shared ant record, simulation time and physical resource summary. The bottom command bar is explicitly `Colony` context and exposes no World View runtime, scene switching, surface terrain, entrances, residency or cross-view navigation.
+
+### Exact 3.4C manual Unity Play Mode acceptance
+
+**Pending:** perform these checks in `Assets/AntColony/Scenes/AntGameDevelopment.unity`; keep 3.4C at **Implemented — Pending Manual Acceptance** until the user confirms them.
+
+1. Open the development scene.
+2. Confirm Day 1, 08:00 paused start.
+3. Confirm the player HUD is visible without developer controls.
+4. Confirm Mara, Pip and Tala appear.
+5. Select each ant from the roster.
+6. Select ants directly in Colony View.
+7. Check roster/inspector synchronisation.
+8. Inspect needs, skills and inventory.
+9. Test player Play/Pause.
+10. Test 1×, 2× and 3×.
+11. Mark excavation while paused using only player tools.
+12. Test excavation drag designation.
+13. Press Play and observe autonomous excavation.
+14. Verify physical resource drops and hauling.
+15. Select all six available Background conversions.
+16. Check the displayed provisional costs and four-hour work requirements.
+17. Designate construction while paused.
+18. Observe autonomous material collection and construction.
+19. Inspect job progress and waiting reasons.
+20. Test construction cancellation and recoverable staged material.
+21. Test excavation cancellation.
+22. Check the resource summary against actual inventory, storage, drops and staged material.
+23. Exercise inventory recovery and ground-drop fallback.
+24. Open Developer Mode deliberately with F12 or its separate reopen control.
+25. Confirm all seven developer categories and fixture controls remain available.
+26. Close Developer Mode without altering simulation state or autonomy.
+27. Test input blocking across player HUD and developer UI, including drag start/release.
+28. Test camera pan, middle-drag and zoom outside UI, and confirm UI scrolling does not zoom.
+29. Test 1280×720, 1920×1080 and 2560×1080.
+30. Reset the scene and confirm the deterministic starting state.
+31. Verify the Unity Console is free of relevant errors and warnings.
+
+### Known limitations
+
+The roster compatibility adapter can select only an ant with a currently loaded Colony View representation; registered unloaded/future-region ants remain displayable but cannot yet be focused. Region residency and cross-view selection are deliberately absent. There is no full work-priority matrix, colony alert system, contextual order menu, World View toolset, save/load or production bootstrap. Layout at the three target resolutions still requires manual visual acceptance.
 
 
 ## Current implemented milestone — 3.4B Unified Simulation Clock & Gameplay Mode (14 October 2026)

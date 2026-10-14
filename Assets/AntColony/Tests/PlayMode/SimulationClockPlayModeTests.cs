@@ -1,6 +1,7 @@
 using System.Collections;
 using AntColony.Commands;
 using AntColony.Development;
+using AntColony.PlayerUI;
 using AntColony.World;
 using NUnit.Framework;
 using UnityEngine;
@@ -134,19 +135,23 @@ namespace AntColony.Tests.PlayMode
         }
 
         [UnityTest]
-        public IEnumerator TimeStripRemainsVisibleAndBlocksWorldInputWhenDevUiIsHidden()
+        public IEnumerator PlayerHudReplacesTimeStripAndBlocksWorldInputWhenDevUiIsHidden()
         {
             yield return LoadPausedScene();
             AntGameDevelopmentWorldHost host = FindHost();
-            SimulationTimeControlStrip strip =
-                Object.FindFirstObjectByType<SimulationTimeControlStrip>();
-            Assert.That(strip, Is.Not.Null);
+            PlayerHudController hud = host.PlayerHud;
+            Assert.That(hud, Is.Not.Null);
+            Assert.That(Object.FindFirstObjectByType<SimulationTimeControlStrip>(),
+                Is.Null);
 
             host.SelectionController.SetDevelopmentUiVisible(false);
-            yield return null; // Lets OnGUI publish the strip's blocker rectangle.
+            yield return null;
+            RectTransform panel = hud.SimulationControls.GetComponent<RectTransform>();
+            var corners = new Vector3[4];
+            panel.GetWorldCorners(corners);
+            Vector2 centre = (corners[0] + corners[2]) * 0.5f;
 
-            Assert.That(host.SelectionController.IsGuiPointBlocked(
-                strip.GuiRect.center), Is.True);
+            Assert.That(host.SelectionController.IsScreenPointBlocked(centre), Is.True);
             Assert.That(host.SelectionController.DevelopmentUiVisible, Is.False);
         }
 

@@ -1,0 +1,1925 @@
+{
+  "format_version": 1,
+  "notes": [
+    "Coordinates are measured source slots, not an assumed 32x32 source grid.",
+    "Sprites are aspect-preserving candidates and are not certified seamless.",
+    "World props below the regular terrain block are retained only in Source.",
+    "Colony composite cavities and edges are not bound to Background/Solid data."
+  ],
+  "sheets": [
+    {
+      "key": "Colony",
+      "source": "Assets/_AntGame/Art/Colony/Source/Colony_Tileset_Source.png",
+      "source_sha256": "0f70c4859c8a9d3059c953bf8e2653bf7b2ce0cda1e3f949d47e53fc4ccf2a52",
+      "source_dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "fully_transparent_pixels": 296608,
+      "partially_transparent_pixels": 1274632,
+      "fully_opaque_pixels": 1276,
+      "prepared": "Assets/_AntGame/Art/Colony/Prepared/Colony_Tile_Candidates_32.png",
+      "prepared_dimensions": [
+        320,
+        320
+      ],
+      "sprite_count": 100,
+      "target_tile_pixels": 32,
+      "sprites": [
+        {
+          "name": "Colony_R01_C01",
+          "row_from_top": 1,
+          "column_from_left": 1,
+          "source_rect_top_left": [
+            30,
+            29,
+            154,
+            159
+          ]
+        },
+        {
+          "name": "Colony_R01_C02",
+          "row_from_top": 1,
+          "column_from_left": 2,
+          "source_rect_top_left": [
+            154,
+            29,
+            269,
+            159
+          ]
+        },
+        {
+          "name": "Colony_R01_C03",
+          "row_from_top": 1,
+          "column_from_left": 3,
+          "source_rect_top_left": [
+            269,
+            29,
+            391,
+            159
+          ]
+        },
+        {
+          "name": "Colony_R01_C04",
+          "row_from_top": 1,
+          "column_from_left": 4,
+          "source_rect_top_left": [
+            391,
+            29,
+            508,
+            159
+          ]
+        },
+        {
+          "name": "Colony_R01_C05",
+          "row_from_top": 1,
+          "column_from_left": 5,
+          "source_rect_top_left": [
+            508,
+            29,
+            625,
+            159
+          ]
+        },
+        {
+          "name": "Colony_R01_C06",
+          "row_from_top": 1,
+          "column_from_left": 6,
+          "source_rect_top_left": [
+            625,
+            29,
+            745,
+            159
+          ]
+        },
+        {
+          "name": "Colony_R01_C07",
+          "row_from_top": 1,
+          "column_from_left": 7,
+          "source_rect_top_left": [
+            745,
+            29,
+            864,
+            159
+          ]
+        },
+        {
+          "name": "Colony_R01_C08",
+          "row_from_top": 1,
+          "column_from_left": 8,
+          "source_rect_top_left": [
+            864,
+            29,
+            983,
+            159
+          ]
+        },
+        {
+          "name": "Colony_R01_C09",
+          "row_from_top": 1,
+          "column_from_left": 9,
+          "source_rect_top_left": [
+            983,
+            29,
+            1105,
+            159
+          ]
+        },
+        {
+          "name": "Colony_R01_C10",
+          "row_from_top": 1,
+          "column_from_left": 10,
+          "source_rect_top_left": [
+            1105,
+            29,
+            1225,
+            159
+          ]
+        },
+        {
+          "name": "Colony_R02_C01",
+          "row_from_top": 2,
+          "column_from_left": 1,
+          "source_rect_top_left": [
+            30,
+            159,
+            154,
+            279
+          ]
+        },
+        {
+          "name": "Colony_R02_C02",
+          "row_from_top": 2,
+          "column_from_left": 2,
+          "source_rect_top_left": [
+            154,
+            159,
+            269,
+            279
+          ]
+        },
+        {
+          "name": "Colony_R02_C03",
+          "row_from_top": 2,
+          "column_from_left": 3,
+          "source_rect_top_left": [
+            269,
+            159,
+            391,
+            279
+          ]
+        },
+        {
+          "name": "Colony_R02_C04",
+          "row_from_top": 2,
+          "column_from_left": 4,
+          "source_rect_top_left": [
+            391,
+            159,
+            508,
+            279
+          ]
+        },
+        {
+          "name": "Colony_R02_C05",
+          "row_from_top": 2,
+          "column_from_left": 5,
+          "source_rect_top_left": [
+            508,
+            159,
+            625,
+            279
+          ]
+        },
+        {
+          "name": "Colony_R02_C06",
+          "row_from_top": 2,
+          "column_from_left": 6,
+          "source_rect_top_left": [
+            625,
+            159,
+            745,
+            279
+          ]
+        },
+        {
+          "name": "Colony_R02_C07",
+          "row_from_top": 2,
+          "column_from_left": 7,
+          "source_rect_top_left": [
+            745,
+            159,
+            864,
+            279
+          ]
+        },
+        {
+          "name": "Colony_R02_C08",
+          "row_from_top": 2,
+          "column_from_left": 8,
+          "source_rect_top_left": [
+            864,
+            159,
+            983,
+            279
+          ]
+        },
+        {
+          "name": "Colony_R02_C09",
+          "row_from_top": 2,
+          "column_from_left": 9,
+          "source_rect_top_left": [
+            983,
+            159,
+            1105,
+            279
+          ]
+        },
+        {
+          "name": "Colony_R02_C10",
+          "row_from_top": 2,
+          "column_from_left": 10,
+          "source_rect_top_left": [
+            1105,
+            159,
+            1225,
+            279
+          ]
+        },
+        {
+          "name": "Colony_R03_C01",
+          "row_from_top": 3,
+          "column_from_left": 1,
+          "source_rect_top_left": [
+            30,
+            279,
+            154,
+            391
+          ]
+        },
+        {
+          "name": "Colony_R03_C02",
+          "row_from_top": 3,
+          "column_from_left": 2,
+          "source_rect_top_left": [
+            154,
+            279,
+            269,
+            391
+          ]
+        },
+        {
+          "name": "Colony_R03_C03",
+          "row_from_top": 3,
+          "column_from_left": 3,
+          "source_rect_top_left": [
+            269,
+            279,
+            391,
+            391
+          ]
+        },
+        {
+          "name": "Colony_R03_C04",
+          "row_from_top": 3,
+          "column_from_left": 4,
+          "source_rect_top_left": [
+            391,
+            279,
+            508,
+            391
+          ]
+        },
+        {
+          "name": "Colony_R03_C05",
+          "row_from_top": 3,
+          "column_from_left": 5,
+          "source_rect_top_left": [
+            508,
+            279,
+            625,
+            391
+          ]
+        },
+        {
+          "name": "Colony_R03_C06",
+          "row_from_top": 3,
+          "column_from_left": 6,
+          "source_rect_top_left": [
+            625,
+            279,
+            745,
+            391
+          ]
+        },
+        {
+          "name": "Colony_R03_C07",
+          "row_from_top": 3,
+          "column_from_left": 7,
+          "source_rect_top_left": [
+            745,
+            279,
+            864,
+            391
+          ]
+        },
+        {
+          "name": "Colony_R03_C08",
+          "row_from_top": 3,
+          "column_from_left": 8,
+          "source_rect_top_left": [
+            864,
+            279,
+            983,
+            391
+          ]
+        },
+        {
+          "name": "Colony_R03_C09",
+          "row_from_top": 3,
+          "column_from_left": 9,
+          "source_rect_top_left": [
+            983,
+            279,
+            1105,
+            391
+          ]
+        },
+        {
+          "name": "Colony_R03_C10",
+          "row_from_top": 3,
+          "column_from_left": 10,
+          "source_rect_top_left": [
+            1105,
+            279,
+            1225,
+            391
+          ]
+        },
+        {
+          "name": "Colony_R04_C01",
+          "row_from_top": 4,
+          "column_from_left": 1,
+          "source_rect_top_left": [
+            30,
+            391,
+            154,
+            506
+          ]
+        },
+        {
+          "name": "Colony_R04_C02",
+          "row_from_top": 4,
+          "column_from_left": 2,
+          "source_rect_top_left": [
+            154,
+            391,
+            269,
+            506
+          ]
+        },
+        {
+          "name": "Colony_R04_C03",
+          "row_from_top": 4,
+          "column_from_left": 3,
+          "source_rect_top_left": [
+            269,
+            391,
+            391,
+            506
+          ]
+        },
+        {
+          "name": "Colony_R04_C04",
+          "row_from_top": 4,
+          "column_from_left": 4,
+          "source_rect_top_left": [
+            391,
+            391,
+            508,
+            506
+          ]
+        },
+        {
+          "name": "Colony_R04_C05",
+          "row_from_top": 4,
+          "column_from_left": 5,
+          "source_rect_top_left": [
+            508,
+            391,
+            625,
+            506
+          ]
+        },
+        {
+          "name": "Colony_R04_C06",
+          "row_from_top": 4,
+          "column_from_left": 6,
+          "source_rect_top_left": [
+            625,
+            391,
+            745,
+            506
+          ]
+        },
+        {
+          "name": "Colony_R04_C07",
+          "row_from_top": 4,
+          "column_from_left": 7,
+          "source_rect_top_left": [
+            745,
+            391,
+            864,
+            506
+          ]
+        },
+        {
+          "name": "Colony_R04_C08",
+          "row_from_top": 4,
+          "column_from_left": 8,
+          "source_rect_top_left": [
+            864,
+            391,
+            983,
+            506
+          ]
+        },
+        {
+          "name": "Colony_R04_C09",
+          "row_from_top": 4,
+          "column_from_left": 9,
+          "source_rect_top_left": [
+            983,
+            391,
+            1105,
+            506
+          ]
+        },
+        {
+          "name": "Colony_R04_C10",
+          "row_from_top": 4,
+          "column_from_left": 10,
+          "source_rect_top_left": [
+            1105,
+            391,
+            1225,
+            506
+          ]
+        },
+        {
+          "name": "Colony_R05_C01",
+          "row_from_top": 5,
+          "column_from_left": 1,
+          "source_rect_top_left": [
+            30,
+            506,
+            154,
+            621
+          ]
+        },
+        {
+          "name": "Colony_R05_C02",
+          "row_from_top": 5,
+          "column_from_left": 2,
+          "source_rect_top_left": [
+            154,
+            506,
+            269,
+            621
+          ]
+        },
+        {
+          "name": "Colony_R05_C03",
+          "row_from_top": 5,
+          "column_from_left": 3,
+          "source_rect_top_left": [
+            269,
+            506,
+            391,
+            621
+          ]
+        },
+        {
+          "name": "Colony_R05_C04",
+          "row_from_top": 5,
+          "column_from_left": 4,
+          "source_rect_top_left": [
+            391,
+            506,
+            508,
+            621
+          ]
+        },
+        {
+          "name": "Colony_R05_C05",
+          "row_from_top": 5,
+          "column_from_left": 5,
+          "source_rect_top_left": [
+            508,
+            506,
+            625,
+            621
+          ]
+        },
+        {
+          "name": "Colony_R05_C06",
+          "row_from_top": 5,
+          "column_from_left": 6,
+          "source_rect_top_left": [
+            625,
+            506,
+            745,
+            621
+          ]
+        },
+        {
+          "name": "Colony_R05_C07",
+          "row_from_top": 5,
+          "column_from_left": 7,
+          "source_rect_top_left": [
+            745,
+            506,
+            864,
+            621
+          ]
+        },
+        {
+          "name": "Colony_R05_C08",
+          "row_from_top": 5,
+          "column_from_left": 8,
+          "source_rect_top_left": [
+            864,
+            506,
+            983,
+            621
+          ]
+        },
+        {
+          "name": "Colony_R05_C09",
+          "row_from_top": 5,
+          "column_from_left": 9,
+          "source_rect_top_left": [
+            983,
+            506,
+            1105,
+            621
+          ]
+        },
+        {
+          "name": "Colony_R05_C10",
+          "row_from_top": 5,
+          "column_from_left": 10,
+          "source_rect_top_left": [
+            1105,
+            506,
+            1225,
+            621
+          ]
+        },
+        {
+          "name": "Colony_R06_C01",
+          "row_from_top": 6,
+          "column_from_left": 1,
+          "source_rect_top_left": [
+            30,
+            621,
+            154,
+            733
+          ]
+        },
+        {
+          "name": "Colony_R06_C02",
+          "row_from_top": 6,
+          "column_from_left": 2,
+          "source_rect_top_left": [
+            154,
+            621,
+            269,
+            733
+          ]
+        },
+        {
+          "name": "Colony_R06_C03",
+          "row_from_top": 6,
+          "column_from_left": 3,
+          "source_rect_top_left": [
+            269,
+            621,
+            391,
+            733
+          ]
+        },
+        {
+          "name": "Colony_R06_C04",
+          "row_from_top": 6,
+          "column_from_left": 4,
+          "source_rect_top_left": [
+            391,
+            621,
+            508,
+            733
+          ]
+        },
+        {
+          "name": "Colony_R06_C05",
+          "row_from_top": 6,
+          "column_from_left": 5,
+          "source_rect_top_left": [
+            508,
+            621,
+            625,
+            733
+          ]
+        },
+        {
+          "name": "Colony_R06_C06",
+          "row_from_top": 6,
+          "column_from_left": 6,
+          "source_rect_top_left": [
+            625,
+            621,
+            745,
+            733
+          ]
+        },
+        {
+          "name": "Colony_R06_C07",
+          "row_from_top": 6,
+          "column_from_left": 7,
+          "source_rect_top_left": [
+            745,
+            621,
+            864,
+            733
+          ]
+        },
+        {
+          "name": "Colony_R06_C08",
+          "row_from_top": 6,
+          "column_from_left": 8,
+          "source_rect_top_left": [
+            864,
+            621,
+            983,
+            733
+          ]
+        },
+        {
+          "name": "Colony_R06_C09",
+          "row_from_top": 6,
+          "column_from_left": 9,
+          "source_rect_top_left": [
+            983,
+            621,
+            1105,
+            733
+          ]
+        },
+        {
+          "name": "Colony_R06_C10",
+          "row_from_top": 6,
+          "column_from_left": 10,
+          "source_rect_top_left": [
+            1105,
+            621,
+            1225,
+            733
+          ]
+        },
+        {
+          "name": "Colony_R07_C01",
+          "row_from_top": 7,
+          "column_from_left": 1,
+          "source_rect_top_left": [
+            30,
+            733,
+            154,
+            843
+          ]
+        },
+        {
+          "name": "Colony_R07_C02",
+          "row_from_top": 7,
+          "column_from_left": 2,
+          "source_rect_top_left": [
+            154,
+            733,
+            269,
+            843
+          ]
+        },
+        {
+          "name": "Colony_R07_C03",
+          "row_from_top": 7,
+          "column_from_left": 3,
+          "source_rect_top_left": [
+            269,
+            733,
+            391,
+            843
+          ]
+        },
+        {
+          "name": "Colony_R07_C04",
+          "row_from_top": 7,
+          "column_from_left": 4,
+          "source_rect_top_left": [
+            391,
+            733,
+            508,
+            843
+          ]
+        },
+        {
+          "name": "Colony_R07_C05",
+          "row_from_top": 7,
+          "column_from_left": 5,
+          "source_rect_top_left": [
+            508,
+            733,
+            625,
+            843
+          ]
+        },
+        {
+          "name": "Colony_R07_C06",
+          "row_from_top": 7,
+          "column_from_left": 6,
+          "source_rect_top_left": [
+            625,
+            733,
+            745,
+            843
+          ]
+        },
+        {
+          "name": "Colony_R07_C07",
+          "row_from_top": 7,
+          "column_from_left": 7,
+          "source_rect_top_left": [
+            745,
+            733,
+            864,
+            843
+          ]
+        },
+        {
+          "name": "Colony_R07_C08",
+          "row_from_top": 7,
+          "column_from_left": 8,
+          "source_rect_top_left": [
+            864,
+            733,
+            983,
+            843
+          ]
+        },
+        {
+          "name": "Colony_R07_C09",
+          "row_from_top": 7,
+          "column_from_left": 9,
+          "source_rect_top_left": [
+            983,
+            733,
+            1105,
+            843
+          ]
+        },
+        {
+          "name": "Colony_R07_C10",
+          "row_from_top": 7,
+          "column_from_left": 10,
+          "source_rect_top_left": [
+            1105,
+            733,
+            1225,
+            843
+          ]
+        },
+        {
+          "name": "Colony_R08_C01",
+          "row_from_top": 8,
+          "column_from_left": 1,
+          "source_rect_top_left": [
+            30,
+            843,
+            154,
+            948
+          ]
+        },
+        {
+          "name": "Colony_R08_C02",
+          "row_from_top": 8,
+          "column_from_left": 2,
+          "source_rect_top_left": [
+            154,
+            843,
+            269,
+            948
+          ]
+        },
+        {
+          "name": "Colony_R08_C03",
+          "row_from_top": 8,
+          "column_from_left": 3,
+          "source_rect_top_left": [
+            269,
+            843,
+            391,
+            948
+          ]
+        },
+        {
+          "name": "Colony_R08_C04",
+          "row_from_top": 8,
+          "column_from_left": 4,
+          "source_rect_top_left": [
+            391,
+            843,
+            508,
+            948
+          ]
+        },
+        {
+          "name": "Colony_R08_C05",
+          "row_from_top": 8,
+          "column_from_left": 5,
+          "source_rect_top_left": [
+            508,
+            843,
+            625,
+            948
+          ]
+        },
+        {
+          "name": "Colony_R08_C06",
+          "row_from_top": 8,
+          "column_from_left": 6,
+          "source_rect_top_left": [
+            625,
+            843,
+            745,
+            948
+          ]
+        },
+        {
+          "name": "Colony_R08_C07",
+          "row_from_top": 8,
+          "column_from_left": 7,
+          "source_rect_top_left": [
+            745,
+            843,
+            864,
+            948
+          ]
+        },
+        {
+          "name": "Colony_R08_C08",
+          "row_from_top": 8,
+          "column_from_left": 8,
+          "source_rect_top_left": [
+            864,
+            843,
+            983,
+            948
+          ]
+        },
+        {
+          "name": "Colony_R08_C09",
+          "row_from_top": 8,
+          "column_from_left": 9,
+          "source_rect_top_left": [
+            983,
+            843,
+            1105,
+            948
+          ]
+        },
+        {
+          "name": "Colony_R08_C10",
+          "row_from_top": 8,
+          "column_from_left": 10,
+          "source_rect_top_left": [
+            1105,
+            843,
+            1225,
+            948
+          ]
+        },
+        {
+          "name": "Colony_R09_C01",
+          "row_from_top": 9,
+          "column_from_left": 1,
+          "source_rect_top_left": [
+            30,
+            948,
+            154,
+            1067
+          ]
+        },
+        {
+          "name": "Colony_R09_C02",
+          "row_from_top": 9,
+          "column_from_left": 2,
+          "source_rect_top_left": [
+            154,
+            948,
+            269,
+            1067
+          ]
+        },
+        {
+          "name": "Colony_R09_C03",
+          "row_from_top": 9,
+          "column_from_left": 3,
+          "source_rect_top_left": [
+            269,
+            948,
+            391,
+            1067
+          ]
+        },
+        {
+          "name": "Colony_R09_C04",
+          "row_from_top": 9,
+          "column_from_left": 4,
+          "source_rect_top_left": [
+            391,
+            948,
+            508,
+            1067
+          ]
+        },
+        {
+          "name": "Colony_R09_C05",
+          "row_from_top": 9,
+          "column_from_left": 5,
+          "source_rect_top_left": [
+            508,
+            948,
+            625,
+            1067
+          ]
+        },
+        {
+          "name": "Colony_R09_C06",
+          "row_from_top": 9,
+          "column_from_left": 6,
+          "source_rect_top_left": [
+            625,
+            948,
+            745,
+            1067
+          ]
+        },
+        {
+          "name": "Colony_R09_C07",
+          "row_from_top": 9,
+          "column_from_left": 7,
+          "source_rect_top_left": [
+            745,
+            948,
+            864,
+            1067
+          ]
+        },
+        {
+          "name": "Colony_R09_C08",
+          "row_from_top": 9,
+          "column_from_left": 8,
+          "source_rect_top_left": [
+            864,
+            948,
+            983,
+            1067
+          ]
+        },
+        {
+          "name": "Colony_R09_C09",
+          "row_from_top": 9,
+          "column_from_left": 9,
+          "source_rect_top_left": [
+            983,
+            948,
+            1105,
+            1067
+          ]
+        },
+        {
+          "name": "Colony_R09_C10",
+          "row_from_top": 9,
+          "column_from_left": 10,
+          "source_rect_top_left": [
+            1105,
+            948,
+            1225,
+            1067
+          ]
+        },
+        {
+          "name": "Colony_R10_C01",
+          "row_from_top": 10,
+          "column_from_left": 1,
+          "source_rect_top_left": [
+            30,
+            1067,
+            154,
+            1190
+          ]
+        },
+        {
+          "name": "Colony_R10_C02",
+          "row_from_top": 10,
+          "column_from_left": 2,
+          "source_rect_top_left": [
+            154,
+            1067,
+            269,
+            1190
+          ]
+        },
+        {
+          "name": "Colony_R10_C03",
+          "row_from_top": 10,
+          "column_from_left": 3,
+          "source_rect_top_left": [
+            269,
+            1067,
+            391,
+            1190
+          ]
+        },
+        {
+          "name": "Colony_R10_C04",
+          "row_from_top": 10,
+          "column_from_left": 4,
+          "source_rect_top_left": [
+            391,
+            1067,
+            508,
+            1190
+          ]
+        },
+        {
+          "name": "Colony_R10_C05",
+          "row_from_top": 10,
+          "column_from_left": 5,
+          "source_rect_top_left": [
+            508,
+            1067,
+            625,
+            1190
+          ]
+        },
+        {
+          "name": "Colony_R10_C06",
+          "row_from_top": 10,
+          "column_from_left": 6,
+          "source_rect_top_left": [
+            625,
+            1067,
+            745,
+            1190
+          ]
+        },
+        {
+          "name": "Colony_R10_C07",
+          "row_from_top": 10,
+          "column_from_left": 7,
+          "source_rect_top_left": [
+            745,
+            1067,
+            864,
+            1190
+          ]
+        },
+        {
+          "name": "Colony_R10_C08",
+          "row_from_top": 10,
+          "column_from_left": 8,
+          "source_rect_top_left": [
+            864,
+            1067,
+            983,
+            1190
+          ]
+        },
+        {
+          "name": "Colony_R10_C09",
+          "row_from_top": 10,
+          "column_from_left": 9,
+          "source_rect_top_left": [
+            983,
+            1067,
+            1105,
+            1190
+          ]
+        },
+        {
+          "name": "Colony_R10_C10",
+          "row_from_top": 10,
+          "column_from_left": 10,
+          "source_rect_top_left": [
+            1105,
+            1067,
+            1225,
+            1190
+          ]
+        }
+      ]
+    },
+    {
+      "key": "World",
+      "source": "Assets/_AntGame/Art/World/Source/World_Tileset_Source.png",
+      "source_sha256": "4ce47f814d93b2b2a1163c4863639f3ef22f975a1a17083a66339338b5489d93",
+      "source_dimensions": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGBA",
+      "fully_transparent_pixels": 326404,
+      "partially_transparent_pixels": 1245330,
+      "fully_opaque_pixels": 782,
+      "prepared": "Assets/_AntGame/Art/World/Prepared/World_Tile_Candidates_32.png",
+      "prepared_dimensions": [
+        320,
+        224
+      ],
+      "sprite_count": 70,
+      "target_tile_pixels": 32,
+      "sprites": [
+        {
+          "name": "World_R01_C01",
+          "row_from_top": 1,
+          "column_from_left": 1,
+          "source_rect_top_left": [
+            30,
+            30,
+            151,
+            161
+          ]
+        },
+        {
+          "name": "World_R01_C02",
+          "row_from_top": 1,
+          "column_from_left": 2,
+          "source_rect_top_left": [
+            151,
+            30,
+            272,
+            161
+          ]
+        },
+        {
+          "name": "World_R01_C03",
+          "row_from_top": 1,
+          "column_from_left": 3,
+          "source_rect_top_left": [
+            272,
+            30,
+            391,
+            161
+          ]
+        },
+        {
+          "name": "World_R01_C04",
+          "row_from_top": 1,
+          "column_from_left": 4,
+          "source_rect_top_left": [
+            391,
+            30,
+            510,
+            161
+          ]
+        },
+        {
+          "name": "World_R01_C05",
+          "row_from_top": 1,
+          "column_from_left": 5,
+          "source_rect_top_left": [
+            510,
+            30,
+            628,
+            161
+          ]
+        },
+        {
+          "name": "World_R01_C06",
+          "row_from_top": 1,
+          "column_from_left": 6,
+          "source_rect_top_left": [
+            628,
+            30,
+            747,
+            161
+          ]
+        },
+        {
+          "name": "World_R01_C07",
+          "row_from_top": 1,
+          "column_from_left": 7,
+          "source_rect_top_left": [
+            747,
+            30,
+            867,
+            161
+          ]
+        },
+        {
+          "name": "World_R01_C08",
+          "row_from_top": 1,
+          "column_from_left": 8,
+          "source_rect_top_left": [
+            867,
+            30,
+            986,
+            161
+          ]
+        },
+        {
+          "name": "World_R01_C09",
+          "row_from_top": 1,
+          "column_from_left": 9,
+          "source_rect_top_left": [
+            986,
+            30,
+            1106,
+            161
+          ]
+        },
+        {
+          "name": "World_R01_C10",
+          "row_from_top": 1,
+          "column_from_left": 10,
+          "source_rect_top_left": [
+            1106,
+            30,
+            1226,
+            161
+          ]
+        },
+        {
+          "name": "World_R02_C01",
+          "row_from_top": 2,
+          "column_from_left": 1,
+          "source_rect_top_left": [
+            30,
+            161,
+            151,
+            273
+          ]
+        },
+        {
+          "name": "World_R02_C02",
+          "row_from_top": 2,
+          "column_from_left": 2,
+          "source_rect_top_left": [
+            151,
+            161,
+            272,
+            273
+          ]
+        },
+        {
+          "name": "World_R02_C03",
+          "row_from_top": 2,
+          "column_from_left": 3,
+          "source_rect_top_left": [
+            272,
+            161,
+            391,
+            273
+          ]
+        },
+        {
+          "name": "World_R02_C04",
+          "row_from_top": 2,
+          "column_from_left": 4,
+          "source_rect_top_left": [
+            391,
+            161,
+            510,
+            273
+          ]
+        },
+        {
+          "name": "World_R02_C05",
+          "row_from_top": 2,
+          "column_from_left": 5,
+          "source_rect_top_left": [
+            510,
+            161,
+            628,
+            273
+          ]
+        },
+        {
+          "name": "World_R02_C06",
+          "row_from_top": 2,
+          "column_from_left": 6,
+          "source_rect_top_left": [
+            628,
+            161,
+            747,
+            273
+          ]
+        },
+        {
+          "name": "World_R02_C07",
+          "row_from_top": 2,
+          "column_from_left": 7,
+          "source_rect_top_left": [
+            747,
+            161,
+            867,
+            273
+          ]
+        },
+        {
+          "name": "World_R02_C08",
+          "row_from_top": 2,
+          "column_from_left": 8,
+          "source_rect_top_left": [
+            867,
+            161,
+            986,
+            273
+          ]
+        },
+        {
+          "name": "World_R02_C09",
+          "row_from_top": 2,
+          "column_from_left": 9,
+          "source_rect_top_left": [
+            986,
+            161,
+            1106,
+            273
+          ]
+        },
+        {
+          "name": "World_R02_C10",
+          "row_from_top": 2,
+          "column_from_left": 10,
+          "source_rect_top_left": [
+            1106,
+            161,
+            1226,
+            273
+          ]
+        },
+        {
+          "name": "World_R03_C01",
+          "row_from_top": 3,
+          "column_from_left": 1,
+          "source_rect_top_left": [
+            30,
+            273,
+            151,
+            387
+          ]
+        },
+        {
+          "name": "World_R03_C02",
+          "row_from_top": 3,
+          "column_from_left": 2,
+          "source_rect_top_left": [
+            151,
+            273,
+            272,
+            387
+          ]
+        },
+        {
+          "name": "World_R03_C03",
+          "row_from_top": 3,
+          "column_from_left": 3,
+          "source_rect_top_left": [
+            272,
+            273,
+            391,
+            387
+          ]
+        },
+        {
+          "name": "World_R03_C04",
+          "row_from_top": 3,
+          "column_from_left": 4,
+          "source_rect_top_left": [
+            391,
+            273,
+            510,
+            387
+          ]
+        },
+        {
+          "name": "World_R03_C05",
+          "row_from_top": 3,
+          "column_from_left": 5,
+          "source_rect_top_left": [
+            510,
+            273,
+            628,
+            387
+          ]
+        },
+        {
+          "name": "World_R03_C06",
+          "row_from_top": 3,
+          "column_from_left": 6,
+          "source_rect_top_left": [
+            628,
+            273,
+            747,
+            387
+          ]
+        },
+        {
+          "name": "World_R03_C07",
+          "row_from_top": 3,
+          "column_from_left": 7,
+          "source_rect_top_left": [
+            747,
+            273,
+            867,
+            387
+          ]
+        },
+        {
+          "name": "World_R03_C08",
+          "row_from_top": 3,
+          "column_from_left": 8,
+          "source_rect_top_left": [
+            867,
+            273,
+            986,
+            387
+          ]
+        },
+        {
+          "name": "World_R03_C09",
+          "row_from_top": 3,
+          "column_from_left": 9,
+          "source_rect_top_left": [
+            986,
+            273,
+            1106,
+            387
+          ]
+        },
+        {
+          "name": "World_R03_C10",
+          "row_from_top": 3,
+          "column_from_left": 10,
+          "source_rect_top_left": [
+            1106,
+            273,
+            1226,
+            387
+          ]
+        },
+        {
+          "name": "World_R04_C01",
+          "row_from_top": 4,
+          "column_from_left": 1,
+          "source_rect_top_left": [
+            30,
+            387,
+            151,
+            502
+          ]
+        },
+        {
+          "name": "World_R04_C02",
+          "row_from_top": 4,
+          "column_from_left": 2,
+          "source_rect_top_left": [
+            151,
+            387,
+            272,
+            502
+          ]
+        },
+        {
+          "name": "World_R04_C03",
+          "row_from_top": 4,
+          "column_from_left": 3,
+          "source_rect_top_left": [
+            272,
+            387,
+            391,
+            502
+          ]
+        },
+        {
+          "name": "World_R04_C04",
+          "row_from_top": 4,
+          "column_from_left": 4,
+          "source_rect_top_left": [
+            391,
+            387,
+            510,
+            502
+          ]
+        },
+        {
+          "name": "World_R04_C05",
+          "row_from_top": 4,
+          "column_from_left": 5,
+          "source_rect_top_left": [
+            510,
+            387,
+            628,
+            502
+          ]
+        },
+        {
+          "name": "World_R04_C06",
+          "row_from_top": 4,
+          "column_from_left": 6,
+          "source_rect_top_left": [
+            628,
+            387,
+            747,
+            502
+          ]
+        },
+        {
+          "name": "World_R04_C07",
+          "row_from_top": 4,
+          "column_from_left": 7,
+          "source_rect_top_left": [
+            747,
+            387,
+            867,
+            502
+          ]
+        },
+        {
+          "name": "World_R04_C08",
+          "row_from_top": 4,
+          "column_from_left": 8,
+          "source_rect_top_left": [
+            867,
+            387,
+            986,
+            502
+          ]
+        },
+        {
+          "name": "World_R04_C09",
+          "row_from_top": 4,
+          "column_from_left": 9,
+          "source_rect_top_left": [
+            986,
+            387,
+            1106,
+            502
+          ]
+        },
+        {
+          "name": "World_R04_C10",
+          "row_from_top": 4,
+          "column_from_left": 10,
+          "source_rect_top_left": [
+            1106,
+            387,
+            1226,
+            502
+          ]
+        },
+        {
+          "name": "World_R05_C01",
+          "row_from_top": 5,
+          "column_from_left": 1,
+          "source_rect_top_left": [
+            30,
+            502,
+            151,
+            619
+          ]
+        },
+        {
+          "name": "World_R05_C02",
+          "row_from_top": 5,
+          "column_from_left": 2,
+          "source_rect_top_left": [
+            151,
+            502,
+            272,
+            619
+          ]
+        },
+        {
+          "name": "World_R05_C03",
+          "row_from_top": 5,
+          "column_from_left": 3,
+          "source_rect_top_left": [
+            272,
+            502,
+            391,
+            619
+          ]
+        },
+        {
+          "name": "World_R05_C04",
+          "row_from_top": 5,
+          "column_from_left": 4,
+          "source_rect_top_left": [
+            391,
+            502,
+            510,
+            619
+          ]
+        },
+        {
+          "name": "World_R05_C05",
+          "row_from_top": 5,
+          "column_from_left": 5,
+          "source_rect_top_left": [
+            510,
+            502,
+            628,
+            619
+          ]
+        },
+        {
+          "name": "World_R05_C06",
+          "row_from_top": 5,
+          "column_from_left": 6,
+          "source_rect_top_left": [
+            628,
+            502,
+            747,
+            619
+          ]
+        },
+        {
+          "name": "World_R05_C07",
+          "row_from_top": 5,
+          "column_from_left": 7,
+          "source_rect_top_left": [
+            747,
+            502,
+            867,
+            619
+          ]
+        },
+        {
+          "name": "World_R05_C08",
+          "row_from_top": 5,
+          "column_from_left": 8,
+          "source_rect_top_left": [
+            867,
+            502,
+            986,
+            619
+          ]
+        },
+        {
+          "name": "World_R05_C09",
+          "row_from_top": 5,
+          "column_from_left": 9,
+          "source_rect_top_left": [
+            986,
+            502,
+            1106,
+            619
+          ]
+        },
+        {
+          "name": "World_R05_C10",
+          "row_from_top": 5,
+          "column_from_left": 10,
+          "source_rect_top_left": [
+            1106,
+            502,
+            1226,
+            619
+          ]
+        },
+        {
+          "name": "World_R06_C01",
+          "row_from_top": 6,
+          "column_from_left": 1,
+          "source_rect_top_left": [
+            30,
+            619,
+            151,
+            735
+          ]
+        },
+        {
+          "name": "World_R06_C02",
+          "row_from_top": 6,
+          "column_from_left": 2,
+          "source_rect_top_left": [
+            151,
+            619,
+            272,
+            735
+          ]
+        },
+        {
+          "name": "World_R06_C03",
+          "row_from_top": 6,
+          "column_from_left": 3,
+          "source_rect_top_left": [
+            272,
+            619,
+            391,
+            735
+          ]
+        },
+        {
+          "name": "World_R06_C04",
+          "row_from_top": 6,
+          "column_from_left": 4,
+          "source_rect_top_left": [
+            391,
+            619,
+            510,
+            735
+          ]
+        },
+        {
+          "name": "World_R06_C05",
+          "row_from_top": 6,
+          "column_from_left": 5,
+          "source_rect_top_left": [
+            510,
+            619,
+            628,
+            735
+          ]
+        },
+        {
+          "name": "World_R06_C06",
+          "row_from_top": 6,
+          "column_from_left": 6,
+          "source_rect_top_left": [
+            628,
+            619,
+            747,
+            735
+          ]
+        },
+        {
+          "name": "World_R06_C07",
+          "row_from_top": 6,
+          "column_from_left": 7,
+          "source_rect_top_left": [
+            747,
+            619,
+            867,
+            735
+          ]
+        },
+        {
+          "name": "World_R06_C08",
+          "row_from_top": 6,
+          "column_from_left": 8,
+          "source_rect_top_left": [
+            867,
+            619,
+            986,
+            735
+          ]
+        },
+        {
+          "name": "World_R06_C09",
+          "row_from_top": 6,
+          "column_from_left": 9,
+          "source_rect_top_left": [
+            986,
+            619,
+            1106,
+            735
+          ]
+        },
+        {
+          "name": "World_R06_C10",
+          "row_from_top": 6,
+          "column_from_left": 10,
+          "source_rect_top_left": [
+            1106,
+            619,
+            1226,
+            735
+          ]
+        },
+        {
+          "name": "World_R07_C01",
+          "row_from_top": 7,
+          "column_from_left": 1,
+          "source_rect_top_left": [
+            30,
+            735,
+            151,
+            847
+          ]
+        },
+        {
+          "name": "World_R07_C02",
+          "row_from_top": 7,
+          "column_from_left": 2,
+          "source_rect_top_left": [
+            151,
+            735,
+            272,
+            847
+          ]
+        },
+        {
+          "name": "World_R07_C03",
+          "row_from_top": 7,
+          "column_from_left": 3,
+          "source_rect_top_left": [
+            272,
+            735,
+            391,
+            847
+          ]
+        },
+        {
+          "name": "World_R07_C04",
+          "row_from_top": 7,
+          "column_from_left": 4,
+          "source_rect_top_left": [
+            391,
+            735,
+            510,
+            847
+          ]
+        },
+        {
+          "name": "World_R07_C05",
+          "row_from_top": 7,
+          "column_from_left": 5,
+          "source_rect_top_left": [
+            510,
+            735,
+            628,
+            847
+          ]
+        },
+        {
+          "name": "World_R07_C06",
+          "row_from_top": 7,
+          "column_from_left": 6,
+          "source_rect_top_left": [
+            628,
+            735,
+            747,
+            847
+          ]
+        },
+        {
+          "name": "World_R07_C07",
+          "row_from_top": 7,
+          "column_from_left": 7,
+          "source_rect_top_left": [
+            747,
+            735,
+            867,
+            847
+          ]
+        },
+        {
+          "name": "World_R07_C08",
+          "row_from_top": 7,
+          "column_from_left": 8,
+          "source_rect_top_left": [
+            867,
+            735,
+            986,
+            847
+          ]
+        },
+        {
+          "name": "World_R07_C09",
+          "row_from_top": 7,
+          "column_from_left": 9,
+          "source_rect_top_left": [
+            986,
+            735,
+            1106,
+            847
+          ]
+        },
+        {
+          "name": "World_R07_C10",
+          "row_from_top": 7,
+          "column_from_left": 10,
+          "source_rect_top_left": [
+            1106,
+            735,
+            1226,
+            847
+          ]
+        }
+      ]
+    }
+  ]
+}

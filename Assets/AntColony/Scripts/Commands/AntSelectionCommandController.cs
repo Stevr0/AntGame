@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using AntColony.Ants;
 using AntColony.Navigation;
@@ -11,7 +12,17 @@ namespace AntColony.Commands
     {
         None,
         Excavate,
-        BackgroundConversion
+        BackgroundConversion,
+        CancelDesignation
+    }
+
+    /// <summary>
+    /// Read-only boundary used by player presentation to stop pointer input before
+    /// it reaches Colony View tools. Commands do not depend on a particular UI kit.
+    /// </summary>
+    public interface IPlayerUiInputBlocker
+    {
+        bool IsScreenPointBlocked(Vector2 screenPoint);
     }
 
     /// <summary>Mutually exclusive sections in the development toolbar.</summary>
@@ -109,9 +120,10 @@ namespace AntColony.Commands
         private int selectedConstructionRecipeIndex;
         private Vector2Int dragStartCell;
         private bool excavationDragActive;
-        private bool developmentUiVisible = true;
+        private bool developmentUiVisible;
         private DevelopmentUiCategory expandedDevelopmentCategory;
         private Vector2 developmentPanelScrollPosition;
+        private IPlayerUiInputBlocker playerUiInputBlocker;
 
         public IReadOnlyList<SelectableGridAnt> SelectableAnts => selectableAnts;
         public SelectableGridAnt SelectedAnt { get; private set; }
@@ -136,6 +148,7 @@ namespace AntColony.Commands
                 ? constructionRecipes[Mathf.Clamp(selectedConstructionRecipeIndex,
                     0, constructionRecipes.Count - 1)] : null;
         public WorldDesignationMode DesignationMode { get; private set; }
+        public event Action<SelectableGridAnt> SelectionChanged;
         public bool DevelopmentUiVisible => developmentUiVisible;
         public DevelopmentUiCategory ExpandedDevelopmentCategory =>
             expandedDevelopmentCategory;
@@ -146,7 +159,8 @@ namespace AntColony.Commands
         public Rect DevelopmentPanelGuiRect => CalculatePanelRect(
             Screen.width, Screen.height);
         public Rect DevelopmentReopenGuiRect => new(
-            DevelopmentUiMargin, DevelopmentUiMargin, 84f, 30f);
+            Mathf.Max(DevelopmentUiMargin, (Screen.width - 160f) * 0.5f),
+            DevelopmentUiMargin, 160f, 30f);
         // Compatibility aliases retained for older tests and callers.
         public Rect DesignationToolbarGuiRect => DevelopmentToolbarGuiRect;
         public Rect PlayerPanelGuiRect => DevelopmentSummaryGuiRect;
@@ -176,6 +190,12 @@ namespace AntColony.Commands
         {
             developmentUiVisible = visible;
             if (!visible) expandedDevelopmentCategory = DevelopmentUiCategory.None;
+        }
+
+        /// <summary>Connects the authored player HUD without making commands own UI.</summary>
+        public void BindPlayerUiInputBlocker(IPlayerUiInputBlocker blocker)
+        {
+            playerUiInputBlocker = blocker;
         }
 
         public void ToggleDevelopmentCategory(DevelopmentUiCategory category)
@@ -438,6 +458,8 @@ namespace AntColony.Commands
 
         public bool IsScreenPointBlocked(Vector2 screenPoint)
         {
+            if (playerUiInputBlocker?.IsScreenPointBlocked(screenPoint) == true)
+                return true;
             Vector2 guiPoint = new(screenPoint.x, Screen.height - screenPoint.y);
             return IsGuiPointBlocked(guiPoint);
         }
@@ -513,7 +535,25 @@ namespace AntColony.Commands
                 ? "Excavate mode: left-click or drag over foreground Solids."
                 : mode == WorldDesignationMode.BackgroundConversion
                     ? $"Background Conversion: {SelectedConstructionRecipe?.Result.DisplayName ?? "No recipe"}."
-                    : "Designation mode closed; selection controls restored.";
+                    : mode == WorldDesignationMode.CancelDesignation
+                        ? "Cancel designation: click or drag over Colony View jobs."
+                        : "Designation mode closed; selection controls restored.";
+        }
+
+        /// <summary>Selects an authored recipe by stable ID for the player build menu.</summary>
+        public bool TrySelectConstructionRecipe(string stableId)
+        {
+            if (constructionRecipes == null || string.IsNullOrWhiteSpace(stableId))
+                return false;
+            for (int index = 0; index < constructionRecipes.Count; index++)
+            {
+                if (!string.Equals(constructionRecipes[index].StableId, stableId,
+                        StringComparison.Ordinal)) continue;
+                selectedConstructionRecipeIndex = index;
+                SetDesignationMode(WorldDesignationMode.BackgroundConversion);
+                return true;
+            }
+            return false;
         }
 
         public void CycleConstructionRecipe(int direction)
@@ -618,6 +658,35 @@ namespace AntColony.Commands
             return result;
         }
 
+        /// <summary>
+        /// Cancels accepted excavation and construction designations in a bounded
+        /// area. Each registry retains responsibility for material preservation.
+        /// </summary>
+        public int CancelDesignationArea(Vector2Int first, Vector2Int second,
+            out string summary)
+        {
+            int minX = Mathf.Min(first.x, second.x);
+            int maxX = Mathf.Max(first.x, second.x);
+            int minY = Mathf.Min(first.y, second.y);
+            int maxY = Mathf.Max(first.y, second.y);
+            int considered = 0;
+            int cancelled = 0;
+            int maximum = Mathf.Max(ExcavationDesignationRegistry.MaximumAreaCells,
+                ConstructionDesignationRegistry.MaximumAreaCells);
+            for (int y = minY; y <= maxY && considered < maximum; y++)
+            for (int x = minX; x <= maxX && considered < maximum; x++)
+            {
+                considered++;
+                Vector2Int cell = new(x, y);
+                bool constructionCancelled = TryCancelConstruction(cell, out _);
+                bool excavationCancelled = TryCancelExcavation(cell, out _);
+                if (constructionCancelled || excavationCancelled) cancelled++;
+            }
+            summary = $"Cancelled {cancelled} designation(s) from {considered} cell(s).";
+            interactionMessage = summary;
+            return cancelled;
+        }
+
         public void Select(SelectableGridAnt ant)
         {
             if (ant != null && !selectableAnts.Contains(ant))
@@ -636,6 +705,7 @@ namespace AntColony.Commands
             interactionMessage = SelectedAnt != null
                 ? $"Selected {SelectedAnt.DisplayName}."
                 : "Selection cleared.";
+            SelectionChanged?.Invoke(SelectedAnt);
         }
 
         public void Deselect()
@@ -1030,6 +1100,10 @@ namespace AntColony.Commands
                 UpdateAutonomousColonyWork();
             }
 
+            Keyboard keyboard = Keyboard.current;
+            if (keyboard?.f12Key.wasPressedThisFrame == true)
+                SetDevelopmentUiVisible(!developmentUiVisible);
+
             Mouse mouse = Mouse.current;
             if (mouse == null)
             {
@@ -1037,7 +1111,7 @@ namespace AntColony.Commands
             }
 
             Vector2 screenPoint = mouse.position.ReadValue();
-            if (Keyboard.current?.escapeKey.wasPressedThisFrame == true &&
+            if (keyboard?.escapeKey.wasPressedThisFrame == true &&
                 DesignationMode != WorldDesignationMode.None)
                 SetDesignationMode(WorldDesignationMode.None);
 
@@ -1059,8 +1133,10 @@ namespace AntColony.Commands
                         worldCamera.ScreenToWorldPoint(screenPoint));
                     if (DesignationMode == WorldDesignationMode.Excavate)
                         DesignateExcavationArea(dragStartCell, end, out _);
-                    else
+                    else if (DesignationMode == WorldDesignationMode.BackgroundConversion)
                         DesignateConstructionArea(dragStartCell, end, out _);
+                    else
+                        CancelDesignationArea(dragStartCell, end, out _);
                 }
                 return;
             }
@@ -1642,10 +1718,14 @@ namespace AntColony.Commands
 
         private void OnGUI()
         {
+            // These markers are normal gameplay feedback and remain visible when
+            // the separate developer toolbar is closed.
+            DrawExcavationWorldOverlay();
             if (!developmentUiVisible)
             {
                 GUILayout.BeginArea(DevelopmentReopenGuiRect, GUI.skin.box);
-                if (GUILayout.Button("Show UI")) SetDevelopmentUiVisible(true);
+                if (GUILayout.Button("Developer Mode (F12)"))
+                    SetDevelopmentUiVisible(true);
                 GUILayout.EndArea();
                 return;
             }
@@ -1665,7 +1745,6 @@ namespace AntColony.Commands
                 GUILayout.EndScrollView();
                 GUILayout.EndArea();
             }
-            DrawExcavationWorldOverlay();
         }
 
         private void DrawDevelopmentToolbar()

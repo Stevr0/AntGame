@@ -71,6 +71,12 @@ flowchart TB
 
 `AntColony.World` owns chunks, Background/Solid material definitions, loose material drops, physical Material Storage slots, the atomic excavation commit, classification, clearance, capability, pathfinding data, and scheduling. Visual and collision Tilemaps project that data through `AntColony.WorldPresentation`; they do not own stored quantities.
 
+### Art assets and presentation boundary
+
+Custom art is organised under `Assets/_AntGame/Art/Colony` and `Assets/_AntGame/Art/World`, with preserved originals separated from prepared candidate sprites. `Tools/Art/prepare_tilesets.py` records measured extraction rectangles and generates deterministic 32-pixel libraries; the resulting sprite names describe source position only.
+
+Candidate sprites do not own or imply material identity. Colony art must be separated into Background, optional foreground Solid, exposed-edge and decoration responsibilities before binding to the existing Tilemap projection. Collision stays on the dedicated collision Tilemap. World art remains an unbound future-view library until its terrain and coordinate authority are approved.
+
 ### Navigation
 
 One `GridNavigationWorldService` owns the shared navigation map and bounded scheduler for a world. Each `GridNavigationMotor` owns only its agent request and execution state. Command and interaction systems call the narrow motor API.
@@ -91,9 +97,13 @@ When construction needs inventory capacity, `InventoryCapacityRecoveryOperation`
 
 `GameplayModeCoordinator` owns only normal-gameplay policy: survival, colony work and hauling follow one enabled bundle unless Developer Mode forces a subsystem on or off. It never owns orders and never changes clock state. `GridNavigationWorldService` and the command controller use explicit clock references to stop scheduler and gameplay progress while paused. Camera movement remains intentionally unscaled.
 
-`AntSelectionCommandController` owns the shared IMGUI toolbar state and central pointer hit test. It draws Ant, Needs, Skills, Jobs and Resources. The existing `DevelopmentWorldInspector` draws World or Debug into the same calculated panel rectangle, never a second side panel. Exactly one category can be expanded; every expansion is internally scrollable and bounded to the current Game view. `DevelopmentCameraController` consults the same hit test for wheel and middle-drag input, while keyboard camera controls remain independent.
+Milestone 3.4C adds `AntColony.PlayerUI` as a presentation-only assembly. The authored `PlayerHud.prefab` contains focused roster, selected-ant inspector, simulation-control, Colony View command, physical-resource and job-status presenters. `AntGameDevelopmentWorldHost` binds them to the existing `AntRegistry`, command/designation registries, physical storage/drop/site owners and the single `SimulationClockController`; the HUD creates none of those authorities. Shared identity, needs, skills, inventory and job information is displayed independently from the inspector's separate Colony View position/navigation section.
 
-For 3.4B only, `SimulationTimeControlStrip` is a compact independent IMGUI surface that remains visible when developer UI is hidden and publishes its responsive rectangle to the same input blocker. The authored production uGUI player HUD remains 3.4C; the temporary strip does not establish a new permanent UI framework.
+The roster reads authoritative records and uses a narrow compatibility adapter to select a currently loaded `SelectableGridAnt`. It never defines identity from the GameObject and performs no repeated scene-wide discovery. This leaves future unloaded or World View records representable without inventing residency state now. The resource summary performs a bounded unscaled refresh and reports stored, carried, loose and staged ownership separately; reservations are not counted again because ownership does not change until commit.
+
+`AntSelectionCommandController` retains accepted command and developer-IMGUI behavior, but no longer acts as the player HUD. It starts Developer Mode hidden and opens through F12 or the separate centre-top reopen control. `DevelopmentWorldInspector` still owns World/Debug developer panels and all seven categories remain available. The controller accepts only an `IPlayerUiInputBlocker` read-only hit test; the uGUI implementation uses the one EventSystem and `GraphicRaycaster`, while existing IMGUI rectangles protect developer controls. Selection, context orders, designation drag start/release and camera mouse input all consult the combined boundary. The temporary `SimulationTimeControlStrip` is no longer authored in the development scene.
+
+The command toolbar declares only `PlayerViewContext.Colony`. Its Select, Excavate, Background conversion and cancellation actions delegate to accepted APIs. Area cancellation invokes construction and excavation registries, so staged construction material follows the existing recoverable-drop transaction. No view manager, World View state, surface input or shared world-coordinate abstraction was added.
 
 ## Approved two-view target architecture
 
