@@ -2,9 +2,9 @@
 
 ## 3.5A implementation status — 14 October 2026
 
-**Implemented — Pending Manual Acceptance.** Colony View now has authoritative amber/green/red/muted hover and bounded drag previews, compatible-only right-click designation cancellation, and a first allow-listed custom Soil/Stone Tilemap mapping. Existing world, collision, navigation, excavation, construction and resource authorities are unchanged. Prepared/functional Background art, decoration, composite-cavity separation and seamless autotiling remain deferred. Milestone 3.4E congestion recovery remains explicitly parked.
+**Implemented — Pending Manual Acceptance.** The 3.5A acceptance correction replaces skin-dependent cell boxes with explicit camera-aligned full-cell fills and borders for hover, live drag and persistent pending/active excavation and construction designations. UI-blocked pointer entry clears and abandons a drag. Cancelled stable cell jobs can be replaced repeatedly, reservations are released, completed excavation remains terminal, and repeated construction cancellation retains exact staged-material recovery. The accepted custom Soil/Stone Tilemap mapping and all gameplay timings, costs and authorities are unchanged. Prepared/functional Background art, decoration, composite-cavity separation and seamless autotiling remain deferred. Milestone 3.4E congestion recovery remains explicitly parked.
 
-Verification: focused 3.5A Edit Mode **11/11**, complete graphics-enabled Edit Mode **503/503**, complete Play Mode **65/65**, updated Unity art validation, deterministic art verification, strict docs build and diff check passed. Manual visual/gameplay acceptance remains pending.
+Correction verification: focused Edit Mode **50/50**, complete graphics-enabled Edit Mode **509/509**, complete Play Mode **67/67**, and the strict documentation build passed. The earlier updated Unity art validation and deterministic art verification remain applicable because this correction changes no art. Manual visual/gameplay acceptance remains pending.
 
 The smallest subsequent presentation milestone should be a manual seam/readability acceptance and, only for failed mappings, production-ready independent Background/Solid replacement art. It must not expand into World View runtime, surface movement or new gameplay systems.
 

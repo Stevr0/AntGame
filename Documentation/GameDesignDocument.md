@@ -401,6 +401,10 @@ The current `AntSurfaceMotor` provides manually tested surface movement, corner 
 
 The player marks one or more excavatable Solid Tiles for removal using a dig-designation tool. Excavation workers select reachable designations beside Exposed Space; inaccessible Solid Tiles remain queued until prior digging creates a valid route.
 
+Colony View presents a live, camera-aligned per-cell hover and bounded-drag preview without creating authoritative work until release. Pending and active designations retain a subtle full-cell border plus a compact status marker. Cancelled or completed designations have no persistent overlay. UI-owned pointer positions cancel a pending drag and cannot leak designation or movement commands into the world.
+
+Cancellation releases the job reservation but does not remove the foreground Solid or reverse physically completed excavation. A cancelled designation on a still-eligible Solid may be designated again repeatedly under the same stable cell identity; active duplicates and completed jobs remain protected. Background Conversion follows the same cancellation/re-designation presentation contract, while staged construction material must remain physically conserved through recoverable loose output.
+
 For the first playable resource model, excavating one resource-bearing foreground Solid Tile produces one transportable item representing that material (for example Soil or Stone). The excavating ant places the item into its personal inventory rather than destroying or automatically depositing it. Each item occupies one slot and does not stack. An excavation that would produce an item must not complete unless the resulting item can be safely accommodated; cargo must never silently disappear. The ant can subsequently deliver the item to storage, place it, or supply it to a construction or Surface Preparation job. An initial known deposit point may be used as a simple storage destination; player-designated storage zones are future work.
 
 When excavation work completes:

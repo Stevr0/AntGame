@@ -2,42 +2,39 @@
 
 ## Current implemented milestone — 3.5A Colony View Presentation, Tile Preview & Art Integration (14 October 2026)
 
-**Implemented — Pending Manual Acceptance.** Excavation and Background Conversion now show a bounded, per-cell hover/drag preview above terrain. Excavation uses amber `X` cells, valid construction uses green `+` cells, invalid targets use red `!` cells, and existing compatible designations use a muted `≡` marker. The preview asks the authoritative designation registry for each cell's state and reason; it never mutates terrain, creates work, or creates per-tile GameObjects. It clears when the tool closes, pointer focus belongs to UI, or simulation is paused.
+**Implemented — Pending Manual Acceptance.** Excavation and Background Conversion now show a bounded, per-cell hover/drag preview above terrain. The presentation draws an explicit translucent fill and four screen-space border edges over the exact projected world-cell rectangle, rather than depending on the active IMGUI box skin. Excavation uses an amber border with a small `X`, valid construction uses a green border with `+`, invalid targets use red `!`, and existing compatible designations use a muted `≡` marker. Committed pending/active jobs retain a subtle full-cell border; cancelled and completed jobs do not render. The preview asks the authoritative designation registry for each cell's state and reason, and never mutates terrain, creates work, or creates per-tile GameObjects.
 
-Right-click while Excavation or Background Conversion is active consumes the world click and calls only that tool's authoritative cancellation API. Normal Select-mode right-click orders are unchanged. Construction cancellation retains its existing reservation release and staged-material-to-loose-drop recovery path. The player Cancel tool still owns its existing bounded left-drag area cancellation; no new area erase gesture was added.
+Hover and bounded drag preview update every frame, including while simulation is paused because designation authoring remains a player command. Entering blocked UI clears the preview and abandons the pending drag, so releasing over UI cannot commit a world designation. Right-click while Excavation or Background Conversion is active consumes the world click and calls only that tool's authoritative cancellation API. Normal Select-mode right-click orders are unchanged.
+
+Cancelled cell-stable job IDs may now be replaced by a fresh job, while active, paused and completed IDs remain protected. Cancellation releases any reservation, retains the cancelled job's recorded progress for diagnostics, and leaves the foreground Solid untouched. A still-eligible Solid can therefore repeat `Available → Designated → Cancelled → Designated` without limit; completed excavation cannot be cancelled or re-created. Construction follows the same re-designation rule. Its existing staged-material recovery remains conservative and now uses a distinct transaction key for every cancellation cycle so repeated cycles cannot suppress or duplicate a recovered drop.
 
 The first custom Colony art mapping is intentionally narrow. `Colony_R02_C01` supplies Soil foreground and darker Natural Earth Background Tiles; `Colony_R04_C01` supplies Stone foreground and darker Natural Stone Background Tiles. All four Tile assets remain collider-free. Prepared and functional Backgrounds retain their clear temporary colours because the candidate sheet does not contain a verified independent semantic match. World data, collision, navigation, material generation and excavation rules are unchanged.
 
 ### 3.5A automated verification
 
-- Focused 3.5A Edit Mode: **11/11 passed**, covering authoritative hover/drag states, invalid and occupied construction targets, selected recipes, existing designations, tool/world-reset cleanup, compatible-only right-click cancellation, empty-cell safety and the four allow-listed collider-free art mappings.
-- Complete graphics-enabled Edit Mode: **503/503 passed**.
-- Complete Play Mode: **65/65 passed**.
+- Focused correction Edit Mode: **50/50 passed**, covering presentation geometry and visibility, live bounded preview state, valid/invalid cells, UI/tool/world cleanup, duplicate protection, repeated cancellation/re-designation, reserved and partial-progress cancellation, completed-job rejection, construction parity, staged-material recovery and the unchanged art allow-list.
+- Complete graphics-enabled Edit Mode: **509/509 passed**.
+- Complete Play Mode: **67/67 passed**.
 - Updated Unity art validation passed for all 170 prepared candidates, import settings, the four allow-listed runtime mappings and collider-free Tile configuration.
 - Deterministic art preparation `--verify-only`, strict Zensical documentation build and `git diff --check` passed. A separate headless full-Edit attempt crashed inside Unity's Tilemap renderer during the existing graphics-backed pixel test; the authoritative complete result is the subsequent graphics-enabled 503/503 pass.
 
 ### Exact 3.5A manual Unity Play Mode acceptance
 
-1. In Excavation mode, hover eligible Soil and Stone and confirm an amber outlined `X`; hover Background-only or non-excavatable terrain and confirm a red `!` plus a useful reason.
-2. Drag across mixed terrain and confirm every targeted cell has its own translucent boundary and valid/invalid state.
-3. Open Background Conversion, select each of the six recipes, and confirm the selected functional Background remains visible in the command bar.
-4. Hover and drag valid exposed cells; confirm green `+`, red invalid/occupied cells, and muted `≡` on an existing construction designation.
-5. Right-click an excavation designation in Excavation mode and confirm only that excavation is cancelled.
-6. Right-click a construction designation in Background Conversion mode and confirm only that construction is cancelled.
-7. Right-click empty or incompatible cells and confirm no other job changes and no movement order is issued.
-8. Return to Select mode and confirm normal right-click movement remains functional.
-9. Click/drag/right-click over every HUD and Colony Management region and confirm no world command leaks through.
-10. Stage construction material, cancel the designation, and confirm reservations release and the exact staged quantity becomes a physical loose drop; verify carried and stored totals remain conserved.
-11. Confirm all six recipes still designate and complete through their established construction path.
-12. At normal zoom, inspect Soil and Stone, darker Background variants, foreground removal revealing Background, and conversion refreshing Background presentation.
-13. Inspect repeated mapped tiles for visible seams; these two candidates are allow-listed full-cell textures but are not certified seamless autotiles.
-14. Confirm pixel edges remain sharp during camera movement and zoom.
-15. Confirm falling, pathfinding, excavation, hauling, construction, clock, HUD, work management and camera behavior are unchanged.
-16. Pause with a preview visible and confirm it clears; resume, change tools, press Escape, open modal UI and reset the world, confirming stale preview cells do not remain.
-17. Toggle F12 Developer Mode and confirm all established tools still work; inspect hovered cell, active mode and preview reason through the controller diagnostics.
-18. Repeat at `1280×720`, `1920×1080` and `2560×1080`.
-19. Reset the world and confirm terrain art and designations return to the deterministic baseline.
-20. Confirm the Unity Console is clean.
+1. In Excavation mode, hover an eligible Soil or Stone Solid and confirm an amber border aligned to the full tile.
+2. Move across several tiles and confirm the border follows the pointer while eligible and ineligible colours remain distinct.
+3. Left-click an eligible Solid and confirm a persistent amber border plus a small `X`.
+4. Right-click that cell and confirm its marker and border disappear without issuing a movement order.
+5. Left-click the same still-solid cell and confirm it can be designated again.
+6. Repeat cancellation and re-designation five times.
+7. Hold left mouse and drag across mixed cells; confirm every bounded cell updates continuously before release.
+8. Release over non-UI world space and confirm eligible cells become persistent designations; release a second drag over UI and confirm nothing commits.
+9. Cancel one cell and confirm adjacent designations remain pending.
+10. Pause and resume; confirm hover/designation authoring remains responsive and committed state is preserved while work execution stays paused.
+11. In Background Conversion, verify green hover, live drag, red invalid and muted existing-designation previews.
+12. Cancel and re-designate an eligible construction cell.
+13. Stage construction material, cancel, and confirm reservations release and exactly the staged quantity becomes a physical loose drop with no duplication.
+14. Verify all HUD/modal input blocking, camera zoom, and `1280×720`, `1920×1080`, and `2560×1080` layouts.
+15. Confirm a clean Unity Console and unchanged movement, clock, job, HUD and accepted Soil/Stone art behaviour.
 
 Known limitations: the source sheet has no verified independent Prepared or functional Background art; composite cavities, exposed edges, roots, fungi and decorations remain unbound; `Colony_R02_C01` and `Colony_R04_C01` repeat safely as full-cell textures but visible tile seams remain possible and no seamless/autotile claim is made. Manual acceptance remains pending.
 

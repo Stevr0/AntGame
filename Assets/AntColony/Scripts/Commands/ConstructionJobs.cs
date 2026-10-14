@@ -150,6 +150,7 @@ namespace AntColony.Commands
         private readonly WorldMaterialDropRegistry drops;
         private readonly Dictionary<Vector2Int, ConstructionDesignation> byCell = new();
         private readonly Dictionary<ColonyJobId, ConstructionDesignation> byJob = new();
+        private readonly Dictionary<Vector2Int, int> cancellationGenerations = new();
 
         public ConstructionDesignationRegistry(ChunkedWorldData world,
             GridNavigationMap map, ColonyJobRegistry jobs,
@@ -279,10 +280,14 @@ namespace AntColony.Commands
                     error = "The staged construction material type is invalid.";
                     return false;
                 }
-                if (!drops.TryAdd($"construction.cancelled.{cell.x}.{cell.y}",
+                int generation = cancellationGenerations.TryGetValue(cell,
+                    out int previousGeneration) ? previousGeneration + 1 : 1;
+                if (!drops.TryAdd(
+                        $"construction.cancelled.{cell.x}.{cell.y}.{generation}",
                         material, designation.Site.DeliveredQuantity, cell,
                         out _, out error))
                     return false;
+                cancellationGenerations[cell] = generation;
                 designation.Site.CommitConsumption(
                     designation.Site.DeliveredQuantity);
             }

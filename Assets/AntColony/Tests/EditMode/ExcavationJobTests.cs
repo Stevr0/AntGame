@@ -57,6 +57,69 @@ namespace AntColony.Tests.EditMode
                 d.State == ExcavationDesignationState.Cancelled), Is.EqualTo(1));
         }
 
+        [Test]
+        public void CancelledPartialExcavationReleasesAndCanBeDesignatedAgain()
+        {
+            AntGameDevelopmentWorldHost host = OpenHost();
+            Vector2Int cell = AntGameDevelopmentWorldHost.ExcavationSoilFixture;
+            Assert.That(host.ExcavationDesignations.TryDesignate(cell,
+                out ExcavationDesignation first, out string error), Is.True, error);
+            AntRecord worker = CreateRecord("cancel-redesignate");
+            Assert.That(host.ColonyJobRegistry.TryReserve(first.Job.Id, worker.Id,
+                out error), Is.True, error);
+            Assert.That(host.ColonyJobRegistry.TryBegin(first.Job.Id, worker.Id,
+                out error), Is.True, error);
+            Assert.That(host.ColonyJobRegistry.TryAddProgress(first.Job.Id, worker.Id,
+                0.25d, out _, out error), Is.True, error);
+
+            Assert.That(host.ExcavationDesignations.TryCancel(cell, out error),
+                Is.True, error);
+            Assert.That(first.State, Is.EqualTo(ExcavationDesignationState.Cancelled));
+            Assert.That(first.Job.ReservationOwner.IsValid, Is.False);
+            Assert.That(first.Job.Progress, Is.EqualTo(0.25d).Within(0.001d));
+            Assert.That(host.ExcavationDesignations.TryDesignate(cell,
+                out ExcavationDesignation replacement, out error), Is.True, error);
+            Assert.That(replacement, Is.Not.SameAs(first));
+            Assert.That(replacement.State, Is.EqualTo(ExcavationDesignationState.Pending));
+            Assert.That(replacement.Job.Progress, Is.Zero);
+        }
+
+        [Test]
+        public void ExcavationCanRepeatDesignationCancellationWithoutLimit()
+        {
+            AntGameDevelopmentWorldHost host = OpenHost();
+            Vector2Int cell = AntGameDevelopmentWorldHost.ExcavationStoneFixture;
+            for (int cycle = 0; cycle < 6; cycle++)
+            {
+                Assert.That(host.ExcavationDesignations.TryDesignate(cell,
+                    out ExcavationDesignation designation, out string error),
+                    Is.True, $"Cycle {cycle + 1}: {error}");
+                Assert.That(designation.State,
+                    Is.EqualTo(ExcavationDesignationState.Pending));
+                Assert.That(host.ExcavationDesignations.TryCancel(cell, out error),
+                    Is.True, $"Cycle {cycle + 1}: {error}");
+            }
+        }
+
+        [Test]
+        public void CompletedExcavationCannotBeCancelledOrDesignatedAgain()
+        {
+            AntGameDevelopmentWorldHost host = OpenHost();
+            Vector2Int cell = AntGameDevelopmentWorldHost.ExcavationSoilFixture;
+            host.ExcavationDesignations.TryDesignate(cell,
+                out ExcavationDesignation designation, out _);
+            AntRecord worker = CreateRecord("completed-terminal");
+            host.ColonyJobRegistry.TryReserve(designation.Job.Id, worker.Id, out _);
+            host.ColonyJobRegistry.TryBegin(designation.Job.Id, worker.Id, out _);
+            host.ColonyJobRegistry.TryAddProgress(designation.Job.Id, worker.Id,
+                1d, out _, out _);
+
+            Assert.That(host.ExcavationDesignations.TryCancel(cell, out _), Is.False);
+            Assert.That(host.ExcavationDesignations.TryDesignate(cell,
+                out _, out _), Is.False);
+            Assert.That(designation.State, Is.EqualTo(ExcavationDesignationState.Completed));
+        }
+
         [TestCase(ExcavatedMaterialType.Soil)]
         [TestCase(ExcavatedMaterialType.Stone)]
         public void CompletionProducesMaterialAndPreservesBackground(

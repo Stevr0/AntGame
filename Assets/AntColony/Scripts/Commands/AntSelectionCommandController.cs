@@ -141,6 +141,7 @@ namespace AntColony.Commands
             ? simulationClock.ElapsedHours : simulationHours;
         public double SkillSimulationHours => SimulationHours;
         public SimulationClockController SimulationClock => simulationClock;
+        public Camera WorldCamera => worldCamera;
         private double CurrentSimulationSeconds => simulationClock != null
             ? simulationClock.ElapsedSeconds : Time.unscaledTimeAsDouble;
         public bool AutonomousSurvivalEnabled { get; private set; }
@@ -160,6 +161,7 @@ namespace AntColony.Commands
         public IReadOnlyList<DesignationPreviewCell> DesignationPreview =>
             designationPreview;
         public bool HasHoveredDesignationCell => hasHoveredDesignationCell;
+        public bool IsDesignationDragActive => excavationDragActive;
         public Vector2Int HoveredDesignationCell => hoveredDesignationCell;
         public string PreviewDiagnostic { get; private set; } = string.Empty;
         public event Action<SelectableGridAnt> SelectionChanged;
@@ -746,6 +748,12 @@ namespace AntColony.Commands
             PreviewDiagnostic = string.Empty;
         }
 
+        public void CancelDesignationDragPreview()
+        {
+            excavationDragActive = false;
+            ClearDesignationPreview();
+        }
+
         /// <summary>
         /// Cancels accepted excavation and construction designations in a bounded
         /// area. Each registry retains responsibility for material preservation.
@@ -1211,23 +1219,22 @@ namespace AntColony.Commands
             {
                 if (IsScreenPointBlocked(screenPoint) || worldCamera == null)
                 {
-                    ClearDesignationPreview();
+                    // Crossing player UI abandons the pending gesture. This
+                    // prevents a later mouse release from committing through UI.
+                    CancelDesignationDragPreview();
                     return;
                 }
                 Vector2Int pointerCell = WorldTileCoordinates.WorldPositionToCell(
                     worldCamera.ScreenToWorldPoint(screenPoint));
-                if (simulationRunning &&
-                    (DesignationMode is WorldDesignationMode.Excavate or
-                        WorldDesignationMode.BackgroundConversion))
+                if (DesignationMode is WorldDesignationMode.Excavate or
+                        WorldDesignationMode.BackgroundConversion)
                     UpdateDesignationPreview(pointerCell, excavationDragActive);
                 else ClearDesignationPreview();
 
                 if (mouse.rightButton.wasPressedThisFrame)
                 {
                     TryHandleDesignationRightClick(pointerCell);
-                    if (simulationRunning)
-                        UpdateDesignationPreview(pointerCell, false);
-                    else ClearDesignationPreview();
+                    UpdateDesignationPreview(pointerCell, false);
                     return;
                 }
                 if (mouse.leftButton.wasPressedThisFrame &&
@@ -1235,9 +1242,7 @@ namespace AntColony.Commands
                 {
                     dragStartCell = pointerCell;
                     excavationDragActive = true;
-                    if (simulationRunning)
-                        UpdateDesignationPreview(pointerCell, true);
-                    else ClearDesignationPreview();
+                    UpdateDesignationPreview(pointerCell, true);
                 }
                 if (mouse.leftButton.wasReleasedThisFrame && excavationDragActive)
                 {
@@ -2033,26 +2038,19 @@ namespace AntColony.Commands
         private void DrawExcavationWorldOverlay()
         {
             if (worldCamera == null) return;
-            DrawDesignationPreview();
             if (excavationDesignations != null)
             {
                 foreach (ExcavationDesignation designation in
                     excavationDesignations.Designations)
                 {
-                    if (designation.State is ExcavationDesignationState.Completed or
-                        ExcavationDesignationState.Cancelled) continue;
-                    Vector3 screen = worldCamera.WorldToScreenPoint(
-                        new Vector3(designation.Cell.x + 0.5f,
-                            designation.Cell.y + 0.5f, 0f));
-                    if (screen.z < 0f) continue;
-                    Color previous = GUI.color;
-                    GUI.color = designation.State == ExcavationDesignationState.Active
-                        ? new Color(1f, 0.45f, 0.1f, 0.85f)
-                        : new Color(1f, 0.9f, 0.1f, 0.7f);
-                    GUI.Box(new Rect(screen.x - 13f, Screen.height - screen.y - 13f,
-                        26f, 26f), designation.State == ExcavationDesignationState.Active
+                    if (!DesignationOverlayRules.IsVisible(designation)) continue;
+                    Color border = designation.State == ExcavationDesignationState.Active
+                        ? new Color(1f, 0.45f, 0.1f, 0.95f)
+                        : new Color(1f, 0.68f, 0.08f, 0.95f);
+                    DrawCellOverlay(designation.Cell, border,
+                        new Color(border.r, border.g, border.b, 0.10f),
+                        designation.State == ExcavationDesignationState.Active
                             ? "A" : "X");
-                    GUI.color = previous;
                 }
             }
             if (constructionDesignations != null)
@@ -2060,65 +2058,83 @@ namespace AntColony.Commands
                 foreach (ConstructionDesignation designation in
                     constructionDesignations.Designations)
                 {
-                    if (designation.State is ConstructionDesignationState.Completed or
-                        ConstructionDesignationState.Cancelled) continue;
-                    Vector3 screen = worldCamera.WorldToScreenPoint(
-                        new Vector3(designation.Cell.x + 0.5f,
-                            designation.Cell.y + 0.5f, 0f));
-                    if (screen.z < 0f) continue;
-                    Color previous = GUI.color;
-                    GUI.color = designation.State == ConstructionDesignationState.Active
-                        ? new Color(0.25f, 0.9f, 1f, 0.9f)
-                        : new Color(0.35f, 0.75f, 1f, 0.75f);
-                    GUI.Box(new Rect(screen.x - 13f, Screen.height - screen.y - 13f,
-                        26f, 26f), designation.State == ConstructionDesignationState.Active
+                    if (!DesignationOverlayRules.IsVisible(designation)) continue;
+                    Color border = designation.State == ConstructionDesignationState.Active
+                        ? new Color(0.25f, 0.9f, 1f, 0.95f)
+                        : new Color(0.2f, 0.85f, 0.35f, 0.95f);
+                    DrawCellOverlay(designation.Cell, border,
+                        new Color(border.r, border.g, border.b, 0.10f),
+                        designation.State == ConstructionDesignationState.Active
                             ? "B" : "C");
-                    GUI.color = previous;
                 }
             }
-            if (materialDrops == null) return;
-            foreach (WorldMaterialDrop drop in materialDrops.Drops)
+            if (materialDrops != null)
             {
-                Vector3 screen = worldCamera.WorldToScreenPoint(
-                    new Vector3(drop.WorldCell.x + 0.5f, drop.WorldCell.y + 0.5f, 0f));
-                if (screen.z >= 0f)
-                    GUI.Box(new Rect(screen.x - 24f, Screen.height - screen.y - 12f,
-                        48f, 24f), $"{drop.Material} {drop.Quantity}");
+                foreach (WorldMaterialDrop drop in materialDrops.Drops)
+                {
+                    Vector3 screen = worldCamera.WorldToScreenPoint(
+                        new Vector3(drop.WorldCell.x + 0.5f, drop.WorldCell.y + 0.5f, 0f));
+                    if (screen.z >= 0f)
+                        GUI.Box(new Rect(screen.x - 24f, Screen.height - screen.y - 12f,
+                            48f, 24f), $"{drop.Material} {drop.Quantity}");
+                }
             }
+
+            // Transient hover and drag feedback is drawn last so it stays clear
+            // above both terrain and any persistent designation at the cell.
+            DrawDesignationPreview();
         }
 
         private void DrawDesignationPreview()
         {
             foreach (DesignationPreviewCell preview in designationPreview)
             {
-                Vector3 minimum = worldCamera.WorldToScreenPoint(
-                    new Vector3(preview.Cell.x, preview.Cell.y, 0f));
-                Vector3 maximum = worldCamera.WorldToScreenPoint(
-                    new Vector3(preview.Cell.x + 1f, preview.Cell.y + 1f, 0f));
-                if (minimum.z < 0f || maximum.z < 0f) continue;
-                float left = Mathf.Min(minimum.x, maximum.x);
-                float top = Screen.height - Mathf.Max(minimum.y, maximum.y);
-                var rectangle = new Rect(left, top,
-                    Mathf.Abs(maximum.x - minimum.x),
-                    Mathf.Abs(maximum.y - minimum.y));
-                Color previous = GUI.color;
-                GUI.color = preview.State switch
+                Color border = preview.State switch
                 {
                     DesignationPreviewState.ExistingDesignation =>
-                        new Color(0.65f, 0.65f, 0.58f, 0.55f),
+                        new Color(0.65f, 0.65f, 0.58f, 0.95f),
                     DesignationPreviewState.Invalid =>
-                        new Color(0.95f, 0.2f, 0.18f, 0.6f),
+                        new Color(0.95f, 0.2f, 0.18f, 0.95f),
                     _ when DesignationMode == WorldDesignationMode.Excavate =>
-                        new Color(1f, 0.68f, 0.08f, 0.58f),
-                    _ => new Color(0.2f, 0.85f, 0.35f, 0.58f)
+                        new Color(1f, 0.68f, 0.08f, 0.95f),
+                    _ => new Color(0.2f, 0.85f, 0.35f, 0.95f)
                 };
                 string symbol = preview.State == DesignationPreviewState.Invalid
                     ? "!" : preview.State == DesignationPreviewState.ExistingDesignation
                         ? "≡" : DesignationMode == WorldDesignationMode.Excavate
                             ? "X" : "+";
-                GUI.Box(rectangle, symbol);
-                GUI.color = previous;
+                DrawCellOverlay(preview.Cell, border,
+                    new Color(border.r, border.g, border.b, 0.18f), symbol);
             }
+        }
+
+        private void DrawCellOverlay(Vector2Int cell, Color border, Color fill,
+            string symbol)
+        {
+            if (!DesignationOverlayGeometry.TryGetCellGuiRect(worldCamera, cell,
+                    Screen.height, out Rect rectangle)) return;
+
+            Color previous = GUI.color;
+            GUI.color = fill;
+            GUI.DrawTexture(rectangle, Texture2D.whiteTexture);
+
+            float thickness = Mathf.Min(DesignationOverlayGeometry.BorderThickness,
+                Mathf.Min(rectangle.width, rectangle.height) * 0.5f);
+            GUI.color = border;
+            GUI.DrawTexture(new Rect(rectangle.xMin, rectangle.yMin,
+                rectangle.width, thickness), Texture2D.whiteTexture);
+            GUI.DrawTexture(new Rect(rectangle.xMin, rectangle.yMax - thickness,
+                rectangle.width, thickness), Texture2D.whiteTexture);
+            GUI.DrawTexture(new Rect(rectangle.xMin, rectangle.yMin,
+                thickness, rectangle.height), Texture2D.whiteTexture);
+            GUI.DrawTexture(new Rect(rectangle.xMax - thickness, rectangle.yMin,
+                thickness, rectangle.height), Texture2D.whiteTexture);
+
+            float markerSize = Mathf.Min(DesignationOverlayGeometry.MarkerSize,
+                Mathf.Min(rectangle.width, rectangle.height));
+            GUI.Box(new Rect(rectangle.xMax - markerSize, rectangle.yMin,
+                markerSize, markerSize), symbol);
+            GUI.color = previous;
         }
 
         private void DrawInventoryInspection(AntRecord record)

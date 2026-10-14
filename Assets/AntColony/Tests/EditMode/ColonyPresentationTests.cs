@@ -63,6 +63,28 @@ namespace AntColony.Tests.EditMode
         }
 
         [Test]
+        public void OverlayGeometryCoversTheWholeCameraAlignedWorldCell()
+        {
+            AntGameDevelopmentWorldHost host = OpenHost();
+            Camera camera = host.SelectionController.WorldCamera;
+            Vector2Int cell = AntGameDevelopmentWorldHost.ExcavationSoilFixture;
+
+            Assert.That(DesignationOverlayGeometry.TryGetCellGuiRect(camera, cell,
+                1000f, out Rect rectangle), Is.True);
+            Vector3 minimum = camera.WorldToScreenPoint(
+                new Vector3(cell.x, cell.y, 0f));
+            Vector3 maximum = camera.WorldToScreenPoint(
+                new Vector3(cell.x + 1f, cell.y + 1f, 0f));
+            Assert.That(rectangle.width,
+                Is.EqualTo(Mathf.Abs(maximum.x - minimum.x)).Within(0.01f));
+            Assert.That(rectangle.height,
+                Is.EqualTo(Mathf.Abs(maximum.y - minimum.y)).Within(0.01f));
+            Assert.That(DesignationOverlayGeometry.BorderThickness, Is.GreaterThan(0f));
+            Assert.That(Mathf.Min(rectangle.width, rectangle.height),
+                Is.GreaterThan(DesignationOverlayGeometry.BorderThickness * 2f));
+        }
+
+        [Test]
         public void ConstructionPreviewReflectsRecipeCoverageAndOccupancy()
         {
             AntGameDevelopmentWorldHost host = OpenHost();
@@ -98,6 +120,38 @@ namespace AntColony.Tests.EditMode
 
             Assert.That(controller.DesignationPreview, Is.Empty);
             Assert.That(controller.HasHoveredDesignationCell, Is.False);
+        }
+
+        [Test]
+        public void UiBlockedGestureClearsPreviewAndCannotRemainInDragState()
+        {
+            AntGameDevelopmentWorldHost host = OpenHost();
+            AntSelectionCommandController controller = host.SelectionController;
+            controller.SetDesignationMode(WorldDesignationMode.Excavate);
+            controller.BeginDesignationDragPreview(
+                AntGameDevelopmentWorldHost.ExcavationAreaMinimum);
+            Assert.That(controller.IsDesignationDragActive, Is.True);
+            Assert.That(controller.DesignationPreview, Is.Not.Empty);
+
+            controller.CancelDesignationDragPreview();
+
+            Assert.That(controller.IsDesignationDragActive, Is.False);
+            Assert.That(controller.DesignationPreview, Is.Empty);
+            Assert.That(controller.HasHoveredDesignationCell, Is.False);
+        }
+
+        [Test]
+        public void PersistentOverlayRuleClearsCancelledExcavation()
+        {
+            AntGameDevelopmentWorldHost host = OpenHost();
+            Vector2Int cell = AntGameDevelopmentWorldHost.ExcavationSoilFixture;
+            host.ExcavationDesignations.TryDesignate(cell,
+                out ExcavationDesignation designation, out _);
+            Assert.That(DesignationOverlayRules.IsVisible(designation), Is.True);
+
+            host.ExcavationDesignations.TryCancel(cell, out _);
+
+            Assert.That(DesignationOverlayRules.IsVisible(designation), Is.False);
         }
 
         [Test]

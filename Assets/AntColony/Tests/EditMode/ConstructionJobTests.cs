@@ -389,6 +389,14 @@ namespace AntColony.Tests.EditMode
             Assert.That(recovered.Material, Is.EqualTo(ExcavatedMaterialType.Soil));
             Assert.That(recovered.Quantity, Is.EqualTo(1));
             Assert.That(order.Designation.Site.DeliveredQuantity, Is.Zero);
+
+            ConstructionRecipe recipe = GetRecipe(host, BackgroundFunction.Sleeping);
+            Assert.That(host.ConstructionDesignations.TryDesignate(Site,
+                recipe.Result.StableMaterialId, out ConstructionDesignation replacement,
+                out error), Is.True, error);
+            Assert.That(replacement, Is.Not.SameAs(order.Designation));
+            Assert.That(replacement.State,
+                Is.EqualTo(ConstructionDesignationState.Pending));
         }
 
         [Test]
