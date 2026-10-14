@@ -1,5 +1,10 @@
 # Ant Colony Current Game State
 
+## Latest acceptance — 3.4C Player Colony HUD & Developer UI Separation (14 October 2026)
+
+**COMPLETE — MANUALLY ACCEPTED.** User confirmed 13/13 grouped Unity HUD/gameplay/input checks, including resolution testing and clean Console. Codex previously reported focused 12/12 Edit, 13/13 Play; full 489/489 Edit and 62/62 Play. No tests rerun in this documentation update. Earlier pending-acceptance passages are historical. The separate art foundation remains **Pending Manual Visual Acceptance**. Future World View runtime is not implemented.
+
+
 ## Art foundation — 14 October 2026
 
 **Implemented — Pending Manual Acceptance.** Original `1254x1254` RGBA Colony and World tilesets are preserved under `Assets/_AntGame/Art/<View>/Source`. A deterministic preparation tool produces 100 Colony and 70 World position-named `32x32` candidate sprites with Multiple-sprite, 32 PPU, Point, uncompressed, no-mipmap import metadata. The extraction uses measured variable source rectangles and aspect-preserving square padding rather than blind 32x32 source slicing.
