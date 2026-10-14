@@ -1,5 +1,12 @@
 # Ant Colony Development Roadmap
 
+## 3.4C manually accepted — 14 October 2026
+
+**COMPLETE — 3.4C Player Colony HUD & Developer UI Separation.** User confirmed 13/13 grouped HUD, colony gameplay, input and resolution manual checks and clean Console. Codex-reported full suites passed 489/489 Edit and 62/62 Play. Existing uGUI player HUD and optional F12 developer IMGUI are accepted; World View runtime has not begun. Older pending-acceptance text is historical.
+
+**Next:** Separate manual visual acceptance for the art foundation remains outstanding. Further Colony View UX work or World View technical specification (WV-A) requires separately agreed scope.
+
+
 ## Parallel art foundation — 14 October 2026
 
 **Implemented — Pending Manual Acceptance.** Custom Colony and World source sheets are preserved separately and a repeatable tool prepares 32-pixel candidate libraries with Unity import metadata. This does not replace current development visuals, create World View gameplay or alter terrain behavior. Next art step: complete the documented Unity Sprite Editor and edge-repeat review, then approve semantic layer separation before creating production Tile assets and separate Colony/World palettes.
