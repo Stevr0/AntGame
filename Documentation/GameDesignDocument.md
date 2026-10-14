@@ -1,5 +1,16 @@
 # ANT COLONY
 
+## Approved resource acquisition loop — 14 October 2026
+
+> **APPROVED DESIGN CHANGE; NOT YET IMPLEMENTED.** This rule supersedes any earlier excavation auto-pickup rule.
+
+- **Foraging means finding and identifying resources**, including potential resource locations. Discovery does not itself collect or extract material.
+- **Excavation and extraction are physical removal/mining work.** All resource-producing excavation and extraction, in Colony View and future World View, spawn physically recoverable loose world resources at a valid site position. The acting ant does **not** auto-pick up the output into its inventory even when carrying capacity exists.
+- **Hauling** is separately collecting loose resources and transporting them to compatible physical storage. Direct player-issued pickup continues to use inventory.
+- **Construction** builders continue personally collecting required resources from existing inventory, storage or loose drops and staging them for work, without remote resource consumption.
+- A founding queen can excavate and construct using loose drops without initial storage. Loose drops remain traversable; future concentration-dependent movement and enclosed-room quality penalties are efficiency effects, never basic progression gates.
+- Maintain exact material conservation, reservation/cancellation semantics, output placement validation and bounded fallback/retry when the preferred drop position is unavailable. Do not destroy/teleport resources or silently grant them to inventory.
+- Surface forage/discovery and resource extraction implementation details are future work under separately scoped World View milestones. This decision does not implement them or settle their UI/AI specifics.
 ## Latest implementation status — 14 October 2026
 
 **Milestone 3.4D Colony Management & Work Priorities UI: manually ACCEPTED.** User confirmed 14 grouped Play Mode checks, including authoritative per-ant priority behaviour, resolution and input compatibility, ongoing jobs and clean Console. The accepted matrix exposes only Excavation, Construction and Hauling, leaving unimplemented work categories out of the normal player screen. This does not change the two-view contract. The art foundation remains pending separate manual visual acceptance.
