@@ -1,5 +1,34 @@
 # ANT COLONY
 
+## Approved player gameplay and interface direction — 14 October 2026
+
+> **Status: APPROVED DESIGN, NOT YET IMPLEMENTED.** This section is authoritative for the next simulation/UI milestones and supersedes earlier contradictory suggestions. Existing production features and the accepted developer test harness must be preserved.
+
+Ant Game's player experience follows **Pause → Plan → Play → Observe → Adjust**. The normal player interface must be distinct from developer testing controls, using RimWorld as a reference for understandable colony management rather than copying its world model. The game's side-view excavatable terrain, climbing ants, permanent Background and functional background conversions remain distinct.
+
+### Approved decisions
+
+1. **New game starts paused.** Player may inspect ants and terrain, move/zoom camera, designate excavation or functional Background conversion, and change work priorities before time advances.
+2. **Direct orders may be issued while paused.** They are accepted and displayed immediately, but must not execute, move ants, advance a route, perform work, complete transfers, or expire retries before resuming. Safe order replacement/cancellation semantics still apply.
+3. **Production UI uses Unity uGUI Canvas.** The existing IMGUI developer toolbar is retained only for optional Developer Mode. Normal play does not require opening developer tools.
+4. **Display only implemented work categories in the player UI.** Future/synthetic categories remain absent from the normal work interface until their real executors exist; developer diagnostics may still expose them.
+5. **Mara, Pip and Tala remain the temporary three-ant development fixture** while building and testing the HUD. This does not supersede the approved eventual single founding queen beginning.
+6. **Colony alerts notify rather than automatically pause.** Automatic pausing for future critical events requires its own design decision.
+
+### Unified simulation contract (3.4B)
+
+Normal gameplay has one simulation Play/Pause state and provisional 1×, 2×, 3× running speeds; on running, autonomous survival, colony work and hauling are activated as one default gameplay policy. These are *not* separate player switches. Developer Mode may retain explicit individual overrides for testing. Pausing preserves order/job ownership, reserved and staged materials, construction progress and pending navigation rather than disabling autonomous systems or cancelling tasks. Simulation needs, skill decay, job work, interactions, movement, physics, navigation scheduling, retry/backoff and reservations must not advance while paused. Player-facing camera, inspection, selection, designation, priority and direct-order authoring remain interactive.
+
+A shared authoritative simulation clock should replace gameplay use of unscaled wall-clock AI/retry timing. The simulation clock, physics, navigation and work progress must be tested for comparable simulation outcomes at 1×, 2× and 3×. Unity Editor Play Mode is distinct from the in-game simulation Play state.
+
+### UI separation and phased scope
+
+- **3.4B:** Authoritative simulation clock, gameplay automation bundle, consistent pause/speed semantics, minimal temporary player time-control strip. Avoid wholesale controller refactor or full HUD.
+- **3.4C:** Authored uGUI player HUD with roster, selected-ant information, resource summaries, excavation and background-conversion tools, time/speed controls; developer IMGUI hidden by default but accessible.
+- **Later:** Work-priority matrix, needs/skills/inventory views, actionable alerts and contextual work orders, incrementally.
+- **Deferred:** Doors, enclosed rooms/quality, brood, production, combat/Draft Mode, queued orders beyond the approved paused immediate-order acceptance. No new game systems should be claimed as implemented by this UI approval.
+
+
 **Game Design Document | Version 3.6 — order-based control, 12 October 2026**
 
 Working title • Unity 6 • Single-player • 2D side-view • PC-first prototype
