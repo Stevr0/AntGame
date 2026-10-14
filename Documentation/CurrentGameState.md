@@ -1,5 +1,11 @@
 # Ant Colony Current Game State
 
+## Milestone 3.4D manual acceptance — 14 October 2026
+
+**3.4D Colony Management & Work Priorities UI: COMPLETE — MANUALLY ACCEPTED.** User confirmed all 14 grouped checks covering independent Excavation/Construction/Hauling priorities, preservation of active work, authoritative ant bindings, layouts, input blocking, clock and clean Console. Codex previously reported focused 7/7 Edit and 7/7 Play, full 492/492 Edit and 65/65 Play. These were not rerun for this documentation-only update. Older pending-acceptance language is historical.
+
+**Next proposed milestone: 3.4E Multiple-Ant Local Avoidance & Congestion Recovery.** Scope must remain narrow: prevent persistent ant overlap/deadlock at close quarters while preserving authoritative grid navigation, valid climbing/falling, orders, jobs, time controls, resources and UI. No World View runtime, new navigation graph or pathfinding rewrite. This proposal is not yet implemented. Custom art foundation visual acceptance remains separate and pending.
+
 ## Current implemented milestone — 3.5A Colony View Presentation, Tile Preview & Art Integration (14 October 2026)
 
 **Implemented — Pending Manual Acceptance.** Excavation and Background Conversion now show a bounded, per-cell hover/drag preview above terrain. The presentation draws an explicit translucent fill and four screen-space border edges over the exact projected world-cell rectangle, rather than depending on the active IMGUI box skin. The alignment correction derives that rectangle from `WorldTileCoordinates.CellToWorldPosition` plus half the authoritative cell size: integer world coordinates are cell centres, matching the authored Grid's `(-0.5, -0.5)` transform and one-unit Tilemap cells. The earlier implementation incorrectly treated the integer coordinate as the lower-left corner, shifting every overlay half a world unit up and right. Excavation uses an amber border with a small `X`, valid construction uses a green border with `+`, invalid targets use red `!`, and existing compatible designations use a muted `≡` marker. Committed pending/active jobs retain a subtle full-cell border; cancelled and completed jobs do not render. The preview asks the authoritative designation registry for each cell's state and reason, and never mutates terrain, creates work, or creates per-tile GameObjects.

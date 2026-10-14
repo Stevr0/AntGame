@@ -1,5 +1,11 @@
 # Ant Colony Development Roadmap
 
+## 3.4D accepted; proposed 3.4E — 14 October 2026
+
+**3.4D COMPLETE — manually accepted:** all 14 grouped checks passed with clean Console. Previously reported full suites 492/492 Edit Mode and 65/65 Play Mode. Only implemented Excavation, Construction and Hauling types appear in the player work matrix, bound to authoritative AntRecord priority sets. Older 3.4D pending wording is superseded.
+
+**3.4E PROPOSED NEXT — Multiple-Ant Local Avoidance & Congestion Recovery:** first inspect and reproduce narrow-passage crowding, same-cell approach, head-on passing and stalled-work cases. Extend existing movement/navigation minimally with deterministic local right-of-way, temporary wait/yield, bounded retries and recovery. Maintain completed 3.4D HUD/work matrix, 3.4B time controls and 3.4A resource conservation. Avoid new world regions, pathfinder replacement, ants passing through invalid solids, artificial teleportation, hard-blocking clutter, combat and World View runtime. Approval of detailed scope required before changes. Art visual acceptance remains pending independently.
+
 ## 3.5A implementation status — 14 October 2026
 
 **Implemented — Pending Manual Acceptance.** The 3.5A acceptance corrections provide explicit camera-aligned full-cell fills and borders for hover, live drag and persistent pending/active excavation and construction designations. The alignment follow-up now projects the authoritative integer-centred cell bounds (`centre ± 0.5`) instead of incorrectly treating the cell coordinate as its lower-left corner. This matches the authored one-unit Tilemap Grid offset by `(-0.5, -0.5)` at every camera position, zoom and supported resolution. UI-blocked pointer entry clears and abandons a drag. Cancelled stable cell jobs can be replaced repeatedly, reservations are released, completed excavation remains terminal, and repeated construction cancellation retains exact staged-material recovery. The accepted custom Soil/Stone Tilemap mapping and all gameplay timings, costs and authorities are unchanged. Prepared/functional Background art, decoration, composite-cavity separation and seamless autotiling remain deferred. Milestone 3.4E congestion recovery remains explicitly parked.
