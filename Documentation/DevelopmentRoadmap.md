@@ -1,5 +1,16 @@
 # Ant Colony Development Roadmap
 
+## Accepted baseline and UI transition roadmap — 14 October 2026
+
+**3.4A — ACCEPTED:** User completed and accepted manual Play Mode testing of Functional Background Conversion & Construction Jobs, including inventory-capacity recovery and storage-first/ground-drop fallback. Codex-reported updated full regressions were 474/474 Edit Mode and 51/51 Play Mode. Historic pending-acceptance text below is superseded by this status.
+
+**3.4B — NEXT, APPROVED FOR IMPLEMENTATION: Unified Simulation Clock & Gameplay Mode.** Begin a game paused; accept player direct orders/designations/priority edits while paused, but execute no world operations before resume; authoritative pause/1×/2×/3× simulation time; a normal-gameplay automation bundle for survival, colony work and hauling; retain individual developer overrides; gate AI retries, needs, work, construction, navigation processing, physics and relevant timeouts without cancelling orders/reservations. Provide a minimal, independently accessible temporary time-control strip for manual tests; keep full production uGUI HUD out of 3.4B. Regression tests must verify pause preservation, 1×/2×/3× equivalence, recovery, navigation and gameplay orders.
+
+**3.4C — LATER: Player Colony HUD.** Unity uGUI Canvas (already installed) for ant roster, inspection, time control, resources, excavation and functional Background conversion. Keep existing IMGUI development tooling separate and hidden by default during normal play. Mara, Pip and Tala remain temporary test population. Show only actually implemented player work categories. Alerts notify and do not pause automatically.
+
+**Subsequent scoped milestones:** All-ant work priorities, information/alerts/storage UX, contextual right-click work orders and incremental controller responsibility separation. Keep doors, rooms, brood, production, combat and larger game features deferred. The approved eventual starting ant remains one founding queen; three ants are only the development fixture.
+
+
 ## Current milestone — 3.4A Functional Background Conversion & Construction Jobs
 
 **Implemented — Pending Manual Acceptance (13 October 2026).** The accepted shared job registry, priority matrix, grid navigation, ant inventory, world drops and Material Storage now drive real Construction jobs. A designated exposed Background is supplied personally by its reserved builder, staged physically at the site, worked over time with Construction skill and Rested modifiers, then committed through an accounted Background-only transaction. Prepared, Nursery, Sleeping, Food Storage, Water Storage and Material Storage conversions use provisional one-unit Soil/Stone recipes and four-hour base durations.
