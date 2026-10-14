@@ -1,5 +1,10 @@
 # ANT COLONY
 
+## Milestone status update — 14 October 2026
+
+**3.4C Player Colony HUD & Developer UI Separation is MANUALLY ACCEPTED.** All 13 grouped Unity manual checks passed, including resolution checks and clean Console. This confirms the current Colony View player uGUI, shared simulation controls and optional developer IMGUI; it does not authorise or implement World View, entrances, surface resources or cross-view routes. The separate art foundation awaits visual acceptance.
+
+
 ## Implementation status update — 14 October 2026
 
 **3.4B Unified Simulation Clock & Gameplay Mode is manually ACCEPTED.** All 20 grouped Unity Play Mode acceptance checks passed, including normal autonomous gameplay, pause/resume safety, developer override compatibility and clean Console. This status update does not change the approved mechanics or the earlier six design decisions.
