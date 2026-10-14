@@ -1,5 +1,12 @@
 # Ant Colony Development Roadmap
 
+## 3.4B acceptance and next milestone — 14 October 2026
+
+**3.4B — ACCEPTED.** Unified simulation clock and gameplay mode passed user manual acceptance: 20/20 grouped checks, normal gameplay, pause/resume, developer overrides and clean Console. Earlier Codex-reported tests: 11/11 focused Edit, 7/7 focused Play, 485/485 complete Edit (graphics-enabled), 58/58 complete Play. No rerun for these docs. Any older 3.4B pending status below is superseded.
+
+**3.4C — NEXT: Player Colony HUD & Developer UI Separation.** Authored uGUI Canvas/prefab, three-ant roster derived from authoritative ant identities, contextual selected-ant summary, normal-gameplay 3.4B time/speed strip migrated to player UI, excavation and functional-background conversion tools including cancel, physical resources/storage overview and clear job/designation feedback. Hide existing developer IMGUI by default but retain a distinct deliberate developer toggle and every current fixture/debug control. Central player+developer pointer blocking and keyboard focus must prevent designation/order leakage. Preserve paused plan/order semantics, autonomy policy and all accepted systems. Keep full work-priority matrix, detailed tabs, alert framework and right-click contextual menus for later isolated milestones. No doors, brood, combat, new simulation systems or production bootstrap.
+
+
 ## Accepted baseline and UI transition roadmap — 14 October 2026
 
 **3.4A — ACCEPTED:** User completed and accepted manual Play Mode testing of Functional Background Conversion & Construction Jobs, including inventory-capacity recovery and storage-first/ground-drop fallback. Codex-reported updated full regressions were 474/474 Edit Mode and 51/51 Play Mode. Historic pending-acceptance text below is superseded by this status.

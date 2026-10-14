@@ -1,5 +1,12 @@
 # Ant Colony Current Game State
 
+## Latest acceptance — 14 October 2026
+
+**Milestone 3.4B Unified Simulation Clock & Gameplay Mode: COMPLETE — MANUALLY ACCEPTED.** User confirmed all 20 grouped manual Unity Play Mode checks covering ordinary colony gameplay, pause/resume integrity, developer overrides, and clean Console. Codex reported focused 11/11 Edit and 7/7 Play; full graphics-enabled 485/485 Edit and 58/58 Play passed before manual acceptance. This documentation-only change did not rerun tests. Earlier 3.4B pending-acceptance text below is historical.
+
+**Next: Milestone 3.4C Player Colony HUD & Developer UI Separation (not implemented).** Build an authored Unity uGUI player HUD for selectable Mara/Pip/Tala roster, selected-ant inspection, current day/time and pause/speeds, excavation and functional-background conversion designation/cancellation, useful job and resource status. Keep the existing developer IMGUI test harness available separately but hidden by default in normal gameplay. Preserve 3.4B clock, paused-order authoring and 3.4A resource conservation. Later work matrix/alerts/context menus remain deferred.
+
+
 ## Current implemented milestone — 3.4B Unified Simulation Clock & Gameplay Mode (14 October 2026)
 
 **Milestone 3.4A Functional Background Conversion & Construction Jobs: MANUALLY ACCEPTED.** User confirmed 3.4A Play Mode testing accepted, including the inventory-capacity recovery correction. Codex previously reported focused construction 19/19 Edit and 4/4 Play; full 474/474 Edit and 51/51 Play after that correction. These suites were not rerun for this documentation-only update. Earlier "pending manual acceptance" passages below are retained as historical milestone records.
