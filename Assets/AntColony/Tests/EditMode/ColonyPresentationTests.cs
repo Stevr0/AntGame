@@ -2,6 +2,7 @@ using System.Linq;
 using AntColony.Commands;
 using AntColony.Development;
 using AntColony.World;
+using AntColony.WorldPresentation;
 using NUnit.Framework;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -71,10 +72,12 @@ namespace AntColony.Tests.EditMode
 
             Assert.That(DesignationOverlayGeometry.TryGetCellGuiRect(camera, cell,
                 1000f, out Rect rectangle), Is.True);
+            Vector2 centre = WorldTileCoordinates.CellToWorldPosition(cell);
+            float halfCell = WorldTileCoordinates.CellWorldSize * 0.5f;
             Vector3 minimum = camera.WorldToScreenPoint(
-                new Vector3(cell.x, cell.y, 0f));
+                new Vector3(centre.x - halfCell, centre.y - halfCell, 0f));
             Vector3 maximum = camera.WorldToScreenPoint(
-                new Vector3(cell.x + 1f, cell.y + 1f, 0f));
+                new Vector3(centre.x + halfCell, centre.y + halfCell, 0f));
             Assert.That(rectangle.width,
                 Is.EqualTo(Mathf.Abs(maximum.x - minimum.x)).Within(0.01f));
             Assert.That(rectangle.height,
@@ -82,6 +85,70 @@ namespace AntColony.Tests.EditMode
             Assert.That(DesignationOverlayGeometry.BorderThickness, Is.GreaterThan(0f));
             Assert.That(Mathf.Min(rectangle.width, rectangle.height),
                 Is.GreaterThan(DesignationOverlayGeometry.BorderThickness * 2f));
+        }
+
+        [Test]
+        public void OverlayAndAuthoredTilemapShareAuthoritativeCellBounds()
+        {
+            AntGameDevelopmentWorldHost host = OpenHost();
+            Vector2Int cell = AntGameDevelopmentWorldHost.ExcavationSoilFixture;
+            WorldTilemapRenderer renderer = host.TilemapRenderer;
+            Vector3Int tilemapCell = WorldTilemapRenderer.WorldCellToTilemapCell(cell);
+            Vector3 tileCentre = renderer.ForegroundTilemap.GetCellCenterWorld(tilemapCell);
+            Vector2 authoritativeCentre = WorldTileCoordinates.CellToWorldPosition(cell);
+
+            Assert.That(tileCentre.x,
+                Is.EqualTo(authoritativeCentre.x).Within(0.0001f));
+            Assert.That(tileCentre.y,
+                Is.EqualTo(authoritativeCentre.y).Within(0.0001f));
+
+            Camera camera = host.SelectionController.WorldCamera;
+            Assert.That(DesignationOverlayGeometry.TryGetCellGuiRect(camera, cell,
+                1000f, out Rect overlay), Is.True);
+            Vector3 projectedCentre = camera.WorldToScreenPoint(tileCentre);
+            Assert.That(overlay.center.x,
+                Is.EqualTo(projectedCentre.x).Within(0.01f));
+            Assert.That(overlay.center.y,
+                Is.EqualTo(1000f - projectedCentre.y).Within(0.01f));
+        }
+
+        [TestCase(1280, 720, 4f, 0f, 0f)]
+        [TestCase(1920, 1080, 30f, 7.25f, -3.5f)]
+        [TestCase(2560, 1080, 64f, -19.5f, 11.75f)]
+        public void ProjectionRemainsCentredAcrossResolutionPanAndZoom(
+            int width, int height, float orthographicSize,
+            float cameraX, float cameraY)
+        {
+            var cameraObject = new GameObject("Projection Test Camera");
+            var target = new RenderTexture(width, height, 0);
+            try
+            {
+                Camera camera = cameraObject.AddComponent<Camera>();
+                camera.orthographic = true;
+                camera.orthographicSize = orthographicSize;
+                camera.transform.position = new Vector3(cameraX, cameraY, -10f);
+                camera.targetTexture = target;
+                var cell = new Vector2Int(-6, 9);
+
+                Assert.That(DesignationOverlayGeometry.TryGetCellGuiRect(
+                    camera, cell, height, out Rect overlay), Is.True);
+                Vector3 projectedCentre = camera.WorldToScreenPoint(
+                    WorldTileCoordinates.CellToWorldPosition(cell));
+
+                Assert.That(overlay.center.x,
+                    Is.EqualTo(projectedCentre.x).Within(0.01f));
+                Assert.That(overlay.center.y,
+                    Is.EqualTo(height - projectedCentre.y).Within(0.01f));
+                Assert.That(overlay.width, Is.GreaterThan(0f));
+                Assert.That(overlay.height, Is.GreaterThan(0f));
+            }
+            finally
+            {
+                Camera camera = cameraObject.GetComponent<Camera>();
+                if (camera != null) camera.targetTexture = null;
+                Object.DestroyImmediate(target);
+                Object.DestroyImmediate(cameraObject);
+            }
         }
 
         [Test]

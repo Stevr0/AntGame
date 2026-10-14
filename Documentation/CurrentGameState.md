@@ -2,7 +2,7 @@
 
 ## Current implemented milestone — 3.5A Colony View Presentation, Tile Preview & Art Integration (14 October 2026)
 
-**Implemented — Pending Manual Acceptance.** Excavation and Background Conversion now show a bounded, per-cell hover/drag preview above terrain. The presentation draws an explicit translucent fill and four screen-space border edges over the exact projected world-cell rectangle, rather than depending on the active IMGUI box skin. Excavation uses an amber border with a small `X`, valid construction uses a green border with `+`, invalid targets use red `!`, and existing compatible designations use a muted `≡` marker. Committed pending/active jobs retain a subtle full-cell border; cancelled and completed jobs do not render. The preview asks the authoritative designation registry for each cell's state and reason, and never mutates terrain, creates work, or creates per-tile GameObjects.
+**Implemented — Pending Manual Acceptance.** Excavation and Background Conversion now show a bounded, per-cell hover/drag preview above terrain. The presentation draws an explicit translucent fill and four screen-space border edges over the exact projected world-cell rectangle, rather than depending on the active IMGUI box skin. The alignment correction derives that rectangle from `WorldTileCoordinates.CellToWorldPosition` plus half the authoritative cell size: integer world coordinates are cell centres, matching the authored Grid's `(-0.5, -0.5)` transform and one-unit Tilemap cells. The earlier implementation incorrectly treated the integer coordinate as the lower-left corner, shifting every overlay half a world unit up and right. Excavation uses an amber border with a small `X`, valid construction uses a green border with `+`, invalid targets use red `!`, and existing compatible designations use a muted `≡` marker. Committed pending/active jobs retain a subtle full-cell border; cancelled and completed jobs do not render. The preview asks the authoritative designation registry for each cell's state and reason, and never mutates terrain, creates work, or creates per-tile GameObjects.
 
 Hover and bounded drag preview update every frame, including while simulation is paused because designation authoring remains a player command. Entering blocked UI clears the preview and abandons the pending drag, so releasing over UI cannot commit a world designation. Right-click while Excavation or Background Conversion is active consumes the world click and calls only that tool's authoritative cancellation API. Normal Select-mode right-click orders are unchanged.
 
@@ -12,8 +12,8 @@ The first custom Colony art mapping is intentionally narrow. `Colony_R02_C01` su
 
 ### 3.5A automated verification
 
-- Focused correction Edit Mode: **50/50 passed**, covering presentation geometry and visibility, live bounded preview state, valid/invalid cells, UI/tool/world cleanup, duplicate protection, repeated cancellation/re-designation, reserved and partial-progress cancellation, completed-job rejection, construction parity, staged-material recovery and the unchanged art allow-list.
-- Complete graphics-enabled Edit Mode: **509/509 passed**.
+- Focused alignment Edit Mode: **18/18 passed**, including authoritative Tilemap/overlay centre agreement and projection at `1280×720`, `1920×1080`, and `2560×1080` across camera pan and minimum/default/maximum zoom.
+- Complete graphics-enabled Edit Mode: **513/513 passed**.
 - Complete Play Mode: **67/67 passed**.
 - Updated Unity art validation passed for all 170 prepared candidates, import settings, the four allow-listed runtime mappings and collider-free Tile configuration.
 - Deterministic art preparation `--verify-only`, strict Zensical documentation build and `git diff --check` passed. A separate headless full-Edit attempt crashed inside Unity's Tilemap renderer during the existing graphics-backed pixel test; the authoritative complete result is the subsequent graphics-enabled 503/503 pass.

@@ -1,3 +1,4 @@
+using AntColony.World;
 using UnityEngine;
 
 namespace AntColony.Commands
@@ -18,10 +19,16 @@ namespace AntColony.Commands
             rectangle = default;
             if (camera == null) return false;
 
+            // Authoritative world cells are centred on integer coordinates.
+            // The authored Tilemap Grid uses a matching half-cell transform,
+            // so derive both edges from the shared centre convention instead
+            // of treating the integer coordinate as the lower-left corner.
+            Vector2 centre = WorldTileCoordinates.CellToWorldPosition(cell);
+            float halfCell = WorldTileCoordinates.CellWorldSize * 0.5f;
             Vector3 minimum = camera.WorldToScreenPoint(
-                new Vector3(cell.x, cell.y, 0f));
+                new Vector3(centre.x - halfCell, centre.y - halfCell, 0f));
             Vector3 maximum = camera.WorldToScreenPoint(
-                new Vector3(cell.x + 1f, cell.y + 1f, 0f));
+                new Vector3(centre.x + halfCell, centre.y + halfCell, 0f));
             if (minimum.z < 0f || maximum.z < 0f) return false;
 
             float left = Mathf.Min(minimum.x, maximum.x);
