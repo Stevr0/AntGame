@@ -108,7 +108,7 @@ namespace AntColony.Tests.EditMode
 
             controller.Select(mara);
             Assert.That(controller.TryAwardSelectedSkillExperience(
-                AntSkillId.Excavation, 250d, 1d, out _, out _), Is.True);
+                AntSkillId.Extraction, 250d, 1d, out _, out _), Is.True);
             controller.Select(pip);
             Assert.That(controller.TryAwardSelectedSkillExperience(
                 AntSkillId.Construction, 350d, 1d, out _, out _), Is.True);
@@ -116,7 +116,7 @@ namespace AntColony.Tests.EditMode
             Assert.That(controller.TryAwardSelectedSkillExperience(
                 AntSkillId.Hauling, 450d, 1d, out _, out _), Is.True);
 
-            Assert.That(mara.Record.Skills.Get(AntSkillId.Excavation).Level,
+            Assert.That(mara.Record.Skills.Get(AntSkillId.Extraction).Level,
                 Is.GreaterThan(0));
             Assert.That(mara.Record.Skills.Get(AntSkillId.Construction).Level,
                 Is.Zero);
@@ -135,8 +135,8 @@ namespace AntColony.Tests.EditMode
             AntRecord record = mara.Record;
             controller.Select(mara);
             Assert.That(controller.TryAwardSelectedSkillExperience(
-                AntSkillId.Excavation, 500d, 1d, out _, out _), Is.True);
-            double experience = record.Skills.Get(AntSkillId.Excavation)
+                AntSkillId.Extraction, 500d, 1d, out _, out _), Is.True);
+            double experience = record.Skills.Get(AntSkillId.Extraction)
                 .TotalExperience;
 
             controller.Select(controller.SelectableAnts[1]);
@@ -147,7 +147,7 @@ namespace AntColony.Tests.EditMode
 
             SelectableGridAnt rebound = host.SelectionController.SelectableAnts[0];
             Assert.That(rebound.Record, Is.SameAs(record));
-            Assert.That(rebound.Record.Skills.Get(AntSkillId.Excavation)
+            Assert.That(rebound.Record.Skills.Get(AntSkillId.Extraction)
                 .TotalExperience, Is.EqualTo(experience));
         }
 
@@ -158,7 +158,7 @@ namespace AntColony.Tests.EditMode
             AntSelectionCommandController controller = host.SelectionController;
             controller.Select(controller.SelectableAnts[0]);
             Assert.That(controller.TryAwardSelectedSkillExperience(
-                AntSkillId.Excavation, 50000d, 1d, out _, out _), Is.True);
+                AntSkillId.Extraction, 50000d, 1d, out _, out _), Is.True);
             Assert.That(controller.TryAdvanceSkillInactivity(48d, out _), Is.True);
 
             Assert.That(host.RebuildWorld(), Is.True);

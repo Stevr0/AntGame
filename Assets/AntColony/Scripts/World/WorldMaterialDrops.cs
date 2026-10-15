@@ -77,9 +77,16 @@ namespace AntColony.World
             }
             int mergeCapacity = 0;
             foreach (WorldMaterialDrop existing in drops.Values)
-                if (existing.WorldCell == cell && existing.Material == material &&
-                    existing.MaximumStack == maximumStack)
+            {
+                if (existing.WorldCell != cell) continue;
+                if (existing.Material != material)
+                {
+                    error = "A loose-ground cell cannot contain different resource types.";
+                    return false;
+                }
+                if (existing.MaximumStack == maximumStack)
                     mergeCapacity += existing.MaximumStack - existing.Quantity;
+            }
             if (needsDrop && quantity - mergeCapacity > maximumStack)
             {
                 error = "The requested output cannot be represented by bounded stacks.";
@@ -129,6 +136,19 @@ namespace AntColony.World
             result = CommitOutput(key, material, quantity, cell, maximumStack);
             error = string.Empty;
             return true;
+        }
+
+        public bool CanAdd(string key, ExcavatedMaterialType material, int quantity,
+            Vector2Int cell, out string error,
+            int maximumStack = MaterialResourceCatalog.ProvisionalMaximumStack)
+        {
+            if (quantity <= 0)
+            {
+                error = "Material output requires a positive quantity.";
+                return false;
+            }
+            return CanCommitOutput(key, material, quantity, cell,
+                maximumStack, true, out error);
         }
 
         public bool TryAddFromSource(string key, ExcavatedMaterialType material,

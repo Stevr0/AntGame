@@ -53,6 +53,10 @@ namespace AntColony.Tests.PlayMode
             }
             controller.SelectableAnts[0].Record.Inventory.TryAdd("material.soil", 1,
                 MaterialResourceCatalog.ProvisionalMaximumStack, false, out _, out _);
+            Assert.That(designation.Site.TryStage(
+                controller.SelectableAnts[0].Record.Inventory, 1,
+                MaterialResourceCatalog.ProvisionalMaximumStack, out error),
+                Is.True, error);
             controller.SetAutonomousColonyWorkEnabled(true);
             Assert.That(controller.EvaluateAutonomousColonyWorkNow(
                 controller.SelectableAnts[0], 1d), Is.True);
@@ -101,7 +105,7 @@ namespace AntColony.Tests.PlayMode
         }
 
         [UnityTest]
-        public IEnumerator FullInventoryUnloadIsSafelyInterruptedByPlayerOrder()
+        public IEnumerator UnsuppliedConstructionDoesNotClaimAntOrCarriedMaterial()
         {
             yield return LoadScene();
             AntGameDevelopmentWorldHost host = FindHost();
@@ -122,16 +126,13 @@ namespace AntColony.Tests.PlayMode
                 MaterialResourceCatalog.ProvisionalMaximumStack, false, out _, out _);
             controller.SetAutonomousColonyWorkEnabled(true);
 
-            Assert.That(controller.EvaluateAutonomousColonyWorkNow(ant, 1d), Is.True);
-            ConstructionJobOrder recoveryOrder = ant.ConstructionOrder;
-            Assert.That(recoveryOrder.Phase,
-                Is.EqualTo(ConstructionOrderPhase.UnloadingInventory));
+            Assert.That(controller.EvaluateAutonomousColonyWorkNow(ant, 1d), Is.False);
+            Assert.That(ant.ConstructionOrder, Is.Null);
             Assert.That(ant.IssueMoveOrder(SampleWorldGenerator.GridDirectDestination),
                 Is.True);
-            Assert.That(recoveryOrder.Phase,
-                Is.EqualTo(ConstructionOrderPhase.Cancelled));
             Assert.That(ant.Record.Inventory.TotalQuantity, Is.EqualTo(3));
             Assert.That(designation.Job.Status, Is.EqualTo(ColonyJobStatus.Paused));
+            Assert.That(designation.Job.ReservationOwner.IsValid, Is.False);
             Assert.That(host.MaterialStorage.Slots.All(slot =>
                 slot.ReservationOwnerId != ant.Record.Id.Value), Is.True);
         }

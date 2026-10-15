@@ -489,7 +489,7 @@ namespace AntColony.EditorTools
 
             var buttons = new Button[3];
             var labels = new Text[3];
-            string[] names = { "Excavation", "Construction", "Hauling" };
+            string[] names = { "Extraction", "Construction", "Hauling" };
             for (int index = 0; index < buttons.Length; index++)
             {
                 buttons[index] = CreateButton(root.transform, names[index],
@@ -634,7 +634,7 @@ namespace AntColony.EditorTools
                 Vector2.one, new Vector2(10f, -44f), new Vector2(-10f, -8f));
             Button select = CreateButton(row.transform, "Select", "Select", font, 112f,
                 out _);
-            Button excavate = CreateButton(row.transform, "Excavate", "Excavate", font,
+            Button excavate = CreateButton(row.transform, "Extract", "Extract", font,
                 128f, out _);
             Button build = CreateButton(row.transform, "Build", "Build", font, 112f,
                 out _);

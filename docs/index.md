@@ -13,7 +13,7 @@ This wiki is a readable development companion to the repository's authoritative 
   <div class="status-card" markdown>
   **Latest implemented slice**
 
-  Milestone 3.5B: loose-only excavation output — pending manual acceptance.
+  Milestone 3.5B: loose-only Extraction output — pending manual acceptance.
   </div>
   <div class="status-card" markdown>
   **Engine**

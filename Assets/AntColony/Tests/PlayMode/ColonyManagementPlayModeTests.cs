@@ -39,20 +39,20 @@ namespace AntColony.Tests.PlayMode
             WorkPriorityRowView pip = management.Rows.Single(
                 row => row.Record.DisplayName == "Pip");
 
-            Assert.That(mara.TrySetPriority(AntWorkCategory.Excavation,
+            Assert.That(mara.TrySetPriority(AntWorkCategory.Extraction,
                 AntWorkPriority.Highest, out string message), Is.True, message);
             Assert.That(mara.TrySetPriority(AntWorkCategory.Construction,
                 AntWorkPriority.Disabled, out message), Is.True, message);
-            Assert.That(mara.Record.WorkPriorities.Get(AntWorkCategory.Excavation),
+            Assert.That(mara.Record.WorkPriorities.Get(AntWorkCategory.Extraction),
                 Is.EqualTo(AntWorkPriority.Highest));
             Assert.That(mara.Record.WorkPriorities.Get(AntWorkCategory.Construction),
                 Is.EqualTo(AntWorkPriority.Disabled));
-            Assert.That(pip.Record.WorkPriorities.Get(AntWorkCategory.Excavation),
+            Assert.That(pip.Record.WorkPriorities.Get(AntWorkCategory.Extraction),
                 Is.EqualTo(AntWorkPriority.Normal));
 
             management.Close();
             management.Open();
-            Assert.That(mara.Record.WorkPriorities.Get(AntWorkCategory.Excavation),
+            Assert.That(mara.Record.WorkPriorities.Get(AntWorkCategory.Extraction),
                 Is.EqualTo(AntWorkPriority.Highest));
             Assert.That(mara.Record.WorkPriorities.Get(AntWorkCategory.Construction),
                 Is.EqualTo(AntWorkPriority.Disabled));

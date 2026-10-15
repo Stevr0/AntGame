@@ -6,22 +6,60 @@ using UnityEngine;
 
 namespace AntColony.Commands
 {
+    public readonly struct ConstructionMaterialCost
+    {
+        public ConstructionMaterialCost(string resourceTypeId, int quantity)
+        {
+            if (string.IsNullOrWhiteSpace(resourceTypeId) || quantity <= 0)
+                throw new ArgumentException("Construction material costs require a resource and positive quantity.");
+            ResourceTypeId = resourceTypeId.Trim();
+            Quantity = quantity;
+        }
+
+        public string ResourceTypeId { get; }
+        public int Quantity { get; }
+    }
+
     /// <summary>One intentionally small, provisional Background conversion recipe.</summary>
     public sealed class ConstructionRecipe
     {
         public ConstructionRecipe(string stableId, string requiredSourceMaterialId,
             BackgroundTileMaterialDefinition result, ExcavatedMaterialType material,
             int quantity, double baseDurationHours)
+            : this(stableId, requiredSourceMaterialId, result,
+                new[] { new ConstructionMaterialCost(
+                    MaterialResourceCatalog.GetStableId(material), quantity) },
+                baseDurationHours)
+        {
+            if (material == ExcavatedMaterialType.None)
+                throw new ArgumentException("Construction recipes require a physical material.");
+        }
+
+        public ConstructionRecipe(string stableId, string requiredSourceMaterialId,
+            BackgroundTileMaterialDefinition result,
+            IEnumerable<ConstructionMaterialCost> materialRequirements,
+            double baseDurationHours)
         {
             if (string.IsNullOrWhiteSpace(stableId) || result == null ||
-                material == ExcavatedMaterialType.None || quantity <= 0 ||
-                baseDurationHours <= 0d)
-                throw new ArgumentException("Construction recipes require a stable ID, result, material, quantity and duration.");
+                materialRequirements == null || baseDurationHours <= 0d)
+                throw new ArgumentException("Construction recipes require a stable ID, result, materials and duration.");
             StableId = stableId.Trim();
             RequiredSourceMaterialId = requiredSourceMaterialId?.Trim() ?? string.Empty;
             Result = result;
-            ResourceTypeId = MaterialResourceCatalog.GetStableId(material);
-            RequiredQuantity = quantity;
+            var costs = new List<ConstructionMaterialCost>();
+            var seen = new HashSet<string>(StringComparer.Ordinal);
+            foreach (ConstructionMaterialCost cost in materialRequirements)
+            {
+                if (!seen.Add(cost.ResourceTypeId))
+                    throw new ArgumentException("Construction material types must be unique.");
+                costs.Add(cost);
+            }
+            if (costs.Count == 0)
+                throw new ArgumentException("Construction recipes require at least one material.");
+            MaterialRequirements = costs;
+            // Compatibility accessors keep today's single-material callers stable.
+            ResourceTypeId = costs[0].ResourceTypeId;
+            RequiredQuantity = costs[0].Quantity;
             BaseDurationHours = baseDurationHours;
         }
 
@@ -30,6 +68,7 @@ namespace AntColony.Commands
         public BackgroundTileMaterialDefinition Result { get; }
         public string ResourceTypeId { get; }
         public int RequiredQuantity { get; }
+        public IReadOnlyList<ConstructionMaterialCost> MaterialRequirements { get; }
         public double BaseDurationHours { get; }
         public bool AcceptsSource(string materialId) =>
             string.IsNullOrEmpty(RequiredSourceMaterialId) ||
@@ -74,15 +113,116 @@ namespace AntColony.Commands
     /// </summary>
     public sealed class ConstructionSite
     {
-        internal ConstructionSite(Vector2Int cell, string resourceTypeId)
+        private readonly Dictionary<string, ConstructionMaterialRequirement> requirements =
+            new(StringComparer.Ordinal);
+
+        internal ConstructionSite(Vector2Int cell,
+            IEnumerable<ConstructionMaterialCost> materialRequirements)
         {
             Cell = cell;
-            ResourceTypeId = resourceTypeId;
+            foreach (ConstructionMaterialCost cost in materialRequirements)
+                requirements.Add(cost.ResourceTypeId,
+                    new ConstructionMaterialRequirement(cost.ResourceTypeId,
+                        cost.Quantity));
+            foreach (string resourceTypeId in requirements.Keys)
+            {
+                ResourceTypeId = resourceTypeId;
+                break;
+            }
         }
 
         public Vector2Int Cell { get; }
+        // Compatibility accessors for today's single-material authored recipes.
         public string ResourceTypeId { get; }
-        public int DeliveredQuantity { get; private set; }
+        public int DeliveredQuantity => GetDeliveredQuantity(ResourceTypeId);
+        public IEnumerable<ConstructionMaterialRequirement> Requirements =>
+            requirements.Values;
+        public bool AcceptsDeliveries { get; private set; } = true;
+        public bool IsFullySupplied
+        {
+            get
+            {
+                foreach (ConstructionMaterialRequirement requirement in requirements.Values)
+                    if (requirement.DeliveredQuantity < requirement.RequiredQuantity)
+                        return false;
+                return true;
+            }
+        }
+
+        public int GetDeliveredQuantity(string resourceTypeId) =>
+            requirements.TryGetValue(resourceTypeId ?? string.Empty,
+                out ConstructionMaterialRequirement requirement)
+                ? requirement.DeliveredQuantity : 0;
+
+        public int GetAvailableCapacity(string resourceTypeId)
+        {
+            if (!AcceptsDeliveries) return 0;
+            if (!requirements.TryGetValue(resourceTypeId ?? string.Empty,
+                    out ConstructionMaterialRequirement requirement)) return 0;
+            return Math.Max(0, requirement.RequiredQuantity -
+                requirement.DeliveredQuantity - requirement.ReservedIncomingQuantity);
+        }
+
+        public bool TryReserveIncoming(string resourceTypeId, string ownerId,
+            int requested, out int reserved, out string error)
+        {
+            reserved = 0;
+            if (!requirements.TryGetValue(resourceTypeId ?? string.Empty,
+                    out ConstructionMaterialRequirement requirement) ||
+                string.IsNullOrWhiteSpace(ownerId) || requested <= 0 ||
+                !AcceptsDeliveries ||
+                !string.IsNullOrEmpty(requirement.ReservationOwnerId))
+            {
+                error = "The construction site has no compatible unreserved staging capacity.";
+                return false;
+            }
+            int available = GetAvailableCapacity(resourceTypeId);
+            if (available <= 0)
+            {
+                error = "The construction site already has its required material.";
+                return false;
+            }
+            reserved = Math.Min(requested, available);
+            requirement.ReservationOwnerId = ownerId;
+            requirement.ReservedIncomingQuantity = reserved;
+            error = string.Empty;
+            return true;
+        }
+
+        public bool TryCommitReservedDelivery(string resourceTypeId, string ownerId,
+            int quantity, Func<bool> commitSource, out string error)
+        {
+            if (!requirements.TryGetValue(resourceTypeId ?? string.Empty,
+                    out ConstructionMaterialRequirement requirement) ||
+                requirement.ReservationOwnerId != ownerId || quantity <= 0 ||
+                !AcceptsDeliveries ||
+                quantity > requirement.ReservedIncomingQuantity ||
+                requirement.DeliveredQuantity + quantity > requirement.RequiredQuantity)
+            {
+                error = "The reserved construction-site delivery is no longer valid.";
+                return false;
+            }
+            if (commitSource == null || !commitSource())
+            {
+                error = "The carrier inventory rejected the prepared staging transfer.";
+                return false;
+            }
+            requirement.DeliveredQuantity += quantity;
+            ReleaseIncoming(resourceTypeId, ownerId);
+            error = string.Empty;
+            return true;
+        }
+
+        public void ReleaseIncoming(string resourceTypeId, string ownerId)
+        {
+            if (requirements.TryGetValue(resourceTypeId ?? string.Empty,
+                    out ConstructionMaterialRequirement requirement) &&
+                requirement.ReservationOwnerId == ownerId)
+            {
+                requirement.ReservationOwnerId = string.Empty;
+                requirement.ReservedIncomingQuantity = 0;
+            }
+        }
 
         public bool TryStage(AntInventory inventory, int quantity, int maximumStack,
             out string error)
@@ -92,20 +232,52 @@ namespace AntColony.Commands
                 error = "Construction staging requires an inventory and positive quantity.";
                 return false;
             }
+            if (quantity > GetAvailableCapacity(ResourceTypeId))
+            {
+                error = "Construction staging cannot exceed the site requirement.";
+                return false;
+            }
             if (!inventory.TryRemoveResource(ResourceTypeId, quantity,
                     maximumStack, out error)) return false;
-            DeliveredQuantity += quantity;
+            requirements[ResourceTypeId].DeliveredQuantity += quantity;
             error = string.Empty;
             return true;
         }
 
-        internal bool CanConsume(int quantity) => quantity > 0 &&
-            DeliveredQuantity >= quantity;
+        internal bool CanConsumeAll() => IsFullySupplied;
 
-        internal void CommitConsumption(int quantity)
+        internal void CommitConsumption()
         {
-            DeliveredQuantity -= quantity;
+            foreach (ConstructionMaterialRequirement requirement in requirements.Values)
+                requirement.DeliveredQuantity = 0;
         }
+
+        internal void CloseForDeliveries()
+        {
+            AcceptsDeliveries = false;
+            foreach (ConstructionMaterialRequirement requirement in requirements.Values)
+            {
+                requirement.ReservationOwnerId = string.Empty;
+                requirement.ReservedIncomingQuantity = 0;
+            }
+        }
+    }
+
+    /// <summary>One resource line in site-owned construction staging.</summary>
+    public sealed class ConstructionMaterialRequirement
+    {
+        internal ConstructionMaterialRequirement(string resourceTypeId,
+            int requiredQuantity)
+        {
+            ResourceTypeId = resourceTypeId;
+            RequiredQuantity = requiredQuantity;
+        }
+
+        public string ResourceTypeId { get; }
+        public int RequiredQuantity { get; }
+        public int DeliveredQuantity { get; internal set; }
+        public int ReservedIncomingQuantity { get; internal set; }
+        internal string ReservationOwnerId { get; set; } = string.Empty;
     }
 
     public sealed class ConstructionDesignation
@@ -117,7 +289,7 @@ namespace AntColony.Commands
             SourceMaterialId = sourceMaterialId;
             Recipe = recipe;
             Job = job;
-            Site = new ConstructionSite(cell, recipe.ResourceTypeId);
+            Site = new ConstructionSite(cell, recipe.MaterialRequirements);
         }
 
         public Vector2Int Cell { get; }
@@ -271,28 +443,57 @@ namespace AntColony.Commands
                 error = $"No Background conversion exists at {cell}.";
                 return false;
             }
-            if (designation.Site.DeliveredQuantity > 0 && drops != null)
+            if (designation.State == ConstructionDesignationState.Completed)
             {
-                if (!MaterialResourceCatalog.TryGetMaterial(
-                        designation.Site.ResourceTypeId,
-                        out ExcavatedMaterialType material))
-                {
-                    error = "The staged construction material type is invalid.";
-                    return false;
-                }
+                error = "Completed construction cannot be cancelled.";
+                return false;
+            }
+            if (drops != null)
+            {
                 int generation = cancellationGenerations.TryGetValue(cell,
                     out int previousGeneration) ? previousGeneration + 1 : 1;
-                if (!drops.TryAdd(
-                        $"construction.cancelled.{cell.x}.{cell.y}.{generation}",
-                        material, designation.Site.DeliveredQuantity, cell,
-                        out _, out error))
-                    return false;
-                cancellationGenerations[cell] = generation;
-                designation.Site.CommitConsumption(
-                    designation.Site.DeliveredQuantity);
+                var recovery = new List<(ConstructionMaterialRequirement requirement,
+                    ExcavatedMaterialType material, Vector2Int cell, string key)>();
+                var usedCells = new HashSet<Vector2Int>();
+                foreach (ConstructionMaterialRequirement requirement in
+                    designation.Site.Requirements)
+                {
+                    if (requirement.DeliveredQuantity <= 0) continue;
+                    if (!MaterialResourceCatalog.TryGetMaterial(
+                            requirement.ResourceTypeId,
+                            out ExcavatedMaterialType material))
+                    {
+                        error = "A staged construction material type is invalid.";
+                        return false;
+                    }
+                    if (!TryFindRecoveryCell(cell, usedCells,
+                            out Vector2Int recoveryCell))
+                    {
+                        error = "No valid ground cell can recover staged construction material.";
+                        return false;
+                    }
+                    string key = $"construction.cancelled.{cell.x}.{cell.y}." +
+                        $"{generation}.{requirement.ResourceTypeId}";
+                    if (!drops.CanAdd(key, material, requirement.DeliveredQuantity,
+                            recoveryCell, out error)) return false;
+                    usedCells.Add(recoveryCell);
+                    recovery.Add((requirement, material, recoveryCell, key));
+                }
+                foreach (var item in recovery)
+                    if (!drops.TryAdd(item.key, item.material,
+                            item.requirement.DeliveredQuantity, item.cell,
+                            out _, out error)) return false;
+                if (recovery.Count > 0)
+                {
+                    cancellationGenerations[cell] = generation;
+                    designation.Site.CommitConsumption();
+                }
             }
-            return jobs.TryCancel(designation.Job.Id,
-                "Player cancelled the Background conversion.", out error);
+            if (!jobs.TryCancel(designation.Job.Id,
+                    "Player cancelled the Background conversion.", out error))
+                return false;
+            designation.Site.CloseForDeliveries();
+            return true;
         }
 
         public bool TryGet(ColonyJobId id, out ConstructionDesignation designation) =>
@@ -306,6 +507,26 @@ namespace AntColony.Commands
         {
             foreach (Vector2Int direction in CardinalDirections)
                 if (map.TryGetAnchor(cell + direction, out _)) return true;
+            return false;
+        }
+
+        private bool TryFindRecoveryCell(Vector2Int origin,
+            HashSet<Vector2Int> usedCells, out Vector2Int recoveryCell)
+        {
+            for (int radius = 0; radius <= 3; radius++)
+            for (int y = -radius; y <= radius; y++)
+            for (int x = -radius; x <= radius; x++)
+            {
+                if (Math.Abs(x) + Math.Abs(y) != radius) continue;
+                Vector2Int candidate = origin + new Vector2Int(x, y);
+                if (usedCells.Contains(candidate) ||
+                    world.GetCell(candidate, out _) != WorldCellQueryResult.Available ||
+                    !map.TryGetAnchor(candidate, out _) ||
+                    drops.TryFindAtCell(candidate, out _)) continue;
+                recoveryCell = candidate;
+                return true;
+            }
+            recoveryCell = default;
             return false;
         }
 
@@ -358,7 +579,7 @@ namespace AntColony.Commands
                 error = "Occupied functional capacity prevents Background conversion.";
                 return false;
             }
-            if (!designation.Site.CanConsume(recipe.RequiredQuantity))
+            if (!designation.Site.CanConsumeAll())
             {
                 error = "The construction site has not received all required material.";
                 return false;
@@ -384,7 +605,8 @@ namespace AntColony.Commands
                 return false;
             }
 
-            designation.Site.CommitConsumption(recipe.RequiredQuantity);
+            designation.Site.CommitConsumption();
+            designation.Site.CloseForDeliveries();
             committedJobs.Add(designation.Job.Id.Value);
             committed?.Invoke(designation.Cell);
             error = string.Empty;
@@ -416,6 +638,9 @@ namespace AntColony.Commands
 
     public enum ConstructionOrderPhase
     {
+        // Retained at their original numeric values for save/debug compatibility.
+        // Construction orders no longer enter these two material-gathering phases;
+        // the separate Hauling job owns collection and delivery.
         UnloadingInventory,
         TravellingToSource,
         TravellingToSite,
@@ -658,33 +883,23 @@ namespace AntColony.Commands
         public double BaseExperiencePerJob { get; }
     }
 
-    /// <summary>One builder-owned gather, stage and construct state machine.</summary>
+    /// <summary>One builder-owned, work-only construction state machine.</summary>
     public sealed class ConstructionJobOrder
     {
         private readonly ColonyJobRegistry jobs;
         private readonly GridNavigationMap map;
-        private readonly WorldMaterialDropRegistry drops;
-        private readonly MaterialStorageWorld storage;
         private readonly AntRecord ant;
         private readonly ConstructionDesignation designation;
         private readonly ConstructionWorldTransaction transaction;
         private readonly ConstructionJobSettings settings;
-        private ConstructionMaterialSourceKind sourceKind;
-        private string sourceKey = string.Empty;
-        private Vector2Int sourceCell;
-        private Vector2Int sourceApproach;
-        private int tripQuantity;
-        private int maximumStack = MaterialResourceCatalog.ProvisionalMaximumStack;
-        private InventoryCapacityRecoveryOperation inventoryRecovery;
-
         private ConstructionJobOrder(ColonyJobRegistry jobs, GridNavigationMap map,
             WorldMaterialDropRegistry drops, MaterialStorageWorld storage,
             AntRecord ant, ConstructionDesignation designation,
             Vector2Int siteApproach, ConstructionWorldTransaction transaction,
             ConstructionJobSettings settings)
         {
-            this.jobs = jobs; this.map = map; this.drops = drops;
-            this.storage = storage; this.ant = ant; this.designation = designation;
+            this.jobs = jobs; this.map = map;
+            this.ant = ant; this.designation = designation;
             this.transaction = transaction; this.settings = settings;
             SiteApproachCell = siteApproach;
         }
@@ -692,20 +907,12 @@ namespace AntColony.Commands
         public ColonyJob Job => designation.Job;
         public ConstructionDesignation Designation => designation;
         public Vector2Int SiteApproachCell { get; }
-        public Vector2Int CurrentSourceCell => sourceCell;
-        public int TripQuantity => tripQuantity;
-        public InventoryCapacityRecoveryOperation InventoryRecovery => inventoryRecovery;
         public ConstructionOrderPhase Phase { get; private set; }
         public string Status { get; private set; } = string.Empty;
         public string FailureReason { get; private set; } = string.Empty;
-        public bool IsActive => Phase is ConstructionOrderPhase.UnloadingInventory or
-            ConstructionOrderPhase.TravellingToSource or
-            ConstructionOrderPhase.TravellingToSite or ConstructionOrderPhase.Working;
-        public Vector2Int InitialApproachCell => Phase ==
-            ConstructionOrderPhase.UnloadingInventory
-                ? inventoryRecovery.ApproachCell
-                : Phase == ConstructionOrderPhase.TravellingToSource
-                    ? sourceApproach : SiteApproachCell;
+        public bool IsActive => Phase is ConstructionOrderPhase.TravellingToSite or
+            ConstructionOrderPhase.Working;
+        public Vector2Int InitialApproachCell => SiteApproachCell;
 
         public static bool TryCreate(ColonyJobRegistry jobs, GridNavigationMap map,
             WorldMaterialDropRegistry drops, MaterialStorageWorld storage,
@@ -715,13 +922,18 @@ namespace AntColony.Commands
             out string error, ConstructionJobSettings settings = null)
         {
             order = null;
-            if (jobs == null || map == null || drops == null || storage == null ||
+            if (jobs == null || map == null ||
                 ant == null || designation == null || transaction == null ||
                 !ant.CanAcceptMovementOrders || ant.Needs.HasDepletedHealth ||
                 !SurvivalInteractionOrder.IsValidAdjacentInteractionAnchor(
                     map, siteApproach, designation.Cell))
             {
-                error = "Construction requires an active builder, valid site and physical material authorities.";
+                error = "Construction requires an active builder and valid supplied site.";
+                return false;
+            }
+            if (!designation.Site.IsFullySupplied)
+            {
+                error = "Construction is waiting for all required materials to be staged.";
                 return false;
             }
             if (!jobs.TryReserve(designation.Job.Id, ant.Id, out error)) return false;
@@ -729,31 +941,9 @@ namespace AntColony.Commands
                 designation, siteApproach, transaction,
                 settings ?? ConstructionJobSettings.Provisional);
 
-            int missing = order.GetMissingQuantity();
-            if (missing <= 0)
-            {
-                order.Phase = ConstructionOrderPhase.TravellingToSite;
-                order.Status = "Travelling to resume supplied construction.";
-                error = string.Empty;
-                return true;
-            }
-            int carried = GetInventoryQuantity(ant.Inventory,
-                designation.Recipe.ResourceTypeId,
-                MaterialResourceCatalog.ProvisionalMaximumStack);
-            if (carried > 0)
-            {
-                order.tripQuantity = Math.Min(missing, carried);
-                order.Phase = ConstructionOrderPhase.TravellingToSite;
-                order.Status = $"Carrying {order.tripQuantity} material to the construction site.";
-                error = string.Empty;
-                return true;
-            }
-            if (!order.TryReserveNextSource(start, out error))
-            {
-                jobs.PauseAndRelease(designation.Job.Id, ant.Id, error);
-                order = null;
-                return false;
-            }
+            order.Phase = ConstructionOrderPhase.TravellingToSite;
+            order.Status = "Travelling to supplied construction site.";
+            error = string.Empty;
             return true;
         }
 
@@ -767,85 +957,23 @@ namespace AntColony.Commands
             AntRecord ant, ConstructionDesignation designation, Vector2Int start,
             out string reason)
         {
-            if (map == null || drops == null || storage == null || ant == null ||
-                designation == null)
+            if (map == null || ant == null || designation == null)
             {
-                reason = "Construction material authorities are unavailable.";
+                reason = "Construction authorities are unavailable.";
                 return false;
             }
-
-            int missing = Math.Max(0, designation.Recipe.RequiredQuantity -
-                designation.Site.DeliveredQuantity);
-            if (missing <= 0 || GetInventoryQuantity(ant.Inventory,
-                    designation.Recipe.ResourceTypeId,
-                    MaterialResourceCatalog.ProvisionalMaximumStack) > 0)
+            if (designation.Site.IsFullySupplied)
             {
                 reason = string.Empty;
                 return true;
             }
-
-            foreach (MaterialStorageSlot slot in storage.Slots)
-            {
-                if (slot.ResourceTypeId == designation.Recipe.ResourceTypeId &&
-                    slot.AvailableQuantity > 0 &&
-                    SurvivalInteractionOrder.TryMeasureApproach(
-                        map, start, slot.Cell, out _, out _, out _))
-                {
-                    reason = string.Empty;
-                    return true;
-                }
-            }
-            foreach (WorldMaterialDrop drop in drops.Drops)
-            {
-                if (MaterialResourceCatalog.GetStableId(drop.Material) ==
-                        designation.Recipe.ResourceTypeId &&
-                    drops.GetReservedQuantity(drop.OwnershipKey) == 0 &&
-                    SurvivalInteractionOrder.TryMeasureApproach(
-                        map, start, drop.WorldCell, out _, out _, out _))
-                {
-                    reason = string.Empty;
-                    return true;
-                }
-            }
-
-            reason = $"Waiting for reachable unreserved {designation.Recipe.ResourceTypeId} material.";
+            reason = "Construction is waiting for Hauling to stage all required materials.";
             return false;
         }
 
         public bool TryArrive(Vector2Int currentCell, out Vector2Int nextApproach)
         {
             nextApproach = default;
-            if (Phase == ConstructionOrderPhase.UnloadingInventory)
-            {
-                if (!inventoryRecovery.TryArrive(currentCell, out nextApproach,
-                        out bool capacityReady, out string recoveryError))
-                { Fail(recoveryError); return false; }
-                if (!capacityReady) return true;
-                inventoryRecovery = null;
-                if (!TryReserveNextSource(currentCell, out string recoveryReserveError))
-                { Fail(recoveryReserveError); return false; }
-                nextApproach = sourceApproach;
-                return true;
-            }
-            if (Phase == ConstructionOrderPhase.TravellingToSource)
-            {
-                if (!SurvivalInteractionOrder.IsValidAdjacentInteractionAnchor(
-                        map, currentCell, sourceCell))
-                {
-                    Fail("The construction material source became unreachable.");
-                    return false;
-                }
-                if (!CollectReservedSource(out string error))
-                {
-                    Fail(error);
-                    return false;
-                }
-                Phase = ConstructionOrderPhase.TravellingToSite;
-                Status = $"Carrying {tripQuantity} material to the construction site.";
-                nextApproach = SiteApproachCell;
-                return true;
-            }
-
             if (Phase != ConstructionOrderPhase.TravellingToSite ||
                 !SurvivalInteractionOrder.IsValidAdjacentInteractionAnchor(
                     map, currentCell, designation.Cell))
@@ -853,32 +981,19 @@ namespace AntColony.Commands
                 Fail("The construction-site approach became invalid.");
                 return false;
             }
-            if (tripQuantity > 0 &&
-                !designation.Site.TryStage(ant.Inventory, tripQuantity,
-                    maximumStack, out string stageError))
+            if (!designation.Site.IsFullySupplied)
             {
-                Fail(stageError);
+                Fail("Construction staging changed before work began.");
                 return false;
             }
-            tripQuantity = 0;
-            if (GetMissingQuantity() <= 0)
+            if (!jobs.TryBegin(Job.Id, ant.Id, out string beginError))
             {
-                if (!jobs.TryBegin(Job.Id, ant.Id, out string beginError))
-                {
-                    Fail(beginError);
-                    return false;
-                }
-                Phase = ConstructionOrderPhase.Working;
-                Status = "All materials delivered; constructing Background.";
+                Fail(beginError);
                 return false;
             }
-            if (!TryReserveNextSource(currentCell, out string reserveError))
-            {
-                Fail(reserveError);
-                return false;
-            }
-            nextApproach = sourceApproach;
-            return true;
+            Phase = ConstructionOrderPhase.Working;
+            Status = "All materials staged; constructing Background.";
+            return false;
         }
 
         public void Advance(double elapsedHours, double simulationHours)
@@ -922,155 +1037,19 @@ namespace AntColony.Commands
         public void Cancel(string reason)
         {
             if (!IsActive) return;
-            ReleaseSourceReservation();
             jobs.PauseAndRelease(Job.Id, ant.Id, reason);
             Phase = ConstructionOrderPhase.Cancelled;
             FailureReason = reason ?? string.Empty;
             Status = "Construction paused; progress and staged materials preserved.";
         }
 
-        private bool TryReserveNextSource(Vector2Int start, out string error)
-        {
-            int missing = GetMissingQuantity();
-            int capacity = ant.Inventory.GetAvailableCapacity(
-                designation.Recipe.ResourceTypeId,
-                MaterialResourceCatalog.ProvisionalMaximumStack);
-            if (missing <= 0)
-            {
-                error = "The construction site already has its required material.";
-                return false;
-            }
-            if (capacity <= 0)
-            {
-                if (!InventoryCapacityRecoveryOperation.TryCreate(ant.Inventory,
-                        storage, drops, map, ant.Id.Value,
-                        designation.Job.Id.Value,
-                        designation.Recipe.ResourceTypeId,
-                        MaterialResourceCatalog.ProvisionalMaximumStack, 1, start,
-                        out inventoryRecovery, out error)) return false;
-                if (inventoryRecovery.Phase == InventoryCapacityRecoveryPhase.Completed)
-                {
-                    inventoryRecovery = null;
-                    return TryReserveNextSource(start, out error);
-                }
-                Phase = ConstructionOrderPhase.UnloadingInventory;
-                Status = inventoryRecovery.Status;
-                return true;
-            }
-
-            float bestCost = float.PositiveInfinity;
-            ConstructionMaterialSourceKind bestKind = default;
-            string bestKey = string.Empty;
-            Vector2Int bestCell = default;
-            Vector2Int bestApproach = default;
-            int available = 0;
-            foreach (MaterialStorageSlot slot in storage.Slots)
-            {
-                if (slot.ResourceTypeId != designation.Recipe.ResourceTypeId ||
-                    slot.AvailableQuantity <= 0 ||
-                    !SurvivalInteractionOrder.TryMeasureApproach(map, start, slot.Cell,
-                        out Vector2Int approach, out float cost, out _)) continue;
-                if (cost < bestCost)
-                {
-                    bestCost = cost; bestKind = ConstructionMaterialSourceKind.Storage;
-                    bestCell = slot.Cell; bestApproach = approach;
-                    available = slot.AvailableQuantity; maximumStack = slot.MaximumStack;
-                }
-            }
-            foreach (WorldMaterialDrop drop in drops.Drops)
-            {
-                if (MaterialResourceCatalog.GetStableId(drop.Material) !=
-                        designation.Recipe.ResourceTypeId ||
-                    drops.GetReservedQuantity(drop.OwnershipKey) > 0 ||
-                    !SurvivalInteractionOrder.TryMeasureApproach(map, start,
-                        drop.WorldCell, out Vector2Int approach,
-                        out float cost, out _)) continue;
-                if (cost < bestCost)
-                {
-                    bestCost = cost; bestKind = ConstructionMaterialSourceKind.Drop;
-                    bestKey = drop.OwnershipKey; bestCell = drop.WorldCell;
-                    bestApproach = approach; available = drop.Quantity;
-                    maximumStack = drop.MaximumStack;
-                }
-            }
-            if (float.IsPositiveInfinity(bestCost))
-            {
-                error = "No reachable unreserved construction material is available.";
-                return false;
-            }
-
-            int requested = Math.Min(missing, Math.Min(capacity, available));
-            bool reserved = bestKind == ConstructionMaterialSourceKind.Storage
-                ? storage.TryReserveWithdrawal(bestCell,
-                    designation.Recipe.ResourceTypeId, ant.Id.Value,
-                    requested, out tripQuantity, out error)
-                : drops.TryReserve(bestKey, ant.Id.Value, requested,
-                    out tripQuantity, out error);
-            if (!reserved) return false;
-            sourceKind = bestKind; sourceKey = bestKey;
-            sourceCell = bestCell; sourceApproach = bestApproach;
-            Phase = ConstructionOrderPhase.TravellingToSource;
-            Status = $"Travelling to collect {tripQuantity} construction material.";
-            return true;
-        }
-
-        private bool CollectReservedSource(out string error)
-        {
-            if (sourceKind == ConstructionMaterialSourceKind.Storage)
-            {
-                if (!storage.TryGet(sourceCell, out MaterialStorageSlot slot))
-                {
-                    error = "The reserved Material Storage source disappeared.";
-                    return false;
-                }
-                maximumStack = slot.MaximumStack;
-                return storage.TryCommitReservedWithdrawal(sourceCell,
-                    designation.Recipe.ResourceTypeId, ant.Id.Value, tripQuantity,
-                    () => ant.Inventory.TryAdd(designation.Recipe.ResourceTypeId,
-                        tripQuantity, maximumStack, false, out int added, out _) &&
-                        added == tripQuantity, out _, out error);
-            }
-            return drops.TryCommitReservedPickup(sourceKey, ant.Id.Value, tripQuantity,
-                () => ant.Inventory.TryAdd(designation.Recipe.ResourceTypeId,
-                    tripQuantity, maximumStack, false, out int added, out _) &&
-                    added == tripQuantity, out _, out error);
-        }
-
-        private int GetMissingQuantity() => Math.Max(0,
-            designation.Recipe.RequiredQuantity - designation.Site.DeliveredQuantity);
-
-        private void ReleaseSourceReservation()
-        {
-            inventoryRecovery?.Cancel("Construction inventory recovery stopped.");
-            if (sourceKind == ConstructionMaterialSourceKind.Storage)
-                storage.ReleaseWithdrawal(sourceCell, ant.Id.Value);
-            else if (sourceKind == ConstructionMaterialSourceKind.Drop)
-                drops.ReleaseReservation(sourceKey, ant.Id.Value);
-        }
-
         private void Fail(string reason)
         {
-            ReleaseSourceReservation();
             jobs.PauseAndRelease(Job.Id, ant.Id, reason);
             Phase = ConstructionOrderPhase.Failed;
             FailureReason = reason;
             Status = "Construction stopped; physical materials and progress were preserved.";
         }
 
-        private static int GetInventoryQuantity(AntInventory inventory,
-            string resourceTypeId, int maximumStack)
-        {
-            int total = 0;
-            foreach (AntInventorySlot slot in inventory.OccupiedSlots)
-                if (slot.ResourceTypeId == resourceTypeId &&
-                    slot.MaximumStack == maximumStack) total += slot.Quantity;
-            return total;
-        }
-
-        private enum ConstructionMaterialSourceKind
-        {
-            Storage,
-            Drop
-        }
     }
 }

@@ -273,7 +273,7 @@ namespace AntColony.World
             {
                 int x = index % width, y = index / width;
                 AddNode(cells[x, y], nodes, seed, "surface", x, y, StoneNodeId,
-                    config.SurfaceStoneQuantity, true, "excavation", "excavation",
+                    config.SurfaceStoneQuantity, true, "extraction", "extraction",
                     "material.stone");
             }
             occupied.UnionWith(stones);
@@ -292,7 +292,7 @@ namespace AntColony.World
             // Fixed relative guarantee points make validation/repair bounded while
             // the remaining source scatter still varies by the Surface stream.
             AddNode(cells[28, 32], nodes, seed, "surface", 28, 32, SeedNodeId,
-                config.SeedQuantity, false, "foraging", "foraging", "resource.food.seed");
+                config.SeedQuantity, false, "extraction", "extraction", "resource.food.seed");
             int waterIndex = 32 * width + 36;
             int waterX = waterIndex % width, waterY = waterIndex / width;
             AddNode(cells[waterX, waterY], nodes, seed, "surface", waterX, waterY,
@@ -325,7 +325,7 @@ namespace AntColony.World
                 var node = new GeneratedResourceNodeRecord(
                     NodeId(seed, "colony", column, depth, definition),
                     RegionDestination.Colony(AntRegionIds.Colony, location), definition,
-                    1, true, "excavation", "excavation",
+                    1, true, "extraction", "extraction",
                     isStone ? "material.stone" : "material.soil", "generated:colony");
                 cells[column, depth].Node = node; nodes.Add(node);
             }
@@ -349,7 +349,7 @@ namespace AntColony.World
             var stoneNode = new GeneratedResourceNodeRecord(
                 NodeId(seed, "colony", stoneColumn, stoneDepth, StoneNodeId),
                 RegionDestination.Colony(AntRegionIds.Colony, stoneLocation),
-                StoneNodeId, 1, true, "excavation", "excavation",
+                StoneNodeId, 1, true, "extraction", "extraction",
                 "material.stone", "generated:colony");
             nodes.RemoveAll(node => node.Location.Kind == RegionLocationKind.Colony &&
                 node.Location.ColonyCell.Equals(stoneLocation));
@@ -465,7 +465,7 @@ namespace AntColony.World
                 if (occupied.Contains(index) || cells[x, y].Node != null ||
                     cells[x, y].BackgroundDefinitionId == WaterBackgroundId) continue;
                 AddNode(cells[x, y], nodes, seed, "surface", x, y, definition,
-                    quantity, false, "foraging", "foraging", output);
+                    quantity, false, "extraction", "extraction", output);
                 occupied.Add(index); placed++;
             }
         }

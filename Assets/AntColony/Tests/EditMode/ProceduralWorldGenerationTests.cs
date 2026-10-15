@@ -68,6 +68,29 @@ namespace AntColony.Tests.EditMode
         }
 
         [Test]
+        public void SoilStoneSeedAndTwigNodesShareExtractionContract()
+        {
+            ProceduralWorldGenerator.TryGenerate(2203,
+                new WorldGenerationConfiguration(), out GeneratedWorldSnapshot world,
+                out _);
+            string[] extractionDefinitions =
+            {
+                ProceduralWorldGenerator.SoilNodeId,
+                ProceduralWorldGenerator.StoneNodeId,
+                ProceduralWorldGenerator.SeedNodeId,
+                ProceduralWorldGenerator.TwigNodeId
+            };
+            foreach (string definition in extractionDefinitions)
+            {
+                GeneratedResourceNodeRecord[] nodes = world.Nodes.Where(node =>
+                    node.DefinitionId == definition).ToArray();
+                Assert.That(nodes, Is.Not.Empty, definition);
+                Assert.That(nodes.All(node => node.ActivityId == "extraction" &&
+                    node.SkillId == "extraction"), Is.True, definition);
+            }
+        }
+
+        [Test]
         public void SurfaceHasExpectedExtentClearingAndReachableSources()
         {
             ProceduralWorldGenerator.TryGenerate(2203, new WorldGenerationConfiguration(),

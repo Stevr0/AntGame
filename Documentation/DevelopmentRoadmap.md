@@ -1,5 +1,24 @@
 # Ant Colony Development Roadmap
 
+## WV-B2B-ARCH-001 unified resource logistics — implemented, manual acceptance pending
+
+The approved pre-closure correction replaces Construction self-supply with
+**Resource Node → Loose Ground Resource → Hauling → Construction Site staging /
+Material Storage → Construction**. Extraction is now the single skill and job
+category for Soil, Stone, Seed, Twig and future node removal. Existing earned
+Excavation experience/priorities are preserved in the same numeric slot; legacy
+`Excavation*` names are compatibility seams only.
+
+Hauling now has explicit Construction Site and Material Storage destinations,
+prioritises unmet compatible staging, and owns source/destination reservations.
+Construction is work-only and stays pending until all site requirements are
+staged. This resolves the first-Storage bootstrap without free stock or prior
+Storage. Surface resource interaction is still deferred; do not begin WV-C1.
+Validation passes **82/82 focused Edit**, **9/9 focused Play**, **539/539 full
+Edit** and **73/73 full Play**. Direct seed-`2203` Play Mode acceptance remains
+required. Keep `WV-B2B-DEF-001/002/003` and
+`WV-B1-REG-001` open until that acceptance is recorded.
+
 ## WV-B2B procedural generation foundation — implemented, validation pending (15 October 2026)
 
 WV-B2B now provides frozen SplitMix64-derived `surface`/`colony` streams, unified
@@ -25,16 +44,13 @@ Both defects remain open until Unity automated and manual acceptance are
 confirmed. `WV-B1-REG-001` remains outstanding, WV-B2B is not closed, and WV-C1
 is not started.
 
-`WV-B2B-DEF-003 — Founding Colony Storage Bootstrap` is also **Implemented —
-Pending Manual Acceptance**. Destination-less dynamic Hauling jobs are now
-filtered before reservation and remain paused/unowned, leaving their loose
-material available for existing Construction self-supply. Completing the first
-Material Storage makes later hauling eligible without a bootstrap storage,
-resource grant or scheduler replacement. Seed-`2203` regression coverage and
-the focused Material Storage/Hauling suite pass **17/17 Edit Mode**; broader
-relevant regressions pass **75/75 Edit Mode** and **5/5 Play Mode**. Preserve
-`WV-B2B-DEF-001`, `WV-B2B-DEF-002` and `WV-B1-REG-001`; do not close WV-B2B or
-start WV-C1 before manual acceptance.
+`WV-B2B-DEF-003 — Founding Colony Storage Bootstrap` remains **Implemented —
+Pending Manual Acceptance** and is now corrected by `WV-B2B-ARCH-001`.
+Destination-aware Hauling can reserve an unmet Storage construction site's
+staging without completed Storage, then Construction performs only the supplied
+work. Seed-`2203` focused evidence is included in the current 82/82 Edit Mode
+suite. Preserve `WV-B2B-DEF-001`, `WV-B2B-DEF-002`, `WV-B2B-DEF-003` and
+`WV-B1-REG-001`; do not close WV-B2B or start WV-C1 before manual acceptance.
 
 ## WV-B2A procedural generation specification — complete documentation gate (15 October 2026)
 
@@ -134,7 +150,7 @@ Finite reachable development supply is now **24 food / 32 water** instead of 12/
 
 ## 3.5B implementation status — 14 October 2026
 
-**Implemented — Pending Manual Acceptance.** Excavation completion now always converts eligible foreground Soil/Stone into an exact-once recoverable loose drop at the authoritative excavated cell. It no longer checks, fills or unloads the excavator's inventory and does not create a coupled hauling assignment. Existing same-cell merge/stack bounds preflight the entire yield; an unrepresentable output leaves terrain unchanged. Hauling remains the accepted separate storage-delivery workflow, and construction retains builder-owned self-supply directly from inventory, storage or loose drops.
+**Implemented — Pending Manual Acceptance.** Extraction completion converts eligible foreground Soil/Stone into an exact-once recoverable loose drop at the authoritative cell. It never fills inventory or a destination. Existing same-cell merge/stack bounds preflight the yield; an unrepresentable output leaves terrain unchanged. Under WV-B2B-ARCH-001, Hauling separately supplies Construction staging or Storage and Construction is work-only.
 
 Verification passed **96/96 focused Edit Mode**, **14/14 focused Play Mode**, **514/514 complete graphics-enabled Edit Mode** and **67/67 complete Play Mode**, all with zero failures/skips. The 27-step Unity manual checklist in `CurrentGameState.md` remains pending. Milestone 3.5A remains separately **Implemented — Pending Manual Acceptance**; its visuals, mapping and interaction geometry were not changed.
 

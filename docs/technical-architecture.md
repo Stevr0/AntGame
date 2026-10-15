@@ -1,5 +1,21 @@
 # Technical Architecture
 
+## WV-B2B-ARCH-001 resource ownership flow
+
+`ExcavationWorldTransaction` is the compatibility-named Extraction commit seam:
+it removes a Soil/Stone node only after a recoverable loose output is prepared.
+`MaterialHaulingOrder` is the sole normal transport executor and reserves both a
+loose source and an explicit `ConstructionSite` or `MaterialStorage` destination.
+`ConstructionSite` owns per-resource requirements, incoming reservations and
+staged quantities. `ConstructionJobOrder` accepts only fully supplied sites and
+performs work; it no longer calls inventory, Storage-withdrawal or loose-pickup
+paths. All three use the existing shared job registry and navigation—there is no
+second Extraction or Hauling scheduler.
+
+The legacy `Excavation*`, `BindExcavation`, `TryDesignateExcavation` and
+`WorldDesignationMode.Excavate` names remain compatibility/API seams. The
+authoritative enum/catalog entries and player-facing labels are Extraction.
+
 ## WV-B2B generated-data flow — 15 October 2026
 
 `ProceduralWorldGenerator` owns only initial immutable records and validation.
@@ -25,8 +41,8 @@ paused job, and the existing selector naturally reconsiders it on later passes.
 Dynamic Hauling uses the same eligibility boundary: it validates source access,
 ant carrying capacity and a reachable compatible Storage destination without
 reserving anything. A destination-less plan remains a registry-owned paused
-opportunity, so its source stays available to Construction self-supply until
-completed Storage capacity makes hauling executable.
+opportunity, so its source stays available until staging or Storage capacity
+makes Hauling executable.
 
 ## Approved unified cell boundary — 15 October 2026
 
@@ -60,7 +76,7 @@ Mara/Pip/Tala separate from the one-queen generated scenario. View switching and
 presentation rebuilds may not invoke generation or reset mutable world state.
 
 The strongest reusable transaction seams are prepare-before-commit excavation,
-physical inventory/storage transfers, reservations and builder self-supply. The
+physical inventory/storage transfers and reservations. The
 current loose-drop registry's multiple same-cell stacks and construction's
 Background replacement are compatibility mismatches, not target architecture.
 
@@ -153,7 +169,7 @@ flowchart TB
 
 `AntColony.World` owns chunks, Background/Solid material definitions, loose material drops, physical Material Storage slots, the atomic excavation commit, classification, clearance, capability, pathfinding data, and scheduling. Visual and collision Tilemaps project that data through `AntColony.WorldPresentation`; they do not own stored quantities.
 
-Milestone 3.5B narrows the atomic excavation boundary to terrain plus loose output. It validates the Solid and preflights the entire definition yield in `WorldMaterialDropRegistry` before removing foreground, then commits the prepared same-cell merge/new-stack result under the stable job key. `AntInventory` is not a destination or prerequisite of extraction. Pickup, autonomous storage hauling and construction self-supply continue through their existing independent reservation/transfer operations.
+Milestone 3.5B narrows the atomic Extraction boundary to terrain plus loose output. It validates the Solid and preflights the definition yield in `WorldMaterialDropRegistry` before removing foreground, then commits the prepared same-cell result under the stable job key. `AntInventory` is not an Extraction destination. WV-B2B-ARCH-001 routes later pickup and delivery through destination-aware Hauling; Construction no longer self-supplies.
 
 ### Art assets and presentation boundary
 
@@ -189,11 +205,11 @@ The roster reads authoritative records and uses a narrow compatibility adapter t
 
 `AntSelectionCommandController` retains accepted command and developer-IMGUI behavior, but no longer acts as the player HUD. It starts Developer Mode hidden and opens through F12 or the separate centre-top reopen control. `DevelopmentWorldInspector` still owns World/Debug developer panels and all seven categories remain available. The controller accepts only an `IPlayerUiInputBlocker` read-only hit test; the uGUI implementation uses the one EventSystem and `GraphicRaycaster`, while existing IMGUI rectangles protect developer controls. Selection, context orders, designation drag start/release and camera mouse input all consult the combined boundary. The temporary `SimulationTimeControlStrip` is no longer authored in the development scene.
 
-The command toolbar declares only `PlayerViewContext.Colony`. Its Select, Excavate, Background conversion and cancellation actions delegate to accepted APIs. Area cancellation invokes construction and excavation registries, so staged construction material follows the existing recoverable-drop transaction. No view manager, World View state, surface input or shared world-coordinate abstraction was added.
+The command toolbar declares only `PlayerViewContext.Colony`. Its Select, Extract, Background conversion and cancellation actions delegate to accepted APIs. Area cancellation invokes construction and compatibility-named excavation registries, so staged construction material follows the recoverable-drop transaction.
 
 Milestone 3.5A keeps preview state presentation-only inside `AntSelectionCommandController`. Each hovered or bounded drag cell is classified by the same excavation/construction registry validation used by commit. IMGUI draws the bounded overlay without per-cell GameObjects. Active-tool right-click is consumed before contextual orders and delegates to only the compatible registry cancellation API.
 
-Milestone 3.4D adds a global `ColonyManagementView` and reusable authored work-priority row. The view enumerates active `AntRecord` entries and writes their existing `AntWorkPrioritySet` through a narrow command API that also schedules the next ordinary work evaluation. It does not select the ant, require a loaded visual, cancel active work or own job-choice logic. Rows may consult a loaded `SelectableGridAnt` only for current activity text. The player matrix exposes only Excavation, Construction and Hauling because those categories have real executors; developer diagnostics retain the full catalog over the same underlying values.
+Milestone 3.4D adds a global `ColonyManagementView` and reusable authored work-priority row. The view enumerates active `AntRecord` entries and writes their existing `AntWorkPrioritySet` through a narrow command API that also schedules the next ordinary work evaluation. It does not select the ant, require a loaded visual, cancel active work or own job-choice logic. Rows may consult a loaded `SelectableGridAnt` only for current activity text. The player matrix exposes Extraction, Construction and Hauling because those categories have real executors; developer diagnostics retain the full catalog over the same underlying values.
 
 The management overlay remains inside the existing Canvas and EventSystem. Its full-screen raycast target protects priority clicks and scrolling from world/camera input. An optional keyboard-focus boundary consumes Escape for the modal before Colony View designation cancellation, without coupling command logic to uGUI types. Opening the overlay never owns or changes simulation-clock state.
 

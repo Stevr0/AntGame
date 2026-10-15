@@ -1,5 +1,17 @@
 # Milestone History
 
+## 15 October 2026 — WV-B2B-ARCH-001 Unified Resource Logistics
+
+**Implemented — Pending Manual Acceptance.** Extraction replaces Excavation as
+the official skill/category while preserving its numeric data slot. Soil/Stone
+Extraction creates loose output; destination-aware Hauling reserves and delivers
+to Construction staging or Storage; fully staged Construction performs work
+only. This supersedes builder self-supply and enables first-Storage bootstrap
+without existing Storage. Validation passed 82/82 focused Edit, 9/9 focused
+Play, 539/539 full Edit and 73/73 full Play. Direct Play Mode acceptance remains
+pending. WV-B2B and its existing defect/regression records stay open;
+WV-C1 is not started.
+
 ## 15 October 2026 — WV-B2B Founding Storage Bootstrap Recovery
 
 - Reproduced destination-less Hauling repeatedly winning work selection before

@@ -254,7 +254,7 @@ GameObject:
   - component: {fileID: 2506330033003906067}
   - component: {fileID: 9072504652214591779}
   m_Layer: 0
-  m_Name: Excavate
+  m_Name: Extract
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1359,7 +1359,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: Excavate
+  m_Text: Extract
 --- !u!1 &3083021437689501143
 GameObject:
   m_ObjectHideFlags: 0

@@ -1,13 +1,29 @@
 # Design Decision Log
 
+## 15 October 2026 — WV-B2B-ARCH-001 unified resource logistics
+
+- Make Extraction the single authoritative skill/category for Soil, Stone,
+  Seed, Twig and future resource-node removal; retain former Excavation numeric
+  values and compatibility names so earned experience/priorities survive.
+- Use Resource Node → loose ground resource → Hauling → Construction staging or
+  Material Storage → Construction. Extraction never fills a destination.
+- Make Hauling the sole normal transporter with explicit source and destination
+  reservations; prefer compatible unmet Construction staging over optional
+  Storage.
+- Make Construction work-only and eligible only after every site-owned material
+  requirement is staged. This supersedes all builder self-supply decisions.
+- Preserve exact-once output/consumption, cancellation recovery, shared jobs,
+  navigation, the founding queen and existing recipes. Defer Surface interaction
+  and WV-C1.
+
 ## 15 October 2026 — Destination-aware Hauling eligibility
 
 - Keep dynamic loose-resource Hauling in the shared job registry, but require a
-  reachable compatible Storage destination before autonomous selection.
+  reachable compatible Construction Site or Storage destination before selection.
 - Record an unmet destination as an unowned paused dependency without reserving
   the drop, destination, job or ant.
-- Preserve Construction's existing builder-owned loose-drop self-supply as the
-  founding colony's first-Storage bootstrap path; add no scheduler or free stock.
+- This entry's former builder-self-supply bootstrap is superseded by
+  WV-B2B-ARCH-001 destination-aware Hauling to Construction staging.
 
 ## 15 October 2026 — WV-B2B generation version 2 defect recovery
 
@@ -119,7 +135,7 @@ This log summarises approved decisions. It does not approve unresolved details o
 | 12 Oct 2026 | Require a door at every opening of an enclosed room | Room quality cannot assume open gaps are sealed |
 | 12 Oct 2026 | Allow mixed-use rooms | Specialisation may improve quality but does not invalidate base function |
 | 12 Oct 2026 | Model resources and reservations physically | Avoid unexplained global counters and duplicate consumption |
-| 12 Oct 2026 | Make the builder self-supply construction | Separate haulers do not fulfil the builder's material-gathering responsibility |
+| 12 Oct 2026 | Make the builder self-supply construction | Superseded by WV-B2B-ARCH-001 on 15 Oct 2026 |
 | 12 Oct 2026 | Use per-ant work priorities 1–4 plus Disabled | Priority precedes path-cost choice; skills affect efficiency, not rank |
 | 12 Oct 2026 | Preserve valid partial work across safe interruptions | Critical needs can interrupt without erasing completed progress |
 | 12 Oct 2026 | Require explicit brood authorisation | Spare food or nursery capacity never triggers reproduction automatically |

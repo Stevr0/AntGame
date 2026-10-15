@@ -84,7 +84,7 @@ namespace AntColony.Commands
             }
             if (!cellData.HasSolidTile)
             {
-                reason = $"Cell {cell} has natural Background but no foreground Solid to excavate.";
+                reason = $"Cell {cell} has natural Background but no excavatable foreground Resource Node.";
                 return DesignationPreviewState.Invalid;
             }
             if (!world.TryGetSolidMaterialDefinition(cellData.SolidMaterialId,
@@ -117,7 +117,7 @@ namespace AntColony.Commands
                 out SolidTileMaterialDefinition definition);
 
             ColonyJobId id = new($"excavation.{cell.x}.{cell.y}");
-            if (!jobs.TryAdd(id, AntWorkCategory.Excavation, cell,
+            if (!jobs.TryAdd(id, AntWorkCategory.Extraction, cell,
                     out ColonyJob job, out error)) return false;
             designation = new ExcavationDesignation(cell, cellData.SolidMaterialId,
                 definition.ExcavatedMaterial, definition.ExcavationYield, job);
@@ -224,13 +224,13 @@ namespace AntColony.Commands
             if (jobs == null || map == null || ant == null || designation == null ||
                 transaction == null || !ant.CanAcceptMovementOrders)
             {
-                error = "Excavation requires an active ant, designation and world.";
+                error = "Extraction requires an active ant, designation and world.";
                 return false;
             }
             if (!SurvivalInteractionOrder.IsValidAdjacentInteractionAnchor(
                     map, approach, designation.Cell))
             {
-                error = "Excavation requires a reachable adjacent work position.";
+                error = "Extraction requires a reachable adjacent work position.";
                 return false;
             }
             if (!jobs.TryReserve(designation.Job.Id, ant.Id, out error)) return false;
@@ -253,7 +253,7 @@ namespace AntColony.Commands
                 Fail(error); return false;
             }
             Phase = ExcavationOrderPhase.Working;
-            Status = $"Excavating {designation.SolidMaterialId}.";
+            Status = $"Extracting {designation.SolidMaterialId}.";
             return true;
         }
 
@@ -266,7 +266,7 @@ namespace AntColony.Commands
                 Block("Terrain changed and invalidated the excavation position.");
                 return;
             }
-            int level = ant.Skills.Get(AntSkillId.Excavation).Level;
+            int level = ant.Skills.Get(AntSkillId.Extraction).Level;
             double requested = elapsedHours / settings.BaseDurationHours *
                 (1d + level * settings.SkillSpeedPerLevel) *
                 ant.Needs.WorkSpeedMultiplier;
@@ -288,15 +288,15 @@ namespace AntColony.Commands
                 Fail(error); return;
             }
             if (applied > 0d)
-                ant.TryAwardSkillExperience(AntSkillId.Excavation,
+                ant.TryAwardSkillExperience(AntSkillId.Extraction,
                     settings.BaseExperiencePerBlock * applied, 1d,
                     simulationHours, out _, out _);
             if (Job.Status == ColonyJobStatus.Completed)
             {
                 Phase = ExcavationOrderPhase.Completed;
-                Status = $"Excavation completed at {designation.Cell}.";
+                Status = $"Extraction completed at {designation.Cell}.";
             }
-            else Status = $"Excavation progress: {Job.Progress:P0}.";
+            else Status = $"Extraction progress: {Job.Progress:P0}.";
         }
 
         public void Cancel(string reason)
@@ -305,7 +305,7 @@ namespace AntColony.Commands
             jobs.PauseAndRelease(Job.Id, ant.Id, reason);
             Phase = ExcavationOrderPhase.Cancelled;
             FailureReason = reason ?? string.Empty;
-            Status = "Excavation paused; progress preserved.";
+            Status = "Extraction paused; progress preserved.";
         }
 
         private void Fail(string reason)
@@ -313,7 +313,7 @@ namespace AntColony.Commands
             jobs.PauseAndRelease(Job.Id, ant.Id, reason);
             Phase = ExcavationOrderPhase.Failed;
             FailureReason = reason;
-            Status = "Excavation stopped; progress preserved.";
+            Status = "Extraction stopped; progress preserved.";
         }
 
         private void Block(string reason)
@@ -321,7 +321,7 @@ namespace AntColony.Commands
             jobs.BlockAndRelease(Job.Id, ant.Id, reason);
             Phase = ExcavationOrderPhase.Failed;
             FailureReason = reason;
-            Status = "Excavation blocked; progress preserved.";
+            Status = "Extraction blocked; progress preserved.";
         }
     }
 }

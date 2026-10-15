@@ -578,7 +578,7 @@ namespace AntColony.Commands
             excavationDragActive = false;
             ClearDesignationPreview();
             interactionMessage = mode == WorldDesignationMode.Excavate
-                ? "Excavate mode: left-click or drag over foreground Solids."
+                ? "Extract mode: left-click or drag over foreground Resource Nodes."
                 : mode == WorldDesignationMode.BackgroundConversion
                     ? $"Background Conversion: {SelectedConstructionRecipe?.Result.DisplayName ?? "No recipe"}."
                     : mode == WorldDesignationMode.CancelDesignation
@@ -665,7 +665,7 @@ namespace AntColony.Commands
         {
             if (excavationDesignations == null)
             {
-                message = "Excavation services are unavailable.";
+                message = "Extraction services are unavailable.";
                 return false;
             }
             bool result = excavationDesignations.TryDesignate(cell, out _, out message);
@@ -680,7 +680,7 @@ namespace AntColony.Commands
         {
             if (excavationDesignations == null)
             {
-                message = "Excavation services are unavailable.";
+                message = "Extraction services are unavailable.";
                 return 0;
             }
             int count = excavationDesignations.DesignateArea(first, second, out message);
@@ -693,12 +693,12 @@ namespace AntColony.Commands
         {
             if (excavationDesignations == null)
             {
-                message = "Excavation services are unavailable.";
+                message = "Extraction services are unavailable.";
                 return false;
             }
             foreach (SelectableGridAnt ant in selectableAnts)
                 if (ant?.ExcavationOrder?.Job.TargetCell == cell && ant.HasActiveOrder)
-                    ant.CancelOrder("Excavation designation was cancelled.");
+                    ant.CancelOrder("Extraction designation was cancelled.");
             bool result = excavationDesignations.TryCancel(cell, out message);
             interactionMessage = result ? $"Cancelled excavation at {cell}." : message;
             return result;
@@ -1595,7 +1595,8 @@ namespace AntColony.Commands
                     plan.InventoryOwner.IsValid && !plan.InventoryOwner.Equals(ant.Id))
                     return false;
                 if (MaterialHaulingOrder.CanStart(
-                        navigationWorld.Map, materialDrops, materialStorage, ant,
+                        navigationWorld.Map, materialDrops, materialStorage,
+                        constructionDesignations, ant,
                         plan, start, out string haulingReason)) return true;
 
                 colonyJobs.RecordPendingDependency(job.Id, haulingReason);
@@ -1673,9 +1674,10 @@ namespace AntColony.Commands
                     Vector2Int start = WorldTileCoordinates.WorldPositionToCell(
                         selectable.Motor.Position);
                     if (!MaterialHaulingOrder.TryChooseDestination(materialStorage,
-                            navigationWorld.Map, start, slot.ResourceTypeId,
-                            slot.MaximumStack, slot.Quantity, out Vector2Int destination,
-                            out _, out _, out _)) continue;
+                            constructionDesignations, navigationWorld.Map, start,
+                            slot.ResourceTypeId, slot.MaximumStack, slot.Quantity,
+                            out Vector2Int destination, out _, out _, out _, out _,
+                            out _)) continue;
                     ColonyJobId id = new(
                         $"hauling.self.{record.Id.Value}.{slot.ResourceTypeId}");
                     if (haulingPlans.ContainsKey(id)) continue;
@@ -1821,11 +1823,11 @@ namespace AntColony.Commands
             nextDevelopmentJobNumber = 1;
             (AntWorkCategory category, Vector2Int cell)[] fixtures =
             {
-                (AntWorkCategory.Excavation, new Vector2Int(-10, SampleWorldGenerator.MainPassageY)),
+                (AntWorkCategory.Extraction, new Vector2Int(-10, SampleWorldGenerator.MainPassageY)),
                 (AntWorkCategory.Construction, new Vector2Int(2, SampleWorldGenerator.MainPassageY)),
                 (AntWorkCategory.Hauling, new Vector2Int(8, SampleWorldGenerator.MainPassageY)),
                 (AntWorkCategory.Foraging, new Vector2Int(11, SampleWorldGenerator.MainPassageY)),
-                (AntWorkCategory.Excavation, SampleWorldGenerator.GridUnreachableDestination)
+                (AntWorkCategory.Extraction, SampleWorldGenerator.GridUnreachableDestination)
             };
             for (int index = 0; index < fixtures.Length; index++)
             {
@@ -2450,7 +2452,7 @@ namespace AntColony.Commands
                 GUILayout.Label(
                     $"Builder: {(designation.Job.ReservationOwner.IsValid ? designation.Job.ReservationOwner.ToString() : "None")} | " +
                     $"stage: {order?.Phase.ToString() ?? "Waiting"} | " +
-                    $"source: {order?.CurrentSourceCell.ToString() ?? "None"}");
+                    $"site: {designation.Cell}");
                 string reason = order?.FailureReason ?? designation.Job.FailureReason;
                 if (!string.IsNullOrEmpty(reason)) GUILayout.Label($"Reason: {reason}");
                 if (designation.State is not ConstructionDesignationState.Completed and
@@ -2466,7 +2468,7 @@ namespace AntColony.Commands
             GUILayout.Label("EXCAVATION DESIGNATIONS & LOOSE MATERIALS");
             if (excavationDesignations == null)
             {
-                GUILayout.Label("Excavation services unavailable.");
+                GUILayout.Label("Extraction services unavailable.");
                 return;
             }
             foreach (ExcavationDesignation designation in

@@ -106,14 +106,14 @@ namespace AntColony.Tests.EditMode
                 new AntId("ant-001"), colony, AntCaste.Worker);
             Assert.That(records.TryRegister(record, out _), Is.True);
             Assert.That(record.TryAwardSkillExperience(
-                AntSkillId.Excavation,
+                AntSkillId.Extraction,
                 250d,
                 1d,
                 0d,
                 out _,
                 out _), Is.True);
             double retainedSkillExperience = record.Skills
-                .Get(AntSkillId.Excavation)
+                .Get(AntSkillId.Extraction)
                 .TotalExperience;
             Assert.That(record.Inventory.TryAdd("material.soil", 3, 10, false,
                 out _, out _), Is.True);
@@ -142,7 +142,7 @@ namespace AntColony.Tests.EditMode
             replacement.Configure(record.Id.Value);
             Assert.That(replacement.Bind(records, visuals, out _), Is.True);
             Assert.That(replacement.Record, Is.SameAs(retained));
-            Assert.That(replacement.Record.Skills.Get(AntSkillId.Excavation)
+            Assert.That(replacement.Record.Skills.Get(AntSkillId.Extraction)
                 .TotalExperience, Is.EqualTo(retainedSkillExperience));
             Assert.That(replacement.Record.Inventory.TotalQuantity, Is.EqualTo(3),
                 "Inventory belongs to the record, not its replaceable visual.");

@@ -17,7 +17,7 @@ namespace AntColony.PlayerUI
     {
         private static readonly AntWorkCategory[] supportedCategories =
         {
-            AntWorkCategory.Excavation,
+            AntWorkCategory.Extraction,
             AntWorkCategory.Construction,
             AntWorkCategory.Hauling
         };

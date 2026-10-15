@@ -139,7 +139,7 @@ namespace AntColony.Commands
         {
             interactionOrder?.Cancel("Interaction cancelled because the ant was disabled.");
             jobOrder?.Cancel("Synthetic work cancelled because the ant was disabled.");
-            excavationOrder?.Cancel("Excavation cancelled because the ant was disabled.");
+            excavationOrder?.Cancel("Extraction cancelled because the ant was disabled.");
             pickupOrder?.Cancel("Pickup cancelled because the ant was disabled.");
             haulingOrder?.Cancel("Hauling cancelled because the ant was disabled.");
             constructionOrder?.Cancel("Construction cancelled because the ant was disabled.");
@@ -193,7 +193,7 @@ namespace AntColony.Commands
             ExcavationWorldTransaction transaction,
             WorldMaterialDropRegistry drops = null)
         {
-            excavationOrder?.Cancel("Excavation world was replaced.");
+            excavationOrder?.Cancel("Extraction world was replaced.");
             pickupOrder?.Cancel("Material world was replaced.");
             haulingOrder?.Cancel("Material world was replaced.");
             constructionOrder?.Cancel("Material world was replaced.");
@@ -248,7 +248,7 @@ namespace AntColony.Commands
             CacheComponents();
             interactionOrder?.Cancel("Interaction replaced by a movement order.");
             jobOrder?.Cancel("Synthetic work interrupted by a movement order.");
-            excavationOrder?.Cancel("Excavation interrupted by a movement order.");
+            excavationOrder?.Cancel("Extraction interrupted by a movement order.");
             pickupOrder?.Cancel("Pickup interrupted by a movement order.");
             haulingOrder?.Cancel("Hauling interrupted by a movement order.");
             constructionOrder?.Cancel("Construction interrupted by a movement order.");
@@ -294,7 +294,7 @@ namespace AntColony.Commands
             CacheComponents();
             interactionOrder?.Cancel("Interaction replaced by a new order.");
             jobOrder?.Cancel("Synthetic work interrupted by a survival interaction.");
-            excavationOrder?.Cancel("Excavation interrupted by a survival interaction.");
+            excavationOrder?.Cancel("Extraction interrupted by a survival interaction.");
             pickupOrder?.Cancel("Pickup interrupted by a survival interaction.");
             haulingOrder?.Cancel("Hauling interrupted by a survival interaction.");
             constructionOrder?.Cancel("Construction interrupted by a survival interaction.");
@@ -388,8 +388,8 @@ namespace AntColony.Commands
             pickupOrder?.Cancel("Pickup replaced by excavation.");
             haulingOrder?.Cancel("Hauling replaced by excavation.");
             jobOrder?.Cancel("Synthetic work replaced by excavation.");
-            excavationOrder?.Cancel("Excavation replaced by another job.");
-            motor.CancelMovement("Excavation is choosing an approach.");
+            excavationOrder?.Cancel("Extraction replaced by another job.");
+            motor.CancelMovement("Extraction is choosing an approach.");
             string error = string.Empty;
             if (excavationDesignations == null ||
                 !excavationDesignations.TryGet(job.Id, out ExcavationDesignation designation) ||
@@ -397,8 +397,8 @@ namespace AntColony.Commands
                     Record, designation, approachCell, excavationTransaction,
                     out excavationOrder, out error))
             {
-                failureReason = error ?? "Excavation designation is unavailable.";
-                orderOutcome = "Excavation rejected";
+                failureReason = error ?? "Extraction designation is unavailable.";
+                orderOutcome = "Extraction rejected";
                 hasActiveOrder = false;
                 OrderSource = AntOrderSource.None;
                 return false;
@@ -407,7 +407,7 @@ namespace AntColony.Commands
             {
                 excavationOrder.Cancel(motor.StatusMessage);
                 failureReason = motor.StatusMessage;
-                orderOutcome = "Excavation rejected";
+                orderOutcome = "Extraction rejected";
                 hasActiveOrder = false;
                 OrderSource = AntOrderSource.None;
                 return false;
@@ -416,7 +416,7 @@ namespace AntColony.Commands
             hasDestination = true;
             hasActiveOrder = true;
             failureReason = string.Empty;
-            orderOutcome = "Excavation active";
+            orderOutcome = "Extraction active";
             OrderSource = AntOrderSource.AutonomousWork;
             return true;
         }
@@ -428,14 +428,14 @@ namespace AntColony.Commands
             interactionOrder?.Cancel("Interaction replaced by hauling.");
             pickupOrder?.Cancel("Pickup replaced by hauling.");
             jobOrder?.Cancel("Synthetic work replaced by hauling.");
-            excavationOrder?.Cancel("Excavation replaced by hauling.");
+            excavationOrder?.Cancel("Extraction replaced by hauling.");
             constructionOrder?.Cancel("Construction replaced by hauling.");
             haulingOrder?.Cancel("Hauling replaced by another hauling job.");
             motor.CancelMovement("Hauling is choosing physical transfer positions.");
             Vector2Int start = WorldTileCoordinates.WorldPositionToCell(motor.Position);
             if (!MaterialHaulingOrder.TryCreate(colonyJobs,
                     motor.NavigationWorld?.Map, materialDrops, materialStorage,
-                    Record, plan, sourceApproach, start,
+                    constructionDesignations, Record, plan, sourceApproach, start,
                     out haulingOrder, out string error))
             {
                 failureReason = error; orderOutcome = "Hauling rejected";
@@ -463,9 +463,9 @@ namespace AntColony.Commands
             pickupOrder?.Cancel("Pickup replaced by construction.");
             haulingOrder?.Cancel("Hauling replaced by construction.");
             jobOrder?.Cancel("Synthetic work replaced by construction.");
-            excavationOrder?.Cancel("Excavation replaced by construction.");
+            excavationOrder?.Cancel("Extraction replaced by construction.");
             constructionOrder?.Cancel("Construction replaced by another job.");
-            motor.CancelMovement("Construction is choosing physical supply positions.");
+            motor.CancelMovement("Construction is moving to its supplied work site.");
             Vector2Int start = WorldTileCoordinates.WorldPositionToCell(motor.Position);
             if (constructionDesignations == null ||
                 !constructionDesignations.TryGet(job.Id,
@@ -512,7 +512,7 @@ namespace AntColony.Commands
             CacheComponents();
             interactionOrder?.Cancel("Interaction replaced by material pickup.");
             jobOrder?.Cancel("Synthetic work replaced by material pickup.");
-            excavationOrder?.Cancel("Excavation replaced by material pickup.");
+            excavationOrder?.Cancel("Extraction replaced by material pickup.");
             haulingOrder?.Cancel("Hauling replaced by material pickup.");
             constructionOrder?.Cancel("Construction replaced by material pickup.");
             pickupOrder?.Cancel("Pickup replaced by another pickup.");

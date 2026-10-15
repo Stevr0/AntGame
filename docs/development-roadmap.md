@@ -1,5 +1,15 @@
 # Development Roadmap
 
+## WV-B2B-ARCH-001 — implemented, pending manual acceptance
+
+Extraction is the sole node-removal skill/category. The implemented logistics
+chain is Resource Node → loose output → Hauling → Construction staging or
+Storage → Construction. Hauling supplies the first Storage site directly;
+Construction does only fully staged work. Validation passes 82/82 focused Edit,
+9/9 focused Play, 539/539 full Edit and 73/73 full Play. Direct seed-2203 Play
+Mode acceptance remains pending. WV-B2B and its open defects are not closed,
+and WV-C1 is not started.
+
 ## WV-B2B runtime gate
 
 **Implemented — Pending Manual Acceptance (15 October 2026).** Versioned deterministic
@@ -16,7 +26,7 @@ resource interaction must not begin without separate approval.
 `WV-B2B-DEF-003 — Founding Colony Storage Bootstrap` is implemented with manual
 acceptance pending. Hauling with no compatible destination no longer wins and
 rejects after assignment; it remains paused/unowned and leaves loose Soil free
-for Construction self-supply. Seed-`2203` coverage verifies the first Storage
+for destination-aware Hauling to Construction staging. Seed-`2203` coverage verifies the first Storage
 can be built without pre-existing Storage and later enables ordinary hauling.
 The focused Material Storage/Hauling suite passes 17/17 Edit Mode; broader
 relevant regressions pass 75/75 Edit Mode and 5/5 Play Mode. All three WV-B2B
@@ -58,7 +68,7 @@ later work. `WV-B1-REG-001` remains open.
 
 ## Current implementation — Milestone 3.5B
 
-**Implemented — Pending Manual Acceptance (14 October 2026).** Soil and Stone excavation now always creates exact-once loose output at the excavated authoritative cell, independent of excavator inventory and storage. Existing hauling remains the separate collection/storage activity, and construction retains direct builder self-supply from inventory, storage or drops. Focused verification passed 96/96 Edit and 14/14 Play; complete verification passed 514/514 Edit and 67/67 Play. The 27-step manual checklist remains pending.
+**Implemented — Pending Manual Acceptance (14 October 2026; logistics corrected 15 October).** Soil and Stone Extraction creates exact-once loose output, independent of inventory and Storage. Hauling supplies staging or Storage; Construction is work-only after full staging. Historical 3.5B evidence remains valid for loose output, while WV-B2B-ARCH-001 has its own current evidence and pending manual checklist.
 
 Milestone 3.5A also remains **Implemented — Pending Manual Acceptance** as a separate presentation/art gate. 3.5B changed no art mappings, cell projection, designation input or HUD behavior. 3.4E congestion recovery, World View runtime, new Foraging AI and new extraction types remain out of scope.
 
@@ -72,7 +82,7 @@ This page is a concise navigation view of the authoritative `Documentation/Devel
 
 **Current action:** manually verify Milestone 3.5B's 27-step loose-excavation checklist in `Assets/AntColony/Scenes/AntGameDevelopment.unity`, while keeping 3.5A visual acceptance and older pending UI checklists separately tracked.
 
-Milestones 3.4B and 3.4C are manually accepted. Milestone 3.4D remains **Implemented — Pending Manual Acceptance**. Its global Work matrix uses authoritative active ant records, exposes only real Excavation/Construction/Hauling executors, and edits the existing per-ant 1–4/Disabled values shared with developer diagnostics. Verification passed 7/7 focused Edit, 7/7 focused Play, 492/492 full Edit and 65/65 full Play.
+Milestones 3.4B and 3.4C are manually accepted. Milestone 3.4D remains **Implemented — Pending Manual Acceptance**. Its global Work matrix uses authoritative active ant records, exposes only real Extraction/Construction/Hauling executors, and edits the existing per-ant 1–4/Disabled values shared with developer diagnostics. Verification passed 7/7 focused Edit, 7/7 focused Play, 492/492 full Edit and 65/65 full Play.
 
 ## Current milestone state
 

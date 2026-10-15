@@ -1,5 +1,25 @@
 # ANT COLONY
 
+## WV-B2B-ARCH-001 authoritative resource logistics — 15 October 2026
+
+This approved correction supersedes every earlier Excavation-versus-Extraction
+distinction and every builder self-supply rule. **Extraction** is the one skill
+and activity for removing Soil, Stone, Seed, Twig and future resource nodes.
+Successful Extraction always creates conserved loose ground output and never
+fills inventory, Storage or Construction staging.
+
+The authoritative flow is **Resource Node → Loose Ground Resource → Hauling →
+Construction Site staging / Material Storage → Construction**. Hauling is the
+only normal transport job. A Construction Site owns its required, reserved and
+delivered quantities, may stage multiple recipe resource types, and becomes
+eligible for Construction work only when every requirement is satisfied.
+Storage is an alternative destination, not a prerequisite: the founding queen
+can extract Soil, haul it directly to an unsupplied Storage construction site,
+then construct the first empty Storage. Existing `Excavation*` implementation
+names remain temporary compatibility names; player-facing terminology and the
+authoritative skill/category are Extraction. Surface Seed/Twig interactions are
+approved to use this contract but remain unimplemented; WV-C1 is not started.
+
 ## WV-B2B procedural world-generation foundation — 15 October 2026
 
 > **IMPLEMENTED — AWAITING VALIDATION.** A versioned 64-bit seed now builds and
@@ -119,7 +139,7 @@ The implementation-ready technical contract is `WorldViewTechnicalSpecification.
 - **Foraging** discovers or identifies resources and their locations; it does not collect them automatically.
 - **Extraction** mines, harvests or otherwise removes an identified resource. Successful Colony View Soil or Stone excavation always creates the defined quantity as a physical, recoverable loose world drop at the excavated authoritative cell. It never adds output directly to the excavator's inventory, regardless of available capacity or storage.
 - **Hauling** reserves, picks up and transports already-extracted physical material through the existing inventory and Material Storage rules. Excavation completion does not assign a hauling job.
-- **Construction** remains builder-owned self-supply. The builder may personally gather required material from existing inventory, compatible storage or a recoverable loose drop; material need not pass through storage first.
+- **Construction** performs building work only after Hauling has delivered every required material to site-owned staging; material need not pass through Storage first.
 - Output preparation and foreground removal are one exact-once transaction. A stable job key prevents duplicate output; if the configured yield cannot be represented safely under the existing bounded stack rules, the foreground Solid remains unchanged.
 - **Implemented compatibility behavior:** excavation output currently uses the
   excavated cell, fills compatible partial stacks and may create one new bounded
@@ -310,18 +330,18 @@ Before another gameplay milestone, perform a **read-only architecture/code-to-de
 ### Resource-backed construction and conversion
 
 - Player designation creates a resource-requiring task for doors or functional-background conversions. All such jobs require an accessible adjacent interaction position and use **Construction skill** for work and progression.
-- **The constructing ant must gather and deliver its own required materials.** No separate hauler can satisfy a construction job's material-delivery obligation as its primary workflow; generic hauling to stockpiles is still permitted. The assigned builder obtains usable resources from reachable shared Material Storage, other permitted storage, nearby recoverable drops or its own carried inventory, transports them to the worksite, and then personally performs the construction.
-- For multi-trip jobs, the **same builder** may make multiple supply trips. Once materials are on site, another builder taking over an interrupted/released job may reuse those already-delivered physical materials; material provenance and reservation must stay valid. This is a proposed implementation interpretation of single-builder ownership, **not authorisation for a separate job-specific hauling workforce**.
-- Construction jobs must explicitly represent at least: designation, awaiting materials, gathering/transport, worksite delivery, constructing, completion, pause/interruption, cancellation and inaccessible/invalid states. Exact state names and internal object structure are implementation choices.
+- **Hauling supplies Construction Sites.** A hauler reserves one physical source quantity and one explicit destination capacity, carries the material, and commits it to that site's staging. Pending site needs take priority over optional Storage when compatible.
+- Staged material belongs only to its site. Another builder may perform the later Construction work, but Construction never searches for, collects or transports resources.
+- Construction jobs represent designation, awaiting fully staged materials, constructing, completion, pause/interruption, cancellation and inaccessible/invalid states. Hauling owns gathering and transport states.
 - Reserve **physical quantities** rather than abstract colony totals so two jobs cannot consume the same item. A reservation is not consumption. Materials delivered to a construction site are **consumed only in an accounted transaction** as construction successfully progresses/completes according to later-approved accounting rules.
 - **Cancelling a construction job leaves all unused materials physical and recoverable** in ant inventory, at the worksite, or as loose world items; do not teleport them to former stockpiles. Job cancellation must release any unconsumed resource reservations. Already irreversibly consumed resources are not automatically refunded; stage of consumption is **TBD**.
 - Recover safely from loss of builder, interrupted work, death, inaccessible stores, unloaded chunks, invalidated terrain, full carrying slots and world changes. On ant death, carried items should remain physical and recoverable; exact drop placement policy is **TBD**. A construction job must never silently swallow cargo or duplicate materials.
 
 ### First-colony bootstrap and unresolved balancing
 
-- The founding queen must be able to excavate, collect, transport and convert at least three Nursery Background tiles from initially reachable resources without relying on existing workers or prior stockpiles. The queen may build directly from carried materials or recoverable nearby drops. Initial nursery is functional before enclosure and doors.
+- The founding queen must be able to extract, haul and construct initial functional placements from reachable resources without existing workers, Storage or prior stockpiles. Initial nursery is functional before enclosure and doors.
 - **Unresolved (do not hardcode as approved):** construction recipes and costs, exact materials available at start, stack-size limits, carrying-slot progression and any equipment modifiers, conversion durations, reservation expiry, exact nearby placement choice when every candidate drop location is invalid, point of material consumption, whether partial construction persists, stockpile filters UI, clutter thresholds/penalties and performance update cadence.
-- Testing when implementation is separately authorised should cover resource conservation (excavate/pick up/drop/store/withdraw/consume), stacking, one-slot capacity, builder self-supply over multiple trips, reservation contention, cancellation at multiple stages, builder death, tile removal, persistent save/load and nursery bootstrap without stockpiles.
+- Testing covers resource conservation (extract/pick up/drop/stage/store/consume), stacking, one-slot capacity, multi-trip Hauling, reservation contention, cancellation at multiple stages, ant death, tile removal, persistent save/load and bootstrap without stockpiles.
 
 ## Approved job and priority system — 12 October 2026
 
@@ -346,7 +366,7 @@ Before another gameplay milestone, perform a **read-only architecture/code-to-de
 
 - Job claims/reservations prevent two workers from consuming the same materials, taking the same exclusive destination, or working on an exclusive tile simultaneously. Job completion, failure, loss of access, death, changed tile state, assignment changes and manual takeover must release or transfer reservations without duplication.
 - **Valid partial job progress persists across safe interruption or handoff** so a later eligible ant can continue rather than restart; the definition of valid/invalid progress and expiry remains **TBD**.
-- Preserve the approved **builder self-supply** rule: the constructing ant personally gathers and delivers its required physical materials before performing Construction, including multiple trips. Autonomous material haulers may replenish stockpiles, but do not fulfil a builder's job-specific delivery obligation.
+- Preserve the `WV-B2B-ARCH-001` separation: Extraction creates loose output, Hauling alone supplies staging or Storage, and Construction performs work only at a fully supplied site.
 - For initial implementation, prefer event-driven/controlled-rate decisions over every-ant/every-frame global job scans. Proposed components or job-state names are architectural candidates, **not approved class names**.
 
 ### Open dependencies — do not silently choose defaults
@@ -361,7 +381,7 @@ Before another gameplay milestone, perform a **read-only architecture/code-to-de
 
 ### Acceptance expectations for a future authorised implementation
 
-Demonstrate two or more autonomous ants with different priority matrices choose priority-before-distance; an inaccessible nearest target is skipped; explicit automated order versus direct control; critical needs override ordinary work only when warranted; interrupted excavation/construction progress persists; exclusive job reservations avoid double consumption; a builder personally gathers all materials; other ants continue working during direct control. This documentation change itself does **not** claim those tests passed.
+Demonstrate two or more autonomous ants with different priority matrices choose priority-before-distance; an inaccessible nearest target is skipped; explicit automated order versus direct control; critical needs override ordinary work only when warranted; interrupted Extraction/Construction progress persists; exclusive source/site/job reservations avoid double consumption; Hauling supplies sites before Construction begins; other ants continue working during direct control.
 
 ## Approved command-based player control — 12 October 2026
 
@@ -541,7 +561,7 @@ Colony View presents a live, camera-aligned per-cell hover and bounded-drag prev
 
 Cancellation releases the job reservation but does not remove the foreground Solid or reverse physically completed excavation. A cancelled designation on a still-eligible Solid may be designated again repeatedly under the same stable cell identity; active duplicates and completed jobs remain protected. Background Conversion follows the same cancellation/re-designation presentation contract, while staged construction material must remain physically conserved through recoverable loose output.
 
-For the current resource model, excavating one resource-bearing foreground Solid Tile produces the material definition's quantity of Soil or Stone as a loose stack at the excavated cell. The excavator's inventory is not part of completion. A later explicit or autonomous Hauling action may reserve and collect that stack; a builder may also collect it directly for self-supply. Excavation must not complete if its physical loose output cannot be represented safely.
+For the current resource model, extracting one resource-bearing foreground Solid Tile produces the node definition's quantity of Soil or Stone as a loose stack at the extracted cell. The extractor's inventory is not part of completion. A later explicit or autonomous Hauling action may reserve and deliver that stack to Construction staging or compatible Storage. Extraction must not complete if its physical loose output cannot be represented safely.
 
 When excavation work completes:
 
@@ -559,7 +579,7 @@ Excavation never removes or destroys a Background Tile and never automatically m
 | Designation | Click or drag to mark soil Solid Tiles; visually distinguish pending, in-progress and complete. |
 | Access | Workers can only dig Solid Tiles with a reachable exposed face. |
 | Job ownership | A Solid Tile excavation job is reserved by at most one worker at a time. |
-| Excavation | Work progresses over time, potentially modified by excavation skill later. |
+| Extraction | Work progresses over time and uses the Extraction skill. |
 | Excavated cargo | One resource-bearing Solid Tile yields its defined quantity as a physical loose stack at the excavated cell; the excavator's inventory is unchanged. |
 | Hauling | Ants transport carried tile-derived resources or objects to storage or to applicable work sites. |
 | Deposit | A known surface storage point is acceptable initially; player-designated zones later. |
@@ -589,7 +609,7 @@ All ants are persistent individuals. A caste may define biological capabilities;
 | --- | --- |
 | Individual identity | Unique ID/name, caste, status, assigned job. |
 | Innate attributes | Strength, movement speed and endurance (final list to be tested). |
-| Skills | Excavation, Surface Preparation, Construction, Hauling, Foraging, Combat and Brood Care. |
+| Skills | Extraction, Surface Preparation, Construction, Hauling, Foraging, Combat and Brood Care. |
 | Needs | Health, hunger/food, hydration/water and energy/rest. |
 | Jobs | Excavator, forager and hauler initially; brood-care later. |
 | Selection | Click an ant or use the roster to inspect it and manage its work. |
@@ -606,7 +626,7 @@ The exact egg-production timings, mating biology, nutrition costs and brood-care
 
 Every ant has every ordinary skill, represented from **0 to 100**, and begins at 0. Level 0 never prevents successful ordinary work: inexperience may make work slower, less resource-efficient, less productive or less consistent where appropriate, but it must not create a failure loop that prevents learning.
 
-Skills improve through meaningful successful work rather than conventional level-point spending. Successful excavation improves Excavation; completed Surface Preparation improves Surface Preparation; delivered resources improve Hauling; gathered food improves Foraging; and applicable completed construction improves Construction. Starting and cancelling jobs must not award exploitable experience.
+Skills improve through meaningful successful work rather than conventional level-point spending. Successful Soil/Stone/Seed/Twig resource removal improves Extraction; completed Surface Preparation improves Surface Preparation; delivered resources improve Hauling; gathered food improves Foraging; and applicable completed construction improves Construction. Starting and cancelling jobs must not award exploitable experience.
 
 Gains may slow as a skill approaches 100. Higher skill may reduce completion time or waste, or improve productivity, effectiveness or consistency, but each skill uses only effects relevant to its task. Exact gain formulas, success criteria, difficulty modifiers and performance curves remain balancing decisions.
 
@@ -623,7 +643,7 @@ Every ant begins with **one personal inventory slot**, and the number of slots i
 | 80–100 | 5 |
 
 - Each slot holds exactly one tile-derived resource or transportable object; **items do not stack** in the initial model.
-- Excavated items remain loose until a separate pickup, hauling or builder self-supply interaction transfers them into an inventory.
+- Extracted items remain loose until a separate Hauling interaction transfers them into an inventory and then to explicit staging or Storage.
 - Resource transport, storage, placement and consumption must conserve items. Background preparation may use carried or delivered Stone to create a completed grippable background.
 - If Hauling skill decays across a capacity threshold, carried items are **never destroyed**. Existing cargo is temporarily retained even if occupied slots exceed the new effective capacity; the ant cannot collect additional items until occupancy falls below its current capacity.
 - The one-item-per-slot rule also applies to transportable objects in the first playable colony. Larger-object capacity rules are deliberately deferred.
@@ -638,7 +658,7 @@ Every ant begins with **one personal inventory slot**, and the number of slots i
 - Decay never produces a negative value or reduces a skill below 50.
 - A configurable inactivity grace period should prevent ordinary rest, eating or short task changes from causing decay.
 
-The exact grace period and decay rate are not yet defined. For example, an ant with Excavation 85, Surface Preparation 72, Hauling 43 and Foraging 18 will gradually retain 50 in the two unused high skills, while Hauling and Foraging remain unchanged. Hauling decay can reduce future carrying capacity, but must never delete cargo already held.
+The exact grace period and decay rate are not yet defined. For example, an ant with Extraction 85, Surface Preparation 72, Hauling 43 and Foraging 18 will gradually retain 50 in the two unused high skills, while Hauling and Foraging remain unchanged. Hauling decay can reduce future carrying capacity, but must never delete cargo already held.
 
 ## 9. Food, water and productivity
 
@@ -707,7 +727,7 @@ Autonomous movement is approved but not implemented. It must support excavation 
 The design separates these conceptual responsibilities. They describe boundaries, not mandatory class names:
 
 - **World Tile Data:** stores resident 32×32 chunks containing one permanently present but material-replaceable Background Tile per coordinate, plus an optional foreground Solid Tile and their configured properties. Missing chunks remain explicitly unavailable.
-- **Terrain/Excavation System:** removes completed excavatable Solid Tiles, produces configured resources, updates collision and announces affected regions.
+- **Extraction System** (currently implemented by compatibility-named `Excavation*` classes): removes completed extractable Solid/Resource Nodes, produces configured resources, updates collision and announces affected regions.
 - **Surface Preparation System:** reserves accessible work, consumes configured resources over time, and replaces an exposed Background Material only when preparation completes.
 - **Colony Task System:** decides what work exists and which ants may perform it, using designations, priorities, roles, skills, availability and explicit individual assignments.
 - **Ant Navigation Agent:** selects destinations, requests paths, follows routes and reports invalid or unreachable results.

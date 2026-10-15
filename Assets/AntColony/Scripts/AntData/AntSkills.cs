@@ -9,7 +9,10 @@ namespace AntColony.Ants
     /// </summary>
     public enum AntSkillId
     {
-        Excavation = 0,
+        // Extraction keeps the former Excavation numeric slot so existing
+        // earned experience is preserved without a save-data migration.
+        Extraction = 0,
+        Excavation = Extraction,
         SurfacePreparation = 1,
         Construction = 2,
         Hauling = 3,
@@ -41,7 +44,7 @@ namespace AntColony.Ants
     {
         private static readonly AntSkillDefinition[] definitions =
         {
-            new(AntSkillId.Excavation, "excavation", "Excavation"),
+            new(AntSkillId.Extraction, "extraction", "Extraction"),
             new(
                 AntSkillId.SurfacePreparation,
                 "surface_preparation",

@@ -1,13 +1,22 @@
 # Colony Construction and Rooms
 
+## Construction staging correction
+
+Under WV-B2B-ARCH-001, builders do not self-supply. Each Construction Site owns
+its required, reserved and delivered resource quantities, including multiple
+recipe types. Hauling delivers physical resources to that site; only then does
+Construction become eligible and consume staging once on successful completion.
+Cancelling returns staged material to recoverable loose output. Material Storage
+is an alternative destination, never a prerequisite for first-Storage building.
+
 ## Approved placement model amendment
 
 **Design approved; migration not implemented.** Sleeping, Food/Water/Material
 Storage, Nursery, doors and future specialised functions are
 Constructions/Placements over an unchanged natural Background. A cell normally
 requires no node, no existing placement and no incompatible loose stack.
-Construction still consumes physical materials, uses builder self-supply and
-awards Construction skill through work.
+Construction still consumes physical staged materials exactly once and awards
+Construction skill through work; Hauling owns supply transport.
 
 One Storage placement owns one functional slot/capacity unit where the 1:1 rule
 applies. That slot contains zero or one resource type up to its capacity; stored
@@ -62,7 +71,7 @@ The approved design allows mixed-use spaces. Enclosure is not required for base 
 | Authored Food/Water/Sleeping fixtures | Implemented and accepted |
 | Physical construction reservations and staging | Implemented in 3.4A |
 | Material Storage | Implemented and accepted in 3.3D |
-| Construction jobs and builder self-supply | Implemented — manual acceptance pending |
+| Destination staging and Construction work | Implemented — manual acceptance pending |
 | Conversion progress and cancellation recovery | Implemented — manual acceptance pending |
 | Room enclosure, doors, and quality | Planned, not implemented |
 

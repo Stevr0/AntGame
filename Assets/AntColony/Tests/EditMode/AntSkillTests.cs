@@ -35,7 +35,7 @@ namespace AntColony.Tests.EditMode
 
             Assert.That(identifiers, Is.EquivalentTo(new[]
             {
-                "excavation",
+                "extraction",
                 "surface_preparation",
                 "construction",
                 "hauling",
@@ -70,6 +70,22 @@ namespace AntColony.Tests.EditMode
             Assert.That(result.CurrentLevel, Is.EqualTo(1));
             Assert.That(ant.Skills.Get(AntSkillId.Excavation).Level, Is.EqualTo(1));
             Assert.That(ant.Skills.Get(AntSkillId.Construction).Level, Is.Zero);
+        }
+
+        [Test]
+        public void LegacyExcavationKeySharesTheAuthoritativeExtractionState()
+        {
+            AntRecord ant = CreateAnt("legacy-worker", AntCaste.Worker);
+#pragma warning disable CS0618
+            Assert.That(Award(ant, AntSkillId.Excavation, 75d, 1d, 0d,
+                out _), Is.True);
+            Assert.That(ant.Skills.Get(AntSkillId.Excavation),
+                Is.SameAs(ant.Skills.Get(AntSkillId.Extraction)));
+#pragma warning restore CS0618
+            Assert.That(ant.Skills.Get(AntSkillId.Extraction).TotalExperience,
+                Is.EqualTo(75d));
+            Assert.That(ant.Skills.All.Count, Is.EqualTo(7),
+                "The legacy name must not create a second skill or duplicate XP.");
         }
 
         [Test]

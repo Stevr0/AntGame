@@ -195,7 +195,7 @@ GameObject:
   - component: {fileID: 8892452206689711536}
   - component: {fileID: 5945109854493684580}
   m_Layer: 0
-  m_Name: Excavation
+  m_Name: Extraction
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

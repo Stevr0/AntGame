@@ -1,5 +1,20 @@
 # Procedural World Generation Specification
 
+## WV-B2B-ARCH-001 logistics and terminology addendum
+
+Extraction is the single authoritative node-removal activity and skill. Soil,
+Stone, Seed and Twig generated node records declare `extraction` for both
+activity and skill. Colony Soil/Stone interaction is implemented through
+compatibility-named `Excavation*` classes; Surface Seed/Twig interaction remains
+approved future behavior and is not implemented in this correction.
+
+Node work commits only after recoverable loose output can be represented. The
+next ownership transfer is a separate destination-aware Hauling transaction to
+Construction Site staging or compatible Material Storage. Construction is
+eligible only after its site owns every required quantity. Storage is not a
+bootstrap prerequisite. This supersedes Construction self-supply and does not
+start WV-C1.
+
 ## Status and authority
 
 > **WV-B2B — IMPLEMENTED, AWAITING VALIDATION (15 October 2026).** The approved
@@ -107,8 +122,8 @@ definition explicitly allows an exception, designation and commit require:
   transfers;
 - an ant completing the Construction work.
 
-Construction preserves the current builder-owned self-supply loop, staged
-physical materials, interruption recovery and learn-by-doing Construction skill.
+Construction preserves staged physical materials, interruption recovery and
+learn-by-doing Construction skill; destination-aware Hauling owns supply.
 Completion creates the placement and consumes exactly the recipe quantity; it
 does not replace the natural Background. Placement definitions own obstruction,
 capacity, allowed resources and any explicit Background exception.
@@ -146,10 +161,10 @@ definitions select the activity, skill, duration, quantity and output:
 
 | Node example | Activity | Skill | Physical result |
 | --- | --- | --- | --- |
-| Soil | Excavation | Excavation | Soil loose resource |
-| Stone | Excavation or Extraction | Definition-dependent | Stone loose resource |
-| Seed source | Extraction | Extraction definition; skill approval pending | Seed loose resource |
-| Twig source | Extraction | Extraction definition; skill approval pending | Twig loose resource |
+| Soil | Extraction | Extraction | Soil loose resource |
+| Stone | Extraction | Extraction | Stone loose resource |
+| Seed source | Extraction | Extraction | Seed loose resource (interaction future) |
+| Twig source | Extraction | Extraction | Twig loose resource (interaction future) |
 
 Before commit, validate node identity/revision, requested quantity, work
 completion and a legal output stack destination. The atomic commit reduces node
@@ -176,14 +191,14 @@ separate. A unified cell model does not authorise merging local A* systems.
 | --- | --- | --- |
 | `ChunkedWorldData` | Owns required Background plus optional Solid material ID; no construction/loose slots and no per-Solid identity/quantity | Preserve as the Colony terrain adapter initially; add shared logical cell records and node instance authority without breaking current terrain queries |
 | `BackgroundTileMaterialDefinition.Function` and `ConstructionWorldTransaction` | Functional placements are encoded as Background definitions and construction replaces the Background ID | Keep legacy content readable; adapter exposes the natural/source Background plus a legacy placement. Later transaction writes a placement record instead of replacing Background |
-| `ConstructionDesignationRegistry` | Calls work “Background conversion”; rejects Solids and occupied functional capacity but does not enforce the new loose-stack compatibility rule | Preserve jobs, recipes, builder self-supply, staging and skill XP; migrate validation to shared occupancy policy before generated-world construction is enabled |
+| `ConstructionDesignationRegistry` | Calls work “Background conversion” and owns site staging | Preserve jobs, recipes, staging and skill XP; Hauling supplies sites and Construction begins only when fully staged |
 | `SurfaceWorldData` | Stores only bounds and an obstacle set | WV-B2B must provide a unified-cell Surface data adapter with required Backgrounds and optional generated nodes while leaving Surface A* separate |
 | `SolidTileMaterialDefinition` | Defines excavatable material/yield per type, while a Solid instance has no node ID or remaining quantity | Adapt each legacy Solid as a quantity-one node using a deterministic cell identity; introduce explicit node instances for generated worlds |
-| `ExcavationWorldTransaction` | Strong exact-once output/terrain removal seam, but removes the complete Solid and supports only Soil/Stone | Generalize later behind the shared node transaction; preserve its prepare-before-remove conservation and navigation notification |
+| `ExcavationWorldTransaction` | Compatibility-named exact-once Extraction seam; removes a complete Soil/Stone Solid and creates loose output | Generalize later behind the shared node transaction for Seed/Twig without creating a second skill or scheduler |
 | `WorldMaterialDropRegistry` | Keyed physical stacks with reservations, but multiple stacks and different material types can occupy one cell | Before shared extraction/drop use, enforce one cell-owned loose stack, same-type merging and deterministic alternate/reject behavior; migrate fixtures without loss |
 | `MaterialStorageWorld` | One Background-owned slot, one type at a time, bounded quantity and strong reservations | Rebind ownership to a Storage placement while retaining filters, exact quantities, reservations and provisional stack 10 |
 | `SurvivalInteractionWorld` | Food/Water/Sleeping depend on functional Background IDs; food/water slots allow quantities but are separate from Material Storage | Adapt as legacy placements; later converge content ownership and source consumption on the placement/node transaction contracts |
-| `AntInventory` and hauling/construction orders | Already use typed bounded slots and prepared source/destination commits | Preserve; expand catalog/transactions without changing physical ownership or builder self-supply |
+| `AntInventory` and hauling/construction orders | Use typed bounded slots and prepared source/destination commits | Preserve physical ownership; Hauling alone moves resources to site staging or Storage |
 
 The current drop registry specifically contradicts the newly approved
 single-type-per-cell rule. Existing documentation that permitted multiple

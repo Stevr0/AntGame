@@ -56,7 +56,7 @@ namespace AntColony.PlayerUI
                 {
                     if (designation.State is ExcavationDesignationState.Completed or
                         ExcavationDesignationState.Cancelled) continue;
-                    AppendJob(designation.Job, $"Excavate {designation.OutputMaterial}",
+                    AppendJob(designation.Job, $"Extract {designation.OutputMaterial}",
                         string.Empty);
                     if (++shown >= 5) break;
                 }

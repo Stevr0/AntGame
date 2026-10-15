@@ -2,6 +2,42 @@
 
 ## WV-B2B implementation state — 15 October 2026
 
+### WV-B2B-ARCH-001 — Unified Resource Logistics
+
+**Implemented — Pending Manual Acceptance.** The resource workflow is now
+**Resource Node → Loose Ground Resource → Hauling → Construction staging /
+Storage → Construction**. Construction self-supply has been removed from both
+autonomous eligibility and order execution. Unsupplied construction remains
+pending and unowned; dynamic Hauling selects compatible unmet Construction Site
+capacity before optional Material Storage, reserves source and destination,
+delivers exactly once, and releases both reservations on interruption.
+
+Construction Sites own per-resource required, reserved and delivered quantities
+and support multiple recipe resource types. Construction work can reserve/start
+only when every requirement is staged; completion consumes staging once.
+Cancellation recovers staged types to separate valid loose cells. The founding
+queen can therefore haul loose Soil directly to the first Storage construction,
+construct it, and later haul new Soil into the completed empty Storage without a
+bootstrap stockpile.
+
+Extraction is now the sole skill/category for Soil, Stone, Seed, Twig and future
+node removal. It retains the former Excavation numeric slot, so existing earned
+experience and work-priority values remain intact; the legacy enum name is an
+alias to the same state and cannot receive duplicate XP. Player labels and
+generated node metadata say Extraction. `ExcavationDesignationRegistry`,
+`ExcavationJobOrder`, `ExcavationWorldTransaction`, related method names and the
+`WorldDesignationMode.Excavate` enum remain compatibility names to avoid a risky
+serialized/API rename. Only Colony Soil/Stone interaction is implemented;
+Surface Seed/Twig extraction remains future WV-C work.
+
+Validation passes **82/82 focused Edit Mode**, **9/9 focused Play Mode**,
+**539/539 full Edit Mode** and **73/73 full Play Mode**, with no failures or
+skips. Direct visual/manual Play Mode acceptance remains pending.
+`WV-B2B-DEF-001`, `WV-B2B-DEF-002`, `WV-B2B-DEF-003` and
+`WV-B1-REG-001` remain visible/open; WV-B2B is not closed and WV-C1 has not
+started. Historical self-supply descriptions below are superseded by this
+architecture correction.
+
 **Implemented — Awaiting Validation.** `ProceduralWorldGenerator` deterministically
 builds a Grass-dominant `64×64` Surface and an entirely underground, Soil-dominant
 `128×128` Colony from one 64-bit seed with independent named streams. Generated
@@ -38,7 +74,7 @@ two independent defects:
   natural Background could still be visible in cleared cells. Generation
   version `2` / configuration `wv-b2b.default.002` guarantees one quantity-one
   `solid.stone` node at Colony `(-4,-8)`, adjacent to the open chamber. Normal
-  adjacency, Excavation skill, exact-once output and Background preservation
+  adjacency, Extraction skill, exact-once output and Background preservation
   remain authoritative. Rejection diagnostics now distinguish background-only,
   unregistered and non-excavatable cells.
 
@@ -67,13 +103,11 @@ Storage has capacity`, applied the ant's ordinary-work retry delay, and selected
 the same still-claimable haul again. The failure did not reserve or consume the
 drop, but it could indefinitely delay Construction self-supply.
 
-Hauling now performs a read-only source, inventory-capacity, route and storage-
+Hauling now performs a read-only source, inventory-capacity, route and explicit-
 destination eligibility check before autonomous selection. An impossible haul
-remains paused and unowned with its diagnostic; the loose resource stays
-unreserved and physically available. Construction can therefore reserve the
-same loose Soil through its existing builder-owned self-supply, collect it,
-stage it, consume it exactly once and register the first Material Storage. The
-paused hauling opportunity becomes eligible naturally when that Storage exists.
+remains paused and unowned with its diagnostic. A compatible unmet Construction
+Site is valid even without Storage, so Hauling can stage the first Storage's
+Soil; Construction then consumes it exactly once and registers empty Storage.
 No new scheduler, storage type, free resource or transfer authority was added.
 
 Automated seed-`2203` coverage gives Hauling higher priority than Construction,
@@ -90,13 +124,13 @@ remains open, so `WV-B2B-DEF-003` is not closed.
 
 1. Start the generated founding-colony scenario with seed `2203` and confirm no
    Material Storage exists.
-2. Excavate one reachable Soil Solid and confirm exactly one loose Soil appears.
+2. Extract one reachable Soil Solid and confirm exactly one loose Soil appears.
 3. Designate one valid empty chamber cell for Material Storage conversion.
 4. Confirm the queen claims Construction rather than repeatedly rejecting
    destination-less Hauling, physically collects the loose Soil and stages it.
 5. Confirm construction completes, consumes the Soil exactly once and registers
    one empty Material Storage slot with no stuck source/destination reservation.
-6. Excavate another Soil Solid and confirm ordinary Hauling now recognises the
+6. Extract another Soil Solid and confirm ordinary Hauling now recognises the
    completed Storage and can deliver the second loose Soil.
 7. Verify loose + carried + staged + stored quantities at each boundary, switch
    views and return, and confirm no state resets or Console errors.
@@ -299,9 +333,9 @@ This focused correction does not change the acceptance state of any milestone. I
 
 `ExcavationWorldTransaction` first validates the target Solid and preflights the complete yield against `WorldMaterialDropRegistry`. Output is placed at the excavated authoritative world cell: compatible partial stacks at that cell fill first, then at most one new stack is created under the stable excavation-job key. Multiple traversable logical stacks may share a cell, so the present implementation does not need an alternate-cell search. If a configured yield cannot fit the existing bounded representation or failure injection rejects creation, terrain is not removed. Once preflight succeeds, foreground removal and the non-fallible prepared drop commit occur once; repeated completion cannot duplicate output.
 
-Hauling remains a separate existing activity: eligible ants may later reserve a loose stack, collect within personal capacity, transport it to compatible reserved Material Storage and deposit it. With no storage or Hauling disabled, output remains loose and recoverable without a pickup/drop loop. Construction retains accepted builder self-supply from existing carried inventory, compatible storage or loose drops, including direct collection of excavation output, multiple trips, exclusive reservations, exact consumption and cancellation recovery.
+Hauling is the separate transport activity: eligible ants reserve a loose stack and explicit Construction Site or Material Storage capacity, collect within personal capacity, then deliver exactly once. With no valid destination or Hauling disabled, output remains loose and recoverable. Construction no longer collects material; it performs work after site staging is complete.
 
-Terminology is now explicit: **Foraging** discovers resource locations; **Extraction** physically removes a resource and leaves loose output; **Hauling** picks up and transports already-extracted material; **Construction** personally gathers and stages its required physical material before work.
+Terminology is now explicit: **Foraging** discovers resource locations; **Extraction** physically removes a resource and leaves loose output; **Hauling** picks up and transports already-extracted material to staging or Storage; **Construction** performs fully staged work.
 
 ### 3.5B automated verification
 
@@ -398,7 +432,7 @@ This foundation status is superseded only by the narrow 3.5A visual mapping abov
 
 **Milestone 3.4C Player Colony HUD & Developer UI Separation: COMPLETE — MANUALLY ACCEPTED.** The user confirmed 3.4C acceptance before authorising 3.4D. The authored uGUI HUD exposes the accepted Colony View loop without developer controls and retains its recorded 12/12 focused Edit, 13/13 focused Play, 489/489 complete Edit and 62/62 complete Play evidence.
 
-**Milestone 3.4D Colony Management & Work Priorities UI: Implemented — Pending Manual Acceptance.** The existing HUD now opens a global scrollable Work matrix derived from active authoritative `AntRecord` entries. Excavation, Construction and Hauling are the only functional columns because they are the only categories with real autonomous executors. Each cell writes the record-owned 1–4/Disabled value, displays the mapped skill level and immediately refreshes without selecting or loading the ant.
+**Milestone 3.4D Colony Management & Work Priorities UI: Implemented — Pending Manual Acceptance.** The existing HUD now opens a global scrollable Work matrix derived from active authoritative `AntRecord` entries. Extraction, Construction and Hauling are the functional columns. Each cell writes the record-owned 1–4/Disabled value, displays the mapped skill level and immediately refreshes without selecting or loading the ant.
 
 The matrix displays current authoritative activity, active category/priority and supported failure or waiting text. Priority edits reset subsequent autonomous evaluation but do not cancel active work, alter skill levels, mutate Developer overrides or pause the clock. The retained developer priority controls observe the same `AntWorkPrioritySet`. The modal uses the existing Canvas, EventSystem and raycast boundary; Escape closes it before cancelling a Colony View tool, and matrix scroll/click input remains blocked from the world camera and commands.
 
@@ -790,9 +824,9 @@ Known limitations are intentional: stack size 10, fixture quantities and carryin
 
 **Status: COMPLETE — the user confirmed all 26 manual Unity Play Mode checks on 13 October 2026.** Previously reported focused Edit Mode 14/14, focused Play Mode 3/3, full graphics-enabled Edit Mode 406/406 and full Play Mode 40/40 passed. These suites were not rerun during this documentation-only update. Milestone 3.3A was also accepted.
 
-The player-facing **Excavate** mode blocks ordinary selection and movement input while active. Left-click or a bounded drag marks only resource-bearing, excavatable foreground Solid cells by authoritative world coordinate. Each accepted designation creates one Excavation job in the existing `ColonyJobRegistry`; duplicate active cells are rejected, cancellation makes the job terminal, and inaccessible work remains pending for controlled retry rather than disappearing. Yellow `X` feedback denotes pending work and orange `A` feedback denotes active work.
+The player-facing **Extract** mode blocks ordinary selection and movement input while active. Left-click or a bounded drag marks only resource-bearing foreground Solid nodes by authoritative world coordinate. Each accepted designation creates one Extraction-category job through the compatibility-named excavation registry; duplicate active cells are rejected, cancellation makes the job terminal, and inaccessible work remains pending for controlled retry rather than disappearing.
 
-Autonomous job selection remains priority-first and then least reachable shared-A* path cost. Excavators reserve exclusively, travel through `GridNavigationMotor` to a valid adjacent full-clearance anchor, revalidate before work, and never enter the Solid cell. Provisional work remains four simulation hours, +0.5% speed per Excavation level, and 20 base XP per block, with accepted Rested modifiers. XP is awarded only for committed progress; safe interruption preserves progress and releases ownership.
+Autonomous job selection remains priority-first and then least reachable shared-A* path cost. Extractors reserve exclusively, travel through `GridNavigationMotor` to a valid adjacent full-clearance anchor, revalidate before work, and never enter the Solid cell. Provisional work remains four simulation hours, +0.5% speed per Extraction level, and 20 base XP per block, with accepted Rested modifiers. XP is awarded only for committed progress; safe interruption preserves progress and releases ownership.
 
 `SolidTileMaterialDefinition` now authoritatively declares excavation output type and positive yield. Soil yields one Soil and Stone yields one Stone provisionally. `ExcavationWorldTransaction` performs every fallible output check before removing foreground, commits a stable job-keyed `WorldMaterialDrop` immediately after removal, then refreshes exactly the affected visual/collision cell and invalidates local navigation. Failed drop creation leaves the Solid intact; retry keys prevent duplicate yield. Background material is unchanged. Drops are plain authoritative data with type, non-negative quantity, location and stable ownership key; they are not Tilemap state, GameObjects, inventories, hauling, stockpiles or global counters.
 

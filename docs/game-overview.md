@@ -1,6 +1,12 @@
 # Game Overview
 
-Milestone 3.5B is **Implemented — Pending Manual Acceptance**; 3.5A remains separately pending visual acceptance. Excavation now always leaves physical Soil/Stone output loose at the excavated cell, independent of the worker's inventory and storage. Hauling performs later pickup/transport, while builders may collect those drops directly. The development game opens paused at Day 1 08:00 with an authored uGUI player HUD and a global Work screen where priorities for active colony ants can be inspected and changed. Developer IMGUI starts hidden and remains deliberately accessible through F12 without replacing the player interface.
+WV-B2B-ARCH-001 is **Implemented — Pending Manual Acceptance**. Extraction is
+the single node-removal skill/activity; Hauling supplies explicit Construction
+staging or Storage; Construction is work-only after full staging. Legacy
+Excavation code names remain compatibility seams, and Surface resource
+interaction remains future work.
+
+Milestone 3.5B is **Implemented — Pending Manual Acceptance**; 3.5A remains separately pending visual acceptance. Extraction always leaves physical Soil/Stone output loose at the worked cell, independent of the worker's inventory and Storage. A separate Hauling job performs every normal pickup and delivery to Construction staging or compatible Storage; builders never self-supply. The development game opens paused at Day 1 08:00 with an authored uGUI player HUD and a global Work screen where priorities for active colony ants can be inspected and changed. Developer IMGUI starts hidden and remains deliberately accessible through F12 without replacing the player interface.
 
 Accepted Milestone 3.4A permits player-designated conversion of exposed Background into Prepared, Nursery, Sleeping, Food Storage, Water Storage or Material Storage tiles. A Construction-priority ant personally supplies physical Soil/Stone, stages it at the site and performs timed work. Doors, rooms, brood and production remain future work.
 

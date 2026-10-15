@@ -72,13 +72,13 @@ namespace AntColony.Tests.PlayMode
 
             controller.Select(mara);
             Assert.That(controller.TryAwardSelectedSkillExperience(
-                AntSkillId.Excavation,
+                AntSkillId.Extraction,
                 250d,
                 1.5d,
                 out AntSkillExperienceResult result,
                 out _), Is.True);
             Assert.That(result.AwardedExperience, Is.EqualTo(375d));
-            Assert.That(pip.Record.Skills.Get(AntSkillId.Excavation).Level,
+            Assert.That(pip.Record.Skills.Get(AntSkillId.Extraction).Level,
                 Is.Zero);
 
             controller.Select(pip);
@@ -89,7 +89,7 @@ namespace AntColony.Tests.PlayMode
                 SampleWorldGenerator.GridDirectDestination), Is.True);
             yield return new WaitForFixedUpdate();
             Assert.That(pip.HasActiveOrder, Is.True);
-            Assert.That(mara.Record.Skills.Get(AntSkillId.Excavation).Level,
+            Assert.That(mara.Record.Skills.Get(AntSkillId.Extraction).Level,
                 Is.GreaterThan(0));
         }
 

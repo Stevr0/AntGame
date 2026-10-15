@@ -6,7 +6,9 @@ namespace AntColony.Ants
     /// <summary>Stable ordinary-work categories approved for the per-ant matrix.</summary>
     public enum AntWorkCategory
     {
-        Excavation = 0,
+        // Keep value zero to preserve every existing priority record.
+        Extraction = 0,
+        Excavation = Extraction,
         SurfacePreparation = 1,
         Construction = 2,
         Hauling = 3,
@@ -51,7 +53,7 @@ namespace AntColony.Ants
     {
         private static readonly AntWorkCategoryDefinition[] definitions =
         {
-            new(AntWorkCategory.Excavation, "excavation", "Excavation", AntSkillId.Excavation),
+            new(AntWorkCategory.Extraction, "extraction", "Extraction", AntSkillId.Extraction),
             new(AntWorkCategory.SurfacePreparation, "surface_preparation", "Surface Preparation", AntSkillId.SurfacePreparation),
             new(AntWorkCategory.Construction, "construction", "Construction", AntSkillId.Construction),
             new(AntWorkCategory.Hauling, "hauling", "Hauling", AntSkillId.Hauling),

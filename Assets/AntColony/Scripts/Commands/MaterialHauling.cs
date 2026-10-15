@@ -6,10 +6,13 @@ using UnityEngine;
 namespace AntColony.Commands
 {
     public enum MaterialHaulSourceKind { WorldDrop, PersonalInventory }
+    public enum MaterialHaulDestinationKind { ConstructionSite, MaterialStorage }
     public enum MaterialHaulingPhase
     {
         TravellingToSource,
-        TravellingToStorage,
+        TravellingToDestination,
+        [Obsolete("Use TravellingToDestination.")]
+        TravellingToStorage = TravellingToDestination,
         Completed,
         Cancelled,
         Failed
@@ -43,6 +46,8 @@ namespace AntColony.Commands
         private readonly GridNavigationMap map;
         private readonly WorldMaterialDropRegistry drops;
         private readonly MaterialStorageWorld storage;
+        private readonly ConstructionDesignationRegistry constructionDesignations;
+        private readonly ConstructionSite destinationSite;
         private readonly AntRecord ant;
         private readonly MaterialHaulingPlan plan;
         private readonly int maximumStack;
@@ -50,21 +55,25 @@ namespace AntColony.Commands
 
         private MaterialHaulingOrder(ColonyJobRegistry jobs, GridNavigationMap map,
             WorldMaterialDropRegistry drops, MaterialStorageWorld storage,
+            ConstructionDesignationRegistry constructionDesignations,
             AntRecord ant, MaterialHaulingPlan plan, Vector2Int sourceApproach,
             Vector2Int destinationCell, Vector2Int destinationApproach,
-            int quantity, int maximumStack)
+            MaterialHaulDestinationKind destinationKind,
+            ConstructionSite destinationSite, int quantity, int maximumStack)
         {
             this.jobs = jobs; this.map = map; this.drops = drops;
-            this.storage = storage; this.ant = ant; this.plan = plan;
+            this.storage = storage; this.constructionDesignations = constructionDesignations;
+            this.ant = ant; this.plan = plan;
             SourceApproachCell = sourceApproach; DestinationCell = destinationCell;
             DestinationApproachCell = destinationApproach; Quantity = quantity;
+            DestinationKind = destinationKind; this.destinationSite = destinationSite;
             this.maximumStack = maximumStack;
             Phase = plan.SourceKind == MaterialHaulSourceKind.WorldDrop
                 ? MaterialHaulingPhase.TravellingToSource
-                : MaterialHaulingPhase.TravellingToStorage;
+                : MaterialHaulingPhase.TravellingToDestination;
             Status = Phase == MaterialHaulingPhase.TravellingToSource
                 ? $"Travelling to collect {quantity} material."
-                : $"Carrying {quantity} material to storage.";
+                : $"Carrying {quantity} material to {DestinationLabel}.";
         }
 
         public ColonyJob Job => plan.Job;
@@ -75,18 +84,29 @@ namespace AntColony.Commands
         public Vector2Int SourceApproachCell { get; }
         public Vector2Int DestinationCell { get; }
         public Vector2Int DestinationApproachCell { get; }
+        public MaterialHaulDestinationKind DestinationKind { get; }
         public int Quantity { get; }
         public MaterialHaulingPhase Phase { get; private set; }
         public string Status { get; private set; }
         public string FailureReason { get; private set; } = string.Empty;
         public bool IsActive => Phase is MaterialHaulingPhase.TravellingToSource or
-            MaterialHaulingPhase.TravellingToStorage;
+            MaterialHaulingPhase.TravellingToDestination;
         public Vector2Int InitialApproachCell =>
             Phase == MaterialHaulingPhase.TravellingToSource
                 ? SourceApproachCell : DestinationApproachCell;
 
         public static bool TryCreate(ColonyJobRegistry jobs, GridNavigationMap map,
             WorldMaterialDropRegistry drops, MaterialStorageWorld storage,
+            AntRecord ant, MaterialHaulingPlan plan, Vector2Int sourceApproach,
+            Vector2Int startCell, out MaterialHaulingOrder order, out string error)
+        {
+            return TryCreate(jobs, map, drops, storage, null, ant, plan,
+                sourceApproach, startCell, out order, out error);
+        }
+
+        public static bool TryCreate(ColonyJobRegistry jobs, GridNavigationMap map,
+            WorldMaterialDropRegistry drops, MaterialStorageWorld storage,
+            ConstructionDesignationRegistry constructionDesignations,
             AntRecord ant, MaterialHaulingPlan plan, Vector2Int sourceApproach,
             Vector2Int startCell, out MaterialHaulingOrder order, out string error)
         {
@@ -118,30 +138,41 @@ namespace AntColony.Commands
 
             Vector2Int destinationStart = plan.SourceKind == MaterialHaulSourceKind.WorldDrop
                 ? sourceApproach : startCell;
-            if (!TryChooseDestination(storage, map, destinationStart,
+            if (!TryChooseDestination(storage, constructionDesignations, map, destinationStart,
                     plan.ResourceTypeId, maximumStack, available,
                     out Vector2Int destination, out Vector2Int destinationApproach,
+                    out MaterialHaulDestinationKind destinationKind,
+                    out ConstructionSite destinationSite,
                     out int quantity, out error)) return false;
 
             string owner = ant.Id.Value;
-            if (!storage.TryReserveIncoming(destination, plan.ResourceTypeId,
-                    maximumStack, owner, quantity, out int reserved, out error)) return false;
+            bool destinationReserved = destinationKind ==
+                    MaterialHaulDestinationKind.ConstructionSite
+                ? destinationSite.TryReserveIncoming(plan.ResourceTypeId, owner,
+                    quantity, out int reserved, out error)
+                : storage.TryReserveIncoming(destination, plan.ResourceTypeId,
+                    maximumStack, owner, quantity, out reserved, out error);
+            if (!destinationReserved) return false;
             quantity = reserved;
             int sourceReserved = quantity;
             if (plan.SourceKind == MaterialHaulSourceKind.WorldDrop &&
                 !drops.TryReserve(plan.DropKey, owner, quantity, out sourceReserved,
                     out error))
-            { storage.ReleaseIncoming(destination, owner); return false; }
+            { ReleaseDestinationReservation(storage, destinationSite,
+                destinationKind, destination, plan.ResourceTypeId, owner); return false; }
             if (plan.SourceKind == MaterialHaulSourceKind.WorldDrop)
                 quantity = Math.Min(quantity, sourceReserved);
             if (!jobs.TryReserve(plan.Job.Id, ant.Id, out error))
             {
                 drops.ReleaseReservation(plan.DropKey, owner);
-                storage.ReleaseIncoming(destination, owner);
+                ReleaseDestinationReservation(storage, destinationSite,
+                    destinationKind, destination, plan.ResourceTypeId, owner);
                 return false;
             }
-            order = new MaterialHaulingOrder(jobs, map, drops, storage, ant, plan,
-                sourceApproach, destination, destinationApproach, quantity, maximumStack);
+            order = new MaterialHaulingOrder(jobs, map, drops, storage,
+                constructionDesignations, ant, plan, sourceApproach, destination,
+                destinationApproach, destinationKind, destinationSite, quantity,
+                maximumStack);
             return true;
         }
 
@@ -153,6 +184,16 @@ namespace AntColony.Commands
         /// </summary>
         public static bool CanStart(GridNavigationMap map,
             WorldMaterialDropRegistry drops, MaterialStorageWorld storage,
+            AntRecord ant, MaterialHaulingPlan plan, Vector2Int startCell,
+            out string reason)
+        {
+            return CanStart(map, drops, storage, null, ant, plan, startCell,
+                out reason);
+        }
+
+        public static bool CanStart(GridNavigationMap map,
+            WorldMaterialDropRegistry drops, MaterialStorageWorld storage,
+            ConstructionDesignationRegistry constructionDesignations,
             AntRecord ant, MaterialHaulingPlan plan, Vector2Int startCell,
             out string reason)
         {
@@ -207,9 +248,10 @@ namespace AntColony.Commands
                 return false;
             }
 
-            return TryChooseDestination(storage, map, destinationStart,
+            return TryChooseDestination(storage, constructionDesignations, map,
+                destinationStart,
                 plan.ResourceTypeId, maximumStack, available,
-                out _, out _, out _, out reason);
+                out _, out _, out _, out _, out _, out reason);
         }
 
         public bool TryArrive(Vector2Int currentCell, double simulationHours,
@@ -230,23 +272,28 @@ namespace AntColony.Commands
                     out _, out string pickupError);
                 if (!pickedUp) { Fail(pickupError); return false; }
                 sourceCollected = true;
-                Phase = MaterialHaulingPhase.TravellingToStorage;
-                Status = $"Carrying {Quantity} material to storage.";
+                Phase = MaterialHaulingPhase.TravellingToDestination;
+                Status = $"Carrying {Quantity} material to {DestinationLabel}.";
                 nextApproach = DestinationApproachCell;
                 return true;
             }
 
-            if (Phase != MaterialHaulingPhase.TravellingToStorage ||
+            if (Phase != MaterialHaulingPhase.TravellingToDestination ||
                 !SurvivalInteractionOrder.IsValidAdjacentInteractionAnchor(
                     map, currentCell, DestinationCell))
-            { Fail("The storage approach became invalid."); return false; }
+            { Fail("The hauling destination approach became invalid."); return false; }
             if (plan.SourceKind == MaterialHaulSourceKind.PersonalInventory &&
                 !jobs.TryBegin(Job.Id, ant.Id, out string error))
             { Fail(error); return false; }
-            bool deposited = storage.TryCommitReservedDeposit(DestinationCell,
-                plan.ResourceTypeId, maximumStack, ant.Id.Value, Quantity,
-                () => ant.Inventory.TryRemoveResource(plan.ResourceTypeId, Quantity,
-                    maximumStack, out _), out string depositError);
+            bool deposited = DestinationKind == MaterialHaulDestinationKind.ConstructionSite
+                ? destinationSite.TryCommitReservedDelivery(plan.ResourceTypeId,
+                    ant.Id.Value, Quantity,
+                    () => ant.Inventory.TryRemoveResource(plan.ResourceTypeId,
+                        Quantity, maximumStack, out _), out string depositError)
+                : storage.TryCommitReservedDeposit(DestinationCell,
+                    plan.ResourceTypeId, maximumStack, ant.Id.Value, Quantity,
+                    () => ant.Inventory.TryRemoveResource(plan.ResourceTypeId,
+                        Quantity, maximumStack, out _), out depositError);
             if (!deposited) { Fail(depositError); return false; }
             if (!jobs.TryAddProgress(Job.Id, ant.Id, 1d, out _, out string progressError))
             { Fail(progressError); return false; }
@@ -254,7 +301,7 @@ namespace AntColony.Commands
                 Quantity * ExperiencePerDeliveredUnit, 1d, simulationHours,
                 out _, out _);
             Phase = MaterialHaulingPhase.Completed;
-            Status = $"Delivered {Quantity} material to storage.";
+            Status = $"Delivered {Quantity} material to {DestinationLabel}.";
             return true;
         }
 
@@ -262,7 +309,7 @@ namespace AntColony.Commands
         {
             if (!IsActive) return;
             drops.ReleaseReservation(plan.DropKey, ant.Id.Value);
-            storage.ReleaseIncoming(DestinationCell, ant.Id.Value);
+            ReleaseDestinationReservation();
             jobs.PauseAndRelease(Job.Id, ant.Id, reason);
             Phase = MaterialHaulingPhase.Cancelled;
             FailureReason = reason ?? string.Empty;
@@ -274,7 +321,7 @@ namespace AntColony.Commands
         private void Fail(string reason)
         {
             drops.ReleaseReservation(plan.DropKey, ant.Id.Value);
-            storage.ReleaseIncoming(DestinationCell, ant.Id.Value);
+            ReleaseDestinationReservation();
             jobs.PauseAndRelease(Job.Id, ant.Id, reason);
             Phase = MaterialHaulingPhase.Failed;
             FailureReason = reason;
@@ -283,31 +330,113 @@ namespace AntColony.Commands
                 : "Hauling failed; source material remains in the world.";
         }
 
+        private string DestinationLabel => DestinationKind ==
+            MaterialHaulDestinationKind.ConstructionSite
+                ? "construction staging" : "Material Storage";
+
+        private void ReleaseDestinationReservation() =>
+            ReleaseDestinationReservation(storage, destinationSite, DestinationKind,
+                DestinationCell, plan.ResourceTypeId, ant.Id.Value);
+
+        private static void ReleaseDestinationReservation(MaterialStorageWorld storage,
+            ConstructionSite site, MaterialHaulDestinationKind kind,
+            Vector2Int cell, string resourceTypeId, string ownerId)
+        {
+            if (kind == MaterialHaulDestinationKind.ConstructionSite)
+                site?.ReleaseIncoming(resourceTypeId, ownerId);
+            else
+                storage?.ReleaseIncoming(cell, ownerId);
+        }
+
+        /// <summary>
+        /// Chooses an explicit destination. Pending construction staging is
+        /// intentionally considered before optional storage, then each group is
+        /// ordered by reachable path cost and deterministic cell order.
+        /// </summary>
+        public static bool TryChooseDestination(MaterialStorageWorld storage,
+            ConstructionDesignationRegistry constructionDesignations,
+            GridNavigationMap map, Vector2Int start, string resourceTypeId,
+            int maximumStack, int requested, out Vector2Int cell,
+            out Vector2Int approach, out MaterialHaulDestinationKind kind,
+            out ConstructionSite site, out int quantity, out string error)
+        {
+            cell = default;
+            approach = default;
+            kind = default;
+            site = null;
+            quantity = 0;
+
+            float bestCost = float.PositiveInfinity;
+            if (constructionDesignations != null)
+            {
+                foreach (ConstructionDesignation candidate in
+                    constructionDesignations.Designations)
+                {
+                    if (candidate.State is ConstructionDesignationState.Completed or
+                        ConstructionDesignationState.Cancelled) continue;
+                    int capacity = candidate.Site.GetAvailableCapacity(resourceTypeId);
+                    if (capacity <= 0 || !SurvivalInteractionOrder.TryMeasureApproach(
+                            map, start, candidate.Cell,
+                            out Vector2Int candidateApproach, out float cost, out _))
+                        continue;
+                    if (cost < bestCost || Mathf.Approximately(cost, bestCost) &&
+                        CompareCell(candidate.Cell, cell) < 0)
+                    {
+                        cell = candidate.Cell;
+                        approach = candidateApproach;
+                        site = candidate.Site;
+                        quantity = Math.Min(requested, capacity);
+                        bestCost = cost;
+                    }
+                }
+            }
+            if (quantity > 0)
+            {
+                kind = MaterialHaulDestinationKind.ConstructionSite;
+                error = string.Empty;
+                return true;
+            }
+
+            bestCost = float.PositiveInfinity;
+            if (storage != null)
+            {
+                foreach (MaterialStorageSlot candidate in storage.Slots)
+                {
+                    int capacity = storage.GetAvailableCapacity(candidate.Cell,
+                        resourceTypeId, maximumStack);
+                    if (capacity <= 0 || !SurvivalInteractionOrder.TryMeasureApproach(
+                            map, start, candidate.Cell,
+                            out Vector2Int candidateApproach, out float cost, out _))
+                        continue;
+                    if (cost < bestCost || Mathf.Approximately(cost, bestCost) &&
+                        CompareCell(candidate.Cell, cell) < 0)
+                    {
+                        cell = candidate.Cell;
+                        approach = candidateApproach;
+                        quantity = Math.Min(requested, capacity);
+                        bestCost = cost;
+                    }
+                }
+            }
+            if (quantity <= 0)
+            {
+                error = "No reachable compatible Construction Site or Material Storage has capacity.";
+                return false;
+            }
+            kind = MaterialHaulDestinationKind.MaterialStorage;
+            error = string.Empty;
+            return true;
+        }
+
+        // Compatibility overload retained for storage-only callers and tests.
         public static bool TryChooseDestination(MaterialStorageWorld storage,
             GridNavigationMap map, Vector2Int start, string resourceTypeId,
             int maximumStack, int requested, out Vector2Int cell,
             out Vector2Int approach, out int quantity, out string error)
         {
-            cell = default; approach = default; quantity = 0;
-            float bestCost = float.PositiveInfinity;
-            foreach (MaterialStorageSlot candidate in storage.Slots)
-            {
-                int capacity = storage.GetAvailableCapacity(candidate.Cell,
-                    resourceTypeId, maximumStack);
-                if (capacity <= 0 || !SurvivalInteractionOrder.TryMeasureApproach(
-                        map, start, candidate.Cell, out Vector2Int candidateApproach,
-                        out float cost, out _)) continue;
-                if (cost < bestCost || Mathf.Approximately(cost, bestCost) &&
-                    CompareCell(candidate.Cell, cell) < 0)
-                {
-                    cell = candidate.Cell; approach = candidateApproach;
-                    quantity = Math.Min(requested, capacity); bestCost = cost;
-                }
-            }
-            if (quantity <= 0)
-            { error = "No reachable compatible Material Storage has capacity."; return false; }
-            error = string.Empty;
-            return true;
+            return TryChooseDestination(storage, null, map, start, resourceTypeId,
+                maximumStack, requested, out cell, out approach, out _, out _,
+                out quantity, out error);
         }
 
         private static int GetInventoryQuantity(AntInventory inventory,

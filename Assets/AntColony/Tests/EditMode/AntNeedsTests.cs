@@ -135,14 +135,14 @@ namespace AntColony.Tests.EditMode
         {
             AntRecord ant = CreateAnt("worker");
             Assert.That(Award(ant, 100d, 1d, out _), Is.True);
-            double earned = ant.Skills.Get(AntSkillId.Excavation).TotalExperience;
+            double earned = ant.Skills.Get(AntSkillId.Extraction).TotalExperience;
             Assert.That(SetNeeds(ant, thirst: 0d), Is.True);
 
             Assert.That(Award(ant, 100d, 1d, out AntSkillExperienceResult result),
                 Is.True);
 
             Assert.That(result.AwardedExperience, Is.Zero);
-            Assert.That(ant.Skills.Get(AntSkillId.Excavation).TotalExperience,
+            Assert.That(ant.Skills.Get(AntSkillId.Extraction).TotalExperience,
                 Is.EqualTo(earned));
         }
 
@@ -168,7 +168,7 @@ namespace AntColony.Tests.EditMode
 
             Assert.That(Award(ant, 100d, -1d, out _), Is.False);
             Assert.That(Award(ant, 100d, double.NaN, out _), Is.False);
-            Assert.That(ant.Skills.Get(AntSkillId.Excavation).TotalExperience,
+            Assert.That(ant.Skills.Get(AntSkillId.Extraction).TotalExperience,
                 Is.Zero);
         }
 
@@ -302,7 +302,7 @@ namespace AntColony.Tests.EditMode
             out AntSkillExperienceResult result)
         {
             return ant.TryAwardSkillExperience(
-                AntSkillId.Excavation,
+                AntSkillId.Extraction,
                 baseExperience,
                 multiplier,
                 0d,

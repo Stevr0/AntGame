@@ -121,7 +121,7 @@ namespace AntColony.Development
             GUILayout.Label("Left-click inspects/selects; right-click issues context orders.");
             if (GUILayout.Button(controller.DesignationMode ==
                     WorldDesignationMode.Excavate
-                    ? "Exit Excavate Mode (Esc)" : "Enter Excavate Mode"))
+                    ? "Exit Extract Mode (Esc)" : "Enter Extract Mode"))
                 controller.SetDesignationMode(controller.DesignationMode ==
                     WorldDesignationMode.Excavate
                         ? WorldDesignationMode.None : WorldDesignationMode.Excavate);

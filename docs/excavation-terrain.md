@@ -1,5 +1,15 @@
 # Excavation and Terrain
 
+> **Compatibility title.** Extraction is the official skill, activity and
+> player-facing term. Existing `Excavation*` types and this page slug remain to
+> avoid unnecessary serialized/API and link churn.
+
+WV-B2B-ARCH-001 preserves the accepted terrain mutation and exact-once loose
+output transaction, but removes Construction self-supply. Soil and Stone work
+award the one Extraction skill. A separate Hauling job reserves the loose stack
+and delivers it to Construction Site staging or compatible Material Storage.
+Construction itself begins only after all staging requirements are satisfied.
+
 ## WV-B2B compatibility projection
 
 Generated underground Soil/Stone nodes have stable IDs and quantity-one
@@ -75,7 +85,7 @@ Milestone 3.3B connected these foundations to player designations and autonomous
 
 Milestone 3.4A adds player-designated Background conversion. Completion consumes builder-staged Soil/Stone, preserves foreground Solid occupancy, refreshes the Background Tilemap and invalidates local navigation through the existing mutation seam.
 
-Milestone 3.4C exposes ordinary Colony View **Excavate**, six-recipe **Build**, and **Cancel designation** tools through the authored player HUD. Single-cell and bounded-drag input still delegates to the accepted registries. Cancellation retains the existing conserving material behavior, and uGUI/developer-IMGUI hit testing blocks designation start or release over interface panels.
+Milestone 3.4C exposes ordinary Colony View **Extract**, six-recipe **Build**, and **Cancel designation** tools through the authored player HUD. Single-cell and bounded-drag input still delegates to the compatibility-named registries. Cancellation retains the existing conserving material behavior, and uGUI/developer-IMGUI hit testing blocks designation start or release over interface panels.
 
 Milestone 3.5A adds a read-only hover/drag preview. Excavation cells are amber when the excavation registry reports eligible, red when invalid and muted with an explicit marker when already designated. Background Conversion uses the same pattern with green valid cells and the selected recipe's authoritative construction validation. The preview does not create jobs or terrain objects and clears on tool exit, blocked pointer focus or pause.
 
@@ -98,7 +108,7 @@ navigation.
 
 Loose Soil and Stone stacks have stable identity, quantity, cell and provisional maximum stack 10. A selected ant can right-click a drop, reserve an eligible quantity, navigate adjacent and pick it up. Developer Only controls can drop a selected carried quantity at the ant's current valid anchor. Compatible same-cell stacks merge; failed or cancelled transfers preserve material and release reservations.
 
-Foraging means discovering or identifying resources. Extraction means physically removing them and producing loose material. Hauling is the separate pickup/transport activity. Construction remains builder-owned self-supply from carried inventory, storage or loose drops. Excavation never assigns hauling automatically, and a no-storage colony simply retains recoverable loose output.
+Foraging means discovering or identifying resources. Extraction means physically removing them and producing loose material. Hauling is the separate pickup/transport activity and may deliver to site staging or Storage. Construction performs work only after staging is complete. A no-storage colony can haul directly to its first Storage construction site.
 
 Material Storage remains physical rather than a global wallet. Each functional Background cell owns one compatible stack and incoming reservation. Autonomous haulers reserve source and destination, carry partial loads through personal inventory, and deposit only after reaching a valid adjacent anchor. Already-carried material produces an owner-only self-deposit task.
 

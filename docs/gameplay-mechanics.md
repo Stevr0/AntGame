@@ -1,5 +1,14 @@
 # Gameplay Mechanics
 
+## WV-B2B-ARCH-001 implemented correction
+
+Extraction replaces Excavation as the official skill and activity for removing
+all resource nodes. Colony Soil/Stone work is implemented; generated Seed/Twig
+records declare the same future contract, but Surface interaction remains
+unimplemented. Extraction produces loose ground resources only. Hauling moves
+them to explicit Construction staging or Storage. Construction starts only when
+all staging is complete and performs no pickup or transport.
+
 ## Unified resources and placements
 
 **Approved design; not implemented.** Extraction and excavation act on the same
@@ -10,8 +19,8 @@ eating/drinking is a separate source-consumption transaction.
 
 Each cell permits at most one loose resource type/stack. Storage is a
 Construction-owned slot, not a ground stack or natural Background; one placement
-provides one capacity unit/slot where the 1:1 rule applies. Existing builder
-self-supply, material staging, interruption recovery and Construction skill
+provides one capacity unit/slot where the 1:1 rule applies. Destination-aware
+Hauling, material staging, interruption recovery and Construction skill
 progression remain authoritative behavior to preserve during migration.
 
 ## Generated founding-colony start
@@ -62,7 +71,7 @@ The approved player-facing model has three states:
 
 Current implementation supports selection plus temporary Move, Eat, Drink, Rest and material Pickup orders, along with autonomous survival, colony work selection and autonomous hauling. It does not yet implement explicit forced-work orders or Draft Mode. The old WASD `PlayerMovementInput` path is retained strictly as a developer movement regression tool.
 
-The accepted 3.4C player HUD provides roster selection, shared ant inspection, the global simulation clock, physical-resource ownership, readable job state and Colony View Select/Excavate/Build/Cancel tools without opening Developer Mode. WV-B1 adds a small development view/entrance strip, hides Colony commands in World View and provides Surface selection/right-click movement. It does not add Surface resources, cross-view jobs, alerts or Draft Mode.
+The accepted player HUD provides roster selection, shared ant inspection, the global simulation clock, physical-resource ownership, readable job state and Colony View Select/Extract/Build/Cancel tools without opening Developer Mode. WV-B1 adds a small development view/entrance strip, hides Colony commands in World View and provides Surface selection/right-click movement. It does not add Surface resources, cross-view jobs, alerts or Draft Mode.
 
 ## Physical-world principles
 
