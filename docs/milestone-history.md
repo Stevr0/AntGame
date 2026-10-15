@@ -1,5 +1,27 @@
 # Milestone History
 
+## 15 October 2026 — WV-B3B Unified Runtime Cell Foundation
+
+**WV-B3B Complete.** Typed `RegionCellId`, immutable cell/occupant snapshots,
+read-only Colony and Surface adapters, region-scoped revisions and bounded
+change feeds with independent cursors, central compatibility validation and
+atomic Colony/Surface read-model publication are implemented. Existing terrain,
+resource, Storage, Construction, ant, residency, entrance and clock authorities
+remain unchanged. Generated Surface nodes remain `GenerationOnly`; no mutable
+Node, loose-resource or Placement migration was performed.
+
+Automated evidence passes 6/6 focused Edit, 3/3 focused Play, 557/557 complete
+Edit and 77/77 complete Play with zero failures, skips or inconclusive tests.
+The user confirmed **16/16 manual Unity acceptance checks passed**. The tests ran
+on the pre-commit working tree based on parent `c229bac2`; the implementation was
+then committed as `05e3b730`, while the XML itself contains no Git SHA. This
+documentation-only closure did not rerun Unity tests.
+
+`WV-B3B-LIM-001` remains accepted: publication is atomic for the unified
+read-model pair, not for construction of the entire mutable gameplay scenario.
+The development host retains its existing in-place rebuild/restore boundary.
+Reassess before persistence, region unloading or complex restoration.
+
 ## 15 October 2026 — WV-B3A Unified Runtime Cell Specification
 
 **Documentation complete; migration not started.** Read-only inspection mapped

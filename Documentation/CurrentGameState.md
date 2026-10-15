@@ -2,7 +2,8 @@
 
 ## WV-B3B unified runtime cell authority foundation — 15 October 2026
 
-**Implemented — Automated Tests Passed, Manual Acceptance Pending.** The runtime
+**WV-B3B — Complete.** Automated validation passed and the user explicitly
+confirmed **16/16 manual Unity acceptance checks passed**. The runtime
 now has one common read boundary for the loaded Colony and Surface. Typed
 `RegionCellId` values cannot erase their `ColonyCell`/`SurfaceCell` domain.
 `RuntimeCellSnapshot` is an immutable point-in-time value with Background,
@@ -32,21 +33,41 @@ call that future validator.
 The host validates a complete Colony/Surface adapter pair and swaps the unified
 read model only after both pass. A failed adapter validation retains the prior
 pair. The view coordinator now consumes the host's same Surface authority.
-Existing scenario construction is still an in-place development-host workflow:
-failures after read-model publication rely on `TryStartScenario` rebuilding the
-previous scenario, so WV-B3B does not claim a general gameplay-world transaction
-or persistence rollback.
+
+### WV-B3B-LIM-001 — Whole-World Publication Atomicity
+
+Implemented: validation and atomic replacement of the Colony/Surface unified
+read-model pair. Not implemented: transactional construction and publication of
+the complete gameplay scenario, including mutable terrain services, ant
+registries, inventories, jobs, entrance and residency. The development host
+constructs those services in place, and a later scenario-build failure follows
+the existing rebuild/restore pathway. A future failure during construction or
+restoration may need stronger recovery guarantees. This is accepted and does
+not block WV-B3B closure, but it must be reassessed before persistence, region
+unloading or complex scenario restoration. Current documentation must not call
+this a complete whole-world transaction.
 
 ### Automated verification
 
-The retained XML/log evidence was produced from the WV-B3B working tree based on
-Git revision `c229bac2` with Unity `6000.3.8f1`.
+The retained XML/log evidence was produced with Unity `6000.3.8f1` on the
+pre-commit WV-B3B working tree whose parent baseline was `c229bac2`. That
+implementation, tests and documentation were subsequently committed as
+`05e3b730`. The XML records test names, totals and timestamps but does not embed
+a Git SHA, so `c229bac2` is recorded as the parent baseline rather than
+misidentified as the final implementation revision.
 
 - Unity `6000.3.8f1`: focused Edit Mode **6/6 passed**.
 - Unity `6000.3.8f1`: focused Play Mode **3/3 passed**.
 - Complete graphics-enabled Edit Mode **557/557 passed**.
 - Complete Play Mode **77/77 passed**.
 - Every run recorded zero failures, skips and inconclusive tests.
+
+Retained evidence references are
+`Logs/WV-B3B-focused-edit-final.xml`,
+`Logs/WV-B3B-focused-play-final.xml`,
+`Logs/WV-B3B-full-edit-final.xml` and
+`Logs/WV-B3B-full-play-final.xml`, with corresponding `.log` files. This final
+closure is documentation-only and did not rerun Unity tests.
 
 Coverage includes identity/ordering, immutable reads, invalid lookups, exact
 revision/change-feed behavior, conservative compatibility, atomic read-model
@@ -56,22 +77,12 @@ The complete suites retain deterministic generation, fixture restoration,
 Extraction, loose output, Hauling, Construction, scheduler, entrance, rendering
 isolation and shared-clock regressions.
 
-### Manual Unity checklist — pending
+### Manual Unity acceptance — complete
 
-1. Start Mara/Pip/Tala; inspect representative Colony and Surface snapshots.
-2. Confirm Background and supported occupant projections match visible state.
-3. Run Soil/Stone Extraction, loose output, Hauling and Construction.
-4. Confirm Work priorities and fair scheduling still operate.
-5. Start generated seed `2203`; confirm queen, both regions and entrance travel.
-6. Confirm generated nodes identify as generation-only, not interactive Surface
-   resources.
-7. Mutate Colony terrain and confirm only that cell revision/change feed moves.
-8. Switch views repeatedly and confirm revisions/publication do not move.
-9. Restore the fixture; confirm three ants, one entrance and no duplicates.
-10. Confirm Pause/1×/2×/3× and a clean Unity Console.
-
-WV-B3C, WV-B3D and WV-C1 remain deferred. No manual check above is claimed as
-accepted until the user observes it in Play Mode.
+The user explicitly confirmed the WV-B3B manual Unity acceptance gate at
+**16/16 passed**. This acceptance covers the runtime-cell foundation and its
+fixture/generated-scenario regression observations. It closes WV-B3B only.
+WV-B3C, WV-B3D and WV-C1 remain deferred and require separate authorisation.
 
 ## WV-B3A unified runtime cell specification — 15 October 2026
 

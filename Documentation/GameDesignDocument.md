@@ -2,7 +2,7 @@
 
 ## WV-B3B unified runtime cell authority foundation — 15 October 2026
 
-> **IMPLEMENTED — AUTOMATED TESTS PASSED, MANUAL ACCEPTANCE PENDING.**
+> **WV-B3B COMPLETE — AUTOMATED AND MANUAL ACCEPTANCE PASSED.**
 > Both loaded regions now publish through one typed, read-only runtime-cell
 > registry. Immutable snapshots expose the natural Background, compatible Node,
 > Placement and loose-stack projections, cell/publication revisions and bounded
@@ -15,6 +15,10 @@ and clock remain their existing authorities. Generated records are provenance;
 Surface resource nodes are explicitly generation-only. WV-B3B does not add
 Foraging, Surface Extraction, Fog of War, Refining, persistence, streaming or
 the WV-B3C/B3D migrations.
+
+The user confirmed the complete WV-B3B Unity manual gate at **16/16 passed**.
+This closes the read-only foundation only; it does not approve the future
+mutable Node, loose-resource or Placement migrations.
 
 ## WV-B3A unified runtime cell architecture — 15 October 2026
 

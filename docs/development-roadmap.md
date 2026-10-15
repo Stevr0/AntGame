@@ -1,14 +1,20 @@
 # Development Roadmap
 
-## WV-B3B — implemented, manual acceptance pending
+## WV-B3B — complete
 
 The unified read foundation now provides typed region/cell identity, immutable
 snapshots, exact Colony terrain/drop invalidation, bounded multi-consumer change
 feeds, conservative compatibility validation and atomic Colony/Surface
 read-model publication. Existing gameplay authorities are unchanged. Automated
 Unity results are 6/6 focused Edit, 3/3 focused Play, 557/557 complete Edit and
-77/77 complete Play with no skips or failures. Manual Play Mode acceptance is
-pending; WV-B3C, WV-B3D and WV-C1 are not started.
+77/77 complete Play with no skips or failures. The user confirmed **16/16 manual
+Unity acceptance checks passed**. WV-B3B is complete; WV-B3C, WV-B3D and WV-C1
+are not started.
+
+`WV-B3B-LIM-001` remains accepted: only the validated Colony/Surface read-model
+pair is atomically replaced. Complete gameplay-scenario construction remains an
+in-place development-host workflow with existing rebuild/restore recovery. It
+must be reassessed before persistence, region unloading or complex restoration.
 
 The smallest next candidate is WV-B3C for one authoritative mutable Node type
 and its exact-once Extraction/output transfer. Placement migration remains a

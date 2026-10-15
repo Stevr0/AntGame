@@ -2,8 +2,9 @@
 
 ## Status
 
-WV-B3B is **implemented with automated tests passed and manual acceptance
-pending**. Typed read contracts, immutable snapshots, revisions/change feeds,
+WV-B3B is **complete**. Automated validation passed and the user confirmed
+**16/16 manual Unity acceptance checks passed**. Typed read contracts, immutable
+snapshots, revisions/change feeds,
 pure compatibility checks and atomic read-model publication now exist. Current
 gameplay authorities remain unchanged. WV-B3C, WV-B3D and WV-C1 require separate
 approval. The authoritative detail is
@@ -81,12 +82,22 @@ Version `wv-b2b.default.002` follows this target sequence:
 View switching never regenerates. Runtime mutations are never overwritten from
 the initial snapshot.
 
+## Accepted limitation: WV-B3B-LIM-001
+
+Atomicity applies to replacement of the validated Colony/Surface unified
+read-model pair. It does not cover transactional construction and publication
+of every mutable gameplay service, ant registry, inventory, job, entrance and
+residency. The development host still constructs these in place and uses its
+existing rebuild/restore pathway after a later scenario-build failure. This did
+not block WV-B3B acceptance, but must be reassessed before persistence, region
+unloading or complex scenario restoration.
+
 ## Implemented foundation and candidate migration slices
 
-1. **WV-B3B — authority foundation (implemented):** typed read contracts,
+1. **WV-B3B — authority foundation (complete):** typed read contracts,
    revisions, central compatibility, atomic read-model publication and
    read-only adapters. Automated evidence: 6/6 focused Edit, 3/3 focused Play,
-   557/557 complete Edit and 77/77 complete Play; manual acceptance pending.
+   557/557 complete Edit and 77/77 complete Play; manual acceptance 16/16.
 2. **WV-B3C — Nodes and loose resources:** mutable Nodes, one-stack occupancy,
    failed-output recovery and narrow transaction adapters.
 3. **WV-B3D — Placements:** site/Placement occupancy and one-function-at-a-time

@@ -1,5 +1,20 @@
 # Design Decision Log
 
+## 2026-10-15 — Close WV-B3B and retain whole-world atomicity limitation
+
+**Decision:** Close WV-B3B after automated validation passed and the user
+confirmed **16/16 manual Unity acceptance checks passed**. The completed scope is
+the typed, immutable, read-only runtime-cell foundation with region revisions,
+independent change-feed cursors, compatibility validation and atomic publication
+of the Colony/Surface read-model pair. Existing gameplay writers remain in
+place; WV-B3C and WV-B3D are not authorised by this closure.
+
+**Accepted limitation — `WV-B3B-LIM-001`:** Atomic read-model replacement is not
+transactional construction/publication of the whole mutable gameplay scenario.
+The development host retains its in-place construction and rebuild/restore
+path. Reassess this before persistence, region unloading or complex scenario
+restoration.
+
 ## 2026-10-15 — WV-B3B publishes a read model without moving writers
 
 **Decision:** Implement the shared cell foundation as immutable region adapters

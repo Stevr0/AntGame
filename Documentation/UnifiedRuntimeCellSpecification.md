@@ -2,7 +2,7 @@
 
 **Milestone:** WV-B3A  
 **Date:** 15 October 2026  
-**Status:** WV-B3B foundation implemented; automated tests passed; manual acceptance pending
+**Status:** WV-B3B complete; automated and 16/16 manual acceptance passed
 **Implementation boundary:** Read-only adapters, revisions, compatibility validation and atomic read-model publication
 
 ## 1. Purpose and authority
@@ -54,7 +54,19 @@ development host itself still assembles several existing mutable services in
 place; a later failure is recovered by rebuilding the previous scenario where
 `TryStartScenario` supports it. This is not claimed as general persistence-grade
 rollback. Unity evidence passes 6/6 focused Edit, 3/3 focused Play, 557/557
-complete Edit and 77/77 complete Play. Manual acceptance remains pending.
+complete Edit and 77/77 complete Play. The user confirmed 16/16 manual Unity
+acceptance checks passed, completing WV-B3B.
+
+### WV-B3B-LIM-001 — Whole-World Publication Atomicity
+
+WV-B3B atomically replaces the validated Colony/Surface unified read-model pair.
+It does not transactionally construct or publish the entire gameplay scenario.
+Mutable terrain services, ant registries, inventories, jobs, entrance and
+residency continue to be constructed in place by the development host; a later
+failure uses the existing rebuild/restore pathway. This accepted limitation is
+not a WV-B3B blocker. Reassess it before persistence, region unloading or
+complex scenario restoration, and never describe the current boundary as
+complete whole-world transaction atomicity.
 
 ## 2. Current runtime authority findings
 
