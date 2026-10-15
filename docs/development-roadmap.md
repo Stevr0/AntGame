@@ -20,6 +20,13 @@ The smallest next candidate is WV-B3C for one authoritative mutable Node type
 and its exact-once Extraction/output transfer. Placement migration remains a
 separate WV-B3D gate.
 
+The documentation-only
+[`ResourceNodeIntegrationPlan`](https://github.com/Stevr0/AntGame/blob/main/Documentation/ResourceNodeIntegrationPlan.md)
+maps current ownership and recommends separately gated B3C.1 Node authority,
+B3C.2 canonical loose stacks and B3C.3 transaction coordination. The next
+recommended implementation prompt is B3C.1 only. WV-B3C remains not started;
+Surface Nodes remain `GenerationOnly`, and `WV-B3B-LIM-001` still applies.
+
 ## WV-B3A — documentation complete
 
 The authoritative [Unified Runtime Cells](unified-runtime-cells.md)

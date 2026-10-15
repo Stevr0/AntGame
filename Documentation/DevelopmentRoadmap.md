@@ -35,6 +35,21 @@ The smallest recommended WV-B3C slice is one authoritative mutable Node type
 plus its exact-once Extraction-to-loose-output transaction behind the published
 cell contract. It must not combine Placement migration or Surface gameplay.
 
+### WV-B3C implementation readiness plan — documentation complete
+
+[Resource Node and Loose Resource Integration Plan](ResourceNodeIntegrationPlan.md)
+maps the current Soil, Stone, generated
+Seed/Twig/Freshwater, loose-resource, reservation and revision owners. It
+recommends three separately authorised and accepted implementation slices:
+B3C.1 Colony quantity-one Node authority, B3C.2 canonical one-stack ground
+resources, and B3C.3 exact-once Node-to-output transaction coordination. The
+recommended next prompt is **B3C.1 only**; WV-B3C remains not started. Generated
+Surface Nodes remain `GenerationOnly`, and Placement migration remains WV-B3D.
+
+The plan preserves `WV-B3B-LIM-001`. Its in-memory operation coordination does
+not provide persistence, region-unload recovery or whole-world transaction
+atomicity.
+
 ## WV-B3A — Complete documentation gate (15 October 2026)
 
 `UnifiedRuntimeCellSpecification.md` now defines the approved end-state,
