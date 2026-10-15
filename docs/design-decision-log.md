@@ -1,5 +1,24 @@
 # Design Decision Log
 
+## 2026-10-15 — Specify one-seed Surface and underground Colony generation
+
+- Approve one versioned world seed with independent deterministic Surface and
+  Colony random domains; generation order and runtime timing cannot affect
+  output.
+- Keep the initial Surface `64×64`, predominantly Grass and approximately
+  centre its one entrance.
+- Make the Colony entirely underground and predominantly solid Dirt/Soil. Put
+  its exit on the approximately central topmost boundary and begin with exactly
+  one minimum passage and small chamber containing the founding queen.
+- Preserve `entrance.founding-nest.001`, typed endpoints, capacity-one handoff,
+  existing excavation/navigation authorities, rendering isolation and the
+  Mara/Pip/Tala development fixture.
+- Keep terrain, extractable Solid material, finite source records, loose
+  physical resources and entrance features separate.
+- Defer implementation to WV-B2B. `128×128` Colony bounds, exact chamber geometry,
+  numerical weights, stable Surface/source IDs and PRNG/version details remain
+  implementation approvals, not reopened product vision.
+
 ## 2026-10-14 — Implement WV-B1 with a reversible loaded-representation adapter
 
 - Approve the proposed `64×64` Surface, `(0,0)` logical origin, one-unit cells, `32×32` future partition seam, fixed obstacles and no-corner-cut diagonal movement for WV-B1.
@@ -94,8 +113,10 @@ This log summarises approved decisions. It does not approve unresolved details o
 - Brood stages, timing, feeding thresholds, mortality, and overflow policy.
 - Queen-death colony outcome.
 - Combat, equipment, enemy behavior, and defence detail.
-- Save format, procedural generation rules, and chunk streaming lifecycle.
-- Final bounded Surface dimensions, origin, cell scale, chunk dimensions, obstacle/diagonal rules and scene packaging.
+- Save format and chunk streaming lifecycle. WV-B2A now specifies bounded
+  procedural-generation rules; final numerical/configuration approvals remain.
+- Final generated Colony dimensions/coordinate adapter, chamber geometry,
+  terrain/source stable IDs, weights, clustering and PRNG/version details.
 - Entrance animation/duration, retry timing and presentation; capacity one, physical approach and atomic rollback are fixed.
 - Seed parcel stacking, water-cache naming/art, natural-rest rate and initial source discovery presentation.
 - Cross-view autonomous route selection/cost policy beyond the specified local-plus-entrance composition.

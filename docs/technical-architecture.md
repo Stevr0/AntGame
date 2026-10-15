@@ -1,5 +1,22 @@
 # Technical Architecture
 
+## WV-B2A generation boundary — 15 October 2026
+
+The future generator is a pure initial-data producer, not a new runtime owner.
+It derives independent named Surface/Colony streams from one versioned world
+seed, builds temporary region/source/feature records, validates the complete
+cross-region result and only then publishes it. `ChunkedWorldData` plus existing
+material, navigation and excavation services remain Colony authorities;
+`SurfaceWorldData`/`SurfacePathfinder` remain separate Surface authorities.
+`AntRegistry`, residency, the clock, HUD, cameras and rendering are consumers,
+never generator dependencies. See [Procedural World
+Generation](procedural-world-generation.md).
+
+The current development `SampleWorldGenerator` remains a fixture builder and is
+not the production generator. An explicit scenario/provider selection will keep
+Mara/Pip/Tala separate from the one-queen generated scenario. View switching and
+presentation rebuilds may not invoke generation or reset mutable world state.
+
 ## WV-B1 implemented two-view boundary — 14 October 2026
 
 WV-B1 implements the typed and transactional subset of WV-A. `AntColony.World` owns region/cell value types plus bounded Surface data/A*; `AntColony.Navigation` owns the clock-driven kinematic Surface motor; `AntColony.Commands` owns exactly-one residency and the capacity-one entrance transaction; `AntColony.Development` composes both loaded regions, two cameras and explicit input contexts. `AntRecord`, `AntRegistry`, `AntEntityBinding`, the Colony world/navigation stack and `SimulationClockController` remain the existing authorities.
@@ -8,7 +25,12 @@ The development adapter keeps the same bound GameObject across regions and switc
 
 ## WV-A approved inputs (documentation baseline) — 14 October 2026
 
-WV-A must specify but must not implement: one paired, pre-authored bidirectional entrance with capacity one ant; manual Colony/World presentation switch with independent remembered cameras; physical approach to entrance followed by a validated atomic single-ant residency/representation handoff; both initially small regions loaded and subject to one existing simulation clock; finite nearby seed/freshwater source records; provisional one-unit liquid payload reusing existing inventory ownership transactions; safe natural rest with constructed Sleeping tile recovery advantage. Region identities, coordinates, entrance occupancy/arrival, cross-region route status, timeout/retry and liquid physical conservation require detailed specifications rather than guessed implementation. No World View runtime exists from this decision.
+This historical WV-A decision specified but did not itself implement one paired,
+pre-authored bidirectional entrance with capacity one ant; manual Colony/World
+presentation switching; physical approach and atomic residency/representation
+handoff; one shared clock; finite nearby sources; provisional liquid carriage;
+and natural rest. WV-B1 has since implemented the typed region, view, local
+movement and entrance subset. Natural sources, liquid and rest remain deferred.
 
 WV-A is now specified in [World View Foundation](world-view-foundation.md). The authoritative detailed contract is `Documentation/WorldViewTechnicalSpecification.md`; this wiki page is its concise implementation companion.
 
@@ -172,7 +194,12 @@ flowchart LR
 
 Colony View retains its implemented signed cell/chunk coordinates and permanent Background plus optional Solid model. World View requires its own approved surface coordinate and terrain specification. A shared chunk size or data schema is not assumed merely because both regions are chunked. Cross-view references use stable region and entrance identities plus explicit local positions rather than one ambiguous global `Vector2`.
 
-WV-A requires distinct `ColonyCell` and `SurfaceCell` value types wrapped by region-scoped location variants. The existing integer-centre Colony mapping is unchanged. The recommended first Surface is `64×64` logical cells with candidate `32×32` Surface chunks; those dimensions, cell scale and obstacle rules still require WV-B approval and do not reuse `ChunkedWorldData` by assumption.
+WV-A requires distinct `ColonyCell` and `SurfaceCell` value types wrapped by
+region-scoped location variants. The existing integer-centre Colony mapping is
+unchanged. WV-B1 approved and implemented a `64×64` logical Surface with a
+`32×32` future partition seam, one-unit cells and fixed obstacle/no-corner-cut
+rules. It still does not reuse `ChunkedWorldData` by assumption. WV-B2A specifies
+how a future generated Surface preserves that separation.
 
 The first World View implementation should load one small bounded surface region around a known entrance. Continuous-world streaming, additional environments and distant chunks follow only after the bounded transition and return loop is validated.
 

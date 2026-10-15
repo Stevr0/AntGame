@@ -1,5 +1,16 @@
 # Gameplay Mechanics
 
+## Generated founding-colony start
+
+WV-B2A approves the future new-game layout: one founding queen starts in one
+small excavated underground chamber connected to the approximately central
+top-boundary Colony exit. The linked `64×64` Surface is predominantly Grass and
+guarantees reachable finite food and freshwater source records near its central
+entrance. No storage, sleeping facility, nursery or other completed
+infrastructure exists initially. This is approved design, not implemented
+gameplay; source consumption, extraction, hauling and foraging remain later
+scopes. See [Procedural World Generation](procedural-world-generation.md).
+
 ## Status map
 
 | System | Design | Implementation | Validation |
@@ -18,6 +29,7 @@
 | Colony View player HUD | Approved 3.4C slice | Complete | Automated and manual accepted |
 | Colony work-priority matrix | Approved 3.4D slice | Implemented | Automated passed; manual pending |
 | Two-view region/entrance contract | WV-B1 | Implemented | 8/8 focused Edit and 2/2 focused Play; manual pending |
+| Seeded two-region generation contract | WV-B2A | Documentation complete | Runtime not started; WV-B2B awaits approval |
 | World View resources and autonomous cross-view work | Later WV-C/WV-D | Not implemented | Not tested |
 | Colony priorities and autonomous jobs | Approved design | Implemented foundation | Accepted in Play Mode |
 | Brood and reproduction | Approved design | Not implemented | Not tested |

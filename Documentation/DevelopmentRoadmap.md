@@ -1,5 +1,25 @@
 # Ant Colony Development Roadmap
 
+## WV-B2A procedural generation specification — complete documentation gate (15 October 2026)
+
+WV-B2A documents the approved shared-seed generation contract for separate
+Surface and Colony regions in
+`ProceduralWorldGenerationSpecification.md`. It specifies deterministic named
+random domains, bounded dimensions, coordinate/chunk ownership, weighted and
+clustered terrain, the top-boundary entrance, one starting chamber and founding
+queen, source records, validation/correction, runtime boundaries, fixture
+preservation and future acceptance tests. No Unity runtime or asset content was
+changed.
+
+The recommended next implementation is **WV-B2B**, only after approval of the
+remaining numerical/configuration choices: a pure bounded `64×64` Surface and
+recommended `128×128` Colony builder/validator, existing Soil/Stone materials,
+one protected entrance/chamber and an explicit generated-versus-development
+scenario selector. WV-B2B must stop before resource interaction, foraging,
+hauling, persistence, streaming or autonomous cross-view routing. WV-B1 manual
+acceptance and `WV-B1-REG-001` remain independently open and must not be
+relabelled as passed by this documentation work.
+
 ## WV-B1-DEF-002 cross-region rendering leakage — correction awaiting manual acceptance (15 October 2026)
 
 The Surface camera inherited an all-layers mask and Colony IMGUI overlays continued drawing through the disabled Colony camera. The correction assigns runtime Surface presentation and Surface-resident ant renderers to a dedicated `SurfaceWorld` layer, gives the two cameras mutually exclusive Surface visibility, and gates Colony overlays and Colony-only World/Debug controls by active view without disabling any authority or simulation. Focused regressions cover layer/mask ownership, repeated switching, dynamic designation persistence, input context, unchanged state and bidirectional ant visual handoff. The affected assemblies compile with Unity Roslyn; focused WV-B1 Edit Mode passed **9/9** and focused Play Mode passed **4/4**, all with zero failures or skips. An initial restricted Play runner attempt crashed in `BuildReportRestService` before discovery, but the unrestricted rerun completed and produced passing XML. The documented manual Play Mode checklist remains pending.
@@ -35,9 +55,21 @@ WV-A does **not** authorise implementation. The recommended next scope is **WV-B
 
 ## Approved founding-colony survival specification — 14 October 2026
 
-**Design agreed; not implemented.** New-game start will be one founding queen without prebuilt Food/Water/Sleeping/Material Storage or Nursery areas. Natural food/water sources permit direct eating/drinking, and safe natural ground permits baseline rest. Constructed storage/sleeping improves organisation and efficiency; functional Background 1:1 capacities and later room-quality enhancements remain. Foraging is discovery; extraction generates loose physical output; hauling transports it. Keep three-ant development fixtures unchanged.
+**Design agreed; not implemented.** New-game start will be one founding queen in
+one small excavated underground chamber without prebuilt
+Food/Water/Sleeping/Material Storage or Nursery areas. Natural food/water sources
+permit direct eating/drinking, and safe natural ground permits baseline rest.
+Constructed storage/sleeping improves organisation and efficiency; functional
+Background 1:1 capacities and later room-quality enhancements remain. Foraging
+is discovery; extraction generates loose physical output; hauling transports it.
+Keep three-ant development fixtures unchanged.
 
-**Prerequisites for playable founding start:** specify finite natural source identity/quantity/access; food extraction and transport; physical water extraction/carriage/storage accounting; natural resting safety and efficiency; initial accessible surface sources and entrance relationship; queen survival/brood bootstrap. Coordinate with approved WV-A/WV-B/WV-C sequencing and implement each in separately authorised milestones. Do not interpret this approved design as permission to implement World View now.
+**Prerequisites for playable founding start:** WV-B2A now specifies the generated
+region/entrance/chamber/source-record contract. Finite source interaction, food
+extraction and transport, physical water accounting, natural-rest balance and
+brood bootstrap still require their separately authorised WV-B2B/WV-C/later
+milestones. The implemented WV-B1 World View foundation does not authorise those
+systems.
 
 
 ## Focused survival-needs balance correction — 14 October 2026

@@ -1,5 +1,19 @@
 # Excavation and Terrain
 
+## Generated underground contract
+
+WV-B2A approves an entirely underground Colony: no Sky row, above-ground layer
+or generated falling shaft. The recommended initial bounds are `128×128` cells
+in four-by-four existing `32×32` chunks. Every cell retains a permanent natural
+Background and initially has a Solid except the protected top-boundary entrance
+passage and exactly one starting chamber. Existing `solid.soil` is the provisional
+Dirt majority and `solid.stone` forms clustered deposits; excavation continues
+to create the existing physical Soil/Stone drops and invalidate local navigation.
+
+Sand and Mud remain disabled until supported definitions, yields, art and tests
+are approved. Exact dimensions, weights and chamber geometry await WV-B2B
+approval. See [Procedural World Generation](procedural-world-generation.md).
+
 ## Colony View two-layer world model
 
 The implemented terrain foundation belongs to the underground **Colony View**. Each cell in a resident 32×32 chunk contains exactly one permanent Background Material and zero or one foreground Solid Material. Missing chunks are unavailable rather than silently generated during a query.
@@ -54,7 +68,12 @@ Preparation is now one 3.4A resource-backed Background conversion target. It cos
 
 ## Future World View terrain
 
-> **WV-A specified direction, not implementation.** World View will be a top-down, continuous chunk-based surface. WV-A now requires distinct typed Surface coordinates, a deterministic bounded first region, explicit unavailable missing chunks and a Surface-local terrain/navigation authority. Final dimensions, cell scale, obstacle/diagonal rules, scene packaging and mutation model still require WV-B approval.
+> **Historical WV-A direction; WV-B1 now implements the bounded foundation.**
+> World View is top-down with distinct typed Surface coordinates, a deterministic
+> bounded first region and a Surface-local terrain/navigation authority. WV-B1
+> fixed the development dimensions, cell scale, future partition seam,
+> obstacle/diagonal rules and authored composition. WV-B2A now specifies the
+> generated terrain contract; Surface mutation and expansion remain future work.
 
 The first surface slice must be a small playable area around a known nest entrance. It should prove surface presentation, traversal, a narrow collection/return loop and persistent state before additional chunks or environments are introduced. Read-only queries must not generate missing surface chunks or treat unloaded space as empty, matching the existing conservative availability rule without requiring both views to share the same tile layers.
 
@@ -62,7 +81,8 @@ The first stable `EntranceId` maps one typed Colony endpoint to one typed Surfac
 
 ## Not implemented
 
-- Procedural generation, durable chunk streaming, or save/load.
+- Procedural generation runtime, durable chunk streaming, or save/load. WV-B2A
+  specifies future generation but does not implement it.
 - World View surface terrain, nest-entrance transitions and cross-view terrain persistence.
 - Resource crafting, demolition, rooms and door construction.
 

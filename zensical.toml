@@ -17,6 +17,7 @@ nav = [
   { "Ants, Attributes and Skills" = "ants-attributes-skills.md" },
   { "Ant Movement and Navigation" = "ant-movement-navigation.md" },
   { "World View Foundation" = "world-view-foundation.md" },
+  { "Procedural World Generation" = "procedural-world-generation.md" },
   { "Excavation and Terrain" = "excavation-terrain.md" },
   { "Art Foundation" = "art-foundation.md" },
   { "Colony Construction and Rooms" = "colony-construction-rooms.md" },

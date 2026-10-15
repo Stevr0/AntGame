@@ -1,5 +1,25 @@
 # ANT COLONY
 
+## WV-B2A procedural world-generation contract — 15 October 2026
+
+> **APPROVED DESIGN; IMPLEMENTATION DEFERRED.** The authoritative technical
+> contract is `ProceduralWorldGenerationSpecification.md`. One world seed will
+> deterministically produce separate top-down Surface and side-on underground
+> Colony regions. The Surface is predominantly Grass; the Colony is
+> predominantly solid Dirt/Soil. The Surface entrance is approximately central,
+> and the Colony exit is approximately central on the topmost underground
+> boundary. Exactly one small chamber and its minimum connecting passage begin
+> excavated, with the founding queen spawning validly inside that chamber.
+
+This approved start supersedes older new-game text that places the founding
+queen on the Surface or begins with no excavated chamber. It does not alter the
+Mara/Pip/Tala development fixture, the WV-B1
+`entrance.founding-nest.001` transaction, existing excavation behavior or any
+accepted runtime system. Terrain, natural sources, loose physical resources and
+the entrance remain separate records. Procedural generation, source interaction,
+persistence, streaming and autonomous cross-view routing are not implemented by
+this decision.
+
 ## WV-B1 two-view foundation — 14 October 2026
 
 > **IMPLEMENTED — AWAITING VALIDATION.** WV-B1 adds the first bounded top-down Surface, manual Colony/World presentation switching, Surface-local movement and one physical capacity-one nest transition. It deliberately adds no Surface resources, foraging, procedural generation, cross-view autonomous work, unloaded simulation or additional entrances.
@@ -30,12 +50,18 @@ The implementation-ready technical contract is `WorldViewTechnicalSpecification.
 
 > **APPROVED DESIGN; IMPLEMENTATION DEFERRED.** This supersedes any assumption that a new founding colony starts with prebuilt food, water or sleeping fixtures. The three-ant development scene remains a testing fixture.
 
-- **Start:** One founding queen on the surface, no excavated chambers and no preconstructed Sleeping, Food Storage, Water Storage, Material Storage or Nursery backgrounds.
+- **Start (superseded by WV-B2A on 15 October 2026):** The earlier Surface/no-chamber start is historical. The current approved new-game start is one founding queen in one small excavated underground chamber directly beneath the top-boundary Colony entrance, with no preconstructed Sleeping, Food Storage, Water Storage, Material Storage or Nursery backgrounds.
 - **Foraging discovers** food, water and other resource sources; **extraction physically removes/collects** finite resources and generates recoverable loose output. **Hauling** transports extracted materials. **Construction** self-supplies physical materials from inventory, storage or loose drops.
 - **Direct survival:** Ants may eat/drink at an accessible natural food/water source without requiring constructed storage. Natural sources must obey future finite-source/access/consumption rules; extraction and water transport need their own approved technical specification. Do not assume water is stackable like stone or that discovery automatically extracts it.
 - **Rest:** Ants may rest at a physically safe, accessible natural position before any dedicated sleeping space exists. Constructed Sleeping Backgrounds grant one dedicated resting position per tile with improved recovery efficiency; later enclosed-room quality may enhance efficiency but never gates basic use.
 - **Storage and nursery:** Food Storage, Water Storage, Material Storage and Nursery are built via existing resource-backed Background conversion jobs; each functional tile provides its previously approved 1:1 capacity. Unenclosed initial chambers can function; future doors/enclosure provide efficiency bonuses.
-- **Progression intent:** Discover nearby natural sustenance → excavate first chamber → recover/rest naturally → construct sleeping and food/water storage → transport resources → prepare nursery → authorise first brood → expand workforce. Brood, World View runtime, natural-source resource interactions and storage efficiency bonuses are not implemented by this decision.
+- **Progression intent (updated by WV-B2A):** Begin in the generated starting
+  chamber → reach nearby natural sustenance through the linked entrance → expand
+  the chamber through excavation → recover/rest naturally → construct sleeping
+  and food/water storage → transport resources → prepare nursery → authorise
+  first brood → expand workforce. Brood, generated-world runtime, natural-source
+  resource interactions and storage efficiency bonuses are not implemented by
+  this decision.
 - **Testing exception:** Preserve finite pre-authored Food, Water and Sleeping fixtures for Mara/Pip/Tala in AntGameDevelopment; they are not the eventual new-game bootstrap.
 
 
@@ -104,7 +130,14 @@ The colony creates reasons to visit the surface; the surface returns resources, 
 
 WV-A resolves one known pre-authored entrance, capacity one, manual view switching with independent remembered cameras, physical approach travel, atomic single residency, both initial regions loaded on one clock, finite nearby seed/freshwater, direct consumption, a recoverable one-unit liquid payload and safe natural rest. View switching is presentation only and never moves an ant.
 
-Remaining approvals are narrower: final bounded Surface dimensions/origin/layout, candidate Surface chunk and obstacle rules, authored scene packaging, entrance animation/timing, initial source discovery presentation, seed stacking, water-cache presentation, natural-rest rate, any revised restoration values and eventual save/version format. Cross-view autonomous work is WV-D; unloaded simulation is WV-F.
+WV-B1 has since fixed the development Surface dimensions/origin, future partition
+seam, obstacle rules and authored composition. WV-B2A now specifies the generated
+layout contract. Remaining approvals are narrower: generated Colony dimensions
+and chamber geometry, final terrain/source weights and IDs, generation versions,
+entrance animation/timing, initial source discovery presentation, seed stacking,
+water-cache presentation, natural-rest rate, revised restoration values and
+eventual save format. Cross-view autonomous work is WV-D; unloaded simulation is
+WV-F.
 
 Ant Game's player experience follows **Pause → Plan → Play → Observe → Adjust**. The normal player interface must be distinct from developer testing controls, using RimWorld as a reference for understandable colony management rather than copying its world model. The game's side-view excavatable terrain, climbing ants, permanent Background and functional background conversions remain distinct.
 
@@ -143,7 +176,7 @@ Design intent: Build a small, finishable colony simulation in which individual a
 
 ### Vision and control
 
-- Ant Game is a single-player, scrollable/zoomable 2D colony simulation with a side-on underground Colony View and a future top-down surface World View in one persistent chunk-based world. Players can manage colony-wide assignments **or directly select and control any adult ant**, including the founding queen; other ants remain autonomous.
+- Ant Game is a single-player, scrollable/zoomable 2D colony simulation with a side-on underground Colony View and a top-down Surface World View in one persistent world. WV-B1 implements the bounded two-view foundation; procedural generation and later expansion remain future work. Players can manage colony-wide assignments **or directly select and control any adult ant**, including the founding queen; other ants remain autonomous.
 - Manual and AI control use the same movement, excavation, hauling, survival and combat rules. Manually performed tasks receive a modest explicit productivity bonus (percentage and eligible actions **TBD**); that bonus must not duplicate rewards or permit impossible actions.
 - Each ant is a persistent individual with stats, skills, equipment, health, energy, hunger and thirst. All ordinary work skills start at 0 and improve through practice, not fixed classes. Roles affect autonomous job priorities, not normal task eligibility. Retain previously approved 0–100 and above-50 skill-decay conventions until explicitly revised.
 - Individual ant death is permanent. The fate of the colony after queen death remains undecided.

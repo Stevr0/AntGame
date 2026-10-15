@@ -1,5 +1,16 @@
 # Ant Colony WV-A — Two-View Technical Specification
 
+## WV-B2A relationship — 15 October 2026
+
+The approved generation-specific extension is
+`ProceduralWorldGenerationSpecification.md`. It preserves this document's typed
+regions, explicit endpoint mapping, single-residency rule, physical approach,
+capacity-one/idempotent transaction, shared clock and region-specific rendering.
+It supersedes only the old new-game assumption that the queen begins on the
+Surface with no chamber: the generated founding queen now begins in one small
+excavated Colony chamber beneath the top-boundary exit. WV-B1's existing authored
+fixture and accepted transaction history remain unchanged.
+
 ## WV-B1 implementation record — 14 October 2026
 
 **Implemented — Awaiting Validation.** WV-B1 approves and implements the proposed `64×64` Surface extent, logical origin `(0,0)`, one-unit cell scale, `32×32` future partition dimension, fixed obstacle-only fixture and eight-direction traversal with the documented no-corner-cut rule. Full chunk streaming is not implemented.
@@ -431,15 +442,25 @@ Provisional balance recommendation for later approval:
 
 This makes constructed sleep twice as efficient while preserving the current accepted constructed recovery value. Exact natural rate requires WV-C1 approval. No room score, enclosure requirement or new functional capacity is introduced.
 
-## 15. Founding queen bootstrap
+## 15. Founding queen bootstrap (new-game location superseded by WV-B2A)
 
-The future new-game scenario contains one active founding queen on the Surface, one known entrance, no constructed storage/sleeping/nursery tiles, finite nearby seed and freshwater, safe natural rest, and an excavatable Soil path/chamber in the Colony region.
+The future generated new-game scenario contains one active founding queen in one
+small excavated underground starting chamber beneath the known top-boundary
+Colony exit. It has no constructed storage/sleeping/nursery tiles. The linked
+Surface contains finite nearby food and freshwater sources and supports safe
+natural rest. The surrounding Colony remains solid and excavatable. Exact
+generation geometry and source-record rules are owned by
+`ProceduralWorldGenerationSpecification.md`.
 
 Minimal opening sequence:
 
-1. The paused game introduces the queen, known entrance and nearby discovered or readily discoverable sustenance.
-2. The player resumes and directs/permits direct eating, drinking and natural rest without storage.
-3. The queen reaches the entrance and transfers through the capacity-one transaction.
+1. The paused game introduces the queen in the valid starting chamber and the
+   known linked entrance.
+2. The queen reaches the Colony approach and transfers through the capacity-one
+   transaction.
+3. The Surface arrival can reach nearby discovered or readily discoverable
+   sustenance; the player can direct/permit direct eating, drinking and natural
+   rest without storage.
 4. She excavates Soil; exact-once extraction leaves physical loose Soil without requiring inventory or storage.
 5. The queen collects loose construction material herself and builds initial Sleeping and storage Backgrounds through existing builder self-supply.
 6. Surface seed/water extraction and hauling can then stock constructed Food/Water Storage.
@@ -520,15 +541,19 @@ No Unity tests are required for WV-A because it changes documentation only. Futu
 
 The following choices remain intentionally open:
 
-1. Final initial Surface extent (`64×64` recommended), origin and exact authored layout/seed.
-2. Surface chunk size (`32×32` candidate), cell world scale, diagonal movement and obstacle categories.
-3. WV-B scene packaging: additive authored scene versus another authored composition. It must preserve current Bootstrap/host boundaries.
-4. Entrance approach/arrival animation, transition duration and exact retry delays (capacity one and atomic guarantees are fixed).
-5. Whether the initial nearby sources begin discovered or require one explicit discovery action.
-6. Seed parcel stack size and Food Storage transfer quantity.
-7. Player-facing name/art for the one-unit water cache and confirmation that it consumes one inventory slot.
-8. Natural-rest recovery (`8/hour` recommended) and exact Surface safety/hazard rules.
-9. Direct seed/water restoration amounts if they differ from the existing provisional `40 Hunger` / `50 Thirst` values.
+1. WV-B1 approved and implemented the initial `64×64` Surface extent, `(0,0)`
+   origin, one-unit cells, `32×32` future partition, diagonal movement and fixed
+   obstacle rules for its development fixture. WV-B2A separately owns future
+   generated-layout rules.
+2. WV-B1 uses the existing authored development composition. A future generated
+   scenario must preserve current Bootstrap/host boundaries and explicit
+   scenario selection.
+3. Entrance approach/arrival animation, transition duration and exact retry delays (capacity one and atomic guarantees are fixed).
+4. Whether the initial nearby sources begin discovered or require one explicit discovery action.
+5. Seed parcel stack size and Food Storage transfer quantity.
+6. Player-facing name/art for the one-unit water cache and confirmation that it consumes one inventory slot.
+7. Natural-rest recovery (`8/hour` recommended) and exact Surface safety/hazard rules.
+8. Direct seed/water restoration amounts if they differ from the existing provisional `40 Hunger` / `50 Thirst` values.
 10. Save/version schema. Persistence is required eventually but is not part of WV-B/C implementation.
 
 These are balancing, presentation or packaging choices. They do not reopen the approved two-view, entrance, physical-travel, finite-source, one-unit water or natural-rest decisions.

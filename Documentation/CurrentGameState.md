@@ -1,5 +1,26 @@
 # Ant Colony Current Game State
 
+## WV-B2A documentation state — 15 October 2026
+
+**Specification complete; procedural generation is not implemented.**
+`ProceduralWorldGenerationSpecification.md` is now the authoritative future
+WV-B2B contract. It preserves the implemented WV-B1 typed regions, bounded
+`64×64` Surface fixture, capacity-one entrance and rendering isolation while
+specifying a shared-seed generated Surface and entirely underground Colony.
+
+The current runtime still uses the deterministic WV-B1 Surface obstacle fixture
+and the authored/development Colony produced by `SampleWorldGenerator`, including
+Mara, Pip and Tala. The existing `ChunkedWorldData.WorldSeed` is reserved/input
+data and the development generator's seed variation does not constitute the new
+production procedural world system. Natural Surface terrain/source records, a
+generated starting chamber and generated founding-queen scenario are not yet
+implemented. No Unity tests were run for WV-B2A because this was a documentation-
+only milestone; WV-B1 manual acceptance and `WV-B1-REG-001` remain unchanged.
+
+The approved new-game vision now starts the founding queen in one small excavated
+underground chamber directly beneath the Colony entrance. Older statements that
+put her on the Surface or start with no chamber are historical and superseded.
+
 ## WV-B1-DEF-002 — Cross-Region Rendering Leakage — 15 October 2026
 
 **Implemented — Pending Manual Acceptance.** The defect had two presentation causes. The runtime Surface camera copied the Colony camera's all-layers culling mask, so spatial separation alone allowed Default-layer Colony renderers to enter World View at sufficiently wide or moved camera bounds. Separately, excavation/construction highlights and loose-material labels are IMGUI overlays projected through the Colony camera; disabling that camera did not stop `OnGUI` from drawing them.
@@ -220,7 +241,7 @@ Known limitations: the source sheet has no verified independent Prepared or func
 
 ## Latest acceptance — 3.4C Player Colony HUD & Developer UI Separation (14 October 2026)
 
-**COMPLETE — MANUALLY ACCEPTED.** User confirmed 13/13 grouped Unity HUD/gameplay/input checks, including resolution testing and clean Console. Codex previously reported focused 12/12 Edit, 13/13 Play; full 489/489 Edit and 62/62 Play. No tests rerun in this documentation update. Earlier pending-acceptance passages are historical. The separate art foundation remains **Pending Manual Visual Acceptance**. Future World View runtime is not implemented.
+**COMPLETE — MANUALLY ACCEPTED.** User confirmed 13/13 grouped Unity HUD/gameplay/input checks, including resolution testing and clean Console. Codex previously reported focused 12/12 Edit, 13/13 Play; full 489/489 Edit and 62/62 Play. No tests rerun in this documentation update. Earlier pending-acceptance passages are historical. The separate art foundation remains **Pending Manual Visual Acceptance**. At the time of this 3.4C record, World View runtime was not implemented; WV-B1 has since implemented its bounded foundation.
 
 
 ## Art foundation — 14 October 2026

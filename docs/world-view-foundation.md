@@ -1,5 +1,15 @@
 # World View Foundation
 
+## WV-B2A generated-world extension
+
+The approved future generated-world contract is summarized in [Procedural World
+Generation](procedural-world-generation.md). One seed produces both regions
+without changing WV-B1 typed locations or entrance semantics. The Surface remains
+`64×64` and predominantly Grass. The Colony is entirely underground,
+predominantly solid Soil/Dirt and begins with one small chamber containing the
+founding queen beneath the top-boundary exit. Runtime implementation has not
+started, and the Mara/Pip/Tala fixture remains intact.
+
 ## Status
 
 **WV-B1 implemented; validation remains incomplete.** Focused Edit/Play and complete Play suites pass, while complete graphics-capable Edit regression and manual acceptance remain outstanding. The authoritative detailed contract is `Documentation/WorldViewTechnicalSpecification.md`. Runtime now covers typed regions/residency, one bounded Surface, manual cameras, Surface-local movement and one entrance. Natural resources, rest, extraction, autonomous cross-view routing, streaming and unloaded simulation remain deferred.
@@ -138,7 +148,13 @@ A safe natural rest pose must be loaded, clear, locally stable and reachable; mu
 
 Recommended later balance is `8` Fatigue recovery per simulation hour for natural rest versus the existing `16` for a constructed one-ant Sleeping Background. The natural value requires WV-C1 approval. No room quality or new functional capacity is implied.
 
-The opening loop is: founding queen survives directly at nearby sources and rests naturally; enters the nest; excavates Soil to loose output; personally gathers construction material; builds Sleeping/Food/Water Storage; then extracts and hauls Surface supplies. Storage improves logistics but is not required to obtain survival or the material used to build it. Brood remains later work.
+The generated opening loop is: founding queen starts in the small underground
+chamber; reaches the linked entrance; survives directly at nearby Surface sources
+and rests naturally; returns underground; excavates Soil to loose output;
+personally gathers construction material; builds Sleeping/Food/Water Storage;
+then extracts and hauls Surface supplies. Storage improves logistics but is not
+required to obtain survival or the material used to build it. Brood remains
+later work.
 
 ## Milestone gates
 
