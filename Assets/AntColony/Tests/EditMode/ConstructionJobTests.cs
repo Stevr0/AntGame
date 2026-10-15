@@ -348,6 +348,99 @@ namespace AntColony.Tests.EditMode
         }
 
         [Test]
+        public void UnobtainableConstructionDoesNotStarveExcavationAndCanRecover()
+        {
+            AntGameDevelopmentWorldHost host = OpenHost();
+            host.ColonyJobRegistry.RemoveWhere(_ => true);
+            host.MaterialStorage.Clear();
+            host.MaterialDrops.Clear();
+            ConstructionRecipe recipe = GetRecipe(host, BackgroundFunction.Sleeping);
+            Assert.That(host.ConstructionDesignations.TryDesignate(Site,
+                recipe.Result.StableMaterialId,
+                out ConstructionDesignation construction, out string error),
+                Is.True, error);
+            Assert.That(host.ExcavationDesignations.TryDesignate(
+                AntGameDevelopmentWorldHost.ExcavationSoilFixture,
+                out ExcavationDesignation excavation, out error), Is.True, error);
+
+            AntRecord queen = new(new AntId("founding-queen"), "Founding Queen",
+                new ColonyId("test-colony"), AntCaste.Queen,
+                new AntAttributes(5, 5, 5));
+            queen.WorkPriorities.TrySet(AntWorkCategory.Construction,
+                AntWorkPriority.Highest, out _);
+            queen.WorkPriorities.TrySet(AntWorkCategory.Excavation,
+                AntWorkPriority.Low, out _);
+            Vector2Int start = new(-10, SampleWorldGenerator.MainPassageY);
+
+            Assert.That(ConstructionJobOrder.CanObtainRequiredMaterial(
+                host.GridNavigationMap, host.MaterialDrops, host.MaterialStorage,
+                queen, construction, start, out string waiting), Is.False);
+            host.ColonyJobRegistry.RecordPendingDependency(
+                construction.Job.Id, waiting);
+            var selector = new ColonyJobSelectionService();
+            Assert.That(selector.TryChoose(queen, host.ColonyJobRegistry,
+                host.GridNavigationMap, start,
+                candidate => candidate != construction.Job ||
+                    ConstructionJobOrder.CanObtainRequiredMaterial(
+                        host.GridNavigationMap, host.MaterialDrops,
+                        host.MaterialStorage, queen, construction, start, out _),
+                out ColonyJob selected, out _, out error), Is.True, error);
+            Assert.That(selected.Id, Is.EqualTo(excavation.Job.Id));
+            Assert.That(construction.Job.Status, Is.EqualTo(ColonyJobStatus.Paused));
+            Assert.That(construction.Job.ReservationOwner.IsValid, Is.False);
+            Assert.That(construction.Job.FailureReason,
+                Does.Contain("Waiting for reachable unreserved"));
+            Assert.That(queen.Skills.Get(AntSkillId.Construction).Level, Is.Zero);
+
+            Assert.That(host.MaterialDrops.TryAdd("recovery.soil",
+                ExcavatedMaterialType.Soil, 1, start + Vector2Int.right,
+                out _, out error), Is.True, error);
+            Assert.That(ConstructionJobOrder.CanObtainRequiredMaterial(
+                host.GridNavigationMap, host.MaterialDrops, host.MaterialStorage,
+                queen, construction, start, out error), Is.True, error);
+            Assert.That(selector.TryChoose(queen, host.ColonyJobRegistry,
+                host.GridNavigationMap, start,
+                candidate => candidate != construction.Job ||
+                    ConstructionJobOrder.CanObtainRequiredMaterial(
+                        host.GridNavigationMap, host.MaterialDrops,
+                        host.MaterialStorage, queen, construction, start, out _),
+                out selected, out _, out error), Is.True, error);
+            Assert.That(selected.Id, Is.EqualTo(construction.Job.Id));
+        }
+
+        [Test]
+        public void AutonomousControllerSkipsUnsuppliedConstructionForExcavation()
+        {
+            AntGameDevelopmentWorldHost host = OpenHost();
+            host.ColonyJobRegistry.RemoveWhere(_ => true);
+            host.MaterialStorage.Clear();
+            host.MaterialDrops.Clear();
+            ConstructionRecipe recipe = GetRecipe(host, BackgroundFunction.Sleeping);
+            Assert.That(host.ConstructionDesignations.TryDesignate(Site,
+                recipe.Result.StableMaterialId,
+                out ConstructionDesignation construction, out string error),
+                Is.True, error);
+            Assert.That(host.ExcavationDesignations.TryDesignate(
+                AntGameDevelopmentWorldHost.ExcavationSoilFixture,
+                out ExcavationDesignation excavation, out error), Is.True, error);
+            Assert.That(host.SpawnOrResetSelectableGridAnts(out error), Is.True, error);
+
+            AntSelectionCommandController controller = host.SelectionController;
+            SelectableGridAnt ant = controller.SelectableAnts[0];
+            ant.Record.WorkPriorities.TrySet(AntWorkCategory.Construction,
+                AntWorkPriority.Highest, out _);
+            ant.Record.WorkPriorities.TrySet(AntWorkCategory.Excavation,
+                AntWorkPriority.Low, out _);
+            controller.SetAutonomousColonyWorkEnabled(true);
+
+            Assert.That(controller.EvaluateAutonomousColonyWorkNow(ant, 1d), Is.True);
+            Assert.That(ant.ExcavationOrder, Is.Not.Null);
+            Assert.That(ant.ExcavationOrder.Job.Id, Is.EqualTo(excavation.Job.Id));
+            Assert.That(construction.Job.Status, Is.EqualTo(ColonyJobStatus.Paused));
+            Assert.That(construction.Job.ReservationOwner.IsValid, Is.False);
+        }
+
+        [Test]
         public void CancellationLeavesStagedMaterialForReplacementBuilder()
         {
             AntGameDevelopmentWorldHost host = OpenHost();

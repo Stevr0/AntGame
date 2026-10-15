@@ -77,14 +77,27 @@ namespace AntColony.Commands
                 return DesignationPreviewState.ExistingDesignation;
             }
             if (world.GetCell(cell, out WorldTileCellData cellData) !=
-                    WorldCellQueryResult.Available || !cellData.HasSolidTile ||
-                !world.TryGetSolidMaterialDefinition(cellData.SolidMaterialId,
-                    out SolidTileMaterialDefinition definition) ||
-                !definition.IsExcavatable ||
+                    WorldCellQueryResult.Available)
+            {
+                reason = $"Cell {cell} is outside the resident Colony world.";
+                return DesignationPreviewState.Invalid;
+            }
+            if (!cellData.HasSolidTile)
+            {
+                reason = $"Cell {cell} has natural Background but no foreground Solid to excavate.";
+                return DesignationPreviewState.Invalid;
+            }
+            if (!world.TryGetSolidMaterialDefinition(cellData.SolidMaterialId,
+                    out SolidTileMaterialDefinition definition))
+            {
+                reason = $"Foreground Solid '{cellData.SolidMaterialId}' is not registered.";
+                return DesignationPreviewState.Invalid;
+            }
+            if (!definition.IsExcavatable ||
                 definition.ExcavatedMaterial == ExcavatedMaterialType.None ||
                 definition.ExcavationYield <= 0)
             {
-                reason = "Only resource-bearing excavatable foreground Solids can be designated.";
+                reason = $"Foreground Solid '{cellData.SolidMaterialId}' is not a resource-bearing excavation material.";
                 return DesignationPreviewState.Invalid;
             }
 

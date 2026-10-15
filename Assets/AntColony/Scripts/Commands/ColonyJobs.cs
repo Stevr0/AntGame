@@ -176,6 +176,18 @@ namespace AntColony.Commands
             job.FailureReason = reason ?? string.Empty;
         }
 
+        /// <summary>
+        /// Records a temporary unmet dependency without assigning the job.
+        /// Paused jobs remain reconsiderable when their dependency changes.
+        /// </summary>
+        public void RecordPendingDependency(ColonyJobId id, string reason)
+        {
+            if (!jobs.TryGetValue(id, out ColonyJob job) ||
+                !job.CanBeClaimed || job.ReservationOwner.IsValid) return;
+            job.Status = ColonyJobStatus.Paused;
+            job.FailureReason = reason ?? string.Empty;
+        }
+
         public void BlockAndRelease(ColonyJobId id, AntId owner, string reason)
         {
             if (!TryGetOwned(id, owner, out ColonyJob job, out _)) return;

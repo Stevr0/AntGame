@@ -6,10 +6,24 @@ WV-B2B now provides frozen SplitMix64-derived `surface`/`colony` streams, unifie
 generated cells, whole-world validation, compatibility projection into
 `ChunkedWorldData` and `SurfaceWorldData`, an explicit fixture/generated
 scenario switch, one generated queen, temporary visuals and deterministic test
-coverage. Unity assemblies compile through the Editor's Roslyn response files
-and a four-seed direct validation probe passed. Unity Test Runner execution is
-not claimed: the local Licensing Client crashed before producing test XML.
-Manual Play Mode acceptance and `WV-B1-REG-001` remain open. Do not begin WV-C1.
+coverage. Unity assemblies compile through the Editor's Roslyn response files.
+The defect-focused suite passed 12/12 Edit Mode; relevant construction,
+excavation, procedural and WV-B1 classes passed 58/58 Edit Mode; World View
+regressions passed 5/5 Play Mode. Manual Play Mode acceptance and
+`WV-B1-REG-001` remain open. Do not begin WV-C1.
+
+**Defect recovery implemented; acceptance remains open.**
+`WV-B2B-DEF-001 — Founding Queen Job Starvation` now filters construction with
+no obtainable physical material before autonomous selection, records an
+unowned paused waiting reason, permits excavation/other eligible work, and
+reconsiders construction when carried, stored or loose material becomes
+reachable. `WV-B2B-DEF-002 — Generated Stone Excavation` advances the generation
+identity to version `2` / `wv-b2b.default.002` and guarantees one real Stone
+foreground face at `(-4,-8)` beside the starting chamber. Existing adjacency,
+skill, transaction, Background-preservation and conservation rules are unchanged.
+Both defects remain open until Unity automated and manual acceptance are
+confirmed. `WV-B1-REG-001` remains outstanding, WV-B2B is not closed, and WV-C1
+is not started.
 
 ## WV-B2A procedural generation specification — complete documentation gate (15 October 2026)
 

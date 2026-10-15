@@ -9,6 +9,11 @@ Earth/Stone Backgrounds. The starting chamber and passage omit nodes without
 creating excavation output. Existing exact-once excavation remains the runtime
 interaction authority; Surface source extraction is not implemented.
 
+Generation version 2 guarantees a real Stone foreground node at `(-4,-8)` on
+the founding chamber boundary. It uses the registered `solid.stone` definition
+and ordinary adjacent-work path. A Stone-looking natural Background without a
+foreground Solid is not excavatable and now produces a specific diagnostic.
+
 ## Unified Background and node model
 
 **Approved design; not implemented.** Every resident Surface and Colony cell has

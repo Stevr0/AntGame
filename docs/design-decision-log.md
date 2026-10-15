@@ -1,5 +1,15 @@
 # Design Decision Log
 
+## 15 October 2026 — WV-B2B generation version 2 defect recovery
+
+- Advance generation identity to version `2` / `wv-b2b.default.002` because the
+  guaranteed founding-chamber Stone face changes deterministic output.
+- Guarantee one quantity-one `solid.stone` node at Colony `(-4,-8)` beside the
+  open chamber; retain ordinary excavation adjacency and conservation rules.
+- Filter construction with no obtainable physical material before autonomous
+  reservation so the founding queen can select other eligible work. Keep the
+  job paused, unowned and reconsiderable rather than adding another scheduler.
+
 ## 2026-10-15 — Implement WV-B2B through validated compatibility adapters
 
 - Freeze generation version `1` and configuration `wv-b2b.default.001` with

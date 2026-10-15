@@ -757,6 +757,61 @@ namespace AntColony.Commands
             return true;
         }
 
+        /// <summary>
+        /// Checks the physical material dependency without reserving the job or
+        /// any resource. Autonomous selection uses this to skip construction
+        /// that cannot currently start, leaving the ant free for other work.
+        /// </summary>
+        public static bool CanObtainRequiredMaterial(GridNavigationMap map,
+            WorldMaterialDropRegistry drops, MaterialStorageWorld storage,
+            AntRecord ant, ConstructionDesignation designation, Vector2Int start,
+            out string reason)
+        {
+            if (map == null || drops == null || storage == null || ant == null ||
+                designation == null)
+            {
+                reason = "Construction material authorities are unavailable.";
+                return false;
+            }
+
+            int missing = Math.Max(0, designation.Recipe.RequiredQuantity -
+                designation.Site.DeliveredQuantity);
+            if (missing <= 0 || GetInventoryQuantity(ant.Inventory,
+                    designation.Recipe.ResourceTypeId,
+                    MaterialResourceCatalog.ProvisionalMaximumStack) > 0)
+            {
+                reason = string.Empty;
+                return true;
+            }
+
+            foreach (MaterialStorageSlot slot in storage.Slots)
+            {
+                if (slot.ResourceTypeId == designation.Recipe.ResourceTypeId &&
+                    slot.AvailableQuantity > 0 &&
+                    SurvivalInteractionOrder.TryMeasureApproach(
+                        map, start, slot.Cell, out _, out _, out _))
+                {
+                    reason = string.Empty;
+                    return true;
+                }
+            }
+            foreach (WorldMaterialDrop drop in drops.Drops)
+            {
+                if (MaterialResourceCatalog.GetStableId(drop.Material) ==
+                        designation.Recipe.ResourceTypeId &&
+                    drops.GetReservedQuantity(drop.OwnershipKey) == 0 &&
+                    SurvivalInteractionOrder.TryMeasureApproach(
+                        map, start, drop.WorldCell, out _, out _, out _))
+                {
+                    reason = string.Empty;
+                    return true;
+                }
+            }
+
+            reason = $"Waiting for reachable unreserved {designation.Recipe.ResourceTypeId} material.";
+            return false;
+        }
+
         public bool TryArrive(Vector2Int currentCell, out Vector2Int nextApproach)
         {
             nextApproach = default;

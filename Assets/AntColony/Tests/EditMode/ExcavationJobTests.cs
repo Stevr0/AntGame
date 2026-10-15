@@ -192,6 +192,45 @@ namespace AntColony.Tests.EditMode
         }
 
         [Test]
+        public void GeneratedFoundingStoneCanBeWorkedByZeroConstructionQueen()
+        {
+            AntGameDevelopmentWorldHost host = OpenHost();
+            Assert.That(host.TryStartScenario(
+                GeneratedWorldScenario.FoundingQueen, 2203, out string error),
+                Is.True, error);
+            Vector2Int cell = new(
+                ProceduralWorldGenerator.FoundingStoneFace.X,
+                ProceduralWorldGenerator.FoundingStoneFace.Y);
+            host.WorldData.GetCell(cell, out WorldTileCellData before);
+            Assert.That(host.ExcavationDesignations.TryDesignate(cell,
+                out ExcavationDesignation designation, out error), Is.True, error);
+            var queen = new AntRecord(new AntId("generated-queen"), "Founding Queen",
+                new ColonyId("generated-colony"), AntCaste.Queen,
+                new AntAttributes(5, 5, 5));
+            Assert.That(queen.Skills.Get(AntSkillId.Construction).Level, Is.Zero);
+            Vector2Int start = new(ProceduralWorldGenerator.QueenSpawn.X,
+                ProceduralWorldGenerator.QueenSpawn.Y);
+            Assert.That(SurvivalInteractionOrder.TryMeasureApproach(
+                host.GridNavigationMap, start, cell, out Vector2Int approach,
+                out _, out error), Is.True, error);
+            Assert.That(ExcavationJobOrder.TryCreate(host.ColonyJobRegistry,
+                host.GridNavigationMap, queen, designation, approach,
+                host.ExcavationTransaction, out ExcavationJobOrder order,
+                out error), Is.True, error);
+            Assert.That(order.TryBegin(approach), Is.True);
+            order.Advance(4d, 4d);
+
+            host.WorldData.GetCell(cell, out WorldTileCellData after);
+            Assert.That(order.Phase, Is.EqualTo(ExcavationOrderPhase.Completed));
+            Assert.That(after.HasSolidTile, Is.False);
+            Assert.That(after.BackgroundMaterialId, Is.EqualTo(before.BackgroundMaterialId));
+            Assert.That(host.MaterialDrops.TryFindAtCell(
+                cell, out WorldMaterialDrop output), Is.True);
+            Assert.That(output.Material, Is.EqualTo(ExcavatedMaterialType.Stone));
+            Assert.That(output.Quantity, Is.EqualTo(1));
+        }
+
+        [Test]
         public void OrderProgressAwardsXpAndInterruptionPreservesProgress()
         {
             AntGameDevelopmentWorldHost host = OpenHost();

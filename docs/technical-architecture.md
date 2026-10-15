@@ -14,6 +14,15 @@ The generator records placement and loose-stack slots but starts them empty.
 It does not replace construction, storage, drops, excavation transactions,
 navigation, ant records, residency or the simulation clock.
 
+Generation version 2 reserves a deterministic Stone node at `(-4,-8)` on the
+founding chamber boundary. It is projected through the same
+`GeneratedWorldSnapshot.CreateColonyWorld` adapter and registered Solid
+definition as every other generated Stone node; no special excavation executor
+exists. Autonomous work retains the shared `ColonyJobSelectionService`.
+Construction contributes only a read-only material-dependency eligibility check
+before selection; `ColonyJobRegistry` records the unmet dependency as an unowned
+paused job, and the existing selector naturally reconsiders it on later passes.
+
 ## Approved unified cell boundary — 15 October 2026
 
 **Implemented for generated records; legacy runtime migration deferred.** Surface and Colony share one logical cell

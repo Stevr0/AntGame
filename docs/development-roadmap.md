@@ -2,13 +2,16 @@
 
 ## WV-B2B runtime gate
 
-**Implemented — Awaiting Validation (15 October 2026).** Versioned deterministic
+**Implemented — Pending Manual Acceptance (15 October 2026).** Versioned deterministic
 generation, unified generated cells, structural/source validation, both region
 adapters, generated entrance/chamber, founding queen, temporary presentation and
-development controls are implemented. Unity assemblies compile and the four-seed
-validation probe passes. Unity Test Runner execution is blocked by a local
-Licensing Client crash; manual acceptance and `WV-B1-REG-001` remain open.
-WV-C1 resource interaction must not begin without separate approval.
+development controls are implemented. Generation version `2` /
+`wv-b2b.default.002` guarantees one exposed Stone node at `(-4,-8)`. Autonomous
+selection leaves unsupplied construction paused and unowned so other eligible
+work can proceed, then reconsiders it when physical material becomes reachable.
+Relevant regressions passed 58/58 Edit Mode and 5/5 Play Mode. Manual acceptance,
+both `WV-B2B-DEF-001`/`WV-B2B-DEF-002`, and `WV-B1-REG-001` remain open. WV-C1
+resource interaction must not begin without separate approval.
 
 ## WV-B2A documentation gate
 

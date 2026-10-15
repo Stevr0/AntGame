@@ -28,6 +28,7 @@ Milestones through 3.3D are accepted, and 3.4A extends that foundation with phys
 - Actual A* travel cost selects the closest reachable compatible storage with deterministic ties. Disabled Hauling blocks dynamic claims; critical survival and explicit player orders interrupt safely.
 - The development scene exposes deterministic job, excavation and loose-drop fixtures plus priority, inventory, cancellation, reset, and diagnostic controls.
 - Background Conversion designations create real Construction jobs. The exclusive builder uses inventory first, otherwise reserves reachable storage/drop material, stages it at the site, performs timed work and commits the Background transaction.
+- Autonomous selection screens construction for obtainable physical material before it reserves an ant. A job with no carried, reachable stored or reachable unreserved loose material remains paused and unowned with an explicit waiting reason, allowing lower-priority eligible work to proceed. The same job is reconsidered when material becomes reachable.
 - A construction builder with no usable inventory capacity temporarily unloads unnecessary cargo through a reusable recovery operation: closest reachable reserved storage first, validated recoverable current-anchor drop second, then automatic resumption of the same job. Critical survival and player orders may interrupt this state safely.
 - Construction interruption preserves progress, carried material and staged material. Cancellation releases reservations and exposes staged material as a recoverable drop.
 

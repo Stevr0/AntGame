@@ -9,8 +9,8 @@ namespace AntColony.World
     /// <summary>Frozen values that participate in deterministic world identity.</summary>
     public sealed class WorldGenerationConfiguration
     {
-        public const int CurrentVersion = 1;
-        public const string CurrentConfigurationId = "wv-b2b.default.001";
+        public const int CurrentVersion = 2;
+        public const string CurrentConfigurationId = "wv-b2b.default.002";
         public const int SurfaceWidth = 64;
         public const int SurfaceHeight = 64;
         public const int ColonyWidth = 128;
@@ -217,6 +217,7 @@ namespace AntColony.World
         public static readonly ColonyCell ColonyApproach = new(0, -2);
         public static readonly ColonyCell ColonyArrival = new(0, -1);
         public static readonly ColonyCell QueenSpawn = new(0, -8);
+        public static readonly ColonyCell FoundingStoneFace = new(-4, -8);
 
         public static bool TryGenerate(long seed, WorldGenerationConfiguration config,
             out GeneratedWorldSnapshot snapshot, out GeneratedWorldValidationReport report)
@@ -337,6 +338,24 @@ namespace AntColony.World
             nodes.RemoveAll(node => node.Location.Kind == RegionLocationKind.Colony &&
                 cells[node.Location.ColonyCell.X + 64,
                     -1 - node.Location.ColonyCell.Y].Node == null);
+
+            // Guarantee one real Stone node on the chamber's west face. Without
+            // this, a seed could expose only Stone-coloured natural Backgrounds
+            // in the chamber and leave every actual Stone node buried.
+            const int stoneColumn = 60;
+            const int stoneDepth = 7;
+            GeneratedCellRecord stoneFace = new(StoneBackgroundId);
+            ColonyCell stoneLocation = ToTypedColonyCell(stoneColumn, stoneDepth);
+            var stoneNode = new GeneratedResourceNodeRecord(
+                NodeId(seed, "colony", stoneColumn, stoneDepth, StoneNodeId),
+                RegionDestination.Colony(AntRegionIds.Colony, stoneLocation),
+                StoneNodeId, 1, true, "excavation", "excavation",
+                "material.stone", "generated:colony");
+            nodes.RemoveAll(node => node.Location.Kind == RegionLocationKind.Colony &&
+                node.Location.ColonyCell.Equals(stoneLocation));
+            stoneFace.Node = stoneNode;
+            cells[stoneColumn, stoneDepth] = stoneFace;
+            nodes.Add(stoneNode);
             return cells;
         }
 
@@ -518,7 +537,8 @@ namespace AntColony.World
         {
             ulong value = unchecked((ulong)seed) ^ 1469598103934665603UL;
             foreach (char character in domain) { value ^= character; value *= 1099511628211UL; }
-            value ^= (ulong)WorldGenerationConfiguration.CurrentVersion * 0x9E3779B97F4A7C15UL;
+            value ^= unchecked((ulong)WorldGenerationConfiguration.CurrentVersion *
+                0x9E3779B97F4A7C15UL);
             return value;
         }
 

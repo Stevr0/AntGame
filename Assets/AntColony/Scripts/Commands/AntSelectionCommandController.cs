@@ -1536,11 +1536,15 @@ namespace AntColony.Commands
             RefreshDynamicHaulingJobs();
             Vector2Int start =
                 WorldTileCoordinates.WorldPositionToCell(ant.Motor.Position);
+            string waitingDependency = string.Empty;
             if (!colonyJobSelectionService.TryChoose(
                     ant.Record, colonyJobs, navigationWorld.Map, start,
-                    job => IsJobEligibleForAnt(job, ant.Record),
+                    job => IsJobEligibleForAnt(
+                        job, ant.Record, start, ref waitingDependency),
                     out ColonyJob job, out Vector2Int approach, out string error))
             {
+                if (!string.IsNullOrEmpty(waitingDependency))
+                    error = waitingDependency;
                 RecordWorkFailure(state, currentTimeSeconds, error);
                 return false;
             }
@@ -1582,12 +1586,24 @@ namespace AntColony.Commands
                 selectableAnts.Count;
         }
 
-        private bool IsJobEligibleForAnt(ColonyJob job, AntRecord ant)
+        private bool IsJobEligibleForAnt(ColonyJob job, AntRecord ant,
+            Vector2Int start, ref string waitingDependency)
         {
-            if (!haulingPlans.TryGetValue(job.Id, out MaterialHaulingPlan plan))
-                return true;
-            return AutonomousHaulingEnabled &&
-                (!plan.InventoryOwner.IsValid || plan.InventoryOwner.Equals(ant.Id));
+            if (haulingPlans.TryGetValue(job.Id, out MaterialHaulingPlan plan))
+                return AutonomousHaulingEnabled &&
+                    (!plan.InventoryOwner.IsValid || plan.InventoryOwner.Equals(ant.Id));
+
+            if (constructionDesignations == null ||
+                !constructionDesignations.TryGet(job.Id,
+                    out ConstructionDesignation construction)) return true;
+            if (ConstructionJobOrder.CanObtainRequiredMaterial(
+                    navigationWorld.Map, materialDrops, materialStorage, ant,
+                    construction, start, out string reason)) return true;
+
+            colonyJobs.RecordPendingDependency(job.Id, reason);
+            if (string.IsNullOrEmpty(waitingDependency))
+                waitingDependency = $"{job.Id}: {reason}";
+            return false;
         }
 
         private bool IsColonyResident(SelectableGridAnt ant)

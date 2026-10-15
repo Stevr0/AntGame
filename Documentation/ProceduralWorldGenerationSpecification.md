@@ -3,9 +3,11 @@
 ## Status and authority
 
 > **WV-B2B — IMPLEMENTED, AWAITING VALIDATION (15 October 2026).** The approved
-> contract is implemented by `ProceduralWorldGenerator` version `1`, configuration
-> `wv-b2b.default.001`. Manual Play Mode acceptance and broad Unity regression
-> execution remain pending; this status does not authorise WV-C1.
+> contract is implemented by `ProceduralWorldGenerator` version `2`, configuration
+> `wv-b2b.default.002`. Version 2 guarantees an exposed Stone node on the
+> founding chamber's west face. Focused Unity regressions pass; manual Play Mode
+> acceptance and the full `WV-B1-REG-001` run remain pending. This status does
+> not authorise WV-C1.
 
 ### Implemented configuration record
 
@@ -21,6 +23,8 @@
 - Surface approach/arrival are `(32,31)`/`(32,32)`. Colony approach/arrival are
   `(0,-2)`/`(0,-1)`. The chamber occupies columns `61..67`, depths `5..9`; the
   passage occupies columns `63..65`, depths `0..4`; queen spawn is `(0,-8)`.
+  A quantity-one `solid.stone` node is guaranteed at `(-4,-8)`, adjacent to the
+  chamber, so the opening excavation loop never depends on a buried cluster.
 - Generated placements and loose stacks are empty. Existing functional
   Background, storage and multi-stack authorities are deliberately not migrated.
 

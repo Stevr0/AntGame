@@ -2,13 +2,16 @@
 
 ## Status
 
-**WV-B2B implemented; automated and manual validation pending (15 October
-2026).** The authoritative contract is
+**WV-B2B implemented; manual validation pending (15 October 2026).** The
+authoritative contract is
 `Documentation/ProceduralWorldGenerationSpecification.md`. This page is the
 wiki summary, not a second source of truth.
 
-Version `1` / `wv-b2b.default.001` uses one signed 64-bit seed, domain-derived
+Version `2` / `wv-b2b.default.002` uses one signed 64-bit seed, domain-derived
 `surface` and `colony` SplitMix64 streams and a validate-before-publish result.
+Version 2 also guarantees a quantity-one Stone foreground node at Colony
+`(-4,-8)`, immediately west of the starting chamber. Stone-coloured natural
+Background in a cleared cell is not itself an excavation target.
 Use the top development toolbar's **Seed**, **Start Generated**, and **Restore
 Fixture** controls. Generated source markers are data/visuals only; WV-C1
 interactions are not present.
@@ -62,9 +65,10 @@ Stone/obstacles/finite sources are compatible nodes where removable or finite.
 Underground begins with predominantly Soil Background plus Soil/Stone nodes in
 most cells. Chamber/passage carving removes nodes only and keeps Backgrounds.
 
-WV-B2B generates Backgrounds/nodes with placement and loose slots empty. It does
-not implement extraction or construction, and generated nodes never emit loose
-resources merely by existing.
+WV-B2B generates Backgrounds/nodes with placement and loose slots empty. Colony
+Soil/Stone nodes project into the existing excavation system; WV-B2B adds no new
+Surface extraction or source-consumption system. Generated nodes never emit
+loose resources merely by existing.
 
 ## Determinism contract
 

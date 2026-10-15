@@ -125,6 +125,15 @@ namespace AntColony.Tests.EditMode
                 cell.Node?.DefinitionId == ProceduralWorldGenerator.SoilNodeId),
                 Is.GreaterThan(8192));
             Assert.That(world.QueenSpawn, Is.EqualTo(ProceduralWorldGenerator.QueenSpawn));
+
+            ColonyCell stone = ProceduralWorldGenerator.FoundingStoneFace;
+            GeneratedCellRecord stoneFace = world.ColonyCells[stone.X + 64, -1 - stone.Y];
+            Assert.That(stoneFace.Node?.DefinitionId,
+                Is.EqualTo(ProceduralWorldGenerator.StoneNodeId));
+            Assert.That(stoneFace.BackgroundDefinitionId,
+                Is.EqualTo(ProceduralWorldGenerator.StoneBackgroundId));
+            Assert.That(world.ColonyCells[stone.X + 65, -1 - stone.Y].Node,
+                Is.Null, "The guaranteed Stone face must border the open chamber.");
         }
 
         [Test]

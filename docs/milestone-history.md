@@ -1,5 +1,19 @@
 # Milestone History
 
+## 15 October 2026 — WV-B2B Founding-Queen Defect Recovery
+
+- Prevented construction with no obtainable physical material from repeatedly
+  winning autonomous selection; it now stays paused, unowned and reconsiderable.
+- Advanced generation to version `2` / `wv-b2b.default.002` and guaranteed one
+  actual Stone foreground node at `(-4,-8)` beside the founding chamber.
+- Added specific excavation rejection diagnostics and controller, recovery,
+  generated-Stone, Background-preservation and conservation regressions.
+- Automated evidence: affected assemblies compile; relevant Edit Mode passed
+  `58/58`; World View Play Mode passed `5/5`; strict docs build passed.
+- Status: **Implemented — Pending Manual Acceptance**. `WV-B2B-DEF-001`,
+  `WV-B2B-DEF-002`, WV-B2B itself and `WV-B1-REG-001` remain open. WV-C1 has not
+  started.
+
 ## 15 October 2026 — WV-B2B Procedural World Generation Foundation
 
 - Added deterministic versioned Surface/Colony generation from one 64-bit seed,

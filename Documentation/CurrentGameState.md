@@ -16,8 +16,65 @@ has one queen, no storage, no sleeping placement and no loose starting stacks.
 Generated nodes are not interactable source gameplay. Existing Colony
 Soil/Stone nodes project to existing Solids, so excavation remains compatible;
 Surface navigation receives only generated obstacles/water through its narrow
-adapter. Unity compilation succeeded, but Test Runner and manual Play Mode
-acceptance remain pending because the local Licensing Client crashed.
+adapter. Unity compilation and focused automated regression execution now pass;
+manual Play Mode acceptance remains pending.
+
+### WV-B2B defect recovery — implemented, acceptance open
+
+**Implemented — Pending Manual Acceptance.** Investigation found
+two independent defects:
+
+- `WV-B2B-DEF-001 — Founding Queen Job Starvation`: construction discovered an
+  absent material source only after selection/reservation. The paused job then
+  became immediately claimable again and could repeatedly win priority
+  selection. Autonomous selection now performs a read-only physical-material
+  dependency check first. Unsatisfied construction stays paused with an
+  explicit waiting reason and no owner or resource reservation, while other
+  eligible work remains selectable. Inventory, reachable storage and reachable
+  unreserved loose drops satisfy the check, so construction becomes eligible
+  when material appears.
+- `WV-B2B-DEF-002 — Generated Stone Excavation`: random generation did not
+  guarantee a Stone foreground node next to the starting chamber, while Stone
+  natural Background could still be visible in cleared cells. Generation
+  version `2` / configuration `wv-b2b.default.002` guarantees one quantity-one
+  `solid.stone` node at Colony `(-4,-8)`, adjacent to the open chamber. Normal
+  adjacency, Excavation skill, exact-once output and Background preservation
+  remain authoritative. Rejection diagnostics now distinguish background-only,
+  unregistered and non-excavatable cells.
+
+Focused regression coverage was added for pending/unowned construction,
+excavation selection despite higher-priority unsatisfied construction,
+material-triggered construction reconsideration, a zero-Construction-skill
+queen, the generated Stone face, adjacent access, Background preservation and
+one-unit Stone output. The affected World, Commands, Development and Edit Mode
+test assemblies compile with Unity's Roslyn compiler. The focused defect suite
+passed **12/12 Edit Mode**, the relevant construction/excavation/procedural/WV-B1
+regression classes passed **58/58 Edit Mode**, and World View regressions passed
+**5/5 Play Mode**, with no failures or skips. The first restricted runner attempt
+crashed before discovery in `BuildReportRestService` and produced no XML; the
+unrestricted rerun produced the passing results above. Direct Play Mode
+acceptance is still pending, so both defect IDs remain open. `WV-B1-REG-001`
+also remains open; WV-C1 has not started.
+
+#### WV-B2B defect-recovery manual Play Mode checklist
+
+1. Open `Assets/AntColony/Scenes/AntGameDevelopment.unity`, enter Play Mode and
+   start the generated founding-queen scenario with seed `2203`.
+2. Confirm the queen has no stored or carried material. Designate a Background
+   conversion requiring Soil or Stone and confirm it reports a material waiting
+   reason without owning or trapping the queen.
+3. Designate accessible Soil. Confirm the queen completes excavation, the Solid
+   disappears, its natural Background remains, and exactly one Soil unit appears.
+4. Let the queen collect/transport sufficient existing physical material and
+   confirm pending construction is reconsidered without free or duplicate material.
+5. Designate the exposed Stone face at `(-4,-8)`. Confirm acceptance, adjacent
+   approach, normal work, retained Stone Background and exactly one Stone output.
+6. Attempt to work buried Stone with no reachable adjacent cell. It may remain
+   designated, but the queen must not mine it through solid terrain.
+7. Switch views and return; confirm terrain, drops and jobs persist. Restore the
+   Mara/Pip/Tala fixture and confirm existing jobs and WV-B1 entrance behavior.
+8. Confirm the Console has no new errors. Record any failure's exact rejection
+   text and cell coordinate.
 
 ## WV-B2A documentation state — historical pre-implementation record
 
