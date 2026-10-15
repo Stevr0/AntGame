@@ -1,5 +1,11 @@
 # Ant Colony Development Roadmap
 
+## WV-B1-DEF-002 cross-region rendering leakage — correction awaiting manual acceptance (15 October 2026)
+
+The Surface camera inherited an all-layers mask and Colony IMGUI overlays continued drawing through the disabled Colony camera. The correction assigns runtime Surface presentation and Surface-resident ant renderers to a dedicated `SurfaceWorld` layer, gives the two cameras mutually exclusive Surface visibility, and gates Colony overlays and Colony-only World/Debug controls by active view without disabling any authority or simulation. Focused regressions cover layer/mask ownership, repeated switching, dynamic designation persistence, input context, unchanged state and bidirectional ant visual handoff. The affected assemblies compile with Unity Roslyn; focused WV-B1 Edit Mode passed **9/9** and focused Play Mode passed **4/4**, all with zero failures or skips. An initial restricted Play runner attempt crashed in `BuildReportRestService` before discovery, but the unrestricted rerun completed and produced passing XML. The documented manual Play Mode checklist remains pending.
+
+WV-B1 remains open. Preserve `WV-B1-DEF-001` entrance-reuse manual acceptance and the incomplete `WV-B1-REG-001` full Edit Mode regression. Do not begin WV-C1 or later World View milestones.
+
 ## WV-B1 entrance reuse defect — correction awaiting validation (14 October 2026)
 
 The entrance correctly released capacity, but completed local movement did not update residency occupancy, leaving a moved Surface or Colony ant recorded on the arrival cell. The coordinator now synchronises completed same-region movement through a region-preserving residency API; genuine occupied arrivals still fail safely, and released transaction IDs cannot be replayed. Focused Edit and Play regression cases were added and all affected assemblies compile. Unity test execution and the repeatable two-ant Play Mode checklist remain pending because an interactive Editor owns the project lock. WV-B1 stays open; no WV-C or later work is authorised.

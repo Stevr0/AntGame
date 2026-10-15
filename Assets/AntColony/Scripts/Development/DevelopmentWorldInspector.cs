@@ -49,6 +49,8 @@ namespace AntColony.Development
         private void Update()
         {
             UpdateUiBlocker();
+            AntSelectionCommandController controller = worldHost?.SelectionController;
+            if (controller == null || !controller.WorldInputEnabled) return;
             Mouse mouse = Mouse.current;
             if (mouse != null && mouse.leftButton.wasPressedThisFrame)
             {
@@ -86,7 +88,8 @@ namespace AntColony.Development
         private void OnGUI()
         {
             AntSelectionCommandController controller = worldHost?.SelectionController;
-            if (controller == null || !controller.DevelopmentUiVisible ||
+            if (controller == null || !controller.WorldInputEnabled ||
+                !controller.DevelopmentUiVisible ||
                 controller.ExpandedDevelopmentCategory is not
                     (DevelopmentUiCategory.World or DevelopmentUiCategory.Debug))
                 return;

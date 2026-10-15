@@ -169,6 +169,7 @@ namespace AntColony.Commands
         public event Action<SelectableGridAnt> SelectionChanged;
         public bool DevelopmentUiVisible => developmentUiVisible;
         public bool WorldInputEnabled => worldInputEnabled;
+        public bool ColonyWorldPresentationEnabled => worldInputEnabled;
         public DevelopmentUiCategory ExpandedDevelopmentCategory =>
             expandedDevelopmentCategory;
         public Rect DevelopmentToolbarGuiRect => CalculateToolbarRect(
@@ -229,12 +230,21 @@ namespace AntColony.Commands
         public void SetWorldInputEnabled(bool enabled)
         {
             worldInputEnabled = enabled;
-            if (!enabled) CancelDesignationDragPreview();
+            if (!enabled)
+            {
+                CancelDesignationDragPreview();
+                if (expandedDevelopmentCategory is DevelopmentUiCategory.World or
+                    DevelopmentUiCategory.Debug)
+                    expandedDevelopmentCategory = DevelopmentUiCategory.None;
+            }
         }
 
         public void ToggleDevelopmentCategory(DevelopmentUiCategory category)
         {
             if (category == DevelopmentUiCategory.None) return;
+            if (!worldInputEnabled && category is
+                    (DevelopmentUiCategory.World or DevelopmentUiCategory.Debug))
+                return;
             developmentUiVisible = true;
             expandedDevelopmentCategory = expandedDevelopmentCategory == category
                 ? DevelopmentUiCategory.None : category;
@@ -1896,7 +1906,8 @@ namespace AntColony.Commands
         {
             // These markers are normal gameplay feedback and remain visible when
             // the separate developer toolbar is closed.
-            DrawExcavationWorldOverlay();
+            if (ColonyWorldPresentationEnabled)
+                DrawExcavationWorldOverlay();
             if (!developmentUiVisible)
             {
                 GUILayout.BeginArea(DevelopmentReopenGuiRect, GUI.skin.box);

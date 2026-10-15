@@ -18,6 +18,8 @@ namespace AntColony.Development
     [DisallowMultipleComponent]
     public sealed class TwoViewWorldCoordinator : MonoBehaviour
     {
+        public const int SurfacePresentationLayer = 9;
+        public const string SurfacePresentationLayerName = "SurfaceWorld";
         public static readonly Vector2 SurfaceWorldOrigin = new(192f, 0f);
         public static readonly ColonyCell ColonyApproach = new(-1, -8);
         public static readonly ColonyCell ColonyArrival = new(0, -8);
@@ -36,7 +38,10 @@ namespace AntColony.Development
         private NestEntranceTransitionService entrance;
         private readonly Dictionary<SelectableGridAnt, SurfaceNavigationMotor>
             surfaceMotors = new();
+        private readonly Dictionary<SelectableGridAnt, Dictionary<GameObject, int>>
+            originalAntPresentationLayers = new();
         private EntranceTransition activeTransition;
+        private Transform surfacePresentationRoot;
         private Sprite temporarySprite;
         private string status = "WV-B1 two-view foundation loading.";
 
@@ -47,6 +52,7 @@ namespace AntColony.Development
         public NestEntranceTransitionService Entrance => entrance;
         public Camera ColonyCamera => colonyCamera;
         public Camera SurfaceCamera => surfaceCamera;
+        public Transform SurfacePresentationRoot => surfacePresentationRoot;
         public string Status => status;
 
         private void Start()
@@ -220,16 +226,20 @@ namespace AntColony.Development
                 ant.Motor.enabled = false;
                 SurfaceNavigationMotor motor = surfaceMotors[ant];
                 motor.enabled = true;
-                return motor.Initialize(surfaceWorld, host.SimulationClock,
+                bool initialized = motor.Initialize(surfaceWorld, host.SimulationClock,
                     SurfaceWorldOrigin, destination.SurfaceCell);
+                if (initialized) SetAntPresentationRegion(ant, true);
+                return initialized;
             }
 
             SurfaceNavigationMotor surfaceMotor = surfaceMotors[ant];
             surfaceMotor.CancelMovement("Ant transferred to Colony.");
             surfaceMotor.enabled = false;
             ant.Motor.enabled = true;
-            return ant.Motor.InitializeNavigation(host.NavigationWorldService,
+            bool activated = ant.Motor.InitializeNavigation(host.NavigationWorldService,
                 new Vector2Int(destination.ColonyCell.X, destination.ColonyCell.Y));
+            if (activated) SetAntPresentationRegion(ant, false);
+            return activated;
         }
 
         private void RestoreSource(SelectableGridAnt ant, AntResidency source)
@@ -241,6 +251,7 @@ namespace AntColony.Development
                     new Vector2Int(source.Location.ColonyCell.X,
                         source.Location.ColonyCell.Y));
                 surfaceMotors[ant].enabled = false;
+                SetAntPresentationRegion(ant, false);
             }
             else
             {
@@ -248,6 +259,7 @@ namespace AntColony.Development
                 surfaceMotors[ant].enabled = true;
                 surfaceMotors[ant].Initialize(surfaceWorld, host.SimulationClock,
                     SurfaceWorldOrigin, source.Location.SurfaceCell);
+                SetAntPresentationRegion(ant, true);
             }
         }
 
@@ -299,6 +311,33 @@ namespace AntColony.Development
                 if (motor == null) motor = ant.gameObject.AddComponent<SurfaceNavigationMotor>();
                 motor.enabled = false;
                 surfaceMotors.Add(ant, motor);
+                SetAntPresentationRegion(ant, false);
+            }
+        }
+
+        /// <summary>
+        /// Changes only GameObjects that own renderers. The ant's authoritative
+        /// root keeps its original physics layer, so presentation isolation cannot
+        /// alter collision, navigation, orders, or simulation.
+        /// </summary>
+        private void SetAntPresentationRegion(SelectableGridAnt ant, bool surface)
+        {
+            if (ant == null) return;
+            if (!originalAntPresentationLayers.TryGetValue(ant, out
+                    Dictionary<GameObject, int> originalLayers))
+            {
+                originalLayers = new Dictionary<GameObject, int>();
+                originalAntPresentationLayers.Add(ant, originalLayers);
+            }
+
+            foreach (Renderer renderer in ant.GetComponentsInChildren<Renderer>(true))
+            {
+                GameObject visual = renderer.gameObject;
+                if (!originalLayers.ContainsKey(visual))
+                    originalLayers.Add(visual, visual.layer);
+                visual.layer = surface
+                    ? SurfacePresentationLayer
+                    : originalLayers[visual];
             }
         }
 
@@ -328,6 +367,11 @@ namespace AntColony.Development
                 SurfaceWorldOrigin.x + 32f, SurfaceWorldOrigin.y + 32f, -10f);
             surfaceCamera = cameraObject.AddComponent<Camera>();
             surfaceCamera.CopyFrom(colonyCamera);
+            int surfaceMask = 1 << SurfacePresentationLayer;
+            // Spatial separation is useful for authoring, but culling is the
+            // authoritative view boundary and remains correct at wide aspect ratios.
+            colonyCamera.cullingMask &= ~surfaceMask;
+            surfaceCamera.cullingMask = surfaceMask;
             surfaceCamera.orthographic = true;
             surfaceCamera.orthographicSize = 36f;
             surfaceCamera.backgroundColor = new Color32(85, 128, 83, 255);
@@ -342,7 +386,9 @@ namespace AntColony.Development
         {
             surfaceWorld = SurfaceWorldData.CreateDevelopmentFixture();
             var root = new GameObject("Surface World (WV-B1)");
+            root.layer = SurfacePresentationLayer;
             root.transform.SetParent(transform, false);
+            surfacePresentationRoot = root.transform;
             temporarySprite = CreateTemporarySprite();
             CreateVisual(root.transform, "Surface Terrain",
                 SurfaceWorldOrigin + new Vector2(32f, 32f), new Vector2(64f, 64f),
@@ -362,6 +408,7 @@ namespace AntColony.Development
             Vector2 scale, Color colour, int sortingOrder)
         {
             var item = new GameObject(name);
+            item.layer = SurfacePresentationLayer;
             item.transform.SetParent(parent, false);
             item.transform.position = position;
             item.transform.localScale = scale;

@@ -51,12 +51,40 @@ namespace AntColony.Tests.PlayMode
             Assert.That(views, Is.Not.Null);
             Assert.That(views.SurfaceWorld.Width, Is.EqualTo(64));
             Assert.That(views.Residencies.Count, Is.EqualTo(3));
+            Assert.That(LayerMask.LayerToName(
+                TwoViewWorldCoordinator.SurfacePresentationLayer),
+                Is.EqualTo(TwoViewWorldCoordinator.SurfacePresentationLayerName));
+            int surfaceMask = 1 << TwoViewWorldCoordinator.SurfacePresentationLayer;
+            Assert.That(views.SurfaceCamera.cullingMask, Is.EqualTo(surfaceMask));
+            Assert.That(views.ColonyCamera.cullingMask & surfaceMask, Is.Zero);
+            foreach (Renderer renderer in
+                views.SurfacePresentationRoot.GetComponentsInChildren<Renderer>(true))
+            {
+                Assert.That(renderer.gameObject.layer,
+                    Is.EqualTo(TwoViewWorldCoordinator.SurfacePresentationLayer));
+            }
+            foreach (Renderer renderer in
+                GameObject.Find("World Grid").GetComponentsInChildren<Renderer>(true))
+            {
+                Assert.That(views.SurfaceCamera.cullingMask &
+                    (1 << renderer.gameObject.layer), Is.Zero,
+                    $"Colony renderer {renderer.name} leaked into World View.");
+            }
+            host.SimulationClock.Resume();
             double elapsed = host.SimulationClock.ElapsedSeconds;
             int residents = views.Residencies.Count;
 
             views.SwitchView(DevelopmentWorldView.Surface);
             Assert.That(host.PlayerHud.CurrentView, Is.EqualTo(PlayerViewContext.World));
             Assert.That(views.SurfaceCamera.enabled, Is.True);
+            Assert.That(host.SelectionController.WorldInputEnabled, Is.False);
+            Assert.That(host.SelectionController.ColonyWorldPresentationEnabled,
+                Is.False);
+            host.SelectionController.ToggleDevelopmentCategory(
+                DevelopmentUiCategory.World);
+            Assert.That(host.SelectionController.ExpandedDevelopmentCategory,
+                Is.Not.EqualTo(DevelopmentUiCategory.World));
+            yield return null;
             views.SurfaceCamera.transform.position += new Vector3(2f, 1f, 0f);
             Vector3 remembered = views.SurfaceCamera.transform.position;
             views.SwitchView(DevelopmentWorldView.Colony);
@@ -64,8 +92,45 @@ namespace AntColony.Tests.PlayMode
 
             Assert.That(views.SurfaceCamera.transform.position, Is.EqualTo(remembered));
             Assert.That(views.Residencies.Count, Is.EqualTo(residents));
-            Assert.That(host.SimulationClock.ElapsedSeconds, Is.GreaterThanOrEqualTo(elapsed));
+            Assert.That(host.SimulationClock.ElapsedSeconds, Is.GreaterThan(elapsed));
             Assert.That(host.SimulationClock.SelectedSpeed, Is.EqualTo(SimulationSpeed.Normal));
+        }
+
+        [UnityTest]
+        public IEnumerator RepeatedViewSwitchesHideDynamicColonyOverlaysWithoutMutatingState()
+        {
+            yield return SceneManager.LoadSceneAsync("AntGameDevelopment",
+                LoadSceneMode.Single);
+            yield return null;
+            AntGameDevelopmentWorldHost host =
+                Object.FindFirstObjectByType<AntGameDevelopmentWorldHost>();
+            TwoViewWorldCoordinator views = host.TwoViewWorld;
+            host.SimulationClock.Pause();
+
+            Assert.That(host.SelectionController.TryDesignateExcavation(
+                AntGameDevelopmentWorldHost.ExcavationSoilFixture, out _), Is.True);
+            int excavationCount = host.ExcavationDesignations.Count;
+            int constructionCount = host.ConstructionDesignations.Count;
+            int dropCount = host.MaterialDrops.Count;
+            int residentCount = views.Residencies.Count;
+
+            for (int index = 0; index < 4; index++)
+            {
+                views.SwitchView(DevelopmentWorldView.Surface);
+                Assert.That(host.SelectionController.ColonyWorldPresentationEnabled,
+                    Is.False);
+                Assert.That(host.PlayerHud.CommandBar.gameObject.activeSelf, Is.False);
+                views.SwitchView(DevelopmentWorldView.Colony);
+                Assert.That(host.SelectionController.ColonyWorldPresentationEnabled,
+                    Is.True);
+                Assert.That(host.PlayerHud.CommandBar.gameObject.activeSelf, Is.True);
+            }
+
+            Assert.That(host.ExcavationDesignations.Count, Is.EqualTo(excavationCount));
+            Assert.That(host.ConstructionDesignations.Count, Is.EqualTo(constructionCount));
+            Assert.That(host.MaterialDrops.Count, Is.EqualTo(dropCount));
+            Assert.That(views.Residencies.Count, Is.EqualTo(residentCount));
+            Assert.That(host.SimulationClock.IsRunning, Is.False);
         }
 
         [UnityTest]
@@ -85,6 +150,7 @@ namespace AntColony.Tests.PlayMode
             yield return WaitFor(() => views.Residencies.IsInRegion(
                 antA.Record.Id, AntRegionIds.Surface), 12f,
                 "Ant A did not reach the Surface.");
+            AssertAntPresentationLayer(antA, surface: true);
             Assert.That(views.Entrance.IsReserved, Is.False);
 
             SurfaceNavigationMotor surfaceA =
@@ -121,6 +187,7 @@ namespace AntColony.Tests.PlayMode
             yield return WaitFor(() => views.Residencies.IsInRegion(
                 antA.Record.Id, AntRegionIds.Colony), 12f,
                 "Ant A did not return to the Colony.");
+            AssertAntPresentationLayer(antA, surface: false);
             Assert.That(antA.IssueMoveOrder(new Vector2Int(-5, -8)), Is.True);
             yield return WaitFor(() => antA.Motor.HasArrived, 8f,
                 "Ant A did not clear the Colony arrival.");
@@ -133,6 +200,20 @@ namespace AntColony.Tests.PlayMode
                 "Ant B could not reuse the Colony-bound entrance.");
             Assert.That(views.Entrance.IsReserved, Is.False);
             Assert.That(views.Residencies.Count, Is.EqualTo(3));
+        }
+
+        private static void AssertAntPresentationLayer(
+            SelectableGridAnt ant, bool surface)
+        {
+            foreach (Renderer renderer in ant.GetComponentsInChildren<Renderer>(true))
+            {
+                if (surface)
+                    Assert.That(renderer.gameObject.layer,
+                        Is.EqualTo(TwoViewWorldCoordinator.SurfacePresentationLayer));
+                else
+                    Assert.That(renderer.gameObject.layer,
+                        Is.Not.EqualTo(TwoViewWorldCoordinator.SurfacePresentationLayer));
+            }
         }
 
         private static IEnumerator WaitFor(Func<bool> predicate, float timeout,

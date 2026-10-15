@@ -1,5 +1,26 @@
 # Ant Colony Current Game State
 
+## WV-B1-DEF-002 — Cross-Region Rendering Leakage — 15 October 2026
+
+**Implemented — Pending Manual Acceptance.** The defect had two presentation causes. The runtime Surface camera copied the Colony camera's all-layers culling mask, so spatial separation alone allowed Default-layer Colony renderers to enter World View at sufficiently wide or moved camera bounds. Separately, excavation/construction highlights and loose-material labels are IMGUI overlays projected through the Colony camera; disabling that camera did not stop `OnGUI` from drawing them.
+
+WV-B1 now owns a dedicated `SurfaceWorld` presentation layer. The Surface camera renders only that layer, while the Colony camera explicitly excludes it. Runtime Surface terrain, obstacles and entrance visuals are created on the Surface layer. When an ant commits an entrance transition, only its child renderer GameObjects (including its selection indicator) change presentation layer; the authoritative ant object, record, residency and movement transaction remain unchanged. A returning ant restores each renderer's original layer. Colony world overlays are explicitly gated by the Colony view context, Colony World/Debug development panels and hotkeys cannot be opened or used from World View, and the authored HUD continues to hide only its Colony command bar while retaining shared information.
+
+Focused Play Mode coverage checks camera masks, runtime Surface visual ownership, exclusion of Colony tilemap renderers, repeated view switching, dynamic designation persistence, Colony-tool input gating, HUD command-bar context, unchanged resources/residencies, and ant renderer handoff in both directions. Unity's Roslyn compiler successfully compiled the changed Commands, Development and Play Mode test assemblies. Focused WV-B1 Edit Mode passed **9/9** and focused Play Mode passed **4/4**, with zero failures or skips; these include the existing entrance capacity, pause, idempotence, bidirectional reuse and shared-clock regressions. An initial restricted Play runner crashed in `UnityEditor.BuildReportRestService` before discovery; rerunning outside that listener restriction produced the recorded passing XML. `WV-B1-DEF-001` manual acceptance and `WV-B1-REG-001` full Edit Mode regression remain outstanding, and WV-B1 stays open.
+
+### WV-B1-DEF-002 manual Play Mode acceptance
+
+1. Open `Assets/AntColony/Scenes/AntGameDevelopment.unity`, enter Play Mode and create both excavation and construction designations in Colony View.
+2. Confirm the designation highlights, loose-material labels, storage terrain and Colony-resident ants render normally in Colony View.
+3. Switch to World View and confirm only Surface terrain, obstacles, entrance and Surface-resident ants are visible; no Colony terrain, designation, material-drop label, storage visual or Colony selection indicator may appear below or within the Surface.
+4. Open and close shared HUD menus. Confirm roster, Colony summaries and clock/speed controls remain usable, while the Colony command bar and World/Debug designation controls remain unavailable in World View.
+5. Leave Colony jobs running, note designation/resource/order state, wait in World View, then return to Colony View. Confirm work and shared-clock simulation continued and no order was cancelled by the view switch.
+6. Confirm the original designations and material drops reappear intact in Colony View.
+7. Send an ant through the entrance and confirm its one existing visual appears only in its authoritative resident region. Return it and confirm the same identity and representation appear only in Colony View.
+8. Switch views repeatedly at different pan/zoom positions and window aspect ratios. Confirm rendering separation remains stable and camera poses remain independent.
+9. Repeat the `WV-B1-DEF-001` two-ant entrance-reuse checklist, including a deliberately occupied arrival cell, to confirm the rendering change did not alter transition capacity or occupancy safety.
+10. Confirm the Console contains no new errors, warnings or exceptions.
+
 ## WV-B1 entrance reuse correction — 14 October 2026
 
 **Implemented — Awaiting Unity test execution and manual acceptance.** Investigation confirmed that entrance capacity was released correctly after terminal transitions. The defect was stale local occupancy: after a Surface ant moved away from `(6,4)`, `SurfaceNavigationMotor.CurrentCell` changed but `AntRegionResidencyRegistry` still recorded the ant at the arrival cell. The next transition therefore failed destination occupancy validation indefinitely. The same stale-location risk existed after moving away from the Colony arrival.
