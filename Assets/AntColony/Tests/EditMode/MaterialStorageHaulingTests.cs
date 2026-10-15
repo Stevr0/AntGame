@@ -233,6 +233,116 @@ namespace AntColony.Tests.EditMode
         }
 
         [Test]
+        public void HaulingWithoutStorageStaysPendingAndLeavesDropUnreserved()
+        {
+            AntGameDevelopmentWorldHost host = OpenHost();
+            host.MaterialStorage.Clear();
+            host.MaterialDrops.TryFindAtCell(
+                AntGameDevelopmentWorldHost.SoilDropFixture,
+                out WorldMaterialDrop source);
+            AntRecord ant = CreateRecord("no-storage");
+            Vector2Int start = new(-10, SampleWorldGenerator.MainPassageY);
+            host.ColonyJobRegistry.TryAdd(new ColonyJobId("haul.no-storage"),
+                AntWorkCategory.Hauling, source.WorldCell,
+                out ColonyJob job, out _);
+            var plan = new MaterialHaulingPlan(job,
+                MaterialHaulSourceKind.WorldDrop, "material.soil",
+                source.OwnershipKey);
+            int quantityBefore = source.Quantity;
+
+            Assert.That(MaterialHaulingOrder.CanStart(host.GridNavigationMap,
+                host.MaterialDrops, host.MaterialStorage, ant, plan, start,
+                out string reason), Is.False);
+            Assert.That(reason, Does.Contain("No reachable compatible Material Storage"));
+            SurvivalInteractionOrder.TryMeasureApproach(host.GridNavigationMap,
+                start, source.WorldCell, out Vector2Int approach, out _, out _);
+            Assert.That(MaterialHaulingOrder.TryCreate(host.ColonyJobRegistry,
+                host.GridNavigationMap, host.MaterialDrops, host.MaterialStorage,
+                ant, plan, approach, start, out _, out _), Is.False);
+            Assert.That(host.MaterialDrops.TryGet(
+                source.OwnershipKey, out WorldMaterialDrop unchanged), Is.True);
+            Assert.That(unchanged.Quantity, Is.EqualTo(quantityBefore));
+            Assert.That(host.MaterialDrops.GetReservedQuantity(source.OwnershipKey),
+                Is.Zero);
+            Assert.That(job.ReservationOwner.IsValid, Is.False);
+        }
+
+        [Test]
+        public void GeneratedQueenBootstrapsFirstStorageFromLooseSoil()
+        {
+            AntGameDevelopmentWorldHost host = OpenHost();
+            Assert.That(host.TryStartScenario(
+                GeneratedWorldScenario.FoundingQueen, 2203, out string error),
+                Is.True, error);
+            Assert.That(host.SpawnOrResetSelectableGridAnts(out error), Is.True, error);
+            Assert.That(host.MaterialStorage.Count, Is.Zero);
+            Assert.That(host.MaterialDrops.TryAdd("bootstrap.soil",
+                ExcavatedMaterialType.Soil, 1, new Vector2Int(-2, -8),
+                out WorldMaterialDrop source, out error), Is.True, error);
+
+            ConstructionRecipe storageRecipe = host.ConstructionRecipes.Recipes
+                .Single(recipe =>
+                    recipe.Result.Function == BackgroundFunction.MaterialStorage);
+            Assert.That(host.ConstructionDesignations.TryDesignate(
+                new Vector2Int(1, -8), storageRecipe.Result.StableMaterialId,
+                out ConstructionDesignation first, out error), Is.True, error);
+            Assert.That(host.ConstructionDesignations.TryDesignate(
+                new Vector2Int(2, -8), storageRecipe.Result.StableMaterialId,
+                out ConstructionDesignation competing, out error), Is.True, error);
+
+            AntSelectionCommandController controller = host.SelectionController;
+            SelectableGridAnt queen = controller.SelectableAnts.Single();
+            queen.Record.WorkPriorities.TrySet(AntWorkCategory.Hauling,
+                AntWorkPriority.Highest, out _);
+            queen.Record.WorkPriorities.TrySet(AntWorkCategory.Construction,
+                AntWorkPriority.Low, out _);
+            controller.SetAutonomousHaulingEnabled(true);
+            controller.SetAutonomousColonyWorkEnabled(true);
+
+            Assert.That(controller.EvaluateAutonomousColonyWorkNow(queen, 1d),
+                Is.True);
+            Assert.That(queen.HaulingOrder, Is.Null);
+            Assert.That(queen.ConstructionOrder, Is.Not.Null);
+            ConstructionJobOrder order = queen.ConstructionOrder;
+            Assert.That(order.Job.Id, Is.EqualTo(first.Job.Id));
+            Assert.That(host.MaterialDrops.GetReservedQuantity(source.OwnershipKey),
+                Is.EqualTo(1));
+            Assert.That(competing.Job.ReservationOwner.IsValid, Is.False);
+            ColonyJob pendingHaul = host.ColonyJobRegistry.Jobs.Single(job =>
+                job.Category == AntWorkCategory.Hauling);
+            Assert.That(pendingHaul.Status, Is.EqualTo(ColonyJobStatus.Paused));
+            Assert.That(pendingHaul.ReservationOwner.IsValid, Is.False);
+
+            Assert.That(order.TryArrive(order.InitialApproachCell,
+                out Vector2Int siteApproach), Is.True);
+            Assert.That(order.TryArrive(siteApproach, out _), Is.False);
+            order.Advance(4d, 4d);
+
+            Assert.That(order.Phase, Is.EqualTo(ConstructionOrderPhase.Completed));
+            Assert.That(host.MaterialDrops.TryGet(source.OwnershipKey, out _), Is.False);
+            Assert.That(queen.Record.Inventory.TotalQuantity, Is.Zero);
+            Assert.That(first.Site.DeliveredQuantity, Is.Zero);
+            Assert.That(host.MaterialStorage.TryGet(first.Cell,
+                out MaterialStorageSlot completedStorage), Is.True);
+            Assert.That(completedStorage.Quantity, Is.Zero);
+            Assert.That(host.ConstructionTransaction.TryCommit(first, out _), Is.False,
+                "Construction material must not be consumed twice.");
+
+            Assert.That(host.MaterialDrops.TryAdd("bootstrap.second-soil",
+                ExcavatedMaterialType.Soil, 1, new Vector2Int(-1, -7),
+                out WorldMaterialDrop secondSource, out error), Is.True, error);
+            host.ColonyJobRegistry.TryAdd(new ColonyJobId("haul.after-bootstrap"),
+                AntWorkCategory.Hauling, secondSource.WorldCell,
+                out ColonyJob secondJob, out error);
+            var secondPlan = new MaterialHaulingPlan(secondJob,
+                MaterialHaulSourceKind.WorldDrop, "material.soil",
+                secondSource.OwnershipKey);
+            Assert.That(MaterialHaulingOrder.CanStart(host.GridNavigationMap,
+                host.MaterialDrops, host.MaterialStorage, queen.Record, secondPlan,
+                first.Cell, out error), Is.True, error);
+        }
+
+        [Test]
         public void DisabledHaulingBlocksDynamicClaimAndPriorityReenablesIt()
         {
             AntGameDevelopmentWorldHost host = OpenHostWithAnts();

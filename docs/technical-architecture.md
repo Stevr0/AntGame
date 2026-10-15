@@ -22,6 +22,11 @@ exists. Autonomous work retains the shared `ColonyJobSelectionService`.
 Construction contributes only a read-only material-dependency eligibility check
 before selection; `ColonyJobRegistry` records the unmet dependency as an unowned
 paused job, and the existing selector naturally reconsiders it on later passes.
+Dynamic Hauling uses the same eligibility boundary: it validates source access,
+ant carrying capacity and a reachable compatible Storage destination without
+reserving anything. A destination-less plan remains a registry-owned paused
+opportunity, so its source stays available to Construction self-supply until
+completed Storage capacity makes hauling executable.
 
 ## Approved unified cell boundary — 15 October 2026
 

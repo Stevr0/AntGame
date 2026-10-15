@@ -13,6 +13,15 @@ Relevant regressions passed 58/58 Edit Mode and 5/5 Play Mode. Manual acceptance
 both `WV-B2B-DEF-001`/`WV-B2B-DEF-002`, and `WV-B1-REG-001` remain open. WV-C1
 resource interaction must not begin without separate approval.
 
+`WV-B2B-DEF-003 — Founding Colony Storage Bootstrap` is implemented with manual
+acceptance pending. Hauling with no compatible destination no longer wins and
+rejects after assignment; it remains paused/unowned and leaves loose Soil free
+for Construction self-supply. Seed-`2203` coverage verifies the first Storage
+can be built without pre-existing Storage and later enables ordinary hauling.
+The focused Material Storage/Hauling suite passes 17/17 Edit Mode; broader
+relevant regressions pass 75/75 Edit Mode and 5/5 Play Mode. All three WV-B2B
+defect IDs and `WV-B1-REG-001` remain open.
+
 ## WV-B2A documentation gate
 
 **Historical specification gate; implemented by WV-B2B above (15 October 2026).** One

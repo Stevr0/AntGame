@@ -1,5 +1,19 @@
 # Milestone History
 
+## 15 October 2026 — WV-B2B Founding Storage Bootstrap Recovery
+
+- Reproduced destination-less Hauling repeatedly winning work selection before
+  failing because the founding colony had no completed Material Storage.
+- Added a reservation-free Hauling eligibility check for source access, carrying
+  capacity, route and compatible Storage destination.
+- Preserved the loose Soil for existing Construction self-supply, exact-once
+  staging/consumption and automatic hauling reconsideration after Storage exists.
+- Automated evidence: focused Material Storage/Hauling Edit Mode passed `17/17`;
+  broader relevant Edit Mode passed `75/75`, World View Play Mode passed `5/5`,
+  and affected Commands/Edit Mode assemblies compile.
+- Status: **Implemented — Pending Manual Acceptance**. `WV-B2B-DEF-003`, earlier
+  WV-B2B defects, WV-B2B and `WV-B1-REG-001` remain open; WV-C1 has not started.
+
 ## 15 October 2026 — WV-B2B Founding-Queen Defect Recovery
 
 - Prevented construction with no obtainable physical material from repeatedly

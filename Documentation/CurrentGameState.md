@@ -56,6 +56,51 @@ unrestricted rerun produced the passing results above. Direct Play Mode
 acceptance is still pending, so both defect IDs remain open. `WV-B1-REG-001`
 also remains open; WV-C1 has not started.
 
+#### WV-B2B-DEF-003 — Founding Colony Storage Bootstrap
+
+**Implemented — Pending Manual Acceptance.** Generated-seed `2203` reproduced a
+real scheduling dependency rather than a resource-accounting failure. Dynamic
+discovery created a Hauling job for every loose drop even when no compatible
+Material Storage destination existed. When that impossible haul won priority
+selection, order creation rejected it with `No reachable compatible Material
+Storage has capacity`, applied the ant's ordinary-work retry delay, and selected
+the same still-claimable haul again. The failure did not reserve or consume the
+drop, but it could indefinitely delay Construction self-supply.
+
+Hauling now performs a read-only source, inventory-capacity, route and storage-
+destination eligibility check before autonomous selection. An impossible haul
+remains paused and unowned with its diagnostic; the loose resource stays
+unreserved and physically available. Construction can therefore reserve the
+same loose Soil through its existing builder-owned self-supply, collect it,
+stage it, consume it exactly once and register the first Material Storage. The
+paused hauling opportunity becomes eligible naturally when that Storage exists.
+No new scheduler, storage type, free resource or transfer authority was added.
+
+Automated seed-`2203` coverage gives Hauling higher priority than Construction,
+zero existing Storage, one loose Soil and two competing Storage conversions.
+It proves the haul cannot monopolise the queen, only one Construction reserves
+the Soil, the first Storage completes conservatively, and a later Soil drop can
+then start ordinary hauling. The focused Material Storage/Hauling suite passed
+**17/17 Edit Mode**. The broader relevant Construction, Hauling, Excavation,
+procedural and WV-B1 set passed **75/75 Edit Mode**, and World View regressions
+passed **5/5 Play Mode**, with no failures or skips. Manual Play Mode acceptance
+remains open, so `WV-B2B-DEF-003` is not closed.
+
+##### WV-B2B-DEF-003 manual Play Mode checklist
+
+1. Start the generated founding-colony scenario with seed `2203` and confirm no
+   Material Storage exists.
+2. Excavate one reachable Soil Solid and confirm exactly one loose Soil appears.
+3. Designate one valid empty chamber cell for Material Storage conversion.
+4. Confirm the queen claims Construction rather than repeatedly rejecting
+   destination-less Hauling, physically collects the loose Soil and stages it.
+5. Confirm construction completes, consumes the Soil exactly once and registers
+   one empty Material Storage slot with no stuck source/destination reservation.
+6. Excavate another Soil Solid and confirm ordinary Hauling now recognises the
+   completed Storage and can deliver the second loose Soil.
+7. Verify loose + carried + staged + stored quantities at each boundary, switch
+   views and return, and confirm no state resets or Console errors.
+
 #### WV-B2B defect-recovery manual Play Mode checklist
 
 1. Open `Assets/AntColony/Scenes/AntGameDevelopment.unity`, enter Play Mode and

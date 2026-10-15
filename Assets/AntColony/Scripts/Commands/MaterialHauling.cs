@@ -145,6 +145,73 @@ namespace AntColony.Commands
             return true;
         }
 
+        /// <summary>
+        /// Checks whether this ant can currently complete both ends of a haul
+        /// without reserving the source, destination, job, or ant. Autonomous
+        /// selection uses this to leave destination-less hauling pending while
+        /// construction and excavation remain eligible.
+        /// </summary>
+        public static bool CanStart(GridNavigationMap map,
+            WorldMaterialDropRegistry drops, MaterialStorageWorld storage,
+            AntRecord ant, MaterialHaulingPlan plan, Vector2Int startCell,
+            out string reason)
+        {
+            if (map == null || drops == null || storage == null || ant == null ||
+                plan?.Job == null || !ant.CanAcceptMovementOrders ||
+                ant.Needs.HasDepletedHealth)
+            {
+                reason = "Hauling requires an active ant and physical material authorities.";
+                return false;
+            }
+            if (plan.InventoryOwner.IsValid && !plan.InventoryOwner.Equals(ant.Id))
+            {
+                reason = "Only the carrying ant may claim its self-deposit task.";
+                return false;
+            }
+
+            int maximumStack = MaterialResourceCatalog.ProvisionalMaximumStack;
+            int available;
+            Vector2Int destinationStart = startCell;
+            if (plan.SourceKind == MaterialHaulSourceKind.WorldDrop)
+            {
+                if (!drops.TryGet(plan.DropKey, out WorldMaterialDrop drop) ||
+                    MaterialResourceCatalog.GetStableId(drop.Material) !=
+                        plan.ResourceTypeId)
+                {
+                    reason = "The hauling source is no longer available.";
+                    return false;
+                }
+                if (!SurvivalInteractionOrder.TryMeasureApproach(
+                        map, startCell, drop.WorldCell,
+                        out Vector2Int sourceApproach, out _, out string pathError))
+                {
+                    reason = $"The hauling source is unreachable: {pathError}";
+                    return false;
+                }
+                maximumStack = drop.MaximumStack;
+                int unreserved = Math.Max(0, drop.Quantity -
+                    drops.GetReservedQuantity(drop.OwnershipKey));
+                available = Math.Min(unreserved,
+                    ant.Inventory.GetAvailableCapacity(
+                        plan.ResourceTypeId, maximumStack));
+                destinationStart = sourceApproach;
+            }
+            else
+            {
+                available = GetInventoryQuantity(
+                    ant.Inventory, plan.ResourceTypeId, maximumStack);
+            }
+            if (available <= 0)
+            {
+                reason = "The hauling source has no unreserved transferable material.";
+                return false;
+            }
+
+            return TryChooseDestination(storage, map, destinationStart,
+                plan.ResourceTypeId, maximumStack, available,
+                out _, out _, out _, out reason);
+        }
+
         public bool TryArrive(Vector2Int currentCell, double simulationHours,
             out Vector2Int nextApproach)
         {

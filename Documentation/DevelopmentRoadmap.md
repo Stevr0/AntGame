@@ -25,6 +25,17 @@ Both defects remain open until Unity automated and manual acceptance are
 confirmed. `WV-B1-REG-001` remains outstanding, WV-B2B is not closed, and WV-C1
 is not started.
 
+`WV-B2B-DEF-003 — Founding Colony Storage Bootstrap` is also **Implemented —
+Pending Manual Acceptance**. Destination-less dynamic Hauling jobs are now
+filtered before reservation and remain paused/unowned, leaving their loose
+material available for existing Construction self-supply. Completing the first
+Material Storage makes later hauling eligible without a bootstrap storage,
+resource grant or scheduler replacement. Seed-`2203` regression coverage and
+the focused Material Storage/Hauling suite pass **17/17 Edit Mode**; broader
+relevant regressions pass **75/75 Edit Mode** and **5/5 Play Mode**. Preserve
+`WV-B2B-DEF-001`, `WV-B2B-DEF-002` and `WV-B1-REG-001`; do not close WV-B2B or
+start WV-C1 before manual acceptance.
+
 ## WV-B2A procedural generation specification — complete documentation gate (15 October 2026)
 
 WV-B2A documents the approved shared-seed generation contract for separate

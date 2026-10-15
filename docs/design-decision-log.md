@@ -1,5 +1,14 @@
 # Design Decision Log
 
+## 15 October 2026 — Destination-aware Hauling eligibility
+
+- Keep dynamic loose-resource Hauling in the shared job registry, but require a
+  reachable compatible Storage destination before autonomous selection.
+- Record an unmet destination as an unowned paused dependency without reserving
+  the drop, destination, job or ant.
+- Preserve Construction's existing builder-owned loose-drop self-supply as the
+  founding colony's first-Storage bootstrap path; add no scheduler or free stock.
+
 ## 15 October 2026 — WV-B2B generation version 2 defect recovery
 
 - Advance generation identity to version `2` / `wv-b2b.default.002` because the

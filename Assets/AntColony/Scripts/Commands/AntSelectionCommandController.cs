@@ -1590,8 +1590,19 @@ namespace AntColony.Commands
             Vector2Int start, ref string waitingDependency)
         {
             if (haulingPlans.TryGetValue(job.Id, out MaterialHaulingPlan plan))
-                return AutonomousHaulingEnabled &&
-                    (!plan.InventoryOwner.IsValid || plan.InventoryOwner.Equals(ant.Id));
+            {
+                if (!AutonomousHaulingEnabled ||
+                    plan.InventoryOwner.IsValid && !plan.InventoryOwner.Equals(ant.Id))
+                    return false;
+                if (MaterialHaulingOrder.CanStart(
+                        navigationWorld.Map, materialDrops, materialStorage, ant,
+                        plan, start, out string haulingReason)) return true;
+
+                colonyJobs.RecordPendingDependency(job.Id, haulingReason);
+                if (string.IsNullOrEmpty(waitingDependency))
+                    waitingDependency = $"{job.Id}: {haulingReason}";
+                return false;
+            }
 
             if (constructionDesignations == null ||
                 !constructionDesignations.TryGet(job.Id,
