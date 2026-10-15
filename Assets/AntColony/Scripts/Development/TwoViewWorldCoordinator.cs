@@ -44,6 +44,16 @@ namespace AntColony.Development
         private Transform surfacePresentationRoot;
         private Sprite temporarySprite;
         private string status = "WV-B1 two-view foundation loading.";
+        private string seedText = "2203";
+
+        private ColonyCell ActiveColonyApproach => host?.ProceduralWorld?.Entrance.ColonyApproach
+            ?? ColonyApproach;
+        private ColonyCell ActiveColonyArrival => host?.ProceduralWorld?.Entrance.ColonyArrival
+            ?? ColonyArrival;
+        private SurfaceCell ActiveSurfaceApproach => host?.ProceduralWorld?.Entrance.SurfaceApproach
+            ?? SurfaceApproach;
+        private SurfaceCell ActiveSurfaceArrival => host?.ProceduralWorld?.Entrance.SurfaceArrival
+            ?? SurfaceArrival;
 
         public DevelopmentWorldView CurrentView { get; private set; } =
             DevelopmentWorldView.Colony;
@@ -66,6 +76,24 @@ namespace AntColony.Development
             InitializeAntResidencies();
             SwitchView(DevelopmentWorldView.Colony);
             status = "Colony View active. Surface remains loaded and simulated.";
+            seedText = host.WorldSeed.ToString();
+        }
+
+        /// <summary>Rebinds view-only state after the development host changes scenario.</summary>
+        public void RebuildScenario()
+        {
+            activeTransition = null;
+            surfaceMotors.Clear();
+            originalAntPresentationLayers.Clear();
+            if (surfacePresentationRoot != null) Destroy(surfacePresentationRoot.gameObject);
+            if (surfaceCamera != null) Destroy(surfaceCamera.gameObject);
+            BuildSurfaceWorld();
+            BuildCameras();
+            InitializeAntResidencies();
+            SwitchView(DevelopmentWorldView.Colony);
+            seedText = host.WorldSeed.ToString();
+            status = host.ActiveScenario == GeneratedWorldScenario.FoundingQueen
+                ? host.GenerationDiagnostics.Summary : "Development fixture restored.";
         }
 
         private void OnDestroy()
@@ -123,10 +151,10 @@ namespace AntColony.Development
             bool accepted;
             if (residency.RegionId == AntRegionIds.Colony)
                 accepted = ant.IssueMoveOrder(new Vector2Int(
-                    ColonyApproach.X, ColonyApproach.Y));
+                    ActiveColonyApproach.X, ActiveColonyApproach.Y));
             else
                 accepted = surfaceMotors.TryGetValue(ant, out SurfaceNavigationMotor motor) &&
-                    motor.MoveTo(SurfaceApproach);
+                    motor.MoveTo(ActiveSurfaceApproach);
             if (!accepted)
             {
                 entrance.Cancel(activeTransition.Id);
@@ -298,8 +326,14 @@ namespace AntColony.Development
         {
             residencies = new AntRegionResidencyRegistry();
             entrance = new NestEntranceTransitionService(residencies,
-                new NestEntranceDefinition(FoundingEntranceId, ColonyApproach,
-                    ColonyArrival, SurfaceApproach, SurfaceArrival));
+                host.ProceduralWorld == null
+                    ? new NestEntranceDefinition(FoundingEntranceId, ColonyApproach,
+                        ColonyArrival, SurfaceApproach, SurfaceArrival)
+                    : new NestEntranceDefinition(FoundingEntranceId,
+                        host.ProceduralWorld.Entrance.ColonyApproach,
+                        host.ProceduralWorld.Entrance.ColonyArrival,
+                        host.ProceduralWorld.Entrance.SurfaceApproach,
+                        host.ProceduralWorld.Entrance.SurfaceArrival));
             host.SelectionController.BindRegionResidencies(residencies);
             foreach (SelectableGridAnt ant in host.SelectionController.SelectableAnts)
             {
@@ -384,8 +418,10 @@ namespace AntColony.Development
 
         private void BuildSurfaceWorld()
         {
-            surfaceWorld = SurfaceWorldData.CreateDevelopmentFixture();
-            var root = new GameObject("Surface World (WV-B1)");
+            surfaceWorld = host.ProceduralWorld?.CreateSurfaceNavigationWorld() ??
+                SurfaceWorldData.CreateDevelopmentFixture();
+            var root = new GameObject(host.ProceduralWorld == null
+                ? "Surface World (WV-B1 Fixture)" : "Surface World (WV-B2B Generated)");
             root.layer = SurfacePresentationLayer;
             root.transform.SetParent(transform, false);
             surfacePresentationRoot = root.transform;
@@ -393,15 +429,39 @@ namespace AntColony.Development
             CreateVisual(root.transform, "Surface Terrain",
                 SurfaceWorldOrigin + new Vector2(32f, 32f), new Vector2(64f, 64f),
                 new Color32(108, 151, 91, 255), -20);
-            foreach (SurfaceCell obstacle in surfaceWorld.Obstacles)
-                CreateVisual(root.transform, $"Obstacle {obstacle}",
-                    SurfaceWorldOrigin + new Vector2(obstacle.X + 0.5f,
-                        obstacle.Y + 0.5f), Vector2.one,
-                    new Color32(80, 70, 61, 255), -10);
+            if (host.ProceduralWorld == null)
+            {
+                foreach (SurfaceCell obstacle in surfaceWorld.Obstacles)
+                    CreateVisual(root.transform, $"Obstacle {obstacle}",
+                        SurfaceWorldOrigin + new Vector2(obstacle.X + 0.5f,
+                            obstacle.Y + 0.5f), Vector2.one,
+                        new Color32(80, 70, 61, 255), -10);
+            }
+            else
+            {
+                for (int y = 0; y < 64; y++) for (int x = 0; x < 64; x++)
+                {
+                    GeneratedCellRecord cell = host.ProceduralWorld.SurfaceCells[x, y];
+                    Color32 colour;
+                    if (cell.BackgroundDefinitionId == ProceduralWorldGenerator.WaterBackgroundId)
+                        colour = new Color32(63, 137, 190, 255);
+                    else if (cell.Node?.DefinitionId == ProceduralWorldGenerator.StoneNodeId)
+                        colour = new Color32(118, 119, 112, 255);
+                    else if (cell.Node?.DefinitionId == ProceduralWorldGenerator.SeedNodeId)
+                        colour = new Color32(232, 200, 93, 255);
+                    else if (cell.Node?.DefinitionId == ProceduralWorldGenerator.TwigNodeId)
+                        colour = new Color32(126, 82, 46, 255);
+                    else if (cell.Node == null) continue;
+                    else colour = new Color32(67, 90, 54, 255);
+                    CreateVisual(root.transform, $"Generated {x},{y}",
+                        SurfaceWorldOrigin + new Vector2(x + 0.5f, y + 0.5f),
+                        Vector2.one, colour, -10);
+                }
+            }
             CreateVisual(root.transform, "Founding Nest Entrance",
-                SurfaceWorldOrigin + new Vector2(SurfaceApproach.X + 0.5f,
-                    SurfaceApproach.Y + 0.5f), new Vector2(2f, 2f),
-                new Color32(214, 170, 74, 255), -5);
+                SurfaceWorldOrigin + new Vector2(ActiveSurfaceArrival.X + 0.5f,
+                    ActiveSurfaceArrival.Y + 0.5f), new Vector2(2f, 2f),
+                new Color32(38, 26, 20, 255), -5);
         }
 
         private void CreateVisual(Transform parent, string name, Vector2 position,
@@ -430,7 +490,7 @@ namespace AntColony.Development
         {
             if (host == null) return;
             var controlsRect = new Rect(
-                Screen.width * 0.5f - 260f, 8f, 520f, 84f);
+                Screen.width * 0.5f - 300f, 8f, 600f, 116f);
             host.SelectionController.SetAdditionalUiBlocker(controlsRect);
             GUILayout.BeginArea(controlsRect,
                 GUI.skin.box);
@@ -443,6 +503,17 @@ namespace AntColony.Development
             if (GUILayout.Button("Use Nest Entrance", GUILayout.Height(28f)))
                 TryUseEntrance(host.SelectionController.SelectedAnt);
             GUI.enabled = true;
+            GUILayout.EndHorizontal();
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Seed", GUILayout.Width(38f));
+            seedText = GUILayout.TextField(seedText, GUILayout.Width(150f));
+            if (GUILayout.Button("Start Generated", GUILayout.Height(24f)) &&
+                long.TryParse(seedText, out long seed))
+                host.TryStartScenario(GeneratedWorldScenario.FoundingQueen,
+                    seed, out status);
+            if (GUILayout.Button("Restore Fixture", GUILayout.Height(24f)))
+                host.TryStartScenario(GeneratedWorldScenario.DevelopmentFixture,
+                    host.WorldSeed, out status);
             GUILayout.EndHorizontal();
             GUILayout.Label(status);
             GUILayout.EndArea();

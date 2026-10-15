@@ -1,14 +1,28 @@
 # Technical Architecture
 
+## WV-B2B generated-data flow — 15 October 2026
+
+`ProceduralWorldGenerator` owns only initial immutable records and validation.
+After a successful gate, `GeneratedWorldSnapshot.CreateColonyWorld` projects
+natural Background/node occupancy into `ChunkedWorldData`, while
+`CreateSurfaceNavigationWorld` projects Water and obstructing nodes into the
+bounded Surface obstacle authority. `AntGameDevelopmentWorldHost` owns scenario
+selection/publication; `TwoViewWorldCoordinator` consumes validated endpoints
+and builds temporary region-isolated visuals. Cameras never call the generator.
+
+The generator records placement and loose-stack slots but starts them empty.
+It does not replace construction, storage, drops, excavation transactions,
+navigation, ant records, residency or the simulation clock.
+
 ## Approved unified cell boundary — 15 October 2026
 
-**Design only; not implemented.** Surface and Colony now share one logical cell
+**Implemented for generated records; legacy runtime migration deferred.** Surface and Colony share one logical cell
 shape: exactly one natural Background plus optional Solid/Resource Node,
 Construction/Placement and one-type loose resource stack. This is an ownership
 contract, not a four-Tilemap mandate. Region-specific adapters retain typed
 coordinates, separate A*, movement, clearance and rendering.
 
-WV-B2B needs generated Background/node records and may leave placement/loose
+WV-B2B provides generated Background/node records and leaves placement/loose
 slots empty. Existing Colony Background/Solid data adapts into the model;
 quantity-less legacy Solids appear as deterministic quantity-one nodes. Existing
 functional Backgrounds project as legacy placements until a later authorised

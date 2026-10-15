@@ -1,8 +1,18 @@
 # Development Roadmap
 
+## WV-B2B runtime gate
+
+**Implemented — Awaiting Validation (15 October 2026).** Versioned deterministic
+generation, unified generated cells, structural/source validation, both region
+adapters, generated entrance/chamber, founding queen, temporary presentation and
+development controls are implemented. Unity assemblies compile and the four-seed
+validation probe passes. Unity Test Runner execution is blocked by a local
+Licensing Client crash; manual acceptance and `WV-B1-REG-001` remain open.
+WV-C1 resource interaction must not begin without separate approval.
+
 ## WV-B2A documentation gate
 
-**Complete as specification; runtime not started (15 October 2026).** One
+**Historical specification gate; implemented by WV-B2B above (15 October 2026).** One
 versioned world seed will generate separate bounded Surface and underground
 Colony data, a protected linked entrance, exactly one starting chamber, a valid
 founding queen spawn and compatible finite source records. The specification
@@ -10,17 +20,17 @@ preserves the WV-B1 entrance/residency/rendering contracts and the existing
 development fixture. See [Procedural World
 Generation](procedural-world-generation.md).
 
-The smallest proposed WV-B2B slice is a pure `64×64` Surface plus recommended
+The implemented WV-B2B slice is a pure `64×64` Surface plus
 `128×128` Colony builder/validator and explicit generated-versus-development
-scenario selector. It requires approval of dimensions, chamber geometry, stable
-Surface/source IDs, weights and versioned PRNG details. It excludes resource
+scenario selector. It freezes the approved dimensions, chamber geometry, stable
+generation-only source IDs, weights and versioned PRNG details. It excludes resource
 interaction, AI, persistence, streaming and autonomous cross-view routing.
 
 ### Unified-cell amendment
 
 WV-B2A now approves one logical cell model across both regions: required natural
-Background plus optional node, placement and one-type loose stack. This is not
-implemented. WV-B2B should generate Background/node slots only and preserve
+Background plus optional node, placement and one-type loose stack. WV-B2B
+generates Background/node slots only and preserves
 separate region adapters. Shared node interaction and strict loose occupancy
 precede WV-C1; legacy functional-Background migration precedes construction in
 the generated scenario. Decay, streaming and full fixture migration remain

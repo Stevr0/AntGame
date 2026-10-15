@@ -1,5 +1,14 @@
 # Ant Colony WV-A — Two-View Technical Specification
 
+## WV-B2B runtime relationship — 15 October 2026
+
+The generated scenario supplies validated typed endpoints to the unchanged
+capacity-one `NestEntranceTransitionService`; it does not use the authored WV-B1
+coordinates. View changes remain presentation-only and never invoke generation.
+The fixture continues using its authored endpoints. Generated Surface cells
+adapt to `SurfaceWorldData`, while generated Colony cells adapt to
+`ChunkedWorldData`; local navigators and residency authority remain separate.
+
 ## WV-B2A relationship — 15 October 2026
 
 The approved generation-specific extension is

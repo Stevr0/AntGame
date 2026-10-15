@@ -134,6 +134,64 @@ namespace AntColony.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator GeneratedFoundingScenarioPublishesOnceAndPreservesMutationAcrossViews()
+        {
+            yield return SceneManager.LoadSceneAsync("AntGameDevelopment",
+                LoadSceneMode.Single);
+            yield return null;
+            AntGameDevelopmentWorldHost host =
+                Object.FindFirstObjectByType<AntGameDevelopmentWorldHost>();
+            Assert.That(host.TryStartScenario(GeneratedWorldScenario.FoundingQueen,
+                2203L, out string message), Is.True, message);
+            yield return null;
+
+            Assert.That(host.ActiveScenario,
+                Is.EqualTo(GeneratedWorldScenario.FoundingQueen));
+            Assert.That(host.GenerationDiagnostics.IsValid, Is.True);
+            Assert.That(host.WorldData.WorldSeed, Is.EqualTo(2203L));
+            Assert.That(host.SelectionController.SelectableAnts.Count, Is.EqualTo(1));
+            Assert.That(host.SelectionController.SelectableAnts[0].Record.Caste,
+                Is.EqualTo(AntColony.Ants.AntCaste.Queen));
+            Assert.That(host.MaterialStorage.Count, Is.Zero);
+            Assert.That(host.MaterialDrops.Count, Is.Zero);
+            Assert.That(host.TwoViewWorld.SurfaceWorld.Width, Is.EqualTo(64));
+            Assert.That(host.TwoViewWorld.Residencies.Count, Is.EqualTo(1));
+
+            var generatedSolid = new Vector2Int(4, -8);
+            Assert.That(host.WorldData.GetCell(generatedSolid,
+                out WorldTileCellData before), Is.EqualTo(WorldCellQueryResult.Available));
+            Assert.That(before.HasSolidTile, Is.True);
+            Assert.That(host.ToggleForegroundSolid(generatedSolid), Is.True);
+            host.TwoViewWorld.SwitchView(DevelopmentWorldView.Surface);
+            host.TwoViewWorld.SwitchView(DevelopmentWorldView.Colony);
+            Assert.That(host.WorldData.GetCell(generatedSolid,
+                out WorldTileCellData after), Is.EqualTo(WorldCellQueryResult.Available));
+            Assert.That(after.HasSolidTile, Is.False,
+                "View switching must not regenerate the Colony.");
+
+            SelectableGridAnt queen = host.SelectionController.SelectableAnts[0];
+            AntColony.Ants.AntId queenId = queen.Record.Id;
+            host.SimulationClock.Resume();
+            Assert.That(host.TwoViewWorld.TryUseEntrance(queen), Is.True);
+            yield return WaitFor(() => host.TwoViewWorld.Residencies.IsInRegion(
+                queenId, AntRegionIds.Surface), 12f,
+                "Generated queen did not reach the Surface.");
+            SurfaceNavigationMotor surfaceMotor =
+                queen.GetComponent<SurfaceNavigationMotor>();
+            Assert.That(surfaceMotor.MoveTo(new SurfaceCell(28, 32)), Is.True);
+            yield return WaitFor(() => surfaceMotor.HasArrived, 8f,
+                "Generated queen did not clear the Surface arrival.");
+            yield return null;
+            host.TwoViewWorld.SwitchView(DevelopmentWorldView.Surface);
+            Assert.That(host.TwoViewWorld.TryUseEntrance(queen), Is.True);
+            yield return WaitFor(() => host.TwoViewWorld.Residencies.IsInRegion(
+                queenId, AntRegionIds.Colony), 12f,
+                "Generated queen did not complete the entrance round trip.");
+            Assert.That(queen.Record.Id, Is.EqualTo(queenId));
+            Assert.That(host.TwoViewWorld.Entrance.IsReserved, Is.False);
+        }
+
+        [UnityTest]
         public IEnumerator EntranceCanBeReusedAfterEachArrivalCellIsCleared()
         {
             yield return SceneManager.LoadSceneAsync("AntGameDevelopment",

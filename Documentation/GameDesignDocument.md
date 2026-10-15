@@ -1,8 +1,18 @@
 # ANT COLONY
 
+## WV-B2B procedural world-generation foundation — 15 October 2026
+
+> **IMPLEMENTED — AWAITING VALIDATION.** A versioned 64-bit seed now builds and
+> validates the approved `64×64` Surface and `128×128` underground Colony before
+> runtime publication. The explicit generated scenario contains one founding
+> queen, one centred entrance, a `7×5` chamber and three-wide passage. The
+> Mara/Pip/Tala fixture remains the default separate scenario. Generated source
+> nodes are records and temporary visuals only; consumption, extraction,
+> hauling, storage migration, brood and cross-region autonomy remain deferred.
+
 ## WV-B2A procedural world-generation contract — 15 October 2026
 
-> **APPROVED DESIGN; IMPLEMENTATION DEFERRED.** The authoritative technical
+> **HISTORICAL WV-B2A APPROVAL RECORD; IMPLEMENTED BY WV-B2B ABOVE.** The authoritative technical
 > contract is `ProceduralWorldGenerationSpecification.md`. One world seed will
 > deterministically produce separate top-down Surface and side-on underground
 > Colony regions. The Surface is predominantly Grass; the Colony is
@@ -22,7 +32,7 @@ this decision.
 
 ### Approved unified cell, node and placement model — 15 October 2026
 
-> **APPROVED DESIGN; NOT IMPLEMENTED.** This WV-B2A amendment supersedes older
+> **APPROVED DESIGN; IMPLEMENTED FOR GENERATED DATA BY WV-B2B.** This WV-B2A amendment supersedes older
 > conceptual descriptions of Surface sources as a separate world model and of
 > Sleeping/Storage/Nursery functions as natural Background replacements. Existing
 > runtime representations and development fixtures remain intact until an

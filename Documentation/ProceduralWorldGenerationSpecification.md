@@ -2,15 +2,31 @@
 
 ## Status and authority
 
-> **WV-B2A — APPROVED DESIGN, IMPLEMENTATION DEFERRED (15 October 2026).**
-> This document is the implementation-ready contract for a future WV-B2B
-> seed-based generator. It does not describe implemented procedural generation
-> and does not authorise changes to Unity scripts, scenes, prefabs,
-> ScriptableObjects or tests.
+> **WV-B2B — IMPLEMENTED, AWAITING VALIDATION (15 October 2026).** The approved
+> contract is implemented by `ProceduralWorldGenerator` version `1`, configuration
+> `wv-b2b.default.001`. Manual Play Mode acceptance and broad Unity regression
+> execution remain pending; this status does not authorise WV-C1.
+
+### Implemented configuration record
+
+- The authoritative seed is signed 64-bit metadata. FNV-1a domain derivation
+  creates independent `surface` and `colony` SplitMix64 streams.
+- Surface categories use provisional targets derived from 82/8/6/4 weights:
+  Grass base, connected Water Background clusters, clustered Stone nodes and
+  spaced natural-obstacle nodes. Seed, Twig and Freshwater are generation-only
+  node definitions with configurable provisional quantities.
+- Colony columns `0..127` map to X `-64..63`; depths `0..127` map to Y `-1..-128`.
+  Four-by-four signed chunks span `(-2,-4)` through `(1,-1)`. Soil/Stone nodes
+  project to the existing `solid.soil`/`solid.stone` definitions.
+- Surface approach/arrival are `(32,31)`/`(32,32)`. Colony approach/arrival are
+  `(0,-2)`/`(0,-1)`. The chamber occupies columns `61..67`, depths `5..9`; the
+  passage occupies columns `63..65`, depths `0..4`; queen spawn is `(0,-8)`.
+- Generated placements and loose stacks are empty. Existing functional
+  Background, storage and multi-stack authorities are deliberately not migrated.
 
 ### Unified cell/resource amendment — approved 15 October 2026
 
-> **APPROVED DESIGN; NOT IMPLEMENTED.** This amendment is authoritative for
+> **IMPLEMENTED FOR GENERATED DATA; LEGACY MIGRATION DEFERRED.** This amendment is authoritative for
 > WV-B2B and later work. It unifies the logical cell, natural-resource and
 > placement model across Surface and Colony without merging their coordinate,
 > navigation, movement or rendering implementations. Existing functional

@@ -1,5 +1,14 @@
 # Excavation and Terrain
 
+## WV-B2B compatibility projection
+
+Generated underground Soil/Stone nodes have stable IDs and quantity-one
+generation records. At scenario publication they project to the existing
+registered `solid.soil` and `solid.stone` foreground materials over retained
+Earth/Stone Backgrounds. The starting chamber and passage omit nodes without
+creating excavation output. Existing exact-once excavation remains the runtime
+interaction authority; Surface source extraction is not implemented.
+
 ## Unified Background and node model
 
 **Approved design; not implemented.** Every resident Surface and Colony cell has

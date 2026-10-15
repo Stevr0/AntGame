@@ -25,7 +25,10 @@ namespace AntColony.Development
         public const int ReachableWaterQuantityPerFixture = 16;
 
         [Header("Deterministic sample")]
+        [SerializeField] private GeneratedWorldScenario startingScenario =
+            GeneratedWorldScenario.DevelopmentFixture;
         [SerializeField] private int worldSeed = 2203;
+        [SerializeField] private long generatedWorldSeed = 2203;
         [SerializeField] private Vector2Int minimumChunk = new(-2, -2);
         [SerializeField] private Vector2Int sizeInChunks = new(4, 4);
 
@@ -71,6 +74,8 @@ namespace AntColony.Development
         [SerializeField, Range(1, 100)] private int staggeredRequestsPerUpdate = 10;
 
         private GeneratedSampleWorld generatedWorld;
+        private GeneratedWorldSnapshot proceduralWorld;
+        private GeneratedWorldValidationReport generationDiagnostics;
         private AntAutonomousMotor autonomousAnt;
         private GridNavigationMotor gridNavigationAnt;
         private readonly List<GridNavigationMotor> selectableGridAnts = new();
@@ -85,9 +90,15 @@ namespace AntColony.Development
         public ChunkedWorldData WorldData => generatedWorld?.WorldData;
         public GeneratedSampleWorld GeneratedWorld => generatedWorld;
         public WorldTilemapRenderer TilemapRenderer => tilemapRenderer;
-        public int WorldSeed => worldSeed;
-        public Vector2Int MinimumChunk => minimumChunk;
-        public Vector2Int SizeInChunks => sizeInChunks;
+        public long WorldSeed => startingScenario == GeneratedWorldScenario.FoundingQueen
+            ? generatedWorldSeed : worldSeed;
+        public GeneratedWorldScenario ActiveScenario => startingScenario;
+        public GeneratedWorldSnapshot ProceduralWorld => proceduralWorld;
+        public GeneratedWorldValidationReport GenerationDiagnostics => generationDiagnostics;
+        public Vector2Int MinimumChunk => startingScenario == GeneratedWorldScenario.FoundingQueen
+            ? new Vector2Int(-2, -4) : minimumChunk;
+        public Vector2Int SizeInChunks => startingScenario == GeneratedWorldScenario.FoundingQueen
+            ? new Vector2Int(4, 4) : sizeInChunks;
         public string SoilSolidMaterialId => soilSolid != null
             ? soilSolid.StableMaterialId
             : string.Empty;
@@ -179,30 +190,44 @@ namespace AntColony.Development
             var registry = new WorldMaterialRegistry(
                 BackgroundDefinitions(),
                 SolidDefinitions());
-            generatedWorld = SampleWorldGenerator.Generate(
-                registry,
-                BuildMaterialIds(),
-                worldSeed,
-                minimumChunk,
-                sizeInChunks);
-            if (!BuildSurvivalFixtures(out string fixtureError))
+            proceduralWorld = null;
+            if (startingScenario == GeneratedWorldScenario.FoundingQueen)
             {
-                Debug.LogError(fixtureError, this);
-                return false;
+                if (!ProceduralWorldGenerator.TryGenerate(generatedWorldSeed,
+                        new WorldGenerationConfiguration(), out proceduralWorld,
+                        out generationDiagnostics))
+                {
+                    Debug.LogError(generationDiagnostics.Summary, this);
+                    return false;
+                }
+                ChunkedWorldData colony = proceduralWorld.CreateColonyWorld(
+                    registry, BuildMaterialIds());
+                generatedWorld = new GeneratedSampleWorld(colony, MinimumChunk,
+                    SizeInChunks, new int[WorldGenerationConfiguration.ColonyWidth],
+                    new Vector2Int(proceduralWorld.QueenSpawn.X,
+                        proceduralWorld.QueenSpawn.Y),
+                    new Vector2Int(proceduralWorld.QueenSpawn.X,
+                        proceduralWorld.QueenSpawn.Y));
+                SurvivalInteractionWorld = new SurvivalInteractionWorld(WorldData);
+                MaterialStorage = new MaterialStorageWorld(WorldData);
             }
-            if (!BuildMaterialStorageFixtures(out fixtureError))
+            else
             {
-                Debug.LogError(fixtureError, this);
-                return false;
-            }
-            if (!BuildExcavationFixtures(out fixtureError))
-            {
-                Debug.LogError(fixtureError, this);
-                return false;
+                generationDiagnostics = null;
+                generatedWorld = SampleWorldGenerator.Generate(registry,
+                    BuildMaterialIds(), worldSeed, minimumChunk, sizeInChunks);
+                if (!BuildSurvivalFixtures(out string authoredFixtureError) ||
+                    !BuildMaterialStorageFixtures(out authoredFixtureError) ||
+                    !BuildExcavationFixtures(out authoredFixtureError))
+                {
+                    Debug.LogError(authoredFixtureError, this);
+                    return false;
+                }
             }
             ColonyJobRegistry = new ColonyJobRegistry();
             MaterialDrops = new WorldMaterialDropRegistry();
-            if (!BuildMaterialDropFixtures(out fixtureError))
+            if (startingScenario == GeneratedWorldScenario.DevelopmentFixture &&
+                !BuildMaterialDropFixtures(out string fixtureError))
             {
                 Debug.LogError(fixtureError, this);
                 return false;
@@ -244,7 +269,8 @@ namespace AntColony.Development
             selectionController.BindMaterialStorage(MaterialStorage);
             selectionController.BindConstruction(ConstructionDesignations,
                 ConstructionTransaction, ConstructionRecipes.Recipes);
-            if (!selectionController.ResetSyntheticJobFixtures(out string jobError))
+            if (startingScenario == GeneratedWorldScenario.DevelopmentFixture &&
+                !selectionController.ResetSyntheticJobFixtures(out string jobError))
             {
                 Debug.LogError(jobError, this);
                 return false;
@@ -252,10 +278,38 @@ namespace AntColony.Development
 
             if (Application.isPlaying)
             {
-                SpawnOrResetAutonomousAnt(out _);
+                if (startingScenario == GeneratedWorldScenario.DevelopmentFixture)
+                    SpawnOrResetAutonomousAnt(out _);
+                else if (autonomousAnt != null)
+                    autonomousAnt.gameObject.SetActive(false);
                 SpawnOrResetSelectableGridAnts(out _);
             }
             BindPlayerHud();
+            return true;
+        }
+
+        /// <summary>
+        /// Development-only scenario start. Generation is validated before the
+        /// currently published world is replaced, and a failed request retains it.
+        /// </summary>
+        public bool TryStartScenario(GeneratedWorldScenario scenario, long seed,
+            out string message)
+        {
+            GeneratedWorldScenario previous = startingScenario;
+            long previousSeed = generatedWorldSeed;
+            startingScenario = scenario;
+            generatedWorldSeed = seed;
+            if (!RebuildWorld())
+            {
+                startingScenario = previous; generatedWorldSeed = previousSeed;
+                RebuildWorld();
+                message = "Scenario start failed; the previous valid scenario was restored.";
+                return false;
+            }
+            TwoViewWorld?.RebuildScenario();
+            message = scenario == GeneratedWorldScenario.FoundingQueen
+                ? $"Generated seed {seed}; {generationDiagnostics.Summary}"
+                : "Development fixture restored.";
             return true;
         }
 
@@ -284,11 +338,11 @@ namespace AntColony.Development
                 return;
             }
 
-            for (int y = 0; y < sizeInChunks.y; y++)
+            for (int y = 0; y < SizeInChunks.y; y++)
             {
-                for (int x = 0; x < sizeInChunks.x; x++)
+                for (int x = 0; x < SizeInChunks.x; x++)
                 {
-                    Vector2Int chunk = minimumChunk + new Vector2Int(x, y);
+                    Vector2Int chunk = MinimumChunk + new Vector2Int(x, y);
                     tilemapRenderer.RefreshChunk(chunk);
                     collisionRenderer.RefreshChunk(chunk);
                 }
@@ -429,7 +483,9 @@ namespace AntColony.Development
             if (NavigationWorldService == null ||
                 !NavigationWorldService.IsInitialized ||
                 primaryGridAntPrefab == null || selectionController == null ||
-                !TryFindSelectableSpawnCells(3, out List<Vector2Int> spawnCells,
+                !TryFindSelectableSpawnCells(
+                    startingScenario == GeneratedWorldScenario.FoundingQueen ? 1 : 3,
+                    out List<Vector2Int> spawnCells,
                     out message))
             {
                 return false;
@@ -493,10 +549,12 @@ namespace AntColony.Development
                 selectionController.RegisterSelectableAnt(selectable);
             }
 
+            for (int index = spawnCells.Count; index < selectableGridAnts.Count; index++)
+                selectableGridAnts[index].gameObject.SetActive(false);
             gridNavigationAnt = selectableGridAnts[0];
             BindPlayerHud();
             message =
-                $"Spawned {selectableGridAnts.Count} selectable grid ants at " +
+                $"Spawned {spawnCells.Count} selectable grid ants at " +
                 $"{string.Join(", ", spawnCells)}.";
             return true;
         }
@@ -512,7 +570,14 @@ namespace AntColony.Development
             var colonyId = new ColonyId("development-colony");
             antRegistry = new AntRegistry(colonyId);
             antBindingRegistry = new AntEntityBindingRegistry();
-            AntRecord[] records =
+            AntRecord[] records = startingScenario == GeneratedWorldScenario.FoundingQueen
+                ? new[]
+                {
+                    new AntRecord(new AntId("ant-generated-queen-001"),
+                        "Founding Queen", colonyId, AntCaste.Queen,
+                        new AntAttributes(7, 5, 8))
+                }
+                : new AntRecord[]
             {
                 new(
                     new AntId("ant-dev-queen-001"),
@@ -550,7 +615,9 @@ namespace AntColony.Development
 
         private AntRecord GetDevelopmentAntRecord(int index)
         {
-            string id = index switch
+            string id = startingScenario == GeneratedWorldScenario.FoundingQueen
+                ? "ant-generated-queen-001"
+                : index switch
             {
                 0 => "ant-dev-queen-001",
                 1 => "ant-dev-worker-002",
@@ -823,6 +890,21 @@ namespace AntColony.Development
                 return false;
             }
 
+            if (startingScenario == GeneratedWorldScenario.FoundingQueen)
+            {
+                Vector2Int queen = new(proceduralWorld.QueenSpawn.X,
+                    proceduralWorld.QueenSpawn.Y);
+                if (count == 1 && GridNavigationMap.TryGetAnchor(queen, out _))
+                {
+                    spawnCells.Add(queen);
+                    message = string.Empty;
+                    return true;
+                }
+
+                message = "Generated queen spawn is not a valid Colony anchor.";
+                return false;
+            }
+
             // The survival course begins at the bottom of the existing authored
             // shaft. These three anchors are in one proven connected component,
             // so Mara, Pip and Tala can all reach every accessible 3.2B fixture.
@@ -841,7 +923,7 @@ namespace AntColony.Development
                 return true;
             }
 
-            int minimumX = minimumChunk.x * WorldTileCoordinates.ChunkSize;
+            int minimumX = MinimumChunk.x * WorldTileCoordinates.ChunkSize;
             int maximumX = minimumX + generatedWorld.WidthInCells - 1;
             int maximumDistance = Mathf.Max(spawnSearchRadius, count * 4);
             for (int distance = 0;

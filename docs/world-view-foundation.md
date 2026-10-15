@@ -1,22 +1,31 @@
 # World View Foundation
 
+## WV-B2B generated scenario adapter
+
+The development host now exposes an explicit generated founding-queen scenario
+beside the unchanged Mara/Pip/Tala fixture. Validated scenario data supplies the
+entrance endpoints; the existing capacity-one transaction, shared clock,
+residency registry, local motors and camera culling remain authoritative. View
+switching does not regenerate either region. Generated resource markers are not
+yet resource interactions.
+
 ## Shared logical cell amendment
 
 Surface and Colony now share required Background plus optional node, placement
 and one-type loose-stack concepts. They do not share coordinates, A*, movement
 or clearance implementations. The WV-B1 residency, capacity-one entrance and
-rendering isolation remain unchanged. This amendment is approved design only;
-the current bounded Surface still stores obstacles rather than unified cells.
+rendering isolation remain unchanged. Generated records implement the unified
+shape; the Surface navigator still consumes a narrow obstacle adapter.
 
 ## WV-B2A generated-world extension
 
-The approved future generated-world contract is summarized in [Procedural World
+The implemented generated-world contract is summarized in [Procedural World
 Generation](procedural-world-generation.md). One seed produces both regions
 without changing WV-B1 typed locations or entrance semantics. The Surface remains
 `64×64` and predominantly Grass. The Colony is entirely underground,
 predominantly solid Soil/Dirt and begins with one small chamber containing the
-founding queen beneath the top-boundary exit. Runtime implementation has not
-started, and the Mara/Pip/Tala fixture remains intact.
+founding queen beneath the top-boundary exit. The Mara/Pip/Tala fixture remains
+intact as the default separate scenario.
 
 ## Status
 

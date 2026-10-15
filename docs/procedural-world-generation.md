@@ -2,10 +2,40 @@
 
 ## Status
 
-**WV-B2A specification complete; runtime implementation not started (15 October
+**WV-B2B implemented; automated and manual validation pending (15 October
 2026).** The authoritative contract is
 `Documentation/ProceduralWorldGenerationSpecification.md`. This page is the
 wiki summary, not a second source of truth.
+
+Version `1` / `wv-b2b.default.001` uses one signed 64-bit seed, domain-derived
+`surface` and `colony` SplitMix64 streams and a validate-before-publish result.
+Use the top development toolbar's **Seed**, **Start Generated**, and **Restore
+Fixture** controls. Generated source markers are data/visuals only; WV-C1
+interactions are not present.
+
+## Pending manual Play Mode acceptance
+
+1. Open `AntGameDevelopment`; confirm the default fixture still has selectable
+   Mara, Pip and Tala.
+2. Enter a known signed 64-bit value in **Seed**, then choose **Start Generated**.
+   Confirm the status reports successful validation and exactly one founding
+   queen appears.
+3. In World View, confirm mostly Grass, connected Water, Stone/obstacle/source
+   variation, a dark central nest hole and an open `5×5` clearing.
+4. In Colony View, confirm the top-centred exit, three-wide passage, exact `7×5`
+   chamber, Soil majority and clustered Stone. Move the queen in the chamber.
+5. Resume the clock, send the queen through the entrance and back, then clear
+   each arrival. Confirm identity, needs and state persist and the entrance is
+   reusable.
+6. Excavate an accessible generated Solid, switch views twice and confirm the
+   cell remains excavated. Confirm camera poses/zoom remain independent and no
+   renderers leak between regions.
+7. Start the same seed again and compare the initial layout; then start a
+   different seed and confirm meaningful variation.
+8. Choose **Restore Fixture**, confirm Mara/Pip/Tala return, and verify the Unity
+   Console has no new errors.
+
+No item above is recorded as passed yet.
 
 ## Approved world shape
 

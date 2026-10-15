@@ -1,5 +1,16 @@
 # Ant Colony Development Roadmap
 
+## WV-B2B procedural generation foundation — implemented, validation pending (15 October 2026)
+
+WV-B2B now provides frozen SplitMix64-derived `surface`/`colony` streams, unified
+generated cells, whole-world validation, compatibility projection into
+`ChunkedWorldData` and `SurfaceWorldData`, an explicit fixture/generated
+scenario switch, one generated queen, temporary visuals and deterministic test
+coverage. Unity assemblies compile through the Editor's Roslyn response files
+and a four-seed direct validation probe passed. Unity Test Runner execution is
+not claimed: the local Licensing Client crashed before producing test XML.
+Manual Play Mode acceptance and `WV-B1-REG-001` remain open. Do not begin WV-C1.
+
 ## WV-B2A procedural generation specification — complete documentation gate (15 October 2026)
 
 WV-B2A documents the approved shared-seed generation contract for separate
@@ -11,7 +22,8 @@ queen, source records, validation/correction, runtime boundaries, fixture
 preservation and future acceptance tests. No Unity runtime or asset content was
 changed.
 
-The recommended next implementation is **WV-B2B**, only after approval of the
+The historical recommended next implementation was **WV-B2B**; it is now
+implemented with validation still pending. Its approved scope used the
 remaining numerical/configuration choices: a pure bounded `64×64` Surface and
 recommended `128×128` Colony builder/validator, existing Soil/Stone materials,
 one protected entrance/chamber and an explicit generated-versus-development
@@ -24,7 +36,7 @@ relabelled as passed by this documentation work.
 
 The approved logical model now gives every Surface and Colony cell one natural
 Background plus optional Solid/Resource Node, Construction/Placement and
-one-type loose stack. This is not implemented. Existing functional Background
+one-type loose stack. Generated records now implement that shape; existing functional Background
 conversions, quantity-one implicit Solids, bounded Surface obstacles and
 multi-stack world drops require adapters/migration rather than silent rewrites.
 

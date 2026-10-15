@@ -50,7 +50,7 @@ namespace AntColony.World
         private readonly Dictionary<Vector2Int, WorldChunk> chunks = new();
         private readonly WorldMaterialRegistry materials;
 
-        public ChunkedWorldData(WorldMaterialRegistry materials, int worldSeed = 0)
+        public ChunkedWorldData(WorldMaterialRegistry materials, long worldSeed = 0)
         {
             this.materials = materials ??
                 throw new System.ArgumentNullException(nameof(materials));
@@ -58,10 +58,10 @@ namespace AntColony.World
         }
 
         /// <summary>
-        /// Reserved for future deterministic generation. This milestone does not
-        /// generate chunks automatically or interpret the seed.
+        /// Scenario seed metadata. Chunk queries remain passive and never invoke
+        /// generation, so changing views cannot recreate mutated terrain.
         /// </summary>
-        public int WorldSeed { get; }
+        public long WorldSeed { get; }
 
         public int ResidentChunkCount => chunks.Count;
         public float MaximumBackgroundMovementSpeedMultiplier =>

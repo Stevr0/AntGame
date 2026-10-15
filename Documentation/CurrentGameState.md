@@ -1,20 +1,39 @@
 # Ant Colony Current Game State
 
-## WV-B2A documentation state — 15 October 2026
+## WV-B2B implementation state — 15 October 2026
 
-**Specification complete; procedural generation is not implemented.**
+**Implemented — Awaiting Validation.** `ProceduralWorldGenerator` deterministically
+builds a Grass-dominant `64×64` Surface and an entirely underground, Soil-dominant
+`128×128` Colony from one 64-bit seed with independent named streams. Generated
+cells always retain a Background and may hold one stable finite node; placement
+and loose-stack slots begin empty. Validation gates dimensions, identity,
+quantity, entrance clearing, source reachability, predominance, chamber/spawn
+clearance and queen-to-exit reachability before publication.
+
+The development toolbar accepts a seed and can start the generated founding
+scenario or restore the unchanged Mara/Pip/Tala fixture. The generated scenario
+has one queen, no storage, no sleeping placement and no loose starting stacks.
+Generated nodes are not interactable source gameplay. Existing Colony
+Soil/Stone nodes project to existing Solids, so excavation remains compatible;
+Surface navigation receives only generated obstacles/water through its narrow
+adapter. Unity compilation succeeded, but Test Runner and manual Play Mode
+acceptance remain pending because the local Licensing Client crashed.
+
+## WV-B2A documentation state — historical pre-implementation record
+
+**Superseded by the WV-B2B implementation state above.**
 `ProceduralWorldGenerationSpecification.md` is now the authoritative future
 WV-B2B contract. It preserves the implemented WV-B1 typed regions, bounded
 `64×64` Surface fixture, capacity-one entrance and rendering isolation while
 specifying a shared-seed generated Surface and entirely underground Colony.
 
-The current runtime still uses the deterministic WV-B1 Surface obstacle fixture
+At the WV-B2A gate, the runtime used the deterministic WV-B1 Surface obstacle fixture
 and the authored/development Colony produced by `SampleWorldGenerator`, including
 Mara, Pip and Tala. The existing `ChunkedWorldData.WorldSeed` is reserved/input
 data and the development generator's seed variation does not constitute the new
 production procedural world system. Natural Surface terrain/source records, a
 generated starting chamber and generated founding-queen scenario are not yet
-implemented. No Unity tests were run for WV-B2A because this was a documentation-
+implemented at that gate. No Unity tests were run for WV-B2A because this was a documentation-
 only milestone; WV-B1 manual acceptance and `WV-B1-REG-001` remain unchanged.
 
 The approved new-game vision now starts the founding queen in one small excavated
@@ -23,7 +42,7 @@ put her on the Surface or start with no chamber are historical and superseded.
 
 ### Unified-cell amendment status
 
-**Approved design; not implemented.** The target model requires one Background
+**Implemented for generated cells; broader runtime migration deferred.** The target model requires one Background
 per cell and optional node, placement and one-type loose-stack occupants in both
 regions. Current runtime still differs:
 

@@ -36,7 +36,7 @@ namespace AntColony.World
     /// <summary>Immutable result and bounds for one generated sample world.</summary>
     public sealed class GeneratedSampleWorld
     {
-        internal GeneratedSampleWorld(
+        public GeneratedSampleWorld(
             ChunkedWorldData worldData,
             Vector2Int minimumChunk,
             Vector2Int sizeInChunks,

@@ -1,5 +1,17 @@
 # Milestone History
 
+## 15 October 2026 — WV-B2B Procedural World Generation Foundation
+
+- Added deterministic versioned Surface/Colony generation from one 64-bit seed,
+  unified generated cells/nodes, validation and existing-system adapters.
+- Added the separate one-queen generated scenario, seed/start/restore controls,
+  validated entrance/chamber geometry and temporary isolated presentation.
+- Added deterministic Edit Mode coverage and a generated-scenario Play Mode
+  integration regression. Assemblies compile and a four-seed direct probe passed;
+  Unity Test Runner execution was blocked by a Licensing Client crash.
+- Status: **Implemented — Awaiting Validation**; manual checklist and
+  `WV-B1-REG-001` remain open.
+
 ## 14 October 2026 — 3.5B Excavation Output & Loose Resource Handling
 
 - Replaced historical inventory-first excavation output with an exact-once loose drop at the excavated authoritative cell.

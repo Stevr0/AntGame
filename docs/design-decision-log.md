@@ -1,5 +1,19 @@
 # Design Decision Log
 
+## 2026-10-15 — Implement WV-B2B through validated compatibility adapters
+
+- Freeze generation version `1` and configuration `wv-b2b.default.001` with
+  independent domain-derived SplitMix64 Surface and Colony streams.
+- Publish only a fully validated generated snapshot; preserve the previous
+  scenario and seed on a failed development start.
+- Project generated underground nodes to existing Soil/Stone Solids and Surface
+  hazards to the existing obstacle navigator instead of replacing runtime
+  excavation, construction, storage or movement systems.
+- Keep generated placements/loose stacks empty and source definitions
+  interaction-free until separately approved WV-C work.
+- Retain the Mara/Pip/Tala fixture as the default scenario and reuse the WV-B1
+  entrance transaction with scenario-supplied endpoints.
+
 ## 2026-10-15 — Unify logical cells, nodes, placements and loose occupancy
 
 - Require one natural Background in every resident Surface and Colony cell.
