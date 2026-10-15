@@ -1,5 +1,13 @@
 # Food, Water and Survival
 
+## WV-B3A physical-state boundary
+
+Future natural food/water Nodes, Storage Placements and loose/payload ownership
+use the shared cell authority. Direct consumption remains a separate exact-once
+source transaction. Discovery and Fog of War are knowledge state and cannot
+change physical quantity. Current functional-Background survival fixtures remain
+compatibility behavior. See [Unified Runtime Cells](unified-runtime-cells.md).
+
 ## Unified node and storage amendment
 
 Future finite food/freshwater availability uses the shared Resource Node model

@@ -1,5 +1,16 @@
 # Milestone History
 
+## 15 October 2026 — WV-B3A Unified Runtime Cell Specification
+
+**Documentation complete; migration not started.** Read-only inspection mapped
+the current Colony terrain, Surface obstacle/source, generated-data, loose
+resource, Storage, Construction, ant, residency and simulation authorities. The
+approved specification now defines one region-scoped cell contract, central
+compatibility, exact-once ownership transfer, atomic generation publication,
+candidate WV-B3B/B3C/B3D slices and per-slice acceptance gates. No C#, Unity
+content, tests or project settings changed. Scheduler fairness manual acceptance
+is confirmed; unrelated validation items remain open.
+
 ## 15 October 2026 — WV-B2B Closure and Scheduler Fairness
 
 **WV-B2B Complete.** The user accepted the seed-`2203` deterministic generated
@@ -16,8 +27,8 @@ the active pass; removal and priority revisions reset safely, terminal/status
 changes are revalidated, and
 priority-before-path-cost plus exclusive ownership remain unchanged. Focused
 tests pass 40/40 Edit and 1/1 Play; complete XML-backed regressions pass 551/551
-Edit and 74/74 Play. This closes `WV-B1-REG-001`. Scheduler manual stress
-acceptance remains pending; WV-C1 has not started.
+Edit and 74/74 Play. This closes `WV-B1-REG-001`. Scheduler fairness manual
+acceptance is confirmed; WV-C1 has not started.
 
 ## 15 October 2026 — WV-B2B-ARCH-001 Unified Resource Logistics
 

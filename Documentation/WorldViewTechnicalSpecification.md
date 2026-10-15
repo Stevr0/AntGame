@@ -1,5 +1,15 @@
 # Ant Colony WV-A — Two-View Technical Specification
 
+## WV-B3A unified-cell integration clarification
+
+`UnifiedRuntimeCellSpecification.md` defines the shared runtime occupancy and
+mutation contract. It does not merge `ColonyCell` and `SurfaceCell`, either
+local navigator, movement geometry, camera, renderer or the capacity-one
+entrance/residency transaction. Surface obstacles will become a projection of
+Surface cell state; Colony navigation remains a projection of Colony state.
+Knowledge/Fog of War remains separate from physical cells. No WV-B3 runtime work
+or WV-C1 interaction is implemented by this clarification.
+
 ## WV-B2B runtime relationship — 15 October 2026
 
 The generated scenario supplies validated typed endpoints to the unchanged

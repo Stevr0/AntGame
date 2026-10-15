@@ -1,5 +1,16 @@
 # Procedural World Generation Specification
 
+## WV-B3A runtime publication clarification
+
+`UnifiedRuntimeCellSpecification.md` now owns the post-generation runtime-cell
+contract. `GeneratedWorldSnapshot` is immutable initial/provenance data after
+validation. Publication must privately build both authoritative region states,
+atomically expose the complete pair, then initialise navigation/rendering and
+ants/residency before simulation begins. Generated records must never remain a
+second mutable Node-quantity or occupancy authority, and camera switching must
+never regenerate or republish a world. The current compatibility projections
+remain implemented behavior until separately approved WV-B3 slices.
+
 ## WV-B2B-ARCH-001 logistics and terminology addendum
 
 Extraction is the single authoritative node-removal activity and skill. Soil,

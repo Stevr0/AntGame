@@ -1,5 +1,22 @@
 # ANT COLONY
 
+## WV-B3A unified runtime cell architecture — 15 October 2026
+
+> **APPROVED ARCHITECTURE; IMPLEMENTATION NOT STARTED.**
+> `UnifiedRuntimeCellSpecification.md` is the implementation-ready authority for
+> migrating both regions to one region-scoped runtime cell contract. Every
+> resident cell retains exactly one natural Background and may contain zero or
+> one Node, Placement and one-type loose ground stack. Central compatibility and
+> transaction rules prevent duplicate mutable quantity or occupancy.
+
+Generation is immutable initial data after atomic publication. Colony and
+Surface retain typed coordinates, local navigation, movement, rendering and
+cameras; entrance and ant-residency contracts are unchanged. Existing Colony
+Solids, functional Backgrounds, loose drops, Storage and Construction Sites are
+compatibility authorities until separately approved migration slices transfer
+their state. This approval does not start WV-B3B/B3C/B3D, WV-C1, Foraging, Fog
+of War, Refining, persistence or streaming.
+
 ## WV-B2B-ARCH-001 authoritative resource logistics — 15 October 2026
 
 This approved correction supersedes every earlier Excavation-versus-Extraction

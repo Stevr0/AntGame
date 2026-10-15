@@ -1,5 +1,18 @@
 # Ant Colony Current Game State
 
+## WV-B3A unified runtime cell specification — 15 October 2026
+
+**Documentation complete; runtime migration not started.** Read-only inspection
+confirmed that `ChunkedWorldData`, `SurfaceWorldData`, generated records,
+`WorldMaterialDropRegistry`, `MaterialStorageWorld`, `ConstructionSite` and
+functional Background services each own valid current slices but do not yet
+form one runtime cell authority. The approved end-state and controlled migration
+are specified in `UnifiedRuntimeCellSpecification.md`.
+
+No Unity script, asset, scene, prefab, ScriptableObject, test or project setting
+was changed. WV-B3B/B3C/B3D and WV-C1 require separate approval. Existing
+runtime behavior and still-pending WV-B1 or visual acceptance items remain open.
+
 ## WV-B2B closure and scheduler fairness correction — 15 October 2026
 
 ### WV-B2B — Complete
@@ -39,7 +52,7 @@ Mode** and **74/74 complete Play Mode**, with zero failures, skips or
 inconclusive tests. That current full-suite evidence closes
 `WV-B1-REG-001 — Complete Edit Mode Regression`.
 
-### Bounded fair colony-job selection — implemented, manual acceptance pending
+### Bounded fair colony-job selection — complete and manually accepted
 
 The audit's first-32 starvation finding was valid: the selector collected the
 first 32 claimable same-priority jobs before reachability, so unreachable jobs
@@ -65,10 +78,12 @@ the last evaluation, pass completion and selected job ID without per-frame log
 spam. Scale tests assert exactly 1/2/8/32 evaluations for 32/64/256/1,024-entry
 registries when the only eligible job is last, with at most 32 entries examined
 per evaluation. Focused evidence is **40/40 Edit Mode** and **1/1 Play Mode**;
-the complete suites pass **551/551 Edit** and **74/74 Play**. The scheduler's
-manual stress checklist remains pending and does not reopen WV-B2B.
+the complete suites pass **551/551 Edit** and **74/74 Play**. The user confirmed
+the scheduler fairness manual acceptance on 15 October 2026. The checklist below
+is retained as the accepted procedure; this documentation-only status update did
+not rerun Unity.
 
-#### Scheduler manual Play Mode checklist
+#### Scheduler manual Play Mode checklist — accepted 15 October 2026
 
 1. Start the generated founding-queen scenario with seed `2203`.
 2. Confirm the queen can Extract, Haul and Construct with conserved quantities.

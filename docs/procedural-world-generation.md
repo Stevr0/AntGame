@@ -1,5 +1,14 @@
 # Procedural World Generation
 
+## WV-B3A publication boundary
+
+Generated data becomes immutable initial/provenance data after validation.
+Future runtime publication privately creates both region authorities, publishes
+them atomically, then initialises projections and ants/residency before starting
+simulation. Camera switching never regenerates and runtime mutations are never
+read back from the initial snapshot. See [Unified Runtime
+Cells](unified-runtime-cells.md).
+
 ## Status
 
 **WV-B2B complete; manual acceptance confirmed (15 October 2026).** The

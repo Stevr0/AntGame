@@ -1,5 +1,14 @@
 # Ant AI and Job Management
 
+## Scheduler fairness acceptance and WV-B3A boundary
+
+The bounded resumable full-registry scheduler correction is now manually
+accepted. It remains the one Colony job selector; WV-B3A adds no scheduler.
+Future Node, Stack and Placement jobs use typed region targets and the existing
+reservation/priority model through narrow adapters. Pause and interruption keep
+quantity at its last committed owner. See [Unified Runtime
+Cells](unified-runtime-cells.md).
+
 ## Unified resource-job eligibility
 
 Extraction, Hauling and Construction are distinct shared-registry jobs.

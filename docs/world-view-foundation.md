@@ -1,5 +1,13 @@
 # World View Foundation
 
+## WV-B3A integration boundary
+
+World View will share the runtime cell occupancy/mutation contract while keeping
+`SurfaceCell`, Surface A*, motor, obstacles, presentation and camera distinct
+from Colony systems. The entrance/residency transaction and shared clock are
+unchanged. Fog of War and discovery will be knowledge projections and cannot
+mutate physical cells. See [Unified Runtime Cells](unified-runtime-cells.md).
+
 ## WV-B2B generated scenario adapter
 
 The development host now exposes an explicit generated founding-queen scenario

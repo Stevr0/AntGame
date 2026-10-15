@@ -1,5 +1,13 @@
 # Gameplay Mechanics
 
+## WV-B3A runtime-cell architecture
+
+The shared gameplay model is one natural Background plus optional Node,
+Placement and one-type loose stack per resident cell. Current Colony runtime
+representations remain compatibility implementations; the approved migration is
+documented in [Unified Runtime Cells](unified-runtime-cells.md). No Foraging,
+Fog of War, Refining, persistence or WV-C1 behavior was implemented.
+
 ## WV-B2B-ARCH-001 implemented correction
 
 Extraction replaces Excavation as the official skill and activity for removing

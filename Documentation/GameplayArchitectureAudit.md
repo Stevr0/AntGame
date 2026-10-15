@@ -10,6 +10,15 @@ test, balance or milestone status was changed.
 
 ## Post-audit disposition — 15 October 2026
 
+WV-B3A now supersedes the audit's recommended mutable-cell design work with the
+authoritative `UnifiedRuntimeCellSpecification.md`. It resolves the design
+questions of runtime ownership, snapshot versus projection, transaction
+boundaries, publication order and migration slicing; it does not resolve them
+in code. The audit's findings about quantity-less Colony Solids, Surface source
+projections, functional Backgrounds and same-cell loose records therefore remain
+current implementation gaps until WV-B3B/B3C/B3D are separately approved and
+accepted. The scheduler fairness follow-up is now manually accepted.
+
 The audit below remains the evidence snapshot for revision `b280744c`, but two
 recommended actions have now been completed:
 
@@ -29,8 +38,8 @@ recommended actions have now been completed:
   mutation/repriority, exclusive multi-ant claims, pause/3× behavior and bounded
   32/64/256/1,024-entry scans.
 
-The scheduler correction is **Implemented — Pending Manual Acceptance** against
-the 14-step checklist in `CurrentGameState.md`; that follow-up does not reopen
+The scheduler correction is **Complete — Manually Accepted** against the
+14-step checklist in `CurrentGameState.md`; that follow-up did not reopen
 WV-B2B. Generated Surface source interaction, natural rest, typed cross-region
 job targets, persistence and the remaining architectural findings stay deferred.
 Statements below that call these now-resolved items open describe the original

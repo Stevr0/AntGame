@@ -1,5 +1,18 @@
 # Technical Architecture
 
+## WV-B3A authoritative runtime-cell target
+
+WV-B3A approves one region-scoped cell contract while leaving the runtime
+unchanged. `ChunkedWorldData` remains the Colony backing authority; a future
+Surface store will implement the same narrow read/mutation contract. Generated
+snapshots initialise but do not remain mutable authorities. Navigation,
+Tilemaps, colliders, Surface visuals, HUD and inspectors are projections.
+
+Central compatibility and transaction validation will enforce one Background,
+optional Node/Placement/loose stack and single physical ownership. Typed region
+coordinates, both local navigators, cameras, entrance/residency and the shared
+clock remain separate. See [Unified Runtime Cells](unified-runtime-cells.md).
+
 ## WV-B2B-ARCH-001 resource ownership flow
 
 `ExcavationWorldTransaction` is the compatibility-named Extraction commit seam:

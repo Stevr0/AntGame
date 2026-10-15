@@ -8,12 +8,12 @@ This wiki is a readable development companion to the repository's authoritative 
   <div class="status-card" markdown>
   **Current accepted baseline**
 
-  Milestone 3.4C: player Colony HUD and developer UI separation.
+  WV-B2B generated Colony workflow and scheduler fairness follow-up.
   </div>
   <div class="status-card" markdown>
-  **Latest implemented slice**
+  **Latest completed gate**
 
-  Milestone 3.5B: loose-only Extraction output — pending manual acceptance.
+  WV-B3A runtime-cell architecture is specified; migration is not started.
   </div>
   <div class="status-card" markdown>
   **Engine**
@@ -32,6 +32,7 @@ This wiki is a readable development companion to the repository's authoritative 
 - [Gameplay Architecture Audit](gameplay-architecture-audit.md) compares the approved five-stage workflow with the current runtime, tests, compatibility layers, and post-WV-B2B risks.
 - [Ant Movement and Navigation](ant-movement-navigation.md) covers the most mature technical gameplay foundation.
 - [Technical Architecture](technical-architecture.md) shows ownership and data flow.
+- [Unified Runtime Cells](unified-runtime-cells.md) defines the approved WV-B3 migration contract and gates.
 - [World View Foundation](world-view-foundation.md) records the documentation-only WV-A contracts and future acceptance gates.
 - [Development Roadmap](development-roadmap.md) identifies the next authorised action and future milestones.
 - [Milestone History](milestone-history.md) records implementation and validation evidence.

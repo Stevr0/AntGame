@@ -1,5 +1,15 @@
 # Colony Construction and Rooms
 
+## WV-B3A Placement migration boundary
+
+Construction's staged workflow remains unchanged, but its approved end-state
+creates a Placement over the unchanged natural Background. Functional
+Backgrounds migrate one function at a time with contents, reservations,
+capacity, progress and fixtures preserved; the compatibility and replacement
+function can never both be active. Material Storage is the recommended first
+function for a separately approved WV-B3D slice. See [Unified Runtime
+Cells](unified-runtime-cells.md).
+
 ## Construction staging correction
 
 Under WV-B2B-ARCH-001, builders do not self-supply. Each Construction Site owns

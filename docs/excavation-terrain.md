@@ -1,5 +1,15 @@
 # Excavation and Terrain
 
+## WV-B3A Node migration boundary
+
+The approved runtime target represents Soil, Stone, Seed, Twig and future
+natural resources as finite Nodes over an unchanged natural Background.
+Current Colony Solids remain quantity-one compatibility Nodes until WV-B3C is
+separately approved. Extraction must prepare a compatible one-stack-per-cell
+ground output before exact-once Node reduction; failed placement retains a
+recoverable pending transaction and never fills inventory. See [Unified Runtime
+Cells](unified-runtime-cells.md).
+
 > **Compatibility title.** Extraction is the official skill, activity and
 > player-facing term. Existing `Excavation*` types and this page slug remain to
 > avoid unnecessary serialized/API and link churn.

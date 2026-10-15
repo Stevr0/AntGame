@@ -1,6 +1,20 @@
 # Ant Colony Development Roadmap
 
-## WV-B2B — Complete; scheduler fairness follow-up implemented (15 October 2026)
+## WV-B3A — Complete documentation gate (15 October 2026)
+
+`UnifiedRuntimeCellSpecification.md` now defines the approved end-state,
+authority boundaries, exact-once ownership transfers, deterministic generation
+publication, compatibility migration and acceptance gates for shared Colony and
+Surface runtime cells. WV-B3A changed documentation only; current runtime
+authorities remain intact.
+
+Candidate follow-ups are WV-B3B authority foundation, WV-B3C Node/loose-resource
+integration and WV-B3D Placement migration. They are not automatically approved.
+The recommended next slice is read contracts, revisions, central compatibility
+and atomic region publication with read-only adapters; it must not move current
+gameplay writes yet. WV-C1 remains deferred.
+
+## WV-B2B — Complete; scheduler fairness follow-up accepted (15 October 2026)
 
 The user accepted the generated seed-`2203` founding-colony run. Deterministic
 generation, founding-queen movement, Soil/Stone Extraction, loose output,
@@ -23,8 +37,8 @@ removal and priority changes restart safely; terminal/status changes are
 revalidated. Scale coverage proves
 1/2/8/32 evaluations for 32/64/256/1,024 entries. Automated evidence passes
 **40/40 focused Edit**, **1/1 focused Play**, **551/551 complete graphics-enabled
-Edit** and **74/74 complete Play**. Manual scheduler stress acceptance remains
-pending; it is a follow-up validation item, not a WV-B2B blocker.
+Edit** and **74/74 complete Play**. The user confirmed scheduler fairness manual
+acceptance on 15 October 2026, closing the follow-up without changing WV-B2B.
 
 The current full-suite XML rerun supersedes the audit's missing-artifact concern
 and closes `WV-B1-REG-001`. Other explicitly pending WV-B1 visual/manual defect

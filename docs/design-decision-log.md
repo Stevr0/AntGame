@@ -1,5 +1,22 @@
 # Design Decision Log
 
+## 15 October 2026 — Approve unified runtime cell authority and staged migration
+
+**Decision:** Each resident Colony or Surface cell has one natural Background
+and optional Node, Placement and one-type loose stack under one region-scoped
+mutation boundary. Generated snapshots are immutable initial data; local
+navigation/rendering are projections. Existing runtime owners migrate through
+read-only adapters and one authority at a time.
+
+**Consequence:** WV-B3A completes documentation only. Candidate WV-B3B/B3C/B3D
+slices require separate approval. Colony/Surface coordinates and navigators,
+entrance/residency, current exact-once logistics and fixtures are preserved.
+Functional Backgrounds cannot run alongside an active replacement Placement.
+Foraging knowledge and Fog of War remain separate from physical state; Refining
+remains separate from Construction.
+
+**Authority:** `Documentation/UnifiedRuntimeCellSpecification.md`.
+
 ## 15 October 2026 — Bound fair colony-job candidate evaluation
 
 - Preserve the shared `ColonyJobRegistry`, selector, work priorities, path-cost

@@ -1,6 +1,13 @@
 # Development Roadmap
 
-## WV-B2B — complete; scheduler fairness follow-up implemented
+## WV-B3A — documentation complete
+
+The authoritative [Unified Runtime Cells](unified-runtime-cells.md)
+specification defines the end-state and acceptance gates. Runtime migration has
+not started. Candidate WV-B3B/B3C/B3D slices require separate approval; WV-C1
+remains deferred.
+
+## WV-B2B — complete; scheduler fairness follow-up accepted
 
 The user accepted the seed-`2203` generated founding-colony workflow, closing
 `WV-B2B-DEF-001/002/003` and `WV-B2B-ARCH-001`. Deterministic generation,
@@ -14,7 +21,7 @@ The existing job selector now pages fairly across the complete registry at no
 more than 32 entries per evaluation while preserving priority, path cost,
 deterministic ties and exclusive reservations. Focused coverage passes 40/40
 Edit and 1/1 Play; complete XML-backed suites pass 551/551 Edit and 74/74 Play.
-`WV-B1-REG-001` is closed. Scheduler manual stress acceptance is still pending.
+`WV-B1-REG-001` is closed. Scheduler fairness manual acceptance is confirmed.
 
 ## WV-B2B-ARCH-001 — closure history
 
