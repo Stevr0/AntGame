@@ -1,5 +1,14 @@
 # Procedural World Generation
 
+## WV-B3B publication boundary
+
+The validated Colony and Surface outputs are now exposed together through the
+unified read registry. Publication is an atomic read-model swap; a rejected
+adapter pair leaves the previous pair visible. Generated data is immutable
+provenance after initialisation, and generated Surface nodes are explicitly
+generation-only. Views consume the published Surface authority and never
+regenerate or republish the seed.
+
 ## WV-B3A publication boundary
 
 Generated data becomes immutable initial/provenance data after validation.

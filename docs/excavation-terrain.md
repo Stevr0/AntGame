@@ -1,5 +1,15 @@
 # Excavation and Terrain
 
+## WV-B3B read projection
+
+Existing Soil/Stone Solids are now visible as compatibility Node snapshots and
+committed `ChunkedWorldData` writes advance the affected runtime-cell revision.
+Extraction authority, output preflight, Background preservation, XP and
+navigation invalidation are unchanged. Successful physical drop commits also
+publish a loose-resource cell change; reservations alone do not. Quantity-less
+legacy Solids remain explicit compatibility data rather than fabricated finite
+Nodes. Mutable Node migration belongs to WV-B3C.
+
 ## WV-B3A Node migration boundary
 
 The approved runtime target represents Soil, Stone, Seed, Twig and future

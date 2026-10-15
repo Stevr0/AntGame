@@ -2,8 +2,8 @@
 
 **Milestone:** WV-B3A  
 **Date:** 15 October 2026  
-**Status:** Approved architecture and implementation specification; runtime migration not started  
-**Implementation boundary:** Documentation and read-only repository inspection only
+**Status:** WV-B3B foundation implemented; automated tests passed; manual acceptance pending
+**Implementation boundary:** Read-only adapters, revisions, compatibility validation and atomic read-model publication
 
 ## 1. Purpose and authority
 
@@ -12,8 +12,9 @@ and World View to one conceptual runtime cell architecture without replacing
 their local navigation, movement, rendering, cameras or entrance transaction.
 It refines the approved unified-cell model in the GDD and procedural generation
 specification. Where older technical proposals conflict with this document,
-this document controls the WV-B3 migration. It does not approve WV-B3B,
-WV-B3C, WV-B3D, WV-C1 or any gameplay implementation.
+this document controls the WV-B3 migration. WV-B3B now implements the read-only
+foundation described below. It does not approve or implement WV-B3C, WV-B3D,
+WV-C1 or their gameplay migrations.
 
 The migration must preserve the working resource chain:
 
@@ -36,6 +37,24 @@ validated API migration.
   authorised slice; names may change without changing this contract.
 - **Future gameplay:** readiness requirement only, not implemented behavior.
 - **Unresolved:** a choice that still requires approval or measured evidence.
+
+### WV-B3B implementation record
+
+`RegionCellId`, `RuntimeCellSnapshot`, `IReadOnlyRuntimeCellRegion`, bounded
+change feeds, pure compatibility validation and the atomic
+`RuntimeCellPublicationRegistry` are implemented. Colony and Surface adapters
+read existing authorities without accepting writes. Colony terrain and loose
+drops provide exact committed-cell invalidation; current Surface data has no
+runtime mutation API, so it changes only on region republication. Generated
+nodes retain actual initial quantities and are marked generation-only.
+
+The publication guarantee is deliberately narrow: a fully validated pair
+replaces the prior unified read model or neither adapter is published. The
+development host itself still assembles several existing mutable services in
+place; a later failure is recovered by rebuilding the previous scenario where
+`TryStartScenario` supports it. This is not claimed as general persistence-grade
+rollback. Unity evidence passes 6/6 focused Edit, 3/3 focused Play, 557/557
+complete Edit and 77/77 complete Play. Manual acceptance remains pending.
 
 ## 2. Current runtime authority findings
 

@@ -1,5 +1,20 @@
 # Design Decision Log
 
+## 2026-10-15 — WV-B3B publishes a read model without moving writers
+
+**Decision:** Implement the shared cell foundation as immutable region adapters
+over current authorities. Publish Colony and Surface adapters as one validated
+pair, use caller-owned cursors over bounded change journals, and classify legacy
+data as compatibility-projected or details-unavailable rather than inventing
+missing state.
+
+**Consequences:** Terrain and loose-drop commits can invalidate exact Colony
+cells; current Surface changes only by republication. Generated nodes remain
+generation-only. Compatibility validation is pure and does not alter existing
+placement rules. The development host retains its existing rebuild/restore
+limitation, and WV-B3C/B3D are required before mutable Nodes or Placements move
+into the unified authority.
+
 ## 15 October 2026 — Approve unified runtime cell authority and staged migration
 
 **Decision:** Each resident Colony or Surface cell has one natural Background

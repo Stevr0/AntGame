@@ -1,5 +1,20 @@
 # Technical Architecture
 
+## WV-B3B runtime-cell read foundation
+
+`AntGameDevelopmentWorldHost` publishes one validated
+`RuntimeCellRegionSet`. `ColonyRuntimeCellRegionAdapter` reads the existing
+terrain/drop authorities; `SurfaceRuntimeCellRegionAdapter` reads the existing
+bounded Surface and generated provenance. `TwoViewWorldCoordinator` consumes
+the same Surface instance. Immutable snapshots carry cell and publication
+revisions, and bounded caller-cursor journals report only committed terrain/drop
+changes. The compatibility validator is pure diagnostics/future integration;
+no gameplay writer was moved and current actions are not newly rejected.
+
+Publication swaps both read adapters or neither. Broader host rebuild rollback
+remains the existing scenario restore behavior, not a general world transaction.
+Generated nodes are generation-only. WV-B3C/B3D and WV-C1 remain deferred.
+
 ## WV-B3A authoritative runtime-cell target
 
 WV-B3A approves one region-scoped cell contract while leaving the runtime

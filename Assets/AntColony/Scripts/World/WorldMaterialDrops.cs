@@ -53,6 +53,7 @@ namespace AntColony.World
         public IEnumerable<WorldMaterialDrop> Drops => drops.Values;
         public int Count => drops.Count;
         public bool RejectNextCreationForTesting { get; set; }
+        public event Action<Vector2Int> GroundCellChanged;
 
         internal bool CanCommitOutput(string key, ExcavatedMaterialType material,
             int quantity, Vector2Int cell, int maximumStack, bool needsDrop,
@@ -122,6 +123,7 @@ namespace AntColony.World
                 drops.Add(key, last);
             }
             committedOutputKeys.Add(key);
+            GroundCellChanged?.Invoke(cell);
             return last;
         }
 
@@ -238,6 +240,7 @@ namespace AntColony.World
                     drop.WorldCell, drop.MaximumStack);
                 drops[key] = remaining;
             }
+            GroundCellChanged?.Invoke(drop.WorldCell);
             error = string.Empty;
             return true;
         }
@@ -256,7 +259,12 @@ namespace AntColony.World
 
         public void Clear()
         {
+            var affectedCells = new HashSet<Vector2Int>();
+            foreach (WorldMaterialDrop drop in drops.Values)
+                affectedCells.Add(drop.WorldCell);
             drops.Clear(); reservations.Clear(); committedOutputKeys.Clear();
+            foreach (Vector2Int cell in affectedCells)
+                GroundCellChanged?.Invoke(cell);
         }
 
         private readonly struct DropReservation

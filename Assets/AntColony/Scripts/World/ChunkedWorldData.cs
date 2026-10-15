@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -24,6 +25,24 @@ namespace AntColony.World
         SolidTileNotPresent
     }
 
+    /// <summary>Notification emitted only after an authoritative terrain write.</summary>
+    public readonly struct WorldCellAuthorityChange
+    {
+        public WorldCellAuthorityChange(Vector2Int worldCell, long oldRevision,
+            long newRevision, RuntimeCellChangeCategory category)
+        {
+            WorldCell = worldCell;
+            OldRevision = oldRevision;
+            NewRevision = newRevision;
+            Category = category;
+        }
+
+        public Vector2Int WorldCell { get; }
+        public long OldRevision { get; }
+        public long NewRevision { get; }
+        public RuntimeCellChangeCategory Category { get; }
+    }
+
     /// <summary>
     /// Immutable value returned by cell queries. A null SolidMaterialId means a
     /// generated, exposed cell; it never means that the chunk was unavailable.
@@ -48,6 +67,7 @@ namespace AntColony.World
     public sealed class ChunkedWorldData
     {
         private readonly Dictionary<Vector2Int, WorldChunk> chunks = new();
+        private readonly Dictionary<Vector2Int, long> cellRevisions = new();
         private readonly WorldMaterialRegistry materials;
 
         public ChunkedWorldData(WorldMaterialRegistry materials, long worldSeed = 0)
@@ -64,6 +84,7 @@ namespace AntColony.World
         public long WorldSeed { get; }
 
         public int ResidentChunkCount => chunks.Count;
+        public event Action<WorldCellAuthorityChange> CellChanged;
         public float MaximumBackgroundMovementSpeedMultiplier =>
             materials.MaximumBackgroundMovementSpeedMultiplier;
 
@@ -71,6 +92,18 @@ namespace AntColony.World
         {
             return chunks.ContainsKey(chunkCoordinate);
         }
+
+        /// <summary>Returns a stable copy so callers cannot mutate chunk ownership.</summary>
+        public IReadOnlyList<Vector2Int> GetResidentChunkCoordinates()
+        {
+            var result = new Vector2Int[chunks.Count];
+            chunks.Keys.CopyTo(result, 0);
+            System.Array.Sort(result, CompareCoordinates);
+            return result;
+        }
+
+        public long GetCellRevision(Vector2Int worldCell) =>
+            cellRevisions.TryGetValue(worldCell, out long revision) ? revision : 0L;
 
         public WorldChunkCreationResult CreateChunk(
             Vector2Int chunkCoordinate,
@@ -146,7 +179,11 @@ namespace AntColony.World
 
             // The material can change, but the Background Tile itself can never
             // be removed or replaced with a missing value.
+            if (string.Equals(chunk.GetBackgroundMaterialId(localCell),
+                    backgroundMaterialId, StringComparison.Ordinal))
+                return WorldCellMutationResult.Success;
             chunk.SetBackgroundMaterialId(localCell, backgroundMaterialId);
+            PublishChange(worldCell, RuntimeCellChangeCategory.Background);
             return WorldCellMutationResult.Success;
         }
 
@@ -166,7 +203,11 @@ namespace AntColony.World
 
             // One array slot represents the optional Solid Tile, so assigning a
             // material can never create two authoritative solids at one cell.
+            if (string.Equals(chunk.GetSolidMaterialId(localCell),
+                    solidMaterialId, StringComparison.Ordinal))
+                return WorldCellMutationResult.Success;
             chunk.SetSolidMaterialId(localCell, solidMaterialId);
+            PublishChange(worldCell, RuntimeCellChangeCategory.Node);
             return WorldCellMutationResult.Success;
         }
 
@@ -177,9 +218,10 @@ namespace AntColony.World
                 return WorldCellMutationResult.ChunkUnavailable;
             }
 
-            return chunk.RemoveSolidMaterial(localCell)
-                ? WorldCellMutationResult.Success
-                : WorldCellMutationResult.SolidTileNotPresent;
+            if (!chunk.RemoveSolidMaterial(localCell))
+                return WorldCellMutationResult.SolidTileNotPresent;
+            PublishChange(worldCell, RuntimeCellChangeCategory.Node);
+            return WorldCellMutationResult.Success;
         }
 
         /// <summary>
@@ -218,6 +260,22 @@ namespace AntColony.World
             // Missing chunks are explicitly unavailable. A read must never turn
             // ungenerated territory into exposed terrain or allocate neighbours.
             return chunks.TryGetValue(chunkCoordinate, out chunk);
+        }
+
+        private void PublishChange(Vector2Int worldCell,
+            RuntimeCellChangeCategory category)
+        {
+            long oldRevision = GetCellRevision(worldCell);
+            long newRevision = oldRevision + 1L;
+            cellRevisions[worldCell] = newRevision;
+            CellChanged?.Invoke(new WorldCellAuthorityChange(worldCell,
+                oldRevision, newRevision, category));
+        }
+
+        private static int CompareCoordinates(Vector2Int left, Vector2Int right)
+        {
+            int xComparison = left.x.CompareTo(right.x);
+            return xComparison != 0 ? xComparison : left.y.CompareTo(right.y);
         }
     }
 }

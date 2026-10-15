@@ -418,8 +418,14 @@ namespace AntColony.Development
 
         private void BuildSurfaceWorld()
         {
-            surfaceWorld = host.ProceduralWorld?.CreateSurfaceNavigationWorld() ??
-                SurfaceWorldData.CreateDevelopmentFixture();
+            // The host publishes this exact instance through the unified read
+            // model. The view never creates a competing Surface data store.
+            surfaceWorld = host.SurfaceWorld;
+            if (surfaceWorld == null)
+            {
+                Debug.LogError("Surface runtime data was not published.", this);
+                return;
+            }
             var root = new GameObject(host.ProceduralWorld == null
                 ? "Surface World (WV-B1 Fixture)" : "Surface World (WV-B2B Generated)");
             root.layer = SurfacePresentationLayer;

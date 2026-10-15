@@ -2,9 +2,11 @@
 
 ## Status
 
-WV-B3A is a complete documentation gate. The architecture below is approved;
-the runtime migration is not started. WV-B3B, WV-B3C, WV-B3D and WV-C1 require
-separate approval. The authoritative detail is
+WV-B3B is **implemented with automated tests passed and manual acceptance
+pending**. Typed read contracts, immutable snapshots, revisions/change feeds,
+pure compatibility checks and atomic read-model publication now exist. Current
+gameplay authorities remain unchanged. WV-B3C, WV-B3D and WV-C1 require separate
+approval. The authoritative detail is
 [`Documentation/UnifiedRuntimeCellSpecification.md`](https://github.com/Stevr0/AntGame/blob/main/Documentation/UnifiedRuntimeCellSpecification.md).
 
 ## Cell model
@@ -79,10 +81,12 @@ Version `wv-b2b.default.002` follows this target sequence:
 View switching never regenerates. Runtime mutations are never overwritten from
 the initial snapshot.
 
-## Candidate migration slices
+## Implemented foundation and candidate migration slices
 
-1. **WV-B3B — authority foundation:** typed read contracts, revisions, central
-   compatibility, atomic publication and read-only adapters.
+1. **WV-B3B — authority foundation (implemented):** typed read contracts,
+   revisions, central compatibility, atomic read-model publication and
+   read-only adapters. Automated evidence: 6/6 focused Edit, 3/3 focused Play,
+   557/557 complete Edit and 77/77 complete Play; manual acceptance pending.
 2. **WV-B3C — Nodes and loose resources:** mutable Nodes, one-stack occupancy,
    failed-output recovery and narrow transaction adapters.
 3. **WV-B3D — Placements:** site/Placement occupancy and one-function-at-a-time

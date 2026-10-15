@@ -129,6 +129,8 @@ namespace AntColony.Development
         public ConstructionRecipeCatalog ConstructionRecipes { get; private set; }
         public ConstructionDesignationRegistry ConstructionDesignations { get; private set; }
         public ConstructionWorldTransaction ConstructionTransaction { get; private set; }
+        public SurfaceWorldData SurfaceWorld { get; private set; }
+        public RuntimeCellPublicationRegistry RuntimeCells { get; private set; }
         public IReadOnlyList<Vector2Int> SurvivalFixtureCells => survivalFixtureCells;
         public int GridStressGroupSize => gridStressGroupSize;
         public AntAutonomousMotor AutonomousAntPrefab => autonomousAntPrefab;
@@ -258,6 +260,17 @@ namespace AntColony.Development
                 WorldData, SurvivalInteractionWorld, MaterialStorage,
                 OnConstructionCommitted);
 
+            SurfaceWorldData nextSurfaceWorld = proceduralWorld?
+                .CreateSurfaceNavigationWorld() ??
+                SurfaceWorldData.CreateDevelopmentFixture();
+            if (!TryPublishRuntimeCells(nextSurfaceWorld,
+                    out string publicationError))
+            {
+                Debug.LogError(publicationError, this);
+                return false;
+            }
+            SurfaceWorld = nextSurfaceWorld;
+
             tilemapRenderer.BindWorldData(WorldData);
             collisionRenderer.BindWorldData(WorldData);
             RefreshAllChunks();
@@ -286,6 +299,29 @@ namespace AntColony.Development
             }
             BindPlayerHud();
             return true;
+        }
+
+        /// <summary>
+        /// Publishes one complete read model after both region adapters validate.
+        /// Gameplay mutation ownership remains with the existing services.
+        /// </summary>
+        private bool TryPublishRuntimeCells(SurfaceWorldData surfaceWorld,
+            out string error)
+        {
+            var colony = new ColonyRuntimeCellRegionAdapter(WorldData,
+                MaterialDrops, proceduralWorld);
+            var surface = new SurfaceRuntimeCellRegionAdapter(surfaceWorld,
+                proceduralWorld);
+            RuntimeCells ??= new RuntimeCellPublicationRegistry();
+            if (RuntimeCells.TryPublish(colony, surface, out error)) return true;
+            colony.Dispose();
+            surface.Dispose();
+            return false;
+        }
+
+        private void OnDestroy()
+        {
+            RuntimeCells?.Current?.Dispose();
         }
 
         /// <summary>

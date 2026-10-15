@@ -1,5 +1,21 @@
 # ANT COLONY
 
+## WV-B3B unified runtime cell authority foundation — 15 October 2026
+
+> **IMPLEMENTED — AUTOMATED TESTS PASSED, MANUAL ACCEPTANCE PENDING.**
+> Both loaded regions now publish through one typed, read-only runtime-cell
+> registry. Immutable snapshots expose the natural Background, compatible Node,
+> Placement and loose-stack projections, cell/publication revisions and bounded
+> region change feeds. Pure compatibility checks report Valid, Invalid or
+> Unknown without changing existing placement rules.
+
+`ChunkedWorldData`, `SurfaceWorldData`, `WorldMaterialDropRegistry`, functional
+Backgrounds, Storage, Construction Sites, ant inventory, residency, entrance
+and clock remain their existing authorities. Generated records are provenance;
+Surface resource nodes are explicitly generation-only. WV-B3B does not add
+Foraging, Surface Extraction, Fog of War, Refining, persistence, streaming or
+the WV-B3C/B3D migrations.
+
 ## WV-B3A unified runtime cell architecture — 15 October 2026
 
 > **APPROVED ARCHITECTURE; IMPLEMENTATION NOT STARTED.**

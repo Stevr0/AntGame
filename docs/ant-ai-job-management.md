@@ -1,5 +1,13 @@
 # Ant AI and Job Management
 
+## WV-B3B authority preservation
+
+Runtime-cell snapshots and change feeds are read-only inputs for future job
+integration. The shared `ColonyJobRegistry`, bounded fair selection passes,
+per-ant priorities, eligibility, path-cost comparison and exclusive reservation
+remain authoritative and unchanged. WV-B3B does not add Surface jobs or make
+generation-only nodes eligible for Extraction.
+
 ## Scheduler fairness acceptance and WV-B3A boundary
 
 The bounded resumable full-registry scheduler correction is now manually

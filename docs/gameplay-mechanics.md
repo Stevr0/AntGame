@@ -1,5 +1,14 @@
 # Gameplay Mechanics
 
+## WV-B3B compatibility boundary
+
+The runtime-cell foundation is observational. Extraction, loose resources,
+Hauling, Storage, Construction Site staging, ant inventory, job priorities,
+residency and the shared clock retain their existing authorities and behavior.
+Storage contents remain Placement-owned and Construction staging remains
+site-owned; neither is projected as an ordinary ground stack. Pure compatibility
+checks prepare future migrations but do not reject current gameplay actions.
+
 ## WV-B3A runtime-cell architecture
 
 The shared gameplay model is one natural Background plus optional Node,

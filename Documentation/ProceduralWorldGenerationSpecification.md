@@ -1,5 +1,16 @@
 # Procedural World Generation Specification
 
+## WV-B3B runtime publication clarification — 15 October 2026
+
+Validated generated records now initialise existing Colony and Surface
+authorities and are exposed through one atomically replaced read-model pair.
+They remain generation provenance, not a second mutable runtime store. Generated
+Surface nodes expose their IDs and initial/remaining generated quantity only as
+`GenerationOnly`; extraction and consumption remain deferred. Camera switching
+does not publish or regenerate either region. The host's read-model pair is
+all-or-nothing, while broader service construction still uses the existing
+development-host rebuild/restore boundary rather than a persistence transaction.
+
 ## WV-B3A runtime publication clarification
 
 `UnifiedRuntimeCellSpecification.md` now owns the post-generation runtime-cell

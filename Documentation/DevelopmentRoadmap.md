@@ -1,5 +1,27 @@
 # Ant Colony Development Roadmap
 
+## WV-B3B — Implemented; manual acceptance pending (15 October 2026)
+
+The approved authority-foundation slice is implemented. `RegionCellId` retains
+the region and Colony/Surface coordinate type; immutable snapshots are served by
+read-only Colony and Surface adapters. Exact committed Colony terrain/drop
+changes advance only the affected cell revision and enter a bounded,
+multi-consumer change journal. A pure compatibility validator supports
+diagnostics and future transaction integration without rejecting current
+gameplay actions.
+
+`AntGameDevelopmentWorldHost` validates both region adapters before atomically
+replacing the unified read-model pair. The view coordinator consumes the same
+published `SurfaceWorldData`; camera switches never republish. Gameplay writers
+and quantities remain in their pre-WV-B3B owners. Focused Unity evidence passes
+**6/6 Edit** and **3/3 Play**; complete regressions pass **557/557 Edit** and
+**77/77 Play**, all with zero failures, skips or inconclusive tests. Manual Unity
+acceptance remains pending. WV-B3C, WV-B3D and WV-C1 are not started.
+
+The smallest recommended WV-B3C slice is one authoritative mutable Node type
+plus its exact-once Extraction-to-loose-output transaction behind the published
+cell contract. It must not combine Placement migration or Surface gameplay.
+
 ## WV-B3A — Complete documentation gate (15 October 2026)
 
 `UnifiedRuntimeCellSpecification.md` now defines the approved end-state,
