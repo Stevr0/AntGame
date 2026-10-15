@@ -1,5 +1,19 @@
 # Technical Architecture
 
+## Approved unified cell boundary — 15 October 2026
+
+**Design only; not implemented.** Surface and Colony now share one logical cell
+shape: exactly one natural Background plus optional Solid/Resource Node,
+Construction/Placement and one-type loose resource stack. This is an ownership
+contract, not a four-Tilemap mandate. Region-specific adapters retain typed
+coordinates, separate A*, movement, clearance and rendering.
+
+WV-B2B needs generated Background/node records and may leave placement/loose
+slots empty. Existing Colony Background/Solid data adapts into the model;
+quantity-less legacy Solids appear as deterministic quantity-one nodes. Existing
+functional Backgrounds project as legacy placements until a later authorised
+migration. See [Procedural World Generation](procedural-world-generation.md).
+
 ## WV-B2A generation boundary — 15 October 2026
 
 The future generator is a pure initial-data producer, not a new runtime owner.
@@ -16,6 +30,11 @@ The current development `SampleWorldGenerator` remains a fixture builder and is
 not the production generator. An explicit scenario/provider selection will keep
 Mara/Pip/Tala separate from the one-queen generated scenario. View switching and
 presentation rebuilds may not invoke generation or reset mutable world state.
+
+The strongest reusable transaction seams are prepare-before-commit excavation,
+physical inventory/storage transfers, reservations and builder self-supply. The
+current loose-drop registry's multiple same-cell stacks and construction's
+Background replacement are compatibility mismatches, not target architecture.
 
 ## WV-B1 implemented two-view boundary — 14 October 2026
 

@@ -20,6 +20,43 @@ the entrance remain separate records. Procedural generation, source interaction,
 persistence, streaming and autonomous cross-view routing are not implemented by
 this decision.
 
+### Approved unified cell, node and placement model — 15 October 2026
+
+> **APPROVED DESIGN; NOT IMPLEMENTED.** This WV-B2A amendment supersedes older
+> conceptual descriptions of Surface sources as a separate world model and of
+> Sleeping/Storage/Nursery functions as natural Background replacements. Existing
+> runtime representations and development fixtures remain intact until an
+> authorised migration.
+
+Every resident Surface or Colony cell has exactly one natural Background and may
+have zero or one of each: Solid/Resource Node, Construction/Placement and loose
+physical resource stack. Compatibility rules decide which optional occupants
+may coexist. These are logical data layers, not a requirement for four Tilemaps.
+
+- **Background:** natural environment that always remains, such as Grass, Soil or
+  Stone. Removing/depleting a node reveals the same Background.
+- **Solid/Resource Node:** one finite node with stable identity, definition,
+  location, quantity, work/skill/output and depletion rules. Soil/Stone walls and
+  non-blocking Seed/Twig sources use the same node principle; obstruction is
+  definition-specific.
+- **Construction/Placement:** a player-created or authored function such as a
+  Sleeping Spot, Storage, Nursery or Door. Construction normally requires no
+  node, no existing placement and no incompatible loose stack, consumes physical
+  materials and preserves the natural Background.
+- **Loose stack:** one resource type per cell, bounded by its stack rules.
+  Compatible units merge; different loose types cannot share a cell. Storage is
+  not required for a valid ground stack.
+
+Storage is a Construction-owned capacity, not a Background or an independent
+ground stack. Where the 1:1 rule applies, one Storage placement provides one
+resource slot/capacity unit; the slot may hold one compatible type up to its
+approved stack/capacity. Extraction/excavation uses one exact-once node
+transaction: prepare a legal physical output, reduce quantity once, remove the
+depleted node while retaining Background, and create/merge output once. Work
+completion never auto-fills inventory. Direct eating/drinking remains a separate
+source-consumption transaction. Decay is approved for later design but excluded
+from WV-B2B.
+
 ## WV-B1 two-view foundation — 14 October 2026
 
 > **IMPLEMENTED — AWAITING VALIDATION.** WV-B1 adds the first bounded top-down Surface, manual Colony/World presentation switching, Surface-local movement and one physical capacity-one nest transition. It deliberately adds no Surface resources, foraging, procedural generation, cross-view autonomous work, unloaded simulation or additional entrances.
@@ -39,7 +76,7 @@ The authoritative WV-A rule that Colony navigation retains its accepted grip and
 3. **Physical ant travel:** An ant travels through its current region to the entrance before a validated transition to the other region. The same authoritative ant, needs, skills, job and inventory persist; a failed transition must leave recoverable state with no double residency or duplicated materials.
 4. **Initial natural sustenance:** The first small surface will contain finite seed and freshwater sources near the entrance. Foraging discovers sources, extraction produces physical recoverable output; direct consumption at a source is allowed without constructing storage.
 5. **Provisional water transport:** One unit of physically accounted liquid payload may use existing ant inventory/transfer accounting as an initial simplification. Water extraction, containment, recovery/drop semantics and source/storage transactions require explicit design in WV-A/WV-C; do not silently treat water like a loose Stone block or invent containers.
-6. **Natural rest:** Ants may rest at safe accessible natural positions before sleeping facilities exist. Constructed Sleeping Background provides a dedicated one-ant spot with faster recovery; quality-room bonuses remain future work.
+6. **Natural rest:** Ants may rest at safe accessible natural positions before sleeping facilities exist. A constructed Sleeping Placement provides a dedicated one-ant spot with faster recovery; quality-room bonuses remain future work.
 
 Both small starting regions should initially remain loaded and share the accepted clock, autonomy and authoritative ant records. Unloaded-region simulation, larger surface chunks, predators, cross-view autonomous work, production bootstrap and brood remain future separately approved milestones. The Mara/Pip/Tala development test scene remains intact.
 
@@ -50,11 +87,11 @@ The implementation-ready technical contract is `WorldViewTechnicalSpecification.
 
 > **APPROVED DESIGN; IMPLEMENTATION DEFERRED.** This supersedes any assumption that a new founding colony starts with prebuilt food, water or sleeping fixtures. The three-ant development scene remains a testing fixture.
 
-- **Start (superseded by WV-B2A on 15 October 2026):** The earlier Surface/no-chamber start is historical. The current approved new-game start is one founding queen in one small excavated underground chamber directly beneath the top-boundary Colony entrance, with no preconstructed Sleeping, Food Storage, Water Storage, Material Storage or Nursery backgrounds.
+- **Start (superseded by WV-B2A on 15 October 2026):** The earlier Surface/no-chamber start is historical. The current approved new-game start is one founding queen in one small excavated underground chamber directly beneath the top-boundary Colony entrance, with no preconstructed Sleeping, Food Storage, Water Storage, Material Storage or Nursery placements.
 - **Foraging discovers** food, water and other resource sources; **extraction physically removes/collects** finite resources and generates recoverable loose output. **Hauling** transports extracted materials. **Construction** self-supplies physical materials from inventory, storage or loose drops.
 - **Direct survival:** Ants may eat/drink at an accessible natural food/water source without requiring constructed storage. Natural sources must obey future finite-source/access/consumption rules; extraction and water transport need their own approved technical specification. Do not assume water is stackable like stone or that discovery automatically extracts it.
-- **Rest:** Ants may rest at a physically safe, accessible natural position before any dedicated sleeping space exists. Constructed Sleeping Backgrounds grant one dedicated resting position per tile with improved recovery efficiency; later enclosed-room quality may enhance efficiency but never gates basic use.
-- **Storage and nursery:** Food Storage, Water Storage, Material Storage and Nursery are built via existing resource-backed Background conversion jobs; each functional tile provides its previously approved 1:1 capacity. Unenclosed initial chambers can function; future doors/enclosure provide efficiency bonuses.
+- **Rest:** Ants may rest at a physically safe, accessible natural position before any dedicated sleeping space exists. Constructed Sleeping Placements grant one dedicated resting position per cell with improved recovery efficiency; later enclosed-room quality may enhance efficiency but never gates basic use.
+- **Storage and nursery:** Food Storage, Water Storage, Material Storage and Nursery are Constructions/Placements built through resource-backed Construction jobs; each placement provides its previously approved 1:1 capacity where applicable. The current functional-Background representation is a compatibility implementation awaiting migration. Unenclosed initial chambers can function; future doors/enclosure provide efficiency bonuses.
 - **Progression intent (updated by WV-B2A):** Begin in the generated starting
   chamber → reach nearby natural sustenance through the linked entrance → expand
   the chamber through excavation → recover/rest naturally → construct sleeping
@@ -74,7 +111,13 @@ The implementation-ready technical contract is `WorldViewTechnicalSpecification.
 - **Hauling** reserves, picks up and transports already-extracted physical material through the existing inventory and Material Storage rules. Excavation completion does not assign a hauling job.
 - **Construction** remains builder-owned self-supply. The builder may personally gather required material from existing inventory, compatible storage or a recoverable loose drop; material need not pass through storage first.
 - Output preparation and foreground removal are one exact-once transaction. A stable job key prevents duplicate output; if the configured yield cannot be represented safely under the existing bounded stack rules, the foreground Solid remains unchanged.
-- Excavation output uses the excavated cell, first filling compatible same-cell loose stacks to their existing maximum and then creating at most one new bounded stack there. The current logical drop model permits multiple traversable stacks at one cell, so no alternate-cell search is necessary. A future world representation that rejects that placement must use an already validated bounded fallback or preserve the terrain and fail without material loss.
+- **Implemented compatibility behavior:** excavation output currently uses the
+  excavated cell, fills compatible partial stacks and may create one new bounded
+  stack; the current registry permits multiple traversable stacks at one cell.
+  **Approved target:** one loose resource type/stack per cell. Migration must use
+  a validated deterministic alternate cell or preserve the node/terrain and fail
+  without material loss. Existing fixture data is not silently rewritten by
+  this documentation amendment.
 
 This separation applies to future World View extraction as a design rule, but it does not authorise World View terrain, navigation, foraging AI or new resource types.
 
@@ -143,7 +186,7 @@ Ant Game's player experience follows **Pause → Plan → Play → Observe → A
 
 ### Approved decisions
 
-1. **New game starts paused.** Player may inspect ants and terrain, move/zoom camera, designate excavation or functional Background conversion, and change work priorities before time advances.
+1. **New game starts paused.** Player may inspect ants and terrain, move/zoom camera, designate excavation or Construction/Placement work, and change work priorities before time advances.
 2. **Direct orders may be issued while paused.** They are accepted and displayed immediately, but must not execute, move ants, advance a route, perform work, complete transfers, or expire retries before resuming. Safe order replacement/cancellation semantics still apply.
 3. **Production UI uses Unity uGUI Canvas.** The existing IMGUI developer toolbar is retained only for optional Developer Mode. Normal play does not require opening developer tools.
 4. **Display only implemented work categories in the player UI.** Future/synthetic categories remain absent from the normal work interface until their real executors exist; developer diagnostics may still expose them.
@@ -197,8 +240,8 @@ Design intent: Build a small, finishable colony simulation in which individual a
 
 ### Functional backgrounds, construction and physical goods
 
-- **Functional Background tiles define colony uses and capacity**, including Nursery, Sleeping, Food Storage, Water Storage, Production and Burial. A functional tile generally grants one matching capacity slot (**1:1**). Food/water stockpile slots may hold a physical item/stack; exact stack limits **TBD**.
-- Player designates conversion of an accessible exposed Background tile; an ant **physically performs a Construction skill job using required resources**. Converting a functional tile later requires a new job and accounted material consumption. Construction improves through doing.
+- **Construction/Placement records define colony uses and capacity**, including Nursery, Sleeping, Food Storage, Water Storage, Production and Burial. A placement generally grants one matching capacity slot (**1:1**). Food/water stockpile slots may hold one physical compatible type/stack; exact stack limits **TBD**.
+- Player designates construction on a compatible accessible cell; an ant **physically performs a Construction skill job using required resources** while the natural Background remains. Replacing/removing a placement later requires a new job and accounted material handling. Construction improves through doing. Existing functional Background conversions are implemented legacy compatibility, not the target data model.
 - Excavated eligible Solid tiles yield **physical haulable resources**; no automatic global inventory credits or resource deletion. Ants transport them to storage/work sites. Interaction requires adjacency and physically present items at storage locations.
 - At need, autonomous ants target the **closest reachable available** relevant tile by path cost, unless a valid player-assigned spot overrides it (e.g. a personal sleeping spot). Avoid simultaneous capacity claims with reservation/occupancy rules.
 - Shared colony Food and Water Storage supplies are accessible to all ants. Each ant has Hunger and Thirst values that decrease over time and are replenished by consuming physical supplies at valid accessible storage. Lack of food eventually decreases health; lack of water blocks skill experience gains. Exact thresholds/rates and the relationship between water shortage and other stats remain **TBD**.
@@ -243,7 +286,7 @@ Before another gameplay milestone, perform a **read-only architecture/code-to-de
 - Excavation produces physical resources under the 14 October 2026 rule above: successful output is always a recoverable loose world drop and never an automatic inventory transfer. Neither extraction nor later pickup can silently destroy or duplicate resources.
 - One inventory slot may hold a **stack of identical compatible items**. Stack maximum per material is **TBD**. Early carrying limits use **slot count only**, not a weight or mass simulation. The existing concept of Hauling skill increasing carrying slots remains a balancing/design constraint to be reconciled with stacks and later saddlebags.
 - Resources retain physical locations and quantities in world drops, ant inventory, storage tiles and delivered construction-site materials. The colony may display aggregated totals, but totals are **derived views**, not teleportable resources.
-- Add **Material Storage Background** as a functional tile. As with other functional storage, one tile grants **one physical storage slot** (a compatible stack). Optional player-configured material filters can restrict accepted resource types. Food and Water Storage remain distinct shared stockpile types. Stored items are physical and require adjacency to deposit/withdraw.
+- Add **Material Storage** as a Construction/Placement. As with other functional storage, one placement grants **one physical storage slot** (one compatible type/stack). Optional player-configured material filters can restrict accepted resource types. Food and Water Storage remain distinct shared stockpile types. Stored items are placement-owned physical contents, not ground stacks, and require adjacency to deposit/withdraw.
 - If an occupied storage tile is removed or changed, contents become loose, recoverable physical items, consistent with prior design decisions.
 - When an ant requires inventory capacity for its current task, it automatically unloads **unnecessary** carried material. It retains material required by the current task, reserves and physically travels to the closest reachable compatible storage with capacity, deposits only enough to free the required capacity, then resumes the original task. If no compatible reachable storage is available, it places the unnecessary material at a valid nearby recoverable world-drop position. Bounded retries apply when neither transfer is currently possible. Player orders and critical survival may interrupt this recovery without duplicating or deleting resources.
 - Task-reserved material and material already staged at a worksite are not eligible for automatic unloading. Partial stacks and mixed-resource inventories follow the same physical reservation and conservation rules.

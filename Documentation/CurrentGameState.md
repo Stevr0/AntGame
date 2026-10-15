@@ -21,6 +21,27 @@ The approved new-game vision now starts the founding queen in one small excavate
 underground chamber directly beneath the Colony entrance. Older statements that
 put her on the Surface or start with no chamber are historical and superseded.
 
+### Unified-cell amendment status
+
+**Approved design; not implemented.** The target model requires one Background
+per cell and optional node, placement and one-type loose-stack occupants in both
+regions. Current runtime still differs:
+
+- Colony cells expose Background plus optional Solid material ID; Solids have no
+  per-instance node ID or remaining quantity.
+- Surface cells expose bounds/traversability and obstacle membership only.
+- construction replaces Background material with a functional Background and
+  registers separate capacity data;
+- loose material authority can hold multiple stacks, including different types,
+  at the same cell;
+- Material Storage already owns one bounded, one-type slot with reservations,
+  but ownership is tied to a functional Background cell.
+
+Exact-once excavation/drop output, physical inventories, reservations,
+builder-owned self-supply and Construction skill progression remain useful
+implemented seams. No migration, generator, extraction, decay or Unity tests are
+part of this amendment. `WV-B1-REG-001` remains outstanding.
+
 ## WV-B1-DEF-002 — Cross-Region Rendering Leakage — 15 October 2026
 
 **Implemented — Pending Manual Acceptance.** The defect had two presentation causes. The runtime Surface camera copied the Colony camera's all-layers culling mask, so spatial separation alone allowed Default-layer Colony renderers to enter World View at sufficiently wide or moved camera bounds. Separately, excavation/construction highlights and loose-material labels are IMGUI overlays projected through the Colony camera; disabling that camera did not stop `OnGUI` from drawing them.

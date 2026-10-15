@@ -700,6 +700,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
 
         <li class="md-nav__item">
+  <a href="#approved-unified-cell-boundary-15-october-2026" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Approved unified cell boundary — 15 October 2026
+      </span>
+    </span>
+  </a>
+
+</li>
+
+        <li class="md-nav__item">
   <a href="#wv-b2a-generation-boundary-15-october-2026" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -1071,6 +1082,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
 
         <li class="md-nav__item">
+  <a href="#approved-unified-cell-boundary-15-october-2026" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Approved unified cell boundary — 15 October 2026
+      </span>
+    </span>
+  </a>
+
+</li>
+
+        <li class="md-nav__item">
   <a href="#wv-b2a-generation-boundary-15-october-2026" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -1370,6 +1392,17 @@
 
 
 <h1 id="technical-architecture">Technical Architecture<a class="headerlink" href="#technical-architecture" title="Permanent link">&para;</a></h1>
+<h2 id="approved-unified-cell-boundary-15-october-2026">Approved unified cell boundary — 15 October 2026<a class="headerlink" href="#approved-unified-cell-boundary-15-october-2026" title="Permanent link">&para;</a></h2>
+<p><strong>Design only; not implemented.</strong> Surface and Colony now share one logical cell
+shape: exactly one natural Background plus optional Solid/Resource Node,
+Construction/Placement and one-type loose resource stack. This is an ownership
+contract, not a four-Tilemap mandate. Region-specific adapters retain typed
+coordinates, separate A*, movement, clearance and rendering.</p>
+<p>WV-B2B needs generated Background/node records and may leave placement/loose
+slots empty. Existing Colony Background/Solid data adapts into the model;
+quantity-less legacy Solids appear as deterministic quantity-one nodes. Existing
+functional Backgrounds project as legacy placements until a later authorised
+migration. See <a href="../procedural-world-generation/">Procedural World Generation</a>.</p>
 <h2 id="wv-b2a-generation-boundary-15-october-2026">WV-B2A generation boundary — 15 October 2026<a class="headerlink" href="#wv-b2a-generation-boundary-15-october-2026" title="Permanent link">&para;</a></h2>
 <p>The future generator is a pure initial-data producer, not a new runtime owner.
 It derives independent named Surface/Colony streams from one versioned world
@@ -1384,6 +1417,10 @@ Generation</a>.</p>
 not the production generator. An explicit scenario/provider selection will keep
 Mara/Pip/Tala separate from the one-queen generated scenario. View switching and
 presentation rebuilds may not invoke generation or reset mutable world state.</p>
+<p>The strongest reusable transaction seams are prepare-before-commit excavation,
+physical inventory/storage transfers, reservations and builder self-supply. The
+current loose-drop registry's multiple same-cell stacks and construction's
+Background replacement are compatibility mismatches, not target architecture.</p>
 <h2 id="wv-b1-implemented-two-view-boundary-14-october-2026">WV-B1 implemented two-view boundary — 14 October 2026<a class="headerlink" href="#wv-b1-implemented-two-view-boundary-14-october-2026" title="Permanent link">&para;</a></h2>
 <p>WV-B1 implements the typed and transactional subset of WV-A. <code>AntColony.World</code> owns region/cell value types plus bounded Surface data/A*; <code>AntColony.Navigation</code> owns the clock-driven kinematic Surface motor; <code>AntColony.Commands</code> owns exactly-one residency and the capacity-one entrance transaction; <code>AntColony.Development</code> composes both loaded regions, two cameras and explicit input contexts. <code>AntRecord</code>, <code>AntRegistry</code>, <code>AntEntityBinding</code>, the Colony world/navigation stack and <code>SimulationClockController</code> remain the existing authorities.</p>
 <p>The development adapter keeps the same bound GameObject across regions and switches local motors after residency commit. This is intentionally reversible and prevents a second live binding; it does not make the visual authoritative. Surface activation failure restores source residency and pose. No second clock, generic coordinate conversion, cross-region A*, resource authority or streaming system was introduced.</p>

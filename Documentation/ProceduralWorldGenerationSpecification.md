@@ -8,6 +8,219 @@
 > and does not authorise changes to Unity scripts, scenes, prefabs,
 > ScriptableObjects or tests.
 
+### Unified cell/resource amendment — approved 15 October 2026
+
+> **APPROVED DESIGN; NOT IMPLEMENTED.** This amendment is authoritative for
+> WV-B2B and later work. It unifies the logical cell, natural-resource and
+> placement model across Surface and Colony without merging their coordinate,
+> navigation, movement or rendering implementations. Existing functional
+> Background content remains supported through future adapters until an explicit
+> migration is implemented and accepted.
+
+Every resident cell has these logical occupancy slots:
+
+| Slot | Cardinality | Authority |
+| --- | ---: | --- |
+| Natural Background | exactly one | Stable natural environment and its movement/presentation metadata |
+| Solid / Resource Node | zero or one | Natural removable/extractable node, quantity and obstruction |
+| Construction / Placement | zero or one | Player-created or authored functional placement and any placement-owned capacity |
+| Loose Resource Object stack | zero or one | One physical resource type and bounded quantity on the ground |
+
+These are data responsibilities, not a requirement for four Unity Tilemaps.
+Region-specific renderers may combine or separate visuals as appropriate. An
+available cell with none of the three optional occupants still retains its
+Background. Background remains present behind every optional occupant and is
+revealed, not created, when a node is depleted or removed.
+
+### Background contract
+
+A Background is the required natural environment of a cell: for example Grass
+on the Surface and Soil or Stone underground. It has a stable definition ID and
+may retain region-appropriate presentation, movement permissions, grip, speed,
+hazard and terrain-compatibility metadata. Background presence alone does not
+imply that the cell is traversable; node obstruction, construction obstruction,
+region-specific clearance and local movement rules also participate.
+
+Sleeping, Food Storage, Water Storage, Material Storage, Nursery, doors and
+future production/burial functions are conceptually Constructions/Placements,
+not natural Backgrounds. The current project stores those functions in
+`BackgroundTileMaterialDefinition.Function` and replaces Background IDs during
+construction. That representation remains implemented compatibility data only;
+future migration must preserve the natural Background and project the legacy
+functional Background as a placement without silently deleting existing
+fixtures, contents, reservations or construction progress.
+
+### Solid / Resource Node contract
+
+“Solid” and “Resource Node” are one authoritative optional cell occupant. A node
+definition determines whether it blocks or supports movement, what work can act
+on it and what happens on depletion. A node instance contains:
+
+- stable `NodeId`, or a deterministic ID derived from generation identity,
+  typed region and cell;
+- stable node/resource definition ID;
+- typed region and cell location;
+- initial/maximum quantity and mutable remaining quantity;
+- obstruction/support and extraction/excavation properties from its definition;
+- required activity, skill and work amount;
+- output resource definition and output quantity rule;
+- depletion behavior, normally removing the node and revealing the unchanged
+  Background.
+
+Soil and Stone tiles are nodes. Seed, Twig and other future finite Surface
+sources are also nodes. Not every node blocks movement: a Soil wall may block,
+while a seed source may permit traversal. Excavation is a node-defined extraction
+activity and may consume the complete node in one successful job. Partial
+extraction decrements quantity; depletion removes the node. Generating a node
+does not generate a loose resource stack.
+
+### Construction / Placement contract
+
+A Construction/Placement is independent of the natural Background. Unless its
+definition explicitly allows an exception, designation and commit require:
+
+- a resident cell with no Solid/Resource Node;
+- no existing Construction/Placement;
+- no incompatible loose stack;
+- a valid accessible work position under local navigation rules;
+- required physical materials delivered through authoritative reservations and
+  transfers;
+- an ant completing the Construction work.
+
+Construction preserves the current builder-owned self-supply loop, staged
+physical materials, interruption recovery and learn-by-doing Construction skill.
+Completion creates the placement and consumes exactly the recipe quantity; it
+does not replace the natural Background. Placement definitions own obstruction,
+capacity, allowed resources and any explicit Background exception.
+
+Storage is a Construction. One storage placement provides one functional
+capacity unit/slot where the established 1:1 rule applies. “One capacity unit”
+means one placement-owned resource slot, not one individual item. The slot holds
+zero or one resource type at a time up to the capacity/stack limit defined by
+the storage and resource rules, supports reservations, deposits, withdrawals
+and filters, and remains physically conserved. Stored contents belong to the
+Construction; they are not the cell's independent loose ground stack. The
+current Material Storage maximum of 10 is provisional balance, not a universal
+rule. Food and Water storage must converge on the same placement-owned principle
+when their future interaction contract is implemented.
+
+### Loose Resource Object contract
+
+A loose stack is a physical, recoverable resource object produced by extraction,
+excavation, dropping or cancellation recovery. It may occupy an accessible,
+traversable cell without Storage. Exactly one loose resource type is allowed per
+cell. Same-type units merge up to the applicable capacity; a different type
+cannot coexist in that cell. A full compatible stack requires a validated
+alternate cell or causes the prepared source operation to remain uncommitted.
+
+Loose ownership key, resource ID, quantity, capacity and reservations are
+authoritative. Pickup, transport, drop and storage use prepared exact-once
+transactions. Interruption releases only reservations and never duplicates or
+destroys physical quantity. Resource decay is approved future design but is not
+part of WV-B2B and has no timer or rate here.
+
+### Shared node-interaction transaction
+
+All extraction-like work uses one logical transaction boundary while node
+definitions select the activity, skill, duration, quantity and output:
+
+| Node example | Activity | Skill | Physical result |
+| --- | --- | --- | --- |
+| Soil | Excavation | Excavation | Soil loose resource |
+| Stone | Excavation or Extraction | Definition-dependent | Stone loose resource |
+| Seed source | Extraction | Extraction definition; skill approval pending | Seed loose resource |
+| Twig source | Extraction | Extraction definition; skill approval pending | Twig loose resource |
+
+Before commit, validate node identity/revision, requested quantity, work
+completion and a legal output stack destination. The atomic commit reduces node
+quantity exactly once, removes it if depleted, creates/merges the physical output
+exactly once and invalidates relevant navigation/presentation. If output cannot
+be represented, the node and quantity remain unchanged. Output never enters an
+ant inventory merely because work completed. Direct eating/drinking is a
+separate consumption transaction against the authoritative source/node and does
+not implicitly create a loose item.
+
+### Shared concepts, region-specific behavior
+
+Surface and Colony share slot meanings, stable resource definitions, node
+quantity/depletion rules, loose accounting and placement principles. They may
+differ in visuals, generated materials and weights, navigation graphs, movement,
+clearance, obstruction interpretation and available interactions. Typed
+`SurfaceCell` and `ColonyCell`, their explicit conversions, `SurfacePathfinder`,
+the Colony grid pathfinder, residency and the WV-B1 entrance transaction remain
+separate. A unified cell model does not authorise merging local A* systems.
+
+### Existing implementation compatibility assessment
+
+| Current implementation | Difference from approved model | Required treatment |
+| --- | --- | --- |
+| `ChunkedWorldData` | Owns required Background plus optional Solid material ID; no construction/loose slots and no per-Solid identity/quantity | Preserve as the Colony terrain adapter initially; add shared logical cell records and node instance authority without breaking current terrain queries |
+| `BackgroundTileMaterialDefinition.Function` and `ConstructionWorldTransaction` | Functional placements are encoded as Background definitions and construction replaces the Background ID | Keep legacy content readable; adapter exposes the natural/source Background plus a legacy placement. Later transaction writes a placement record instead of replacing Background |
+| `ConstructionDesignationRegistry` | Calls work “Background conversion”; rejects Solids and occupied functional capacity but does not enforce the new loose-stack compatibility rule | Preserve jobs, recipes, builder self-supply, staging and skill XP; migrate validation to shared occupancy policy before generated-world construction is enabled |
+| `SurfaceWorldData` | Stores only bounds and an obstacle set | WV-B2B must provide a unified-cell Surface data adapter with required Backgrounds and optional generated nodes while leaving Surface A* separate |
+| `SolidTileMaterialDefinition` | Defines excavatable material/yield per type, while a Solid instance has no node ID or remaining quantity | Adapt each legacy Solid as a quantity-one node using a deterministic cell identity; introduce explicit node instances for generated worlds |
+| `ExcavationWorldTransaction` | Strong exact-once output/terrain removal seam, but removes the complete Solid and supports only Soil/Stone | Generalize later behind the shared node transaction; preserve its prepare-before-remove conservation and navigation notification |
+| `WorldMaterialDropRegistry` | Keyed physical stacks with reservations, but multiple stacks and different material types can occupy one cell | Before shared extraction/drop use, enforce one cell-owned loose stack, same-type merging and deterministic alternate/reject behavior; migrate fixtures without loss |
+| `MaterialStorageWorld` | One Background-owned slot, one type at a time, bounded quantity and strong reservations | Rebind ownership to a Storage placement while retaining filters, exact quantities, reservations and provisional stack 10 |
+| `SurvivalInteractionWorld` | Food/Water/Sleeping depend on functional Background IDs; food/water slots allow quantities but are separate from Material Storage | Adapt as legacy placements; later converge content ownership and source consumption on the placement/node transaction contracts |
+| `AntInventory` and hauling/construction orders | Already use typed bounded slots and prepared source/destination commits | Preserve; expand catalog/transactions without changing physical ownership or builder self-supply |
+
+The current drop registry specifically contradicts the newly approved
+single-type-per-cell rule. Existing documentation that permitted multiple
+traversable stacks at one cell is superseded. No current data is silently
+rewritten by this amendment.
+
+### Migration sequencing
+
+**Essential for WV-B2B procedural generation**
+
+1. Define a region-neutral logical cell snapshot/record with required Background
+   and optional node/placement/loose slots, wrapped by typed region coordinates.
+2. Add stable Background/node/resource definition boundaries and deterministic
+   generated node identities. Legacy Colony Solids adapt as quantity-one nodes.
+3. Generate `64×64` Surface and `128×128` Colony Background/node occupancy into
+   temporary unified records; placement and loose slots begin empty.
+4. Provide separate Surface and Colony adapters so existing pathfinders and
+   Colony terrain rendering can consume the generated world without merging.
+5. Preserve the explicit generated-versus-Mara/Pip/Tala scenario selection and
+   run structural validation. WV-B2B need not implement extraction, pickup,
+   construction or migration of the development fixture.
+
+**Required before WV-C1 resource interaction**
+
+1. Implement the shared revision/id-guarded node transaction and direct
+   consumption distinction.
+2. Enforce one loose type/stack per cell, compatible merge capacity and
+   deterministic fallback/rejection in every output/drop/cancellation path.
+3. Define approved Seed/Freshwater/Twig resource IDs, quantities, skills,
+   interaction work and terrain compatibility.
+4. Add cross-region resource/quantity conservation tests while retaining local
+   navigation boundaries.
+
+**Required before construction is enabled in the generated scenario**
+
+1. Introduce placement authority and shared occupancy validation.
+2. Project or migrate legacy functional Backgrounds to placements without
+   losing storage contents, reservations, sleep reservations, job progress or
+   fixture identities.
+3. Rebind Material/Survival Storage ownership to the placement and leave the
+   natural Background unchanged on build/cancel/remove.
+
+**Safely deferred**
+
+- decay and preservation bonuses;
+- richer node hardness/tools and partial-yield balance;
+- doors, production, burial, nursery and room-quality behavior beyond adapters;
+- save migration, streaming, unloaded simulation and additional entrances;
+- replacing legacy fixture serialization after adapter acceptance.
+
+Potential regressions include changed traversability where node/placement
+obstruction is misclassified; lost functional capacities or contents during
+Background-to-placement migration; duplicate/lost resources when consolidating
+same-cell drops; stale reservations; construction cancellation failing because a
+cell already has a different loose type; fixture/test IDs changing; and
+Surface/Colony coordinate leakage. Each requires explicit regression coverage.
+
 This specification supersedes older new-game statements that place the founding
 queen on the Surface or begin with no excavated Colony space. A new generated
 game begins with one founding queen in one small underground starting chamber.
@@ -19,17 +232,20 @@ accepted WV-A/WV-B1 entrance transaction.
 - World View and Colony View are separate full-screen regions. World View is
   top-down; Colony View is side-on and entirely underground.
 - One authoritative world seed deterministically produces both initial regions.
-- Surface terrain is predominantly Grass. Underground foreground terrain is
-  predominantly Dirt, represented initially by the existing `solid.soil`
-  definition unless a separate Dirt definition is later approved.
+- Surface Backgrounds are predominantly Grass. Underground Backgrounds are
+  predominantly Soil, while removable Solid/Resource Nodes are predominantly
+  Soil nodes with smaller Stone deposits. Existing `background.earth.unprepared`
+  and `solid.soil` are the provisional compatibility mappings until naming is
+  separately approved.
 - The Surface entrance is approximately central. The Colony exit occupies the
   approximately central cell of the topmost underground boundary.
 - Exactly one small chamber and its minimum connecting passage begin excavated.
   The founding queen starts at a valid location in that chamber.
 - The rest of the initial Colony is solid and is expanded through existing
   excavation mechanics.
-- Terrain, resource sources, loose resources and the entrance are different
-  kinds of records. A resource does not replace its underlying terrain.
+- Required Background, optional Solid/Resource Node, optional Construction and
+  optional loose stack are distinct occupancy slots. The entrance is a linked
+  feature. Removing a node never removes the Background.
 - The existing `entrance.founding-nest.001`, typed endpoints, capacity-one
   ownership, idempotent commit and rollback behavior remain authoritative.
 - Both starting regions remain resident on the shared simulation clock. Camera
@@ -92,8 +308,8 @@ Generation is an explicit new-game operation:
 
 1. Select `WorldGenerationConfiguration`, `WorldSeed` and `GenerationVersion`.
 2. Derive independent named random domains.
-3. Build Surface terrain and feature candidates into temporary data.
-4. Build Colony Background/Solid data into temporary data.
+3. Build Surface Background/node/feature candidates into temporary unified cells.
+4. Build Colony Background/node data into temporary unified cells.
 5. Apply protected entrance, passage, chamber and queen-spawn masks.
 6. Place source records and other features without replacing terrain.
 7. Validate the complete cross-region result.
@@ -167,10 +383,9 @@ material/source registry versions, but permanent save/load is outside WV-B2B.
 
 ### Colony
 
-Use an initial `128×128` underground region because the implemented development
-world already proves four-by-four `32×32` Colony chunks and the current grid
-services at that scale. This is a technical recommendation requiring approval
-before WV-B2B implementation.
+The approved initial Colony is `128×128`. The implemented development world
+already proves four-by-four `32×32` Colony chunks and the current grid services
+at that scale.
 
 Do not give the two views an implicit shared coordinate system. Define generated
 Colony-local coordinates as `(column, depth)`, with `column` and `depth` in
@@ -193,23 +408,26 @@ and offscreen simulation remain out of scope.
 
 ## 6. Surface generation
 
-### Terrain versus features
+### Backgrounds, nodes and features
 
-Every Surface cell has exactly one terrain classification. Resources and the
-nest entrance are separate records placed on compatible cells. Initial semantic
-terrain categories are Grass, Water, Stone ground and Natural Obstacle. WV-B2B
-must define stable Surface terrain IDs and presentation mappings; the existing
-Colony material definitions must not be reused merely because names overlap.
+Every Surface cell has exactly one natural Background plus optional unified
+occupants. Grass and connected Water areas are Background/terrain categories.
+Stone deposits, seed/twig sources and natural obstacles are Solid/Resource Nodes
+when they are removable or finite; a definition may be non-blocking. The nest
+entrance is a specialised linked feature. Loose stacks and Constructions begin
+absent. WV-B2B must define stable Surface Background/node IDs and presentation
+mappings; Colony material definitions are not reused merely because names
+overlap.
 
 Illustrative, **unapproved balance** for candidate terrain cells outside
 protected masks:
 
-| Surface terrain | Provisional base weight |
+| Surface generation category | Provisional base weight |
 | --- | ---: |
 | Grass | 82 |
 | Water | 8 |
-| Stone ground | 6 |
-| Natural obstacle | 4 |
+| Stone node/deposit candidate | 6 |
+| Natural obstacle node candidate | 4 |
 
 These are weighted inputs, not promised final percentages. Protected entrance
 and traversal cells override the draw. Validation checks that Grass is the
@@ -232,23 +450,24 @@ fields, then threshold and region-grow features:
 - A deterministic smoothing pass may remove isolated spikes, but its exact
   neighbour order and iteration count belong to the versioned configuration.
 
-Surface source placement runs after terrain. Scattered items use coordinate
-hashes plus minimum spacing; clustered sources choose deterministic centres and
-offset tables. Twigs, seeds/food and Surface stone are candidate source types,
-but only approved stable resource definitions may be emitted. A freshwater
-source is associated with a Water feature record; Water terrain itself is not a
-loose water item.
+Surface node placement runs after Background generation. Scattered nodes use
+coordinate hashes plus minimum spacing; clustered nodes choose deterministic
+centres and offset tables. Twigs, seeds/food and Surface Stone are candidate node
+types, but only approved stable definitions may be emitted. A freshwater source
+node/record is associated with compatible connected Water Background; Water
+Background itself is not a loose water item.
 
 ## 7. Underground generation
 
-Create all `128×128` Background cells and all initial Solid cells before carving
-protected starting space. Background and Solid IDs should correspond (Earth
-Background with Soil Solid; Stone Background with Stone Solid) unless a later
-material rule explicitly allows another pairing.
+Create all `128×128` predominantly Soil Background cells and their initial
+Solid/Resource Nodes before carving protected starting space. Most occupied
+cells contain a Soil node; smaller connected deposits contain Stone nodes.
+Background/node compatibility is definition-driven and does not require that
+their display names match.
 
 Illustrative, **unapproved balance** for non-protected underground cells:
 
-| Solid material | Provisional base weight | Depth tendency |
+| Solid/Resource Node | Provisional base weight | Depth tendency |
 | --- | ---: | --- |
 | Dirt via `solid.soil` | 88 | Highest near the entrance; remains the majority at every depth band |
 | `solid.stone` | 12 | Increases gradually with depth, capped so Dirt remains predominant |
@@ -300,11 +519,12 @@ anchor near the chamber centre, provisionally local `(64,6)`, only after the
 grid navigation validator confirms clearance and a route to the Colony
 approach. No door, prepared Background or functional room is required.
 
-The exact `7×5` chamber, three-cell passage width and endpoint/spawn cells are
-technical recommendations that require final WV-B2B approval. The fixed rules
-are: exactly one starting chamber, minimum connection to the top-boundary exit,
-sufficient whole-body clearance, a valid queen spawn and no other initial
-excavated areas.
+The `7×5` chamber and three-cell passage width are approved generation settings.
+The fixed rules are: exactly one starting chamber, minimum connection to the
+top-boundary exit, sufficient whole-body clearance, a valid deterministic queen
+spawn and no other initial excavated areas. Exact endpoint/spawn cells may move
+only if implementation validation finds a genuine clearance incompatibility and
+the change is documented.
 
 The carve mask has higher precedence than material deposits and source
 placement. Any extractable material removed by initial carving was never a
@@ -322,33 +542,34 @@ double-counting generated resources.
 - The queen can reach the Colony approach and, after transition, the Surface
   arrival can reach the guaranteed early-source access cells.
 
-## 9. Generated resource-source contract
+## 9. Generated Solid/Resource Node contract
 
-Generation produces source records separately from terrain:
+Generation produces optional node instances over required Backgrounds:
 
 | Field | Contract |
 | --- | --- |
-| `SourceId` | Stable ID derived from generation identity, region, source kind and canonical placement ordinal or coordinate; never a runtime instance ID |
+| `NodeId` | Stable ID derived from generation identity, region, node definition and canonical placement ordinal or coordinate; never a runtime instance ID |
 | `RegionId` | Typed owning region |
 | `Location` | Typed Surface or Colony-local location; no ambiguous `Vector2` |
-| `ResourceTypeId` | Registered stable resource/source type |
+| `NodeDefinitionId` | Registered stable node definition containing obstruction, activity, skill, work, output and depletion rules |
+| `OutputResourceTypeId` | Registered stable physical output resource type, when extraction produces output |
 | `InitialQuantity` | Positive configured quantity |
 | `RemainingQuantity` | Initially equals `InitialQuantity`; mutable at runtime |
 | `DiscoveryState` | Initial explicit state; guarantee sources may be known or readily discoverable according to later WV-C rules |
 | `DepletionState` | Initially not depleted; becomes derived/updated when remaining reaches zero |
 | provenance | World seed, generation version, configuration ID/revision and generator domain |
 
-Record categories remain distinct:
+Record categories and cell slots remain distinct:
 
-1. terrain material determines Surface traversal/presentation;
-2. underground Solid material determines blockage, excavation and existing yield;
-3. a Surface source is finite natural availability at a location;
-4. a loose physical resource is runtime inventory-independent output with its
-   own ownership/conservation rules;
+1. Background is always present and supplies natural environment metadata;
+2. the optional node supplies finite quantity, obstruction and extraction rules;
+3. the optional Construction supplies player-created function/capacity;
+4. the optional loose stack is runtime inventory-independent physical output;
 5. the entrance is a specialised linked world feature.
 
-WV-B2B may create the records required for validation, but it does not implement
-discovery, consumption, extraction, hauling, foraging or AI.
+WV-B2B creates Backgrounds and node records required for generation validation,
+with Construction/loose slots empty. It does not implement discovery,
+consumption, extraction, hauling, foraging, construction interaction or AI.
 
 ### Starting guarantees
 
@@ -456,6 +677,21 @@ open until complete execution evidence exists; WV-B2B must not relabel it.
 
 ### Edit Mode
 
+- every resident Surface and Colony cell always has one Background;
+- node removal/depletion preserves that Background;
+- node quantity reduction, depletion and deterministic identity are exact;
+- shared extraction commits node reduction and one physical output exactly once,
+  including interruption/retry cases;
+- one loose resource type/stack occupies a cell; same-type capacity merges and
+  different-type/full-stack output follows the approved fallback/reject policy;
+- Construction designation/commit rejects a node, existing placement or
+  incompatible loose stack and preserves the Background;
+- Construction consumes exactly its staged materials and retains skill XP,
+  progress and recoverability behavior;
+- Storage contents are placement-owned, one type at a time and conserved across
+  deposit, withdrawal, cancellation and placement migration;
+- equivalent logical occupancy invariants hold through Surface and Colony
+  adapters without merging their coordinate/pathfinding types;
 - golden PRNG vectors and stable sub-seed derivation;
 - same identity produces identical Surface cells, Colony cells, source records,
   feature IDs and validation report;
@@ -505,31 +741,35 @@ future Unity tests.
 The approved vision does not require reconsideration. WV-B2B still needs explicit
 approval of these implementation details:
 
-1. `128×128` initial Colony dimensions and the local-depth-to-signed-cell mapping.
-2. Exact `7×5` chamber, three-cell passage, endpoint and queen-spawn cells.
-3. Stable Surface terrain IDs/presentation and whether “Dirt” formally maps to
+1. Stable Surface Background/node IDs and presentation, plus whether “Soil”
+   formally maps to
    existing `solid.soil` or receives a renamed/new definition.
-4. Final terrain/material weights, Grass/Dirt minimum thresholds, noise
+2. Final Background/node weight balance, Grass/Soil minimum thresholds, noise
    frequency, cluster sizes and depth curve.
-5. Natural source stable IDs, quantities, discovery defaults, compatible
-   terrain and early path-cost budget.
-6. Whether the entrance clears underlying terrain to Grass or uses a dedicated
-   compatible entrance terrain category, plus final art.
-7. Generation/configuration version numbering and the frozen integer PRNG/hash
+3. Natural node stable IDs, quantities, skills/work, discovery defaults,
+   compatible Backgrounds and early path-cost budget.
+4. Whether the entrance uses Grass Background or a dedicated compatible
+   entrance Background category, plus final art.
+5. Generation/configuration version numbering and the frozen integer PRNG/hash
    implementation.
+6. Loose-stack capacity and deterministic alternate-cell policy beyond the
+   approved one-type-per-cell rule.
+7. Exact placement obstruction/compatibility exceptions and migration timing
+   for legacy functional Backgrounds.
 
 Sand, Mud, extra resource types, persistence, streaming, unloading, additional
 entrances and balance outside the initial guarantee remain later decisions.
 
 ## 15. Smallest recommended WV-B2B implementation
 
-After approval, implement one pure, scene-independent generated-world builder
-and validation result for a bounded `64×64` Surface plus bounded `128×128`
-Colony. Use only Grass/Water/Stone/obstacle semantic Surface terrain, existing
-Soil/Stone Colony definitions, one protected entrance/chamber, one queen spawn
-and source **records** for guaranteed food/freshwater. Add an explicit scenario
-selector that leaves the development fixture untouched, then bind the completed
-result through existing world, residency, navigation and coordinator seams.
+Implement one pure, scene-independent unified-cell builder and validation result
+for the approved bounded `64×64` Surface plus `128×128` Colony. Generate required
+Backgrounds and optional nodes only; placement and loose slots start empty. Use
+Grass/Water Surface Backgrounds, compatible Stone/obstacle/source nodes, existing
+Soil/Stone Colony compatibility definitions, the approved `7×5` chamber and
+three-cell passage, one queen spawn and guaranteed food/freshwater nodes. Add an
+explicit scenario selector and separate region adapters, leaving the development
+fixture untouched.
 
 Stop before consumption, extraction, hauling, foraging AI, persistence,
 streaming or autonomous cross-view routing. That is the smallest slice that can

@@ -491,6 +491,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
 
         <li class="md-nav__item">
+  <a href="#unified-background-and-node-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Unified Background and node model
+      </span>
+    </span>
+  </a>
+
+</li>
+
+        <li class="md-nav__item">
   <a href="#generated-underground-contract" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -925,6 +936,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
 
         <li class="md-nav__item">
+  <a href="#unified-background-and-node-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Unified Background and node model
+      </span>
+    </span>
+  </a>
+
+</li>
+
+        <li class="md-nav__item">
   <a href="#generated-underground-contract" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -1035,6 +1057,19 @@
 
 
 <h1 id="excavation-and-terrain">Excavation and Terrain<a class="headerlink" href="#excavation-and-terrain" title="Permanent link">&para;</a></h1>
+<h2 id="unified-background-and-node-model">Unified Background and node model<a class="headerlink" href="#unified-background-and-node-model" title="Permanent link">&para;</a></h2>
+<p><strong>Approved design; not implemented.</strong> Every resident Surface and Colony cell has
+one natural Background. An optional Solid/Resource Node owns finite quantity,
+obstruction, required activity/skill/work, physical output and depletion. Soil,
+Stone, Seed and Twig sources use this common concept; definitions decide whether
+a node blocks movement. Depletion removes the node and reveals the unchanged
+Background.</p>
+<p>The current Colony Solid material/yield model is the compatibility baseline:
+legacy Solids adapt as deterministic quantity-one nodes. Existing exact-once
+excavation remains the conservation pattern—prepare output, remove/reduce once,
+create physical loose output once—but future shared node transactions must also
+support partial quantity. Generated nodes never create loose resources merely by
+existing.</p>
 <h2 id="generated-underground-contract">Generated underground contract<a class="headerlink" href="#generated-underground-contract" title="Permanent link">&para;</a></h2>
 <p>WV-B2A approves an entirely underground Colony: no Sky row, above-ground layer
 or generated falling shaft. The recommended initial bounds are <code>128×128</code> cells
@@ -1044,8 +1079,9 @@ passage and exactly one starting chamber. Existing <code>solid.soil</code> is th
 Dirt majority and <code>solid.stone</code> forms clustered deposits; excavation continues
 to create the existing physical Soil/Stone drops and invalidate local navigation.</p>
 <p>Sand and Mud remain disabled until supported definitions, yields, art and tests
-are approved. Exact dimensions, weights and chamber geometry await WV-B2B
-approval. See <a href="../procedural-world-generation/">Procedural World Generation</a>.</p>
+are approved. The <code>128×128</code> Colony, <code>7×5</code> chamber and three-cell passage are now
+approved; weights remain provisional. See <a href="../procedural-world-generation/">Procedural World
+Generation</a>.</p>
 <h2 id="colony-view-two-layer-world-model">Colony View two-layer world model<a class="headerlink" href="#colony-view-two-layer-world-model" title="Permanent link">&para;</a></h2>
 <p>The implemented terrain foundation belongs to the underground <strong>Colony View</strong>. Each cell in a resident 32×32 chunk contains exactly one permanent Background Material and zero or one foreground Solid Material. Missing chunks are unavailable rather than silently generated during a query.</p>
 <p>The two layers have different responsibilities:</p>
@@ -1090,7 +1126,16 @@ approval. See <a href="../procedural-world-generation/">Procedural World Generat
 <p>Right-click in Excavation mode cancels only an excavation designation under the pointer; right-click in Background Conversion cancels only construction. The click is consumed even when the target is empty, preventing a movement order from dispatching through the tool. Select-mode contextual right-click and the existing Cancel tool remain unchanged.</p>
 <h2 id="implemented-excavation-and-material-handling">Implemented excavation and material handling<a class="headerlink" href="#implemented-excavation-and-material-handling" title="Permanent link">&para;</a></h2>
 <p>Excavate mode creates registry-owned jobs for eligible foreground Solid cells. Autonomous ants select them through the accepted priority/path-cost rules, reserve exclusively, reach a valid adjacent anchor and make incremental progress. Safe interruption retains progress. Completion removes only the foreground Solid and preserves the Background.</p>
-<p>The stable job-keyed transaction preflights the complete loose output before terrain removal. The excavator's inventory and storage availability are deliberately irrelevant. Yield first merges into compatible partial stacks at the excavated authoritative cell, then may create one new bounded stack there. The logical drop model permits multiple traversable stacks on a cell, so this is always the preferred/current placement; no alternate-cell search is needed. A failed or unrepresentable output leaves the Solid intact, and retries cannot duplicate yield. Successful commit preserves Background, refreshes the affected visual/collision cell and invalidates local navigation.</p>
+<p>The stable job-keyed transaction preflights the complete loose output before
+terrain removal. The excavator's inventory and storage availability are
+deliberately irrelevant. The current compatibility implementation merges into
+partial same-cell stacks and may create another bounded stack; it permits
+multiple traversable stacks on a cell. The approved target instead permits one
+loose type/stack per cell and therefore requires a deterministic validated
+alternate or an uncommitted failure. A failed/unrepresentable output leaves the
+node/Solid intact, and retries cannot duplicate yield. Successful commit
+preserves Background, refreshes presentation/collision and invalidates local
+navigation.</p>
 <p>Loose Soil and Stone stacks have stable identity, quantity, cell and provisional maximum stack 10. A selected ant can right-click a drop, reserve an eligible quantity, navigate adjacent and pick it up. Developer Only controls can drop a selected carried quantity at the ant's current valid anchor. Compatible same-cell stacks merge; failed or cancelled transfers preserve material and release reservations.</p>
 <p>Foraging means discovering or identifying resources. Extraction means physically removing them and producing loose material. Hauling is the separate pickup/transport activity. Construction remains builder-owned self-supply from carried inventory, storage or loose drops. Excavation never assigns hauling automatically, and a no-storage colony simply retains recoverable loose output.</p>
 <p>Material Storage remains physical rather than a global wallet. Each functional Background cell owns one compatible stack and incoming reservation. Autonomous haulers reserve source and destination, carry partial loads through personal inventory, and deposit only after reaching a valid adjacent anchor. Already-carried material produces an owner-only self-deposit task.</p>

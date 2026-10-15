@@ -11,6 +11,14 @@ Surface with no chamber: the generated founding queen now begins in one small
 excavated Colony chamber beneath the top-boundary exit. WV-B1's existing authored
 fixture and accepted transaction history remain unchanged.
 
+The later WV-B2A unified-cell amendment establishes the same logical occupancy
+slots in both regions: required natural Background plus optional
+Solid/Resource Node, Construction/Placement and one-type loose stack. It does
+not merge `ColonyCell`/`SurfaceCell`, local A*, movement or rendering. Natural
+Surface sources and underground Solids use the shared node principle; the
+entrance remains a specialised linked feature. Existing functional Background
+content is legacy compatibility data pending an authorised placement migration.
+
 ## WV-B1 implementation record — 14 October 2026
 
 **Implemented — Awaiting Validation.** WV-B1 approves and implements the proposed `64×64` Surface extent, logical origin `(0,0)`, one-unit cell scale, `32×32` future partition dimension, fixed obstacle-only fixture and eight-direction traversal with the documented no-corner-cut rule. Full chunk streaming is not implemented.

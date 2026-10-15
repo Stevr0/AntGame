@@ -16,6 +16,16 @@ scenario selector. It requires approval of dimensions, chamber geometry, stable
 Surface/source IDs, weights and versioned PRNG details. It excludes resource
 interaction, AI, persistence, streaming and autonomous cross-view routing.
 
+### Unified-cell amendment
+
+WV-B2A now approves one logical cell model across both regions: required natural
+Background plus optional node, placement and one-type loose stack. This is not
+implemented. WV-B2B should generate Background/node slots only and preserve
+separate region adapters. Shared node interaction and strict loose occupancy
+precede WV-C1; legacy functional-Background migration precedes construction in
+the generated scenario. Decay, streaming and full fixture migration remain
+later work. `WV-B1-REG-001` remains open.
+
 ## WV-B1 runtime gate
 
 **Implemented — Awaiting Validation (14 October 2026).** Typed residency, a deterministic `64×64` Surface, dedicated Surface navigation, manual remembered cameras and one capacity-one physical-approach entrance are running in the existing development scene. Focused verification passed 8/8 Edit and 2/2 Play; complete Play passed 69/69. Complete headless Edit regression was interrupted by a Unity rendered-pixel crash and is not counted as passed. Finish the manual checklist and broad graphics-enabled regression before accepting WV-B1; do not start WV-C/WV-D.

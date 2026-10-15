@@ -361,6 +361,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
 
         <li class="md-nav__item">
+  <a href="#unified-resources-and-placements" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Unified resources and placements
+      </span>
+    </span>
+  </a>
+
+</li>
+
+        <li class="md-nav__item">
   <a href="#generated-founding-colony-start" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -914,6 +925,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
 
         <li class="md-nav__item">
+  <a href="#unified-resources-and-placements" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Unified resources and placements
+      </span>
+    </span>
+  </a>
+
+</li>
+
+        <li class="md-nav__item">
   <a href="#generated-founding-colony-start" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -1013,11 +1035,22 @@
 
 
 <h1 id="gameplay-mechanics">Gameplay Mechanics<a class="headerlink" href="#gameplay-mechanics" title="Permanent link">&para;</a></h1>
+<h2 id="unified-resources-and-placements">Unified resources and placements<a class="headerlink" href="#unified-resources-and-placements" title="Permanent link">&para;</a></h2>
+<p><strong>Approved design; not implemented.</strong> Extraction and excavation act on the same
+finite Solid/Resource Node model. Successful work reduces quantity exactly once,
+removes a depleted node while retaining natural Background, and creates/merges a
+physical loose stack exactly once. It never auto-fills inventory. Direct
+eating/drinking is a separate source-consumption transaction.</p>
+<p>Each cell permits at most one loose resource type/stack. Storage is a
+Construction-owned slot, not a ground stack or natural Background; one placement
+provides one capacity unit/slot where the 1:1 rule applies. Existing builder
+self-supply, material staging, interruption recovery and Construction skill
+progression remain authoritative behavior to preserve during migration.</p>
 <h2 id="generated-founding-colony-start">Generated founding-colony start<a class="headerlink" href="#generated-founding-colony-start" title="Permanent link">&para;</a></h2>
 <p>WV-B2A approves the future new-game layout: one founding queen starts in one
 small excavated underground chamber connected to the approximately central
 top-boundary Colony exit. The linked <code>64×64</code> Surface is predominantly Grass and
-guarantees reachable finite food and freshwater source records near its central
+guarantees reachable finite food and freshwater nodes near its central
 entrance. No storage, sleeping facility, nursery or other completed
 infrastructure exists initially. This is approved design, not implemented
 gameplay; source consumption, extraction, hauling and foraging remain later
@@ -1122,6 +1155,12 @@ scopes. See <a href="../procedural-world-generation/">Procedural World Generatio
 <td>WV-B2A</td>
 <td>Documentation complete</td>
 <td>Runtime not started; WV-B2B awaits approval</td>
+</tr>
+<tr>
+<td>Unified cell/node/placement/loose contract</td>
+<td>WV-B2A amendment</td>
+<td>Documentation complete</td>
+<td>Migration not started</td>
 </tr>
 <tr>
 <td>World View resources and autonomous cross-view work</td>

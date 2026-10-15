@@ -1,5 +1,15 @@
 # Food, Water and Survival
 
+## Unified node and storage amendment
+
+Future finite food/freshwater availability uses the shared Resource Node model
+on a required natural Background. Extraction creates conserved physical output;
+direct eating/drinking is a separate exact source-consumption transaction.
+Food/Water Storage is a Construction-owned slot, not a natural Background or
+ground stack. These are approved target contracts, not implemented WV-B2B/WV-C1
+behavior. Existing functional-Background survival fixtures remain unchanged
+through a compatibility adapter until migration is authorised.
+
 ## Accepted needs foundation
 
 Milestone 3.2A is complete and manually accepted. Every authoritative ant record owns Health, Hunger, Thirst, Fatigue, and Rested qualification. State persists through selection changes and visual rebinding, and a deterministic development-world rebuild resets it.
@@ -54,7 +64,13 @@ Milestone 3.4B routes needs, interactions, autonomous evaluation and retry/backo
 
 ## Future founding-colony contract
 
-The WV-A specification adds design only, not runtime behavior: finite Surface seed and freshwater sources, direct eating/drinking without storage, extraction to recoverable output, one-unit non-solid water payloads, and safe natural rest. Constructed Sleeping Background keeps one-ant capacity and the existing 16/hour recovery; a provisional 8/hour natural-rest rate requires WV-C1 approval. Water must remain conserved across source, ground cache, ant inventory and Water Storage ownership.
+The WV-A/WV-B2A specifications add design only, not runtime behavior: finite
+Surface food/freshwater nodes, direct eating/drinking without storage,
+extraction to recoverable output, one-unit non-solid water payloads, and safe
+natural rest. A constructed Sleeping Placement keeps one-ant capacity and the
+existing 16/hour recovery; a provisional 8/hour natural-rest rate requires
+WV-C1 approval. Water must remain conserved across node/source, ground cache,
+ant inventory and Water Storage placement ownership.
 
 ## Not implemented
 

@@ -20,6 +20,21 @@ hauling, persistence, streaming or autonomous cross-view routing. WV-B1 manual
 acceptance and `WV-B1-REG-001` remain independently open and must not be
 relabelled as passed by this documentation work.
 
+### WV-B2A unified-cell amendment — complete documentation gate
+
+The approved logical model now gives every Surface and Colony cell one natural
+Background plus optional Solid/Resource Node, Construction/Placement and
+one-type loose stack. This is not implemented. Existing functional Background
+conversions, quantity-one implicit Solids, bounded Surface obstacles and
+multi-stack world drops require adapters/migration rather than silent rewrites.
+
+The minimum WV-B2B slice is limited to unified generated Background/node records,
+empty placement/loose slots, deterministic IDs, structural validation, separate
+region adapters and scenario selection. Shared extraction and strict loose
+occupancy are required before WV-C1 interaction. Functional-Background-to-
+placement migration is required before construction is enabled in the generated
+scenario. Resource decay and broader migration remain deferred.
+
 ## WV-B1-DEF-002 cross-region rendering leakage — correction awaiting manual acceptance (15 October 2026)
 
 The Surface camera inherited an all-layers mask and Colony IMGUI overlays continued drawing through the disabled Colony camera. The correction assigns runtime Surface presentation and Surface-resident ant renderers to a dedicated `SurfaceWorld` layer, gives the two cameras mutually exclusive Surface visibility, and gates Colony overlays and Colony-only World/Debug controls by active view without disabling any authority or simulation. Focused regressions cover layer/mask ownership, repeated switching, dynamic designation persistence, input context, unchanged state and bidirectional ant visual handoff. The affected assemblies compile with Unity Roslyn; focused WV-B1 Edit Mode passed **9/9** and focused Play Mode passed **4/4**, all with zero failures or skips. An initial restricted Play runner attempt crashed in `BuildReportRestService` before discovery, but the unrestricted rerun completed and produced passing XML. The documented manual Play Mode checklist remains pending.

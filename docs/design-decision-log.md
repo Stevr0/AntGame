@@ -1,5 +1,23 @@
 # Design Decision Log
 
+## 2026-10-15 — Unify logical cells, nodes, placements and loose occupancy
+
+- Require one natural Background in every resident Surface and Colony cell.
+- Permit zero or one Solid/Resource Node, Construction/Placement and loose stack,
+  subject to compatibility; one loose resource type is allowed per cell.
+- Treat Soil/Stone walls and Surface sources as node instances whose definitions
+  own obstruction, activity, skill, work, output and depletion.
+- Keep natural Background after node depletion and Construction; reclassify
+  Sleeping/Storage/Nursery/doors as placements.
+- Make Storage placement-owned one-type capacity, preserving the applicable
+  one-placement-to-one-slot rule and physical accounting.
+- Preserve exact-once physical output, reservations, builder self-supply and
+  Construction skill progression. Do not auto-fill inventory on extraction.
+- Retain typed region coordinates, separate local navigation, WV-B1 entrance
+  transactions and Mara/Pip/Tala fixtures.
+- Approve `128×128` Colony bounds, `7×5` chamber and three-cell passage. Weights
+  remain provisional. Defer code migration, interaction and decay.
+
 ## 2026-10-15 — Specify one-seed Surface and underground Colony generation
 
 - Approve one versioned world seed with independent deterministic Surface and

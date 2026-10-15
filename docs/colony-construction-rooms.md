@@ -1,12 +1,28 @@
 # Colony Construction and Rooms
 
+## Approved placement model amendment
+
+**Design approved; migration not implemented.** Sleeping, Food/Water/Material
+Storage, Nursery, doors and future specialised functions are
+Constructions/Placements over an unchanged natural Background. A cell normally
+requires no node, no existing placement and no incompatible loose stack.
+Construction still consumes physical materials, uses builder self-supply and
+awards Construction skill through work.
+
+One Storage placement owns one functional slot/capacity unit where the 1:1 rule
+applies. That slot contains zero or one resource type up to its capacity; stored
+content is not the cell's independent ground stack. The current functional-
+Background implementation below remains compatibility behavior for existing
+fixtures until an authorised migration preserves contents, reservations,
+progress and identities.
+
 ## Approved construction model
 
 Construction is physical, location-based work. Milestone 3.4A implements conversion of exposed Background cells after required materials are gathered and consumed. Recipes and balance remain provisional.
 
 The ant performing construction must personally gather and deliver its own materials, including multiple trips. A separate hauler must not silently complete the builder's supply responsibility. Reservations prevent double allocation; cancelling construction leaves unused delivered or reserved materials physical and recoverable.
 
-## Functional Backgrounds
+## Functional Backgrounds (implemented compatibility representation)
 
 Approved functions include:
 

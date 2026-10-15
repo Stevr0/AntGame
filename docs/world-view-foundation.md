@@ -1,5 +1,13 @@
 # World View Foundation
 
+## Shared logical cell amendment
+
+Surface and Colony now share required Background plus optional node, placement
+and one-type loose-stack concepts. They do not share coordinates, A*, movement
+or clearance implementations. The WV-B1 residency, capacity-one entrance and
+rendering isolation remain unchanged. This amendment is approved design only;
+the current bounded Surface still stores obstacles rather than unified cells.
+
 ## WV-B2A generated-world extension
 
 The approved future generated-world contract is summarized in [Procedural World

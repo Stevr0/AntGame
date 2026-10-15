@@ -1,11 +1,25 @@
 # Gameplay Mechanics
 
+## Unified resources and placements
+
+**Approved design; not implemented.** Extraction and excavation act on the same
+finite Solid/Resource Node model. Successful work reduces quantity exactly once,
+removes a depleted node while retaining natural Background, and creates/merges a
+physical loose stack exactly once. It never auto-fills inventory. Direct
+eating/drinking is a separate source-consumption transaction.
+
+Each cell permits at most one loose resource type/stack. Storage is a
+Construction-owned slot, not a ground stack or natural Background; one placement
+provides one capacity unit/slot where the 1:1 rule applies. Existing builder
+self-supply, material staging, interruption recovery and Construction skill
+progression remain authoritative behavior to preserve during migration.
+
 ## Generated founding-colony start
 
 WV-B2A approves the future new-game layout: one founding queen starts in one
 small excavated underground chamber connected to the approximately central
 top-boundary Colony exit. The linked `64×64` Surface is predominantly Grass and
-guarantees reachable finite food and freshwater source records near its central
+guarantees reachable finite food and freshwater nodes near its central
 entrance. No storage, sleeping facility, nursery or other completed
 infrastructure exists initially. This is approved design, not implemented
 gameplay; source consumption, extraction, hauling and foraging remain later
@@ -30,6 +44,7 @@ scopes. See [Procedural World Generation](procedural-world-generation.md).
 | Colony work-priority matrix | Approved 3.4D slice | Implemented | Automated passed; manual pending |
 | Two-view region/entrance contract | WV-B1 | Implemented | 8/8 focused Edit and 2/2 focused Play; manual pending |
 | Seeded two-region generation contract | WV-B2A | Documentation complete | Runtime not started; WV-B2B awaits approval |
+| Unified cell/node/placement/loose contract | WV-B2A amendment | Documentation complete | Migration not started |
 | World View resources and autonomous cross-view work | Later WV-C/WV-D | Not implemented | Not tested |
 | Colony priorities and autonomous jobs | Approved design | Implemented foundation | Accepted in Play Mode |
 | Brood and reproduction | Approved design | Not implemented | Not tested |

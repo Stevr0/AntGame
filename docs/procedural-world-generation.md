@@ -13,15 +13,28 @@ wiki summary, not a second source of truth.
   Colony.
 - The initial Surface remains `64×64`, predominantly Grass, with an entrance near
   `(32,32)`.
-- The recommended initial Colony is `128×128`, predominantly existing
+- The approved initial Colony is `128×128`, predominantly existing
   `solid.soil`, with Stone deposits and no Sky/above-ground row.
 - The Colony exit is on the topmost underground boundary. One minimum passage
   leads to exactly one small starting chamber containing the founding queen.
-- Terrain, finite source records, loose physical items and the entrance remain
-  separate authorities.
+- Required Backgrounds, optional nodes, optional placements, optional loose
+  stacks and the entrance remain separate authorities.
 
-The `128×128` Colony, `7×5` chamber, three-cell passage and exact generation
-weights are implementation recommendations awaiting WV-B2B approval.
+The `7×5` chamber and three-cell passage are approved. Surface weights
+82/8/6/4 and Colony node weights 88/12 remain provisional balance.
+
+## Unified cell model
+
+Every generated cell has one natural Background and optional node, placement and
+loose-stack slots. Surface and Colony share these meanings while retaining typed
+coordinates and separate navigation. Grass/Water are Surface Backgrounds;
+Stone/obstacles/finite sources are compatible nodes where removable or finite.
+Underground begins with predominantly Soil Background plus Soil/Stone nodes in
+most cells. Chamber/passage carving removes nodes only and keeps Backgrounds.
+
+WV-B2B generates Backgrounds/nodes with placement and loose slots empty. It does
+not implement extraction or construction, and generated nodes never emit loose
+resources merely by existing.
 
 ## Determinism contract
 
@@ -31,7 +44,7 @@ derive named Surface, Colony, entrance and guarantee domains. Generation order,
 frame rate, camera state, dictionary order and ant movement cannot affect output.
 
 Generation builds temporary data, applies protected entrance/chamber masks,
-places source records, validates the complete result and only then publishes it.
+places node records, validates the complete result and only then publishes it.
 Validation never rerolls a failed seed. Once published, excavation and depletion
 mutate the in-memory world; switching views never regenerates it.
 
@@ -50,15 +63,16 @@ fixtures stay available separately from the generated founding-colony scenario.
 
 ## Terrain and sources
 
-Provisional, unapproved example weights are 82 Grass / 8 Water / 6 Stone ground
-/ 4 obstacle on the Surface and 88 Soil / 12 Stone underground. Correlated
+Provisional, unapproved example weights are 82 Grass Background / 8 Water
+Background / 6 Stone-node / 4 obstacle-node candidates on the Surface and 88
+Soil-node / 12 Stone-node underground. Correlated
 noise, deterministic region growth and bounded clusters avoid uniform speckle.
 Sand and Mud remain disabled because the current project has no supported
 production definitions or yield contracts for them.
 
-At least one finite food source and freshwater access/source must be reachable
+At least one finite food node and freshwater access/source node must be reachable
 near the Surface entrance without constructed infrastructure. Sources are
-records on compatible terrain, not replacement terrain or loose drops. Exact
+nodes on compatible Backgrounds, not replacement Backgrounds or loose drops. Exact
 types, quantities and balance belong to a later approved resource slice.
 
 ## Validation gate
@@ -72,8 +86,9 @@ configuration failures reject the original seed with diagnostics.
 
 ## WV-B2B boundary
 
-The smallest future implementation is a pure bounded builder/validator plus an
-explicit scenario selector and adapters into existing world authorities. It does
+The smallest future implementation is a pure bounded unified-cell
+builder/validator plus an explicit scenario selector and separate region
+adapters. It generates Background and node slots only. It does
 not include source consumption, extraction, hauling, foraging, persistence,
 streaming, unloaded simulation, extra entrances or autonomous cross-view routes.
 
