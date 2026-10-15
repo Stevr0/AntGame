@@ -14,6 +14,7 @@ nav = [
   { "Home" = "index.md" },
   { "Game Overview" = "game-overview.md" },
   { "Gameplay Mechanics" = "gameplay-mechanics.md" },
+  { "Gameplay Architecture Audit" = "gameplay-architecture-audit.md" },
   { "Ants, Attributes and Skills" = "ants-attributes-skills.md" },
   { "Ant Movement and Navigation" = "ant-movement-navigation.md" },
   { "World View Foundation" = "world-view-foundation.md" },
