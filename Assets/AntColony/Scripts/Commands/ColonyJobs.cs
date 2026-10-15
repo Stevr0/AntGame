@@ -57,8 +57,18 @@ namespace AntColony.Commands
     public sealed class ColonyJobRegistry
     {
         private readonly Dictionary<ColonyJobId, ColonyJob> jobs = new();
-        public IEnumerable<ColonyJob> Jobs => jobs.Values;
+        private readonly List<ColonyJob> jobsInCreationOrder = new();
+        public IEnumerable<ColonyJob> Jobs => jobsInCreationOrder;
         public int Count => jobs.Count;
+
+        /// <summary>
+        /// Changes when removal can shift an existing cursor. New jobs append to
+        /// creation order and can safely join a pass without restarting it.
+        /// Status changes are rechecked before a candidate is used.
+        /// </summary>
+        public int CursorRevision { get; private set; }
+
+        internal ColonyJob GetAt(int index) => jobsInCreationOrder[index];
 
         public bool TryAdd(
             ColonyJobId id,
@@ -88,7 +98,7 @@ namespace AntColony.Commands
                     error = $"Job ID {id} already exists.";
                     return false;
                 }
-                jobs.Remove(id);
+                Remove(id);
             }
             foreach (ColonyJob existing in jobs.Values)
             {
@@ -104,6 +114,7 @@ namespace AntColony.Commands
 
             job = new ColonyJob(id, category, targetCell);
             jobs.Add(id, job);
+            jobsInCreationOrder.Add(job);
             error = string.Empty;
             return true;
         }
@@ -225,7 +236,13 @@ namespace AntColony.Commands
             }
         }
 
-        public void Clear() => jobs.Clear();
+        public void Clear()
+        {
+            if (jobs.Count == 0) return;
+            jobs.Clear();
+            jobsInCreationOrder.Clear();
+            CursorRevision++;
+        }
 
         public void RemoveWhere(Predicate<ColonyJob> shouldRemove)
         {
@@ -233,7 +250,15 @@ namespace AntColony.Commands
             var ids = new List<ColonyJobId>();
             foreach (ColonyJob job in jobs.Values)
                 if (shouldRemove(job)) ids.Add(job.Id);
-            foreach (ColonyJobId id in ids) jobs.Remove(id);
+            foreach (ColonyJobId id in ids) Remove(id);
+        }
+
+        private void Remove(ColonyJobId id)
+        {
+            if (!jobs.TryGetValue(id, out ColonyJob job)) return;
+            jobs.Remove(id);
+            jobsInCreationOrder.Remove(job);
+            CursorRevision++;
         }
 
         private bool TryGetOwned(
@@ -257,10 +282,58 @@ namespace AntColony.Commands
         }
     }
 
+    /// <summary>Read-only evidence from the most recent bounded selection step.</summary>
+    public readonly struct ColonyJobSelectionDiagnostics
+    {
+        public ColonyJobSelectionDiagnostics(
+            int examined,
+            int total,
+            int nextIndex,
+            bool passCompleted,
+            ColonyJobId selectedJobId,
+            int eligibleCandidates,
+            int reachableCandidates,
+            int unavailableRejected,
+            int disabledRejected,
+            int eligibilityRejected,
+            int unreachableRejected)
+        {
+            ExaminedThisEvaluation = examined;
+            TotalJobs = total;
+            NextIndex = nextIndex;
+            PassCompleted = passCompleted;
+            SelectedJobId = selectedJobId;
+            EligibleCandidatesSeen = eligibleCandidates;
+            ReachableCandidatesSeen = reachableCandidates;
+            UnavailableRejected = unavailableRejected;
+            DisabledRejected = disabledRejected;
+            EligibilityRejected = eligibilityRejected;
+            UnreachableRejected = unreachableRejected;
+        }
+
+        public int ExaminedThisEvaluation { get; }
+        public int TotalJobs { get; }
+        public int NextIndex { get; }
+        public bool PassCompleted { get; }
+        public ColonyJobId SelectedJobId { get; }
+        public int EligibleCandidatesSeen { get; }
+        public int ReachableCandidatesSeen { get; }
+        public int UnavailableRejected { get; }
+        public int DisabledRejected { get; }
+        public int EligibilityRejected { get; }
+        public int UnreachableRejected { get; }
+        public bool HasPendingReachableCandidate =>
+            !PassCompleted && ReachableCandidatesSeen > 0;
+    }
+
     public sealed class ColonyJobSelectionService
     {
         public const int MaximumCandidatesPerEvaluation = 32;
-        private readonly List<ColonyJob> candidates = new(MaximumCandidatesPerEvaluation);
+        private readonly Dictionary<AntId, SelectionPass> passes = new();
+
+        /// <summary>True when another bounded evaluation is needed to finish the pass.</summary>
+        public bool LastEvaluationInProgress { get; private set; }
+        public ColonyJobSelectionDiagnostics LastDiagnostics { get; private set; }
 
         public bool TryChoose(
             AntRecord ant,
@@ -287,47 +360,179 @@ namespace AntColony.Commands
         {
             selected = null;
             approach = default;
+            LastEvaluationInProgress = false;
+            LastDiagnostics = default;
             if (ant == null || registry == null || map == null)
             {
                 error = "Job selection requires an ant, colony registry and navigation map.";
                 return false;
             }
 
-            for (int priority = 1; priority <= 4; priority++)
+            if (registry.Count == 0)
             {
-                candidates.Clear();
-                foreach (ColonyJob job in registry.Jobs)
-                {
-                    if (candidates.Count >= MaximumCandidatesPerEvaluation) break;
-                    if (job.CanBeClaimed && (eligibility == null || eligibility(job)) &&
-                        (int)ant.WorkPriorities.Get(job.Category) == priority)
-                        candidates.Add(job);
-                }
-
-                float bestCost = float.PositiveInfinity;
-                foreach (ColonyJob candidate in candidates)
-                {
-                    if (!SurvivalInteractionOrder.TryMeasureApproach(
-                            map, start, candidate.TargetCell,
-                            out Vector2Int candidateApproach,
-                            out float cost, out _)) continue;
-                    if (cost < bestCost || Mathf.Approximately(cost, bestCost) &&
-                        Compare(candidate, selected) < 0)
-                    {
-                        selected = candidate;
-                        approach = candidateApproach;
-                        bestCost = cost;
-                    }
-                }
-                if (selected != null)
-                {
-                    error = string.Empty;
-                    return true;
-                }
+                passes.Remove(ant.Id);
+                error = "No reachable enabled colony job is currently available.";
+                return false;
             }
 
+            if (!passes.TryGetValue(ant.Id, out SelectionPass pass) ||
+                !pass.Matches(registry, map, start, ant.WorkPriorities.Revision))
+            {
+                pass = new SelectionPass(
+                    registry, map, start, ant.WorkPriorities.Revision);
+                passes[ant.Id] = pass;
+            }
+
+            int remaining = registry.Count - pass.NextIndex;
+            int examined = Math.Min(MaximumCandidatesPerEvaluation, remaining);
+            int endIndex = pass.NextIndex + examined;
+            for (int index = pass.NextIndex; index < endIndex; index++)
+            {
+                ColonyJob job = registry.GetAt(index);
+                if (!job.CanBeClaimed)
+                {
+                    pass.UnavailableRejected++;
+                    continue;
+                }
+                int priority = (int)ant.WorkPriorities.Get(job.Category);
+                if (priority < 1 || priority > 4)
+                {
+                    pass.DisabledRejected++;
+                    continue;
+                }
+                if (eligibility != null && !eligibility(job))
+                {
+                    pass.EligibilityRejected++;
+                    continue;
+                }
+                pass.EligibleCandidatesSeen++;
+                if (!SurvivalInteractionOrder.TryMeasureApproach(
+                        map, start, job.TargetCell,
+                        out Vector2Int candidateApproach,
+                        out float cost, out _))
+                {
+                    pass.UnreachableRejected++;
+                    continue;
+                }
+                pass.ReachableCandidatesSeen++;
+
+                int priorityIndex = priority - 1;
+                ColonyJob currentBest = pass.BestJobs[priorityIndex];
+                if (cost < pass.BestCosts[priorityIndex] ||
+                    Mathf.Approximately(cost, pass.BestCosts[priorityIndex]) &&
+                    Compare(job, currentBest) < 0)
+                {
+                    pass.BestJobs[priorityIndex] = job;
+                    pass.BestApproaches[priorityIndex] = candidateApproach;
+                    pass.BestCosts[priorityIndex] = cost;
+                }
+            }
+            pass.NextIndex = endIndex;
+
+            if (pass.NextIndex < registry.Count)
+            {
+                LastEvaluationInProgress = true;
+                LastDiagnostics = CreateDiagnostics(
+                    pass, examined, registry.Count, false, default);
+                error = $"Job scan in progress: checked {pass.NextIndex} of " +
+                    $"{registry.Count} entries for ant {ant.Id}.";
+                return false;
+            }
+
+            for (int priorityIndex = 0; priorityIndex < pass.BestJobs.Length;
+                 priorityIndex++)
+            {
+                ColonyJob candidate = pass.BestJobs[priorityIndex];
+                if (candidate == null) continue;
+
+                // Another ant or a world transaction may have changed this job
+                // during a multi-tick pass. Restarting is conservative: it keeps
+                // the priority result correct without retaining an unbounded list.
+                if (!registry.TryGet(candidate.Id, out ColonyJob current) ||
+                    !ReferenceEquals(candidate, current) || !candidate.CanBeClaimed ||
+                    (int)ant.WorkPriorities.Get(candidate.Category) != priorityIndex + 1 ||
+                    eligibility != null && !eligibility(candidate) ||
+                    !SurvivalInteractionOrder.TryMeasureApproach(
+                        map, start, candidate.TargetCell,
+                        out Vector2Int currentApproach, out _, out _))
+                {
+                    passes.Remove(ant.Id);
+                    pass.NextIndex = 0;
+                    LastEvaluationInProgress = true;
+                    LastDiagnostics = CreateDiagnostics(
+                        pass, examined, registry.Count, false, default);
+                    error = "Job scan restarted because its best candidate changed.";
+                    return false;
+                }
+
+                selected = candidate;
+                approach = currentApproach;
+                passes.Remove(ant.Id);
+                LastDiagnostics = CreateDiagnostics(
+                    pass, examined, registry.Count, true, selected.Id);
+                error = string.Empty;
+                return true;
+            }
+
+            passes.Remove(ant.Id);
+            LastDiagnostics = CreateDiagnostics(
+                pass, examined, registry.Count, true, default);
             error = "No reachable enabled colony job is currently available.";
             return false;
+        }
+
+        private static ColonyJobSelectionDiagnostics CreateDiagnostics(
+            SelectionPass pass,
+            int examined,
+            int total,
+            bool passCompleted,
+            ColonyJobId selectedJobId) =>
+            new(examined, total, pass.NextIndex, passCompleted, selectedJobId,
+                pass.EligibleCandidatesSeen, pass.ReachableCandidatesSeen,
+                pass.UnavailableRejected, pass.DisabledRejected,
+                pass.EligibilityRejected, pass.UnreachableRejected);
+
+        private sealed class SelectionPass
+        {
+            public SelectionPass(
+                ColonyJobRegistry registry,
+                GridNavigationMap map,
+                Vector2Int start,
+                int priorityRevision)
+            {
+                Registry = registry;
+                Map = map;
+                Start = start;
+                CursorRevision = registry.CursorRevision;
+                PriorityRevision = priorityRevision;
+                for (int index = 0; index < BestCosts.Length; index++)
+                    BestCosts[index] = float.PositiveInfinity;
+            }
+
+            public ColonyJobRegistry Registry { get; }
+            public GridNavigationMap Map { get; }
+            public Vector2Int Start { get; }
+            public int CursorRevision { get; }
+            public int PriorityRevision { get; }
+            public int NextIndex { get; set; }
+            public int EligibleCandidatesSeen { get; set; }
+            public int ReachableCandidatesSeen { get; set; }
+            public int UnavailableRejected { get; set; }
+            public int DisabledRejected { get; set; }
+            public int EligibilityRejected { get; set; }
+            public int UnreachableRejected { get; set; }
+            public ColonyJob[] BestJobs { get; } = new ColonyJob[4];
+            public Vector2Int[] BestApproaches { get; } = new Vector2Int[4];
+            public float[] BestCosts { get; } = new float[4];
+
+            public bool Matches(
+                ColonyJobRegistry registry,
+                GridNavigationMap map,
+                Vector2Int start,
+                int priorityRevision) =>
+                ReferenceEquals(Registry, registry) && ReferenceEquals(Map, map) &&
+                Start == start && CursorRevision == registry.CursorRevision &&
+                PriorityRevision == priorityRevision;
         }
 
         private static int Compare(ColonyJob first, ColonyJob second)

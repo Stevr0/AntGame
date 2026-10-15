@@ -27,7 +27,18 @@ Milestones through 3.3D are accepted, and 3.4A extends that foundation with phys
 - Every ant record owns independent priorities for Excavation, Surface Preparation, Construction, Hauling, Foraging, Production, Combat, and Brood Care.
 - `ColonyJobRegistry` owns synthetic job identity, target, status, reservation, progress, and failure state outside GameObjects.
 - Highest enabled priority is evaluated before actual A* route cost. Equal costs use stable deterministic ties.
-- Evaluations inspect at most 32 candidates per priority, are staggered, and back off for 2/4/8 seconds on failure.
+- Selection uses a deterministic per-ant pass through explicit registry creation
+  order. Each staggered evaluation examines at most 32 entries, but the pass
+  continues on later evaluations until every pending entry had fair access.
+- The selector retains the best reachable candidate for each priority during a
+  pass and assigns only after the pass completes. This preserves highest
+  priority before actual A* route cost and stable category/Y/X/ID ties without
+  pathfinding the complete list in one simulation tick.
+- New jobs append to a partial pass without moving its cursor. Removal and
+  work-priority revisions restart safely. Completed, cancelled, reserved or
+  newly ineligible candidates are revalidated before assignment.
+  Scan-in-progress uses the normal evaluation interval; genuine no-work/failure
+  results retain the existing 2/4/8-second backoff.
 - `SyntheticColonyJobOrder` remains as a regression fixture. Real designations use `ExcavationJobOrder` through the same registry, selector, motor, adjacency, priority and interruption seams.
 - Extract mode accepts eligible foreground Resource Nodes by world coordinate, supports bounded area drags, and blocks ordinary selection/orders while active.
 - Soil and Stone extraction uses a stable job-keyed transaction. The complete yield always becomes loose output at the excavated cell; excavation never mutates inventory or assigns hauling. Output failure preserves the Solid; successful removal preserves Background and refreshes one visual/collision/navigation locality.
@@ -48,6 +59,15 @@ Foraging discovers resource locations, Extraction physically removes resource no
 Milestones 3.4A, 3.4B and 3.4C are manually accepted. Milestone 3.4D is **Implemented — Pending Manual Acceptance**. Its global player-facing matrix lists active authoritative ant records whether or not their Colony View visual is loaded. Extraction, Construction and Hauling are the functional columns. Cells display mapped skills and edit the existing record-owned 1–4/Disabled values; developer diagnostics read the same values.
 
 Changing a matrix value resets subsequent autonomous evaluation but never cancels an active job, changes a skill, pauses simulation or changes a developer autonomy override. Current activity and real failure/waiting text are displayed where the existing agent/job state exposes them. Surface Preparation, Foraging, Production, Combat and Brood Care stay out of the functional player matrix until real executors exist.
+
+The fairness correction exposes read-only diagnostics for total entries, next
+position, entries examined in the last step, pass completion and selected job.
+Focused tests cover a reachable job after 32 unreachable jobs, deterministic
+priority/tie behavior, insert/remove/complete/repriority, multiple ants,
+exclusive reservations, pause and 3× resume. Scale cases prove a final eligible
+entry is found in 1/2/8/32 evaluations for 32/64/256/1,024 entries while never
+examining more than 32 entries in one evaluation. Manual stress acceptance is
+still pending; normal registries of 32 or fewer complete in one evaluation.
 
 ## Future decision flow
 

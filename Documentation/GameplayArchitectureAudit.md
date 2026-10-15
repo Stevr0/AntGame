@@ -8,6 +8,34 @@
 wiki navigation. No runtime code, Unity asset, scene, prefab, serialized data,
 test, balance or milestone status was changed.
 
+## Post-audit disposition — 15 October 2026
+
+The audit below remains the evidence snapshot for revision `b280744c`, but two
+recommended actions have now been completed:
+
+- The user manually accepted the seed-`2203` generated founding-colony workflow.
+  `WV-B2B`, `WV-B2B-DEF-001/002/003` and `WV-B2B-ARCH-001` are closed. The queen's
+  later Day 8 death at Health 0, Hunger 0, Thirst 0 and Fatigue 100 is the known
+  pre-WV-C1 survival limitation, not a proven hunger-only WV-B2B defect.
+- The first-32 selector finding is resolved by the existing selector's resumable
+  deterministic per-ant pass. Each evaluation examines at most 32 registry
+  entries; a choice is made after the complete pass, so higher-priority eligible
+  work and closest reachable path cost remain authoritative. Appends join the
+  current pass; removals and priority revisions restart safely; status changes
+  are revalidated.
+- A current XML-backed rerun passed **551/551 complete graphics-enabled Edit
+  Mode** and **74/74 complete Play Mode**, closing `WV-B1-REG-001`. Focused
+  scheduler coverage passed **40/40 Edit** and **1/1 Play**, including job 33,
+  mutation/repriority, exclusive multi-ant claims, pause/3× behavior and bounded
+  32/64/256/1,024-entry scans.
+
+The scheduler correction is **Implemented — Pending Manual Acceptance** against
+the 14-step checklist in `CurrentGameState.md`; that follow-up does not reopen
+WV-B2B. Generated Surface source interaction, natural rest, typed cross-region
+job targets, persistence and the remaining architectural findings stay deferred.
+Statements below that call these now-resolved items open describe the original
+audit state and are retained intentionally for traceability.
+
 ## 1. Executive summary
 
 Ant Game has a sound, maintainable **Colony-side production foundation**, but it

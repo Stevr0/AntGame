@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Linq;
 using AntColony.Commands;
 using AntColony.Development;
 using AntColony.PlayerUI;
@@ -95,6 +96,45 @@ namespace AntColony.Tests.PlayMode
 
             Assert.That((controller.SelectedAnt.Motor.Position - start).sqrMagnitude,
                 Is.GreaterThanOrEqualTo(0.01f));
+        }
+
+        [UnityTest]
+        public IEnumerator PagedJobSelectionFreezesWhilePausedAndAdvancesAtThreeTimesSpeed()
+        {
+            yield return LoadPausedScene();
+            AntGameDevelopmentWorldHost host = FindHost();
+            AntSelectionCommandController controller = host.SelectionController;
+            ColonyJobRegistry jobs = controller.ColonyJobs;
+            jobs.Clear();
+            for (int index = 0; index < 32; index++)
+            {
+                Assert.That(jobs.TryAdd(new ColonyJobId($"blocked-{index:00}"),
+                    AntColony.Ants.AntWorkCategory.Hauling,
+                    SampleWorldGenerator.GridUnreachableDestination,
+                    out _, out string addError), Is.True, addError);
+            }
+            Assert.That(jobs.TryAdd(new ColonyJobId("reachable-33"),
+                AntColony.Ants.AntWorkCategory.Hauling, new Vector2Int(-10, -8),
+                out _, out string reachableError), Is.True, reachableError);
+
+            yield return null;
+            yield return null;
+            Assert.That(controller.SelectableAnts.Any(ant => ant.HasActiveOrder), Is.False);
+
+            host.SimulationClock.SetRunningSpeed(SimulationSpeed.VeryFast);
+            float deadline = Time.realtimeSinceStartup + 8f;
+            ColonyJob job = null;
+            while (!jobs.TryGet(new ColonyJobId("reachable-33"), out job) ||
+                   !job.ReservationOwner.IsValid)
+            {
+                Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline),
+                    "The reachable job starved after the paged scan resumed.");
+                yield return null;
+            }
+
+            Assert.That(job.ReservationOwner.IsValid, Is.True);
+            Assert.That(controller.SelectableAnts.Count(ant =>
+                ant.JobOrder?.Job?.Id.Equals(job.Id) == true), Is.EqualTo(1));
         }
 
         [UnityTest]

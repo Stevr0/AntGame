@@ -1543,6 +1543,15 @@ namespace AntColony.Commands
                         job, ant.Record, start, ref waitingDependency),
                     out ColonyJob job, out Vector2Int approach, out string error))
             {
+                if (colonyJobSelectionService.LastEvaluationInProgress)
+                {
+                    state.ConsecutiveFailures = 0;
+                    state.FailureReason = string.Empty;
+                    state.Status = error;
+                    state.NextEvaluationTime = currentTimeSeconds +
+                        autonomousDecisionService.Settings.EvaluationIntervalSeconds;
+                    return false;
+                }
                 if (!string.IsNullOrEmpty(waitingDependency))
                     error = waitingDependency;
                 RecordWorkFailure(state, currentTimeSeconds, error);

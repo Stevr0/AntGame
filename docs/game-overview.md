@@ -1,14 +1,20 @@
 # Game Overview
 
-WV-B2B-ARCH-001 is **Implemented — Pending Manual Acceptance**. Extraction is
+WV-B2B is **Complete** and WV-B2B-ARCH-001 is closed. Extraction is
 the single node-removal skill/activity; Hauling supplies explicit Construction
 staging or Storage; Construction is work-only after full staging. Legacy
 Excavation code names remain compatibility seams, and Surface resource
 interaction remains future work.
 
+The accepted seed-`2203` run completed the generated Colony production loop,
+view switching and entrance travel. The founding queen later died on Day 8 with
+all three needs critical; usable generated food/water and natural rest remain
+separately deferred WV-C1 work. Job selection now uses a bounded fair full-registry
+pass so later reachable work cannot remain hidden behind 32 unreachable jobs.
+
 Milestone 3.5B is **Implemented — Pending Manual Acceptance**; 3.5A remains separately pending visual acceptance. Extraction always leaves physical Soil/Stone output loose at the worked cell, independent of the worker's inventory and Storage. A separate Hauling job performs every normal pickup and delivery to Construction staging or compatible Storage; builders never self-supply. The development game opens paused at Day 1 08:00 with an authored uGUI player HUD and a global Work screen where priorities for active colony ants can be inspected and changed. Developer IMGUI starts hidden and remains deliberately accessible through F12 without replacing the player interface.
 
-Accepted Milestone 3.4A permits player-designated conversion of exposed Background into Prepared, Nursery, Sleeping, Food Storage, Water Storage or Material Storage tiles. A Construction-priority ant personally supplies physical Soil/Stone, stages it at the site and performs timed work. Doors, rooms, brood and production remain future work.
+Accepted Milestone 3.4A permits player-designated conversion of exposed Background into Prepared, Nursery, Sleeping, Food Storage, Water Storage or Material Storage tiles. Under the later authoritative logistics correction, Hauling delivers physical Soil/Stone into site staging and a Construction-priority ant performs timed work only after the site is fully supplied. Doors, rooms, brood and production remain future work.
 
 ## Vision
 

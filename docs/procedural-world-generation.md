@@ -2,10 +2,15 @@
 
 ## Status
 
-**WV-B2B implemented; manual validation pending (15 October 2026).** The
+**WV-B2B complete; manual acceptance confirmed (15 October 2026).** The
 authoritative contract is
 `Documentation/ProceduralWorldGenerationSpecification.md`. This page is the
 wiki summary, not a second source of truth.
+
+The accepted seed-`2203` run demonstrated deterministic terrain, the founding
+queen, Colony Extraction, loose output, separate Hauling, staged and completed
+Construction, first Storage, later Storage delivery, expansion, view switching
+and entrance use. Surface Seed/Freshwater survival interaction remains WV-C1.
 
 Version `2` / `wv-b2b.default.002` uses one signed 64-bit seed, domain-derived
 `surface` and `colony` SplitMix64 streams and a validate-before-publish result.
@@ -16,7 +21,11 @@ Use the top development toolbar's **Seed**, **Start Generated**, and **Restore
 Fixture** controls. Generated source markers are data/visuals only; WV-C1
 interactions are not present.
 
-## Pending manual Play Mode acceptance
+## Accepted manual scenario record
+
+The user confirmed the combined scenario outcomes above. The detailed checklist
+below is retained as the original acceptance procedure; unreported individual
+observations are not invented.
 
 1. Open `AntGameDevelopment`; confirm the default fixture still has selectable
    Mara, Pip and Tala.

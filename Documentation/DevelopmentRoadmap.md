@@ -1,6 +1,39 @@
 # Ant Colony Development Roadmap
 
-## WV-B2B-ARCH-001 unified resource logistics — implemented, manual acceptance pending
+## WV-B2B — Complete; scheduler fairness follow-up implemented (15 October 2026)
+
+The user accepted the generated seed-`2203` founding-colony run. Deterministic
+generation, founding-queen movement, Soil/Stone Extraction, loose output,
+separate Hauling, Construction staging/completion, first-Storage bootstrap,
+later Storage delivery, colony expansion, view switching and entrance travel all
+worked in the observed scenario. `WV-B2B-DEF-001`, `WV-B2B-DEF-002`,
+`WV-B2B-DEF-003` and `WV-B2B-ARCH-001` are closed with their history retained
+below. WV-B2B is **Complete**.
+
+The queen's Day 8 death at Health 0, Hunger 0, Thirst 0 and Fatigue 100 records
+the known absence of usable generated sustenance and natural rest. It is not a
+proven hunger-only failure and does not reopen WV-B2B. WV-C1 remains deferred and
+requires separate authorisation.
+
+The post-closure scheduler correction replaces first-32 truncation with a
+resumable deterministic full-registry pass bounded to 32 entries per autonomous
+evaluation. Priority-before-path-cost, eligibility, Colony residency and
+exclusive reservation remain authoritative. Appends join the active pass;
+removal and priority changes restart safely; terminal/status changes are
+revalidated. Scale coverage proves
+1/2/8/32 evaluations for 32/64/256/1,024 entries. Automated evidence passes
+**40/40 focused Edit**, **1/1 focused Play**, **551/551 complete graphics-enabled
+Edit** and **74/74 complete Play**. Manual scheduler stress acceptance remains
+pending; it is a follow-up validation item, not a WV-B2B blocker.
+
+The current full-suite XML rerun supersedes the audit's missing-artifact concern
+and closes `WV-B1-REG-001`. Other explicitly pending WV-B1 visual/manual defect
+acceptance is unchanged.
+
+## WV-B2B-ARCH-001 unified resource logistics — closure history
+
+The following WV-B2B subsections preserve the implementation and pre-acceptance
+record. The completion status above supersedes their pending/open wording.
 
 The approved pre-closure correction replaces Construction self-supply with
 **Resource Node → Loose Ground Resource → Hauling → Construction Site staging /
@@ -19,7 +52,7 @@ Edit** and **73/73 full Play**. Direct seed-`2203` Play Mode acceptance remains
 required. Keep `WV-B2B-DEF-001/002/003` and
 `WV-B1-REG-001` open until that acceptance is recorded.
 
-## WV-B2B procedural generation foundation — implemented, validation pending (15 October 2026)
+## WV-B2B procedural generation foundation — implementation history (15 October 2026)
 
 WV-B2B now provides frozen SplitMix64-derived `surface`/`colony` streams, unified
 generated cells, whole-world validation, compatibility projection into
@@ -92,7 +125,10 @@ scenario. Resource decay and broader migration remain deferred.
 
 The Surface camera inherited an all-layers mask and Colony IMGUI overlays continued drawing through the disabled Colony camera. The correction assigns runtime Surface presentation and Surface-resident ant renderers to a dedicated `SurfaceWorld` layer, gives the two cameras mutually exclusive Surface visibility, and gates Colony overlays and Colony-only World/Debug controls by active view without disabling any authority or simulation. Focused regressions cover layer/mask ownership, repeated switching, dynamic designation persistence, input context, unchanged state and bidirectional ant visual handoff. The affected assemblies compile with Unity Roslyn; focused WV-B1 Edit Mode passed **9/9** and focused Play Mode passed **4/4**, all with zero failures or skips. An initial restricted Play runner attempt crashed in `BuildReportRestService` before discovery, but the unrestricted rerun completed and produced passing XML. The documented manual Play Mode checklist remains pending.
 
-WV-B1 remains open. Preserve `WV-B1-DEF-001` entrance-reuse manual acceptance and the incomplete `WV-B1-REG-001` full Edit Mode regression. Do not begin WV-C1 or later World View milestones.
+WV-B1 remains open for its separately recorded visual/manual defects. Preserve
+`WV-B1-DEF-001` entrance-reuse manual acceptance. `WV-B1-REG-001` is now closed
+by the current 551/551 graphics-enabled Edit Mode rerun. Do not begin WV-C1 or
+later World View milestones without separate approval.
 
 ## WV-B1 entrance reuse defect — correction awaiting validation (14 October 2026)
 
@@ -306,7 +342,7 @@ Verification passes **14/14 focused Edit Mode**, **3/3 focused Play Mode**, **40
 
 ## Milestone status — 13 October 2026
 
-**3.3A Colony Job Designation & Priority Foundation: COMPLETE.** Each `AntRecord` owns stable Excavation, Surface Preparation, Construction, Hauling, Foraging, Production, Combat and Brood Care priorities using 1–4 or Disabled. A shared plain-C# registry owns synthetic designation identity, status, exclusive reservation and persistent progress. Selection uses highest enabled priority before actual shared-A* travel cost, deterministic ties, a 32-candidate-per-priority bound and 2/4/8-second retry backoff.
+**3.3A Colony Job Designation & Priority Foundation: COMPLETE.** Each `AntRecord` owns stable Excavation, Surface Preparation, Construction, Hauling, Foraging, Production, Combat and Brood Care priorities using 1–4 or Disabled. A shared plain-C# registry owns synthetic designation identity, status, exclusive reservation and persistent progress. Selection uses highest enabled priority before actual shared-A* travel cost and deterministic ties. The 15 October fairness follow-up pages across the complete registry at 32 entries per evaluation; genuine failures retain 2/4/8-second retry backoff.
 
 Synthetic work travels through the production grid motor, works from a revalidated adjacent position, preserves progress across safe interruption and awards proportional relevant-skill XP only for committed progress. Provisional balance is 4 simulation hours, +0.5% speed per skill level and 20 base XP per full job; Rested multipliers apply. Ordinary survival waits for active work, while critical survival and explicit player orders interrupt at the cancellation boundary and release a Paused job. Five deterministic fixtures and Developer Only controls/diagnostics are present. No real excavation, preparation, construction, hauling, resource or inventory behavior is implemented.
 

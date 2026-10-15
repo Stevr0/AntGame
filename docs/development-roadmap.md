@@ -1,6 +1,26 @@
 # Development Roadmap
 
-## WV-B2B-ARCH-001 — implemented, pending manual acceptance
+## WV-B2B — complete; scheduler fairness follow-up implemented
+
+The user accepted the seed-`2203` generated founding-colony workflow, closing
+`WV-B2B-DEF-001/002/003` and `WV-B2B-ARCH-001`. Deterministic generation,
+founding-queen movement, Extraction, loose output, separate Hauling, staged and
+completed Construction, first Storage, later Storage delivery, expansion, view
+switching and entrance travel were observed. The queen's later Day 8 survival
+death belongs to missing WV-C1 source consumption/natural rest and does not
+reopen WV-B2B.
+
+The existing job selector now pages fairly across the complete registry at no
+more than 32 entries per evaluation while preserving priority, path cost,
+deterministic ties and exclusive reservations. Focused coverage passes 40/40
+Edit and 1/1 Play; complete XML-backed suites pass 551/551 Edit and 74/74 Play.
+`WV-B1-REG-001` is closed. Scheduler manual stress acceptance is still pending.
+
+## WV-B2B-ARCH-001 — closure history
+
+The following WV-B2B runtime paragraphs retain the implementation and
+pre-acceptance record. The complete status above supersedes their pending/open
+wording.
 
 Extraction is the sole node-removal skill/category. The implemented logistics
 chain is Resource Node → loose output → Hauling → Construction staging or
@@ -10,7 +30,7 @@ Construction does only fully staged work. Validation passes 82/82 focused Edit,
 Mode acceptance remains pending. WV-B2B and its open defects are not closed,
 and WV-C1 is not started.
 
-## WV-B2B runtime gate
+## WV-B2B runtime implementation history
 
 **Implemented — Pending Manual Acceptance (15 October 2026).** Versioned deterministic
 generation, unified generated cells, structural/source validation, both region

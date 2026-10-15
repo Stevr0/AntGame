@@ -1,5 +1,23 @@
 # Design Decision Log
 
+## 15 October 2026 — Bound fair colony-job candidate evaluation
+
+- Preserve the shared `ColonyJobRegistry`, selector, work priorities, path-cost
+  ordering and exclusive reservation; do not create a second scheduler.
+- Replace first-32 pre-reachability truncation with a deterministic per-ant pass
+  over explicit registry creation order, examining at most 32 entries per
+  autonomous evaluation and selecting only after the full pass.
+- Keep the best reachable candidate per priority so 1–4/Disabled remains
+  authoritative before closest path cost and stable category/Y/X/ID ties.
+- Let append-only additions join a partial pass; restart after removal or
+  priority revision, and recheck terminal, reservation, eligibility and
+  reachability state before assignment.
+- Treat an unfinished page as normal scheduler progress, not a failed job, while
+  retaining the existing failure backoff for genuine no-work/failure results.
+- Expose bounded read-only diagnostics and keep pause plus 1×/2×/3× behavior on
+  the existing simulation clock. Manual scheduler stress acceptance remains
+  separate from the now-complete WV-B2B milestone.
+
 ## 15 October 2026 — WV-B2B-ARCH-001 unified resource logistics
 
 - Make Extraction the single authoritative skill/category for Soil, Stone,

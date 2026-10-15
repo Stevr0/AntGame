@@ -17,12 +17,14 @@ start WV-C1.
 
 ## Status and authority
 
-> **WV-B2B — IMPLEMENTED, AWAITING VALIDATION (15 October 2026).** The approved
+> **WV-B2B — COMPLETE (15 October 2026).** The approved
 > contract is implemented by `ProceduralWorldGenerator` version `2`, configuration
 > `wv-b2b.default.002`. Version 2 guarantees an exposed Stone node on the
-> founding chamber's west face. Focused Unity regressions pass; manual Play Mode
-> acceptance and the full `WV-B1-REG-001` run remain pending. This status does
-> not authorise WV-C1.
+> founding chamber's west face. The user accepted the seed-`2203` generated
+> terrain, queen, Colony production, view and entrance workflow. Current full
+> Unity XML passes 551/551 Edit and 74/74 Play, closing `WV-B1-REG-001`. The
+> queen's later survival death remains deferred WV-C1 scope. This status does not
+> authorise WV-C1.
 
 ### Implemented configuration record
 
@@ -705,8 +707,9 @@ the current fixture in place:
 The scenario is selected before world publication. Tests name the scenario they
 require. No test may infer production generation merely from a nonzero
 `ChunkedWorldData.WorldSeed`. The historical 33/33 WV-B1 manual record remains
-evidence for that accepted run, not evidence for WV-B2B. `WV-B1-REG-001` remains
-open until complete execution evidence exists; WV-B2B must not relabel it.
+evidence for that accepted run, not evidence for WV-B2B. At this specification
+gate `WV-B1-REG-001` remained open; it was later closed by the 15 October current
+working-tree 551/551 graphics-enabled Edit Mode rerun.
 
 ## 13. Future WV-B2B test and acceptance strategy
 

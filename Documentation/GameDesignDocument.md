@@ -22,13 +22,14 @@ approved to use this contract but remain unimplemented; WV-C1 is not started.
 
 ## WV-B2B procedural world-generation foundation — 15 October 2026
 
-> **IMPLEMENTED — AWAITING VALIDATION.** A versioned 64-bit seed now builds and
+> **COMPLETE — MANUALLY ACCEPTED.** A versioned 64-bit seed builds and
 > validates the approved `64×64` Surface and `128×128` underground Colony before
 > runtime publication. The explicit generated scenario contains one founding
 > queen, one centred entrance, a `7×5` chamber and three-wide passage. The
-> Mara/Pip/Tala fixture remains the default separate scenario. Generated source
-> nodes are records and temporary visuals only; consumption, extraction,
-> hauling, storage migration, brood and cross-region autonomy remain deferred.
+> Mara/Pip/Tala fixture remains the default separate scenario. The accepted
+> seed-`2203` run demonstrated the Colony Extraction/Hauling/Construction chain,
+> view switching and entrance use. Surface source consumption, natural rest,
+> brood and cross-region autonomy remain deferred; WV-C1 has not started.
 
 ## WV-B2A procedural world-generation contract — 15 October 2026
 

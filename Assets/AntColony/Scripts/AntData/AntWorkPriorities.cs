@@ -83,6 +83,12 @@ namespace AntColony.Ants
         private readonly AntWorkPriority[] priorities =
             new AntWorkPriority[AntWorkCategoryCatalog.All.Count];
 
+        /// <summary>
+        /// Changes whenever the matrix changes. Resumable job selection uses this
+        /// to restart a partial pass instead of finishing with stale priorities.
+        /// </summary>
+        public int Revision { get; private set; }
+
         internal AntWorkPrioritySet()
         {
             Reset();
@@ -102,7 +108,12 @@ namespace AntColony.Ants
                 return false;
             }
 
-            priorities[ValidateCategory(category)] = priority;
+            int index = ValidateCategory(category);
+            if (priorities[index] != priority)
+            {
+                priorities[index] = priority;
+                Revision++;
+            }
             error = string.Empty;
             return true;
         }
@@ -113,6 +124,7 @@ namespace AntColony.Ants
                 throw new ArgumentOutOfRangeException(nameof(defaultPriority));
             for (int index = 0; index < priorities.Length; index++)
                 priorities[index] = defaultPriority;
+            Revision++;
         }
 
         private static int ValidateCategory(AntWorkCategory category)

@@ -1,5 +1,24 @@
 # Milestone History
 
+## 15 October 2026 — WV-B2B Closure and Scheduler Fairness
+
+**WV-B2B Complete.** The user accepted the seed-`2203` deterministic generated
+scenario and confirmed the founding queen could Extract Soil/Stone, create loose
+resources, Haul separately, stage and complete Construction, build first Storage,
+deliver later resources, expand the Colony, switch views and use the entrance.
+`WV-B2B-DEF-001/002/003` and `WV-B2B-ARCH-001` are closed. Her later Day 8 death
+at Health 0, Hunger 0, Thirst 0 and Fatigue 100 is retained as the known pre-WV-C1
+survival limitation, not classified as hunger-only.
+
+The post-closure scheduler correction replaces first-32 truncation with a
+deterministic resumable pass bounded to 32 entries per evaluation. Appends join
+the active pass; removal and priority revisions reset safely, terminal/status
+changes are revalidated, and
+priority-before-path-cost plus exclusive ownership remain unchanged. Focused
+tests pass 40/40 Edit and 1/1 Play; complete XML-backed regressions pass 551/551
+Edit and 74/74 Play. This closes `WV-B1-REG-001`. Scheduler manual stress
+acceptance remains pending; WV-C1 has not started.
+
 ## 15 October 2026 — WV-B2B-ARCH-001 Unified Resource Logistics
 
 **Implemented — Pending Manual Acceptance.** Extraction replaces Excavation as

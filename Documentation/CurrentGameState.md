@@ -1,6 +1,91 @@
 # Ant Colony Current Game State
 
-## WV-B2B implementation state — 15 October 2026
+## WV-B2B closure and scheduler fairness correction — 15 October 2026
+
+### WV-B2B — Complete
+
+The user manually accepted the generated founding-colony scenario at seed
+`2203`. The confirmed run demonstrated deterministic procedural terrain, the
+founding queen spawn and movement, Colony Extraction of physical Soil and Stone,
+loose-resource creation, separate Hauling, Construction Site staging,
+Construction completion, first-Storage construction, later delivery into
+Storage, underground expansion, view switching and entrance travel. This is
+direct acceptance of the approved production chain:
+
+**Extraction → Loose Ground Resource → Hauling → Construction staging / Storage
+→ Construction**
+
+The run closes `WV-B2B-DEF-001`, `WV-B2B-DEF-002`, `WV-B2B-DEF-003` and
+`WV-B2B-ARCH-001`. Their root causes, corrections and earlier automated evidence
+remain in the implementation history below. No blocking WV-B2B defect remains.
+The user confirmed the combined outcomes above; individual historical checklist
+steps not explicitly reported are not inferred.
+
+The founding queen later died on Day 8. The final screenshot showed **Health 0,
+Hunger 0, Thirst 0 and Fatigue 100**, after which autonomous work stopped because
+the ant was inactive. This is a known founding-survival limitation, not a proven
+hunger-only death and not a WV-B2B failure. Generated Seed and Freshwater records
+are not yet usable for complete survival. Direct finite-source consumption and
+safe natural rest remain deferred to separately authorised WV-C1 work; no free
+supplies, invulnerability or survival rebalance was added here.
+
+### WV-B1-REG-001 — Closed
+
+The earlier reported 539/539 Edit and 73/73 Play results had no retained XML in
+the audited checkout and remain historical reports rather than independent
+evidence. This correction reran the current working tree based on `d977f154` and
+produced machine-readable Unity XML: **551/551 complete graphics-enabled Edit
+Mode** and **74/74 complete Play Mode**, with zero failures, skips or
+inconclusive tests. That current full-suite evidence closes
+`WV-B1-REG-001 — Complete Edit Mode Regression`.
+
+### Bounded fair colony-job selection — implemented, manual acceptance pending
+
+The audit's first-32 starvation finding was valid: the selector collected the
+first 32 claimable same-priority jobs before reachability, so unreachable jobs
+could permanently hide job 33 and registry insertion order affected gameplay.
+The existing selector now advances a deterministic per-ant pass through the
+registry, examining no more than 32 entries per autonomous evaluation. It keeps
+the best reachable candidate for each priority and chooses only after the whole
+pass, preserving priority-before-path-cost and the stable category/Y/X/ID tie
+break. This is the existing scheduler and reservation path, not a second system.
+
+New jobs append safely to the active pass without moving its cursor. Removal or a
+work-priority revision safely restarts the cursor.
+Completed, cancelled, reserved and newly ineligible jobs are rechecked before
+assignment; a changed best candidate causes a conservative rescan. In-progress
+pages use the normal evaluation interval rather than the 2/4/8-second failure
+backoff. Registry order is explicit creation order, multiple ants keep separate
+passes, and the existing exclusive reservation remains authoritative. Runtime
+pause still gates `UpdateAutonomousColonyWork`; 1×/2×/3× continue to use the one
+simulation clock.
+
+Read-only diagnostics expose total job count, next position, entries examined in
+the last evaluation, pass completion and selected job ID without per-frame log
+spam. Scale tests assert exactly 1/2/8/32 evaluations for 32/64/256/1,024-entry
+registries when the only eligible job is last, with at most 32 entries examined
+per evaluation. Focused evidence is **40/40 Edit Mode** and **1/1 Play Mode**;
+the complete suites pass **551/551 Edit** and **74/74 Play**. The scheduler's
+manual stress checklist remains pending and does not reopen WV-B2B.
+
+#### Scheduler manual Play Mode checklist
+
+1. Start the generated founding-queen scenario with seed `2203`.
+2. Confirm the queen can Extract, Haul and Construct with conserved quantities.
+3. Confirm blocked jobs remain pending without monopolising the queen.
+4. Switch views and complete an entrance round trip without resetting work.
+5. Create more than 32 pending Extraction jobs, with the first group unreachable.
+6. Create one reachable Extraction job after that group.
+7. Confirm the later reachable job is eventually selected and completed.
+8. Change priorities and confirm the highest genuinely eligible priority wins.
+9. Insert and remove pending jobs during repeated evaluation; confirm work continues.
+10. Complete or cancel jobs and confirm the scan continues without a stuck cursor.
+11. With multiple ants, confirm one exclusive job never has two owners.
+12. Pause during a partial scan; confirm autonomous selection does not advance.
+13. Resume at 1×, 2× and 3×; confirm eventual selection remains deterministic.
+14. Confirm the Console remains clean. No production-facing diagnostic was added.
+
+## WV-B2B implementation history — 15 October 2026
 
 ### WV-B2B-ARCH-001 — Unified Resource Logistics
 

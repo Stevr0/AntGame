@@ -187,6 +187,15 @@ One `GridNavigationWorldService` owns the shared navigation map and bounded sche
 
 `AntColony.Commands` handles selection, designation input, context orders, visual bindings, physical survival, synthetic work, real excavation, explicit material pickup/drop, autonomous hauling and real Background construction. Location-owned supplies remain in `SurvivalInteractionWorld`; job identity, ownership and progress remain in `ColonyJobRegistry`; designation registries are typed views over those same jobs rather than second queues. Source reservations remain in the world-drop or Material Storage authority, and carried stacks remain on the ant record. All travel reuses the shared map and motor.
 
+`ColonyJobSelectionService` performs bounded fair choice without owning jobs. The
+registry exposes stable creation order plus a collection revision; each ant's
+selector pass advances through at most 32 entries per evaluation and retains one
+best reachable candidate per work priority until the complete pass finishes.
+Append-only additions join the pass; removal or priority revisions restart it,
+while status changes are revalidated before assignment. The command controller treats an unfinished page
+as normal scheduled progress, not a work failure. Reservations, pause gating and
+1×/2×/3× timing remain in their existing authorities.
+
 `ConstructionJobOrder` reserves one builder and moves existing physical material through inventory into a cell-owned `ConstructionSite`. `ConstructionWorldTransaction` validates occupancy, source Background and staged quantity before consuming once, replacing only the Background, registering one functional-capacity slot, refreshing presentation and invalidating navigation.
 
 When construction needs inventory capacity, `InventoryCapacityRecoveryOperation` is a reusable task-executor helper rather than a new hauling job. It protects the current task's resource type, uses existing path measurement and incoming storage reservations, commits deposits only after travel, or invokes the existing conserving drop transaction at a valid anchor. Cancellation releases uncommitted capacity reservations while leaving every physical quantity at its current owner. Loose drops remain ordinary traversable world data; future clutter penalties do not yet participate in navigation or room-quality calculation.
