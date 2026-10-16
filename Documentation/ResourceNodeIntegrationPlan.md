@@ -383,8 +383,11 @@ B3C.3 makes the atomic writer/read cutover.
 
 ### B3C.2 — Canonical loose-resource authority
 
-**B3C.2A implementation update — 16 October 2026:** implemented with automated
-validation passed and manual acceptance pending. `GroundStackId` uses a fresh
+**B3C.2A implementation update — 16 October 2026:** automated validation passed
+and manual acceptance is partially confirmed. The user accepted 20/20 summary
+checks, but their item text is unavailable and cannot be mapped safely to the
+authoritative 23-step checklist; presentation checks 18–23 require explicit
+reconciliation. `GroundStackId` uses a fresh
 controlled scenario context plus monotonic local creation sequence; operation
 keys remain separate exact-once replay guards. The registry now enforces one
 stack/type per cell, stable identity across merges and partial pickup,

@@ -2,7 +2,12 @@
 
 ## WV-B3C.2A canonical ground stacks — 16 October 2026
 
-**Status: Implemented — Automated Tests Passed, Manual Acceptance Pending.**
+**Status: WV-B3C.2A — Automated Tests Passed, Manual Acceptance Partially
+Confirmed.** The user confirmed that all **20/20 previously supplied manual
+summary checks passed**. The text of that 20-item summary is not retained in
+the project records or accessible chat history, so it cannot be mapped safely
+onto every item in the authoritative 23-step checklist below. The milestone is
+therefore not yet marked complete.
 `WorldMaterialDropRegistry` remains the sole mutable owner of supported loose
 ground resources and now stores one canonical stack per Colony cell. A stack has
 a scenario-local `GroundStackId`, typed `RegionCellId`, Soil/Stone Resource
@@ -71,12 +76,20 @@ retained in `Logs/WV-B3C2A-Focused-EditMode.xml`,
 `Logs/WV-B3C2A-Focused-PlayMode.xml`, `Logs/WV-B3C2A-Full-EditMode.xml` and
 `Logs/WV-B3C2A-Full-PlayMode.xml`, with corresponding logs. An earlier
 null-graphics complete Edit attempt crashed in the retained URP rendered-pixel
-path before XML and is not a passing or failing test result.
+path before XML and is not a passing or failing test result. The suites tested
+the WV-B3C.2A working tree whose parent baseline was
+`7810d998343230cc6676bbfff9f0a6223168cd9c`; the implementation itself was
+uncommitted, so that baseline is not described as the final implementation
+revision. That working tree was subsequently recorded in implementation commit
+`d8cd7995fcd8127f90aa83b3991b06ae2b93ed7c`; the tests preceded that commit
+rather than running from the commit object. This documentation-only
+reconciliation did not rerun Unity tests.
 
-### Manual Unity acceptance — pending
+### Manual Unity acceptance — partially confirmed
 
-No Inspector setup is required. Manual acceptance remains pending until the user
-confirms all 23 checks:
+No Inspector setup is required. The user's **20/20 summary acceptance** is
+recorded, but it is aggregate evidence rather than an itemised mapping. The
+authoritative checklist remains:
 
 1. Load the Mara/Pip/Tala development fixture.
 2. Confirm existing Colony gameplay starts normally.
@@ -105,6 +118,45 @@ confirms all 23 checks:
 22. Switch to World View and confirm no Colony quantity badge leaks across;
     switch back and confirm authoritative quantities are unchanged.
 23. Confirm badges do not intercept selection, designation or camera input.
+
+#### Reconciliation against the confirmed 20-check summary
+
+Because the 20 summary statements themselves are unavailable, no authoritative
+item is labelled “covered by user-confirmed summary” by assumption. Existing
+Unity evidence supports the non-visual contracts, but does not replace the
+required manual observation.
+
+| Check | Authoritative criterion | Classification |
+|---:|---|---|
+| 1 | Load the development fixture | Automated support; not manually mapped |
+| 2 | Existing Colony gameplay starts | Automated support; not manually mapped |
+| 3 | Extract one Soil tile | Automated support; not manually mapped |
+| 4 | Inspect stable stack identity and quantity | Automated support; not manually mapped |
+| 5 | One canonical stack occupies the cell | Automated support; not manually mapped |
+| 6 | Haul to a valid destination | Automated support; not manually mapped |
+| 7 | Quantity decreases or empty stack is removed | Automated support; not manually mapped |
+| 8 | No resource duplication | Automated support; not manually mapped |
+| 9 | Generate seed `2203` | Automated support; not manually mapped |
+| 10 | Extract Soil and Stone | Automated support; not manually mapped |
+| 11 | Physical stacks appear | Automated support; not manually mapped |
+| 12 | Inspect IDs, revisions and capacities | Automated support; not manually mapped |
+| 13 | Hauling and Construction staging work | Automated support; not manually mapped |
+| 14 | View switching preserves stack identity | Automated support; not manually mapped |
+| 15 | Fixture restore invalidates old stack IDs | Automated support; not manually mapped |
+| 16 | Job scheduling and simulation controls operate | Automated support; not manually mapped |
+| 17 | No new Console errors | Automated run completed cleanly; not manually mapped |
+| 18 | Undesignated Node has no badge | Not yet confirmed visually |
+| 19 | Designated Node shows unobstructed `1` badge | Not yet confirmed visually |
+| 20 | Loose-stack badge updates and disappears at zero | Not yet confirmed visually |
+| 21 | Non-empty Storage shows quantity; empty Storage hides it | Not yet confirmed visually |
+| 22 | No cross-region badge leakage; quantity survives switching | Automated support; visual observation not yet confirmed |
+| 23 | Badges do not intercept world or camera input | Not yet confirmed |
+
+To close WV-B3C.2A without guessing, the user must either confirm that the
+accepted 20-item summary covered authoritative checks **1–23**, or explicitly
+confirm the six unresolved presentation observations **18–23** and that the
+summary covered **1–17**. No fresh Unity tests were run for this documentation-
+only reconciliation.
 
 WV-B3C.2B multi-cell overflow/pending-output recovery, WV-B3C.3 variable Node
 authority/transaction cutover, WV-B3D Placement migration and WV-C1 remain

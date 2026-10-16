@@ -2,6 +2,11 @@
 
 ## WV-B3C.2A canonical ground stacks
 
+Automated validation passed. Manual acceptance is partially confirmed: the user
+accepted 20/20 supplied summary checks, but their text cannot be mapped safely
+to the authoritative 23-step checklist. Presentation checks 18–23 remain open;
+this documentation-only reconciliation did not rerun Unity tests.
+
 The Colony loose occupant now reads one canonical `WorldMaterialDropRegistry`
 stack rather than aggregating operation-keyed records. Each active stack exposes
 its scenario-local ID, typed Colony cell, Soil/Stone resource ID, quantity,

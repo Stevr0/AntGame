@@ -232,7 +232,7 @@ work or produce output. Surface Nodes remain `GenerationOnly`.
 The quantity-one registry is a transitional foundation, not the final v1.0
 Resource Node model.
 
-### WV-B3C.2A — implemented; manual acceptance pending
+### WV-B3C.2A — automated tests passed; manual acceptance partially confirmed
 
 The existing `WorldMaterialDropRegistry` is now the canonical physical
 Soil/Stone ground-stack authority. It owns one stack and one resource type per
@@ -251,6 +251,11 @@ Construction staging and Material Storage remain distinct capacities and
 authorities. Current quantity-one Node Extraction, partial pickup/Hauling and
 Construction behavior are preserved. B3C.2B multi-cell overflow recovery and
 B3C.3 variable Node authority/transaction cutover remain unimplemented.
+
+The user confirmed **20/20 manual summary checks passed**, but the summary text
+is not retained and cannot be mapped item-by-item to the authoritative 23-step
+checklist. The milestone remains open pending explicit reconciliation of the
+six presentation checks 18–23; this status update did not rerun Unity tests.
 
 ### Quantity-badge presentation contract
 
@@ -277,7 +282,7 @@ Extraction cutover together. Split future approval into independently testable
 gates:
 
 1. **B3C.2A — Resource Definitions and canonical stack authority (implemented;
-   manual pending):** introduce
+   manual acceptance partially confirmed):** introduce
    Soil/Stone definitions, stable Stack IDs, one-stack/type/capacity validation,
    revisions and legacy-drop migration without changing Extraction yields.
 2. **B3C.2B — deterministic placement and pending-output recovery:** add bounded

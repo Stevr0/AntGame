@@ -1,5 +1,13 @@
 # Resource and Node System
 
+## WV-B3C.2A acceptance status
+
+Automated validation is complete and the user confirmed 20/20 supplied manual
+summary checks. Because the summary text is unavailable for safe comparison
+with the authoritative 23-step checklist, manual acceptance remains partially
+confirmed. Presentation checks 18–23 require explicit reconciliation. No Unity
+tests were rerun for this documentation-only update.
+
 ## Quantity badges
 
 WV-B3C.2A continuously shows quantity for visible loose stacks and non-empty

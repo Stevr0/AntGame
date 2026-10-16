@@ -2,7 +2,7 @@
 
 ## 16 October 2026 — WV-B3C.2A Canonical Ground Stack Foundation
 
-**Implemented — Automated Tests Passed, Manual Acceptance Pending.** The
+**Automated Tests Passed — Manual Acceptance Partially Confirmed.** The
 existing `WorldMaterialDropRegistry` remains sole quantity authority and now
 owns one typed, bounded, revisioned canonical stack per occupied Colony cell.
 Stable IDs are allocated from a fresh scenario context; same-resource output
@@ -15,7 +15,12 @@ Soil/Stone retain provisional capacity 10. Quantity-one Extraction, existing
 partial pickup, Hauling, Storage and staged Construction are preserved.
 XML evidence passes 16/16 focused Edit, 21/21 focused Play, 575/575 complete
 graphics-enabled Edit and 79/79 complete Play, with zero failures, skips or
-inconclusive results. The 23 manual Unity checks remain pending.
+inconclusive results. The user confirmed all 20 supplied summary checks passed,
+but their text is unavailable for itemised comparison with the authoritative
+23-step checklist. Presentation checks 18–23 remain unresolved, so the
+milestone is not yet closed. No Unity tests were rerun for this documentation-
+only reconciliation. The XML evidence came from the working tree based on
+`7810d998`; that implementation was subsequently committed as `d8cd7995`.
 B3C.2B/B3C.3/WV-B3D/WV-C1 did not begin,
 Surface Nodes remain `GenerationOnly`, and `WV-B3B-LIM-001` remains active.
 
