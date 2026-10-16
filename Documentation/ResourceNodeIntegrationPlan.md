@@ -1,8 +1,8 @@
 # WV-B3C Resource Node and Loose Resource Integration Plan
 
-**Status:** B3C.1 is implemented with automated tests passed and manual Unity
-acceptance pending. B3C.2 and B3C.3 remain planning only and are not authorised
-by this document.
+**Status:** B3C.1 is complete after automated validation and user-confirmed
+17/17 manual Unity acceptance. B3C.2 and B3C.3 remain planning only and are not
+authorised by this document.
 
 **Prepared:** 15 October 2026
 
@@ -10,6 +10,17 @@ by this document.
 and supplies typed `RegionCellId` values, immutable snapshots, read-only region
 adapters, compatibility validation, revisions/change feeds and atomic
 publication of the Colony/Surface read-model pair.
+
+**v1.0 amendment — 16 October 2026:**
+[`ResourceAndNodeSystem.md`](ResourceAndNodeSystem.md) is authoritative where
+this earlier plan differs. Every target Solid is a finite variable-quantity
+Node; normal Solid Extraction commits the complete remaining quantity; output
+may require several deterministic physical stacks; Water is finite; and natural
+Backgrounds own no colony function. The current quantity-one Soil/Stone registry
+and functional Backgrounds are compatibility implementations, not the end-state.
+Completed improvements and their migration are defined separately in
+[`ConstructionPlacementSpecification.md`](ConstructionPlacementSpecification.md);
+no Placement migration belongs to B3C.2 or B3C.3.
 
 ## 1. Scope and decision labels
 
@@ -174,8 +185,10 @@ until the new registry behavior passes its gate.
 An output destination is valid only if the cell is resident, compatible under
 the central validator, accessible under Colony navigation rules, outside
 protected entrance endpoints, and either empty or holds the same resource with
-capacity for the complete prepared output. A transaction never splits one
-operation across cells unless a later approved rule explicitly allows it.
+capacity for its prepared portion. The approved v1.0 whole-node rule permits one
+logical operation to reserve several deterministic output cells when the
+complete yield exceeds one stack's capacity. Every required reservation must
+succeed before depletion commits.
 
 Search order must be deterministic and versioned. First test the source cell,
 then a bounded sequence ordered by local path/adjacency cost, stable cardinal
@@ -183,7 +196,8 @@ then diagonal direction order, and typed coordinate tie-break. The exact radius,
 candidate cap, interaction origin and hazard rule remain unresolved before
 B3C.2/B3C.3.
 
-If no candidate fits, preserve the prepared operation and its Node reservation.
+If the complete output set cannot be reserved, preserve the prepared operation
+and its Node reservation.
 Do not decrement the Node, shrink output, fill inventory, Storage or staging, or
 discard material. Retry only after an affected cell/stack revision, explicit
 recovery request or lifecycle restoration. Cancellation releases reservations
@@ -319,7 +333,7 @@ commits and gates. B3C.1 and B3C.2 establish independently testable authorities;
 B3C.3 is the first slice that changes live Extraction behavior. Do not call
 WV-B3C complete until all three are accepted.
 
-### B3C.1 — Colony Node authority
+### B3C.1 — Inactive Colony Node foundation — complete
 
 **Implementation update — 16 October 2026:** Implemented as the inactive,
 unpublished authority foundation recommended here. It creates immutable
@@ -327,7 +341,7 @@ quantity-one candidate records, deterministic generated/fixture IDs, local
 stale/depleted invalidation, context invalidation and bounded inspector
 diagnostics. It does not switch the WV-B3B adapter or any gameplay writer.
 Focused tests pass 8/8 Edit and 4/4 Play; complete suites pass 565/565 Edit and
-78/78 Play. Manual acceptance remains pending.
+78/78 Play. The user confirmed the complete 17/17 manual checklist passed.
 
 **Systems affected:** new Node definition/registry records; generated scenario
 construction; candidate-publication validation; narrow read-only inspection in
@@ -338,7 +352,7 @@ this slice.
 build report; registry diagnostics; explicit context invalidation. No mutation,
 reservation or competing `NodeChanged` event was added in this slice.
 
-**Mutation ownership:** B3C.1 builds the future sole quantity owner but keeps it
+**Mutation ownership:** B3C.1 builds the schema for a future sole quantity owner but keeps it
 inactive and unpublished while existing excavation remains the live writer.
 `ChunkedWorldData` therefore remains the effective quantity-one compatibility
 authority until B3C.3 performs one atomic writer/read cutover. The recommended
@@ -368,6 +382,13 @@ source and ID version; the exact feature gate and parity diagnostics used before
 B3C.3 makes the atomic writer/read cutover.
 
 ### B3C.2 — Canonical loose-resource authority
+
+For safer v1.0 delivery, approve this as two gates: **B3C.2A** introduces
+Resource Definitions, stable canonical Stack IDs, one-stack/type/capacity rules,
+revisions and legacy migration; **B3C.2B** adds deterministic multi-cell output
+reservation, overflow placement, replay protection and recoverable pending
+output. Neither gate changes Node yields or live Extraction without separate
+approval.
 
 **Systems affected:** internals of `WorldMaterialDropRegistry`; Colony adapter;
 pickup compatibility lookup; construction-cancellation/developer-drop output;
@@ -404,6 +425,11 @@ legacy record during rebuild; whether current development scenarios can ever
 contain over-capacity same-cell totals.
 
 ### B3C.3 — Exact-once Node-to-output transaction
+
+For safer v1.0 delivery, approve this as **B3C.3A** active variable-quantity
+Colony Node ownership followed by **B3C.3B** whole-node Extraction cutover. The
+first establishes and validates sole quantity ownership; the second coordinates
+Node depletion, Solid removal, multi-stack output and coherent publication.
 
 **Systems affected:** `ExcavationWorldTransaction`, `ExcavationJobOrder`, Node
 registry, loose registry, authorised terrain mutation seam, runtime-cell change
@@ -552,15 +578,15 @@ persistence, region unloading or complex restoration.
 
 ## 12. Recommended smallest implementation prompt
 
-The B3C.1 prompt above has been implemented and awaits manual acceptance. After
-acceptance, the next smallest candidate is a separately authorised **B3C.2
-only** prompt for canonical one-stack ground-resource internals while preserving
+The B3C.1 prompt above is complete. The next smallest candidate is a separately
+authorised **B3C.2A only** prompt for Resource Definitions and canonical
+one-stack ground-resource internals while preserving
 existing pickup, Hauling, Construction recovery and developer-drop callers. It
 must settle canonical Stack ID, legacy same-cell reconciliation and reservation
 migration before code changes. It must not implement Node transaction cutover,
 Surface gameplay, Placements or WV-B3D.
 
-The implemented first slice creates a reversible authority seam and proves
+The completed first slice creates a reversible authority seam and proves
 identity without changing accepted gameplay. B3C.2 and B3C.3 should follow only
 after their unresolved decisions are approved and the preceding slice is
 accepted.

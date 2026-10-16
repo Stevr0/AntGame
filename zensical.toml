@@ -19,6 +19,7 @@ nav = [
   { "Ant Movement and Navigation" = "ant-movement-navigation.md" },
   { "World View Foundation" = "world-view-foundation.md" },
   { "Procedural World Generation" = "procedural-world-generation.md" },
+  { "Resource and Node System" = "resource-and-node-system.md" },
   { "Unified Runtime Cells" = "unified-runtime-cells.md" },
   { "Excavation and Terrain" = "excavation-terrain.md" },
   { "Art Foundation" = "art-foundation.md" },

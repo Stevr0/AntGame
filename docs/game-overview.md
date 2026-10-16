@@ -57,7 +57,13 @@ The integrated `AntGameDevelopment.unity` scene is a deterministic development e
 
 Normal gameplay uses the authored player HUD. Development controls remain grouped in one compact top IMGUI toolbar: Ant, Needs, Skills, Jobs, Resources, World and Debug share a single bounded scrollable expansion area. Developer Mode starts hidden, can be opened deliberately with F12 or its separate reopen control, and can close without changing the clock or autonomy. One uGUI/IMGUI input boundary prevents either interface from issuing world commands or moving the camera through pointer leakage.
 
-Milestones 3.3D and 3.4A are accepted, providing physical storage/hauling and functional Background construction with builder self-supply. Milestone 3.5B changes only excavation output ownership and has complete automated verification; its 27-step manual checklist is pending. Brood, room quality, combat, persistence, and a finished onboarding flow are not implemented.
+Milestones 3.3D and 3.4A are accepted, providing physical storage/hauling and
+legacy functional-Background construction. WV-B2B supersedes builder
+self-supply: Hauling delivers to Construction Site staging and Construction is
+work-only. Natural Backgrounds are environmental only in the approved target;
+constructed Placements replace the legacy representation during WV-B3D. Brood,
+room quality, combat, persistence, and a finished onboarding flow are not
+implemented.
 
 ## Scope boundaries
 

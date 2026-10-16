@@ -1,5 +1,14 @@
 # Food, Water and Survival
 
+## Finite Water Node amendment
+
+Water is a finite Resource Node, including when represented as a Solid. Solid
+Water uses whole-node depletion and complete liquid-compatible output; it is not
+an unlimited/replenishing source or an ordinary Soil/Stone stack. Direct
+drinking and Extraction must both consume the same finite source exactly once.
+Whether direct drinking can partially consume a still-solid multi-unit Water
+Node remains unresolved. See [Resource and Node System](resource-and-node-system.md).
+
 ## WV-B3A physical-state boundary
 
 Future natural food/water Nodes, Storage Placements and loose/payload ownership
@@ -73,12 +82,13 @@ Milestone 3.4B routes needs, interactions, autonomous evaluation and retry/backo
 ## Future founding-colony contract
 
 The WV-A/WV-B2A specifications add design only, not runtime behavior: finite
-Surface food/freshwater nodes, direct eating/drinking without storage,
-extraction to recoverable output, one-unit non-solid water payloads, and safe
+Surface food/freshwater Nodes, direct eating/drinking without Storage,
+Extraction to recoverable output, liquid-compatible water caches/carriers, and safe
 natural rest. A constructed Sleeping Placement keeps one-ant capacity and the
 existing 16/hour recovery; a provisional 8/hour natural-rest rate requires
 WV-C1 approval. Water must remain conserved across node/source, ground cache,
-ant inventory and Water Storage placement ownership.
+ant inventory and Water Storage Placement ownership. Cache capacity and direct
+drinking behavior for a Solid whole-node source require later approval.
 
 ## Not implemented
 

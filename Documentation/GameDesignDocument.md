@@ -1,5 +1,56 @@
 # ANT COLONY
 
+## Resource and Node System v1.0 — 16 October 2026
+
+> **APPROVED DESIGN; RUNTIME MIGRATION INCOMPLETE.**
+> [`ResourceAndNodeSystem.md`](ResourceAndNodeSystem.md) is authoritative for
+> resources, finite Nodes, whole-node Extraction, physical stack accounting,
+> finite Water and timed World View resource creation.
+
+Every Solid terrain cell is a finite Resource Node with a specific resource and
+positive actual quantity fixed during generation or explicit creation. Normal
+Solid Extraction performs independent work, removes/depletes the whole Node,
+preserves its natural Background and converts the complete remaining quantity
+into recoverable physical output. Variable per-cell quantities are approved;
+the current quantity-one Colony Soil/Stone behavior is transitional.
+
+Natural Backgrounds are environmental only. Nursery, Sleeping, Storage,
+Workshop, Refining, Doors and other colony functions belong to constructed or
+placed improvements. Existing functional Backgrounds remain an active legacy
+compatibility implementation pending WV-B3D migration; this design approval
+does not change runtime behavior.
+
+Water is finite, including as a Solid Node, and must use a liquid-compatible
+physical representation. Direct drinking and Extraction both consume the same
+finite source through exact-once transactions; their interaction for whole-node
+Solid Water remains an explicit future decision. Timed future Surface events may
+create new Nodes or loose resources such as insects, seeds, fruit and rainwater,
+but never implicitly regenerate extracted terrain.
+
+WV-B3C.1 is **Complete** after its automated suites and user-confirmed manual
+Unity acceptance. It remains only an inactive quantity-one Soil/Stone registry;
+no active quantity authority or Surface interaction was added.
+
+### Construction and Placement definition contract
+
+[`ConstructionPlacementSpecification.md`](ConstructionPlacementSpecification.md)
+is authoritative for Construction Sites, Placement Definitions, completed
+Placement instances, legacy functional-Background migration and room-quality
+integration. A Placement definition owns stable metadata, footprint,
+compatibility, recipe/work, obstruction, interaction, capacity, completed
+function, room modifiers and lifecycle rules. An instance separately owns its
+typed footprint, lifecycle, revision, contents, reservations and users.
+
+The approved workflow is **Designation → Hauling → Material Staging →
+Construction Work → Completed Placement**. Sites provide no function before
+completion. Completion consumes staging and creates the Placement exactly once
+without replacing its natural Background. One Placement supplies one capacity
+unit for Sleeping, Food/Water/Material Storage and Nursery where applicable;
+Doors, Prepared Surface and future Refining Stations do not receive an invented
+generic capacity. Rooms may contain mixed Placements, require completed Doors at
+openings for enclosure and grant only approved bonuses to appropriate completed
+Placements.
+
 ## WV-B3B unified runtime cell authority foundation — 15 October 2026
 
 > **WV-B3B COMPLETE — AUTOMATED AND MANUAL ACCEPTANCE PASSED.**
@@ -156,7 +207,7 @@ The implementation-ready technical contract is `WorldViewTechnicalSpecification.
 > **APPROVED DESIGN; IMPLEMENTATION DEFERRED.** This supersedes any assumption that a new founding colony starts with prebuilt food, water or sleeping fixtures. The three-ant development scene remains a testing fixture.
 
 - **Start (superseded by WV-B2A on 15 October 2026):** The earlier Surface/no-chamber start is historical. The current approved new-game start is one founding queen in one small excavated underground chamber directly beneath the top-boundary Colony entrance, with no preconstructed Sleeping, Food Storage, Water Storage, Material Storage or Nursery placements.
-- **Foraging discovers** food, water and other resource sources; **extraction physically removes/collects** finite resources and generates recoverable loose output. **Hauling** transports extracted materials. **Construction** self-supplies physical materials from inventory, storage or loose drops.
+- **Foraging discovers** food, water and other resource sources; **Extraction physically removes/collects** finite resources and generates recoverable loose output. **Hauling alone** transports extracted materials to explicit staging, Storage or future Refining destinations. **Construction** begins work only after every requirement is staged and never self-supplies.
 - **Direct survival:** Ants may eat/drink at an accessible natural food/water source without requiring constructed storage. Natural sources must obey future finite-source/access/consumption rules; extraction and water transport need their own approved technical specification. Do not assume water is stackable like stone or that discovery automatically extracts it.
 - **Rest:** Ants may rest at a physically safe, accessible natural position before any dedicated sleeping space exists. Constructed Sleeping Placements grant one dedicated resting position per cell with improved recovery efficiency; later enclosed-room quality may enhance efficiency but never gates basic use.
 - **Storage and nursery:** Food Storage, Water Storage, Material Storage and Nursery are Constructions/Placements built through resource-backed Construction jobs; each placement provides its previously approved 1:1 capacity where applicable. The current functional-Background representation is a compatibility implementation awaiting migration. Unenclosed initial chambers can function; future doors/enclosure provide efficiency bonuses.
@@ -295,18 +346,18 @@ Design intent: Build a small, finishable colony simulation in which individual a
 ### Founding queen, brood and nursery
 
 - The first controllable ant is a **working founding queen**, not an ordinary worker awaiting transformation.
-- Early loop: excavate an accessible chamber; designate/conversion-build at least **three Nursery Background tiles**; explicitly authorise the initial brood of **three larvae**; physically feed them on multiple occasions; surviving brood eventually matures into three individually controllable general-purpose workers.
+- Early loop: excavate an accessible chamber; construct/place at least **three Nursery improvements**; explicitly authorise the initial brood of **three larvae**; physically feed them on multiple occasions; surviving brood eventually matures into three individually controllable general-purpose workers.
 - Subsequent reproduction requires **explicit player authorisation**; it is never triggered solely by spare food/space. The queen lays eggs/brood; precise egg→larva→pupa→adult presentation, timing, feeding thresholds, further brood sizes and brood mortality are **TBD**.
-- Each functional Nursery Background tile provides exactly **one brood slot**. A nursery works while unenclosed; enclosing it properly can grant room-quality efficiency bonuses, not extra base capacity. Removing occupied nursery capacity pauses development without silently deleting brood. Need a defined overflow/reassignment policy.
+- Each Nursery Placement provides exactly **one brood slot**. A nursery works while unenclosed; enclosing it properly can grant room-quality efficiency bonuses, not extra base capacity. Removing occupied nursery capacity pauses development without silently deleting brood. The current functional-Background representation is compatibility only. Need a defined overflow/reassignment policy.
 
 ### Authoritative terrain and movement changes
 
 - Preserve the authoritative generated chunk/background/foreground data model. Foreground Solid tiles block physical occupancy as configured; digging removes eligible foreground only and never the permanent Background Tile.
 - **Every exposed, intact natural earth/stone background is intrinsically grippable and traversable**, subject to actual body clearance, collision, valid movement directions and chunk availability. Background preparation is **not** required to climb. Preparing a background improves movement speed (road-versus-gravel analogy); its initial multiplier is **TBD**. Sky or a background material explicitly defined as without grip does not grant grip; falling remains possible without ground or grip.
-- Natural, Prepared and Functional Background materials must support shared ant traversal; function and locomotion are distinct properties. Do not use prepared-only climbing as a gameplay rule. Adapt existing capability evaluators and motors only in a separately approved implementation milestone with regression tests.
+- Natural and Prepared Background materials must support shared ant traversal; constructed Placements must not remove the underlying Background's movement properties. Do not use prepared-only climbing as a gameplay rule or encode colony function in the target Background model. Existing functional Background IDs remain compatibility data until separately migrated with regression tests.
 - The world must eventually support procedural generation, durable tile and entity state, and chunk loading/unloading without treating unknown chunks as exposed empty space.
 
-### Functional backgrounds, construction and physical goods
+### Natural backgrounds, construction and physical goods
 
 - **Construction/Placement records define colony uses and capacity**, including Nursery, Sleeping, Food Storage, Water Storage, Production and Burial. A placement generally grants one matching capacity slot (**1:1**). Food/water stockpile slots may hold one physical compatible type/stack; exact stack limits **TBD**.
 - Player designates construction on a compatible accessible cell; an ant **physically performs a Construction skill job using required resources** while the natural Background remains. Replacing/removing a placement later requires a new job and accounted material handling. Construction improves through doing. Existing functional Background conversions are implemented legacy compatibility, not the target data model.

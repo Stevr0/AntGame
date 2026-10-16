@@ -1,5 +1,29 @@
 # Technical Architecture
 
+## Resource and Node System v1.0 target
+
+The approved target gives every Solid a finite variable-quantity Resource Node,
+uses whole-node Extraction, and commits complete recoverable physical output.
+Resource Definitions own material metadata; Node instances own actual quantity;
+canonical Stack records own loose quantity. Overflow reserves deterministic
+additional cells or remains a recoverable pending transaction. Natural
+Backgrounds own no colony function, and finite Water requires a
+liquid-compatible representation. See [Resource and Node System](resource-and-node-system.md).
+
+This is not current runtime ownership. WV-B3C.1 is complete after 17/17 manual
+acceptance, but its quantity-one registry remains inactive. Existing terrain,
+loose drops and functional Background systems continue as compatibility
+authorities until separately approved B3C.2/B3C.3 and WV-B3D gates.
+
+The target Placement boundary is specified in
+[`Documentation/ConstructionPlacementSpecification.md`](https://github.com/Stevr0/AntGame/blob/main/Documentation/ConstructionPlacementSpecification.md).
+Construction Sites own footprint reservation, staging and progress but expose no
+completed function. Exact-once completion consumes staging and creates a
+Placement instance over retained natural Backgrounds. Completed Placements own
+their capacity, contents and functional reservations. Legacy
+`SurvivalInteractionWorld`/`MaterialStorageWorld` state must be copied and
+validated before a cell-level cutover disables its functional Background.
+
 ## Inactive Colony Resource Node registry
 
 WV-B3C.1 adds a private `InactiveColonyResourceNodeRegistry` beside the existing

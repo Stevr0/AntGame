@@ -1,6 +1,6 @@
 # Ant Colony Development Roadmap
 
-## WV-B3C.1 — Implemented; manual acceptance pending (16 October 2026)
+## WV-B3C.1 — Complete (16 October 2026)
 
 The first controlled Node slice adds an inactive Colony-only registry over
 existing registered Soil/Stone Solids. Deterministic typed quantity-one records,
@@ -14,12 +14,28 @@ physical output remain authoritative; the registry cannot mutate gameplay or
 publish competing cell changes. Surface Nodes remain `GenerationOnly`.
 Automated evidence passes **8/8 focused Edit**, **4/4 focused Play**, **565/565
 complete graphics-enabled Edit** and **78/78 complete Play**, with zero
-failures, skips or inconclusive results. Manual Unity acceptance remains
-pending, so WV-B3C.1 is not complete.
+failures, skips or inconclusive results. The user confirmed the complete **17/17
+manual Unity acceptance checklist passed**. This documentation-only closure did
+not rerun Unity tests.
 
-Next after acceptance is a separately authorised decision on B3C.2 canonical
-loose-resource integration. B3C.2, B3C.3, WV-B3D and WV-C1 have not started.
-`WV-B3B-LIM-001` remains active.
+The approved [Resource and Node System v1.0](ResourceAndNodeSystem.md) now makes
+variable quantities, whole-node Solid Extraction, complete physical output,
+finite Water and natural-only Backgrounds the target. B3C.1 remains a
+quantity-one inactive compatibility foundation, not that final mutable model.
+B3C.2, B3C.3, WV-B3D and WV-C1 have not started. `WV-B3B-LIM-001` remains active.
+
+The next recommended planning gates are B3C.2A Resource Definitions/canonical
+stacks, B3C.2B deterministic overflow/pending-output recovery, B3C.3A active
+variable Colony Nodes, and B3C.3B whole-node transaction cutover. These smaller
+gates are recommendations only and require separate approval.
+
+The companion
+[Construction and Placement Specification](ConstructionPlacementSpecification.md)
+maps every current functional Background and construction recipe to the target
+Placement model. It preserves the staged workflow and recommends Material
+Storage as the first WV-B3D migration, followed by survival functions and
+Nursery. Prepared Surface needs a representation decision; Doors and Refining
+Stations remain new future definitions. WV-B3D has not begun.
 
 ## WV-B3B — Complete (15 October 2026)
 
@@ -62,10 +78,10 @@ cell contract. It must not combine Placement migration or Surface gameplay.
 maps the current Soil, Stone, generated
 Seed/Twig/Freshwater, loose-resource, reservation and revision owners. It
 recommends three separately authorised and accepted implementation slices:
-B3C.1 Colony quantity-one Node authority, B3C.2 canonical one-stack ground
+B3C.1 Colony quantity-one Node foundation, B3C.2 canonical one-stack ground
 resources, and B3C.3 exact-once Node-to-output transaction coordination. The
-recommended first prompt was **B3C.1 only**. That slice is now implemented with
-manual acceptance pending; the broader WV-B3C authority migration remains
+recommended first prompt was **B3C.1 only**. That slice is now complete; the
+broader WV-B3C authority migration remains
 incomplete. Generated Surface Nodes remain `GenerationOnly`, and Placement
 migration remains WV-B3D.
 
@@ -725,4 +741,9 @@ These milestones are ordered direction, not approved implementation work. Their 
 
 The 3.3C carrying model is implemented: one initial slot plus one at Hauling 20/40/60/80, capped at five, with compatible resource stacks and a provisional maximum of 10 for Soil and Stone.
 
-No new milestone is complete without implementation and validation evidence. Milestone 2.4D remains pending its separately recorded manual acceptance. Milestone 3.4A implements functional Background construction and builder self-supply; rooms, doors, brood, production, persistence, streaming and local avoidance are not implemented.
+No new milestone is complete without implementation and validation evidence.
+Milestone 2.4D remains pending its separately recorded manual acceptance.
+Milestone 3.4A still implements functional-Background construction as a
+compatibility representation; WV-B2B replaced its builder self-supply path with
+destination-aware Hauling and site staging. Rooms, doors, brood, production,
+persistence, streaming and local avoidance are not implemented.

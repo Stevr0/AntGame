@@ -1,5 +1,14 @@
 # Excavation and Terrain
 
+## Resource and Node v1.0 target
+
+Every target Solid is a finite variable-quantity Resource Node. Normal Solid
+Extraction removes/depletes the whole Node, preserves its natural Background and
+commits every remaining unit into recoverable physical output. A yield larger
+than one stack uses deterministic additional compatible cells or remains a
+recoverable pending transaction. Partial harvesting requires an explicitly
+approved special Node definition. See [Resource and Node System](resource-and-node-system.md).
+
 ## WV-B3C.1 diagnostic Node records
 
 Each prepared Colony scenario now builds an inactive, read-only quantity-one
@@ -9,8 +18,9 @@ and lifecycle for diagnostics. Existing `ExcavationWorldTransaction` still
 preflights output, removes the authoritative Solid and commits the physical
 drop. That terrain removal marks the matching diagnostic record
 `DepletedOrAbsent`; it does not decrement registry quantity or route gameplay
-through the registry. B3C.2 canonical stacks and B3C.3 transaction cutover have
-not started.
+through the registry. WV-B3C.1 is complete after 17/17 manual acceptance;
+B3C.2 canonical stacks and B3C.3 transaction cutover have not started. The
+inactive quantity-one records remain a transitional foundation.
 
 ## WV-B3B read projection
 
@@ -26,9 +36,9 @@ Nodes. Mutable Node migration belongs to WV-B3C.
 
 The approved runtime target represents Soil, Stone, Seed, Twig and future
 natural resources as finite Nodes over an unchanged natural Background.
-Current Colony Solids remain quantity-one compatibility Nodes until WV-B3C is
-separately approved. Extraction must prepare a compatible one-stack-per-cell
-ground output before exact-once Node reduction; failed placement retains a
+Current Colony Solids remain quantity-one compatibility Nodes until later
+WV-B3C gates are separately approved. Extraction must prepare complete
+compatible ground output before exact-once Node reduction; failed placement retains a
 recoverable pending transaction and never fills inventory. See [Unified Runtime
 Cells](unified-runtime-cells.md).
 
@@ -68,9 +78,9 @@ Background.
 The current Colony Solid material/yield model is the compatibility baseline:
 legacy Solids adapt as deterministic quantity-one nodes. Existing exact-once
 excavation remains the conservation pattern—prepare output, remove/reduce once,
-create physical loose output once—but future shared node transactions must also
-support partial quantity. Generated nodes never create loose resources merely by
-existing.
+create physical loose output once. Future normal Solid transactions use the
+whole remaining quantity; partial harvesting is definition-specific only.
+Generated Nodes never create loose resources merely by existing.
 
 ## Generated underground contract
 
@@ -95,7 +105,7 @@ The two layers have different responsibilities:
 
 | Layer | Purpose | Mutation rule |
 | --- | --- | --- |
-| Background | Persistent substrate, grip, movement speed, and future colony function | May be converted or prepared; never absent in a resident cell |
+| Background | Persistent natural substrate, grip and movement speed | May be prepared; never owns colony function or disappears from a resident cell |
 | Foreground Solid | Blocking/excavatable material and supporting geometry | Removed only by a completed eligible excavation transaction |
 
 Visual Tilemaps and the collision-only Tilemap are projections of authoritative world data. The visual layers do not own gameplay state.

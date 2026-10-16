@@ -2,7 +2,7 @@
 
 **Milestone:** WV-B3A  
 **Date:** 15 October 2026  
-**Status:** WV-B3B complete; automated and 16/16 manual acceptance passed
+**Status:** WV-B3B and WV-B3C.1 complete; later mutable migrations unstarted
 **Implementation boundary:** Read-only adapters, revisions, compatibility validation and atomic read-model publication
 
 ## 1. Purpose and authority
@@ -13,8 +13,10 @@ their local navigation, movement, rendering, cameras or entrance transaction.
 It refines the approved unified-cell model in the GDD and procedural generation
 specification. Where older technical proposals conflict with this document,
 this document controls the WV-B3 migration. WV-B3B now implements the read-only
-foundation described below. It does not approve or implement WV-B3C, WV-B3D,
-WV-C1 or their gameplay migrations.
+foundation described below, and WV-B3C.1 implements the accepted inactive
+quantity-one Colony Node seam. The resource-specific end-state is governed by
+[`ResourceAndNodeSystem.md`](ResourceAndNodeSystem.md). Later mutable WV-B3C,
+WV-B3D, WV-C1 and their gameplay migrations remain unapproved/unimplemented.
 
 The migration must preserve the working resource chain:
 
@@ -520,10 +522,10 @@ and the full existing regression suites plus manual scenario/view checks.
 
 ### WV-B3C candidate — Node and Loose Resource Integration
 
-Scope: runtime Node definitions/instances; quantity-one Colony Solid adapter;
-mutable generated Surface nodes; one-stack-per-cell authority; pending output
-and deterministic bounded placement; narrow adapters for Extraction, pickup and
-Hauling.
+Scope: Resource Definitions; variable-quantity runtime Node instances; active
+Colony Solid projection; later separately gated Surface Nodes; one-stack-per-cell
+authority; deterministic multi-cell overflow, pending-output recovery; narrow
+adapters for Extraction, pickup and Hauling.
 
 Completion requires exact conservation under success, replay, cancellation and
 failed placement; Background preservation; Surface and Colony typed identity;
@@ -531,7 +533,7 @@ and proof that generated records no longer own mutable quantity.
 
 #### WV-B3C.1 implementation status — 16 October 2026
 
-**Implemented — Automated Tests Passed, Manual Acceptance Pending.** The
+**Complete — Automated and Manual Acceptance Passed.** The
 Colony-only inactive registry foundation now builds deterministic quantity-one
 Soil/Stone candidate records from prepared terrain. It validates actual Solid
 definitions, typed cells, generated/fixture provenance, IDs, Backgrounds and
@@ -546,7 +548,21 @@ no competing runtime-cell changes and Surface Nodes remain `GenerationOnly`.
 B3C.2 and B3C.3 are still required for canonical loose stacks and the atomic
 writer/read cutover.
 
+Focused Edit `8/8`, focused Play `4/4`, complete Edit `565/565` and complete
+Play `78/78` passed with zero failures, skips or inconclusive results. The user
+confirmed all **17/17** manual Unity checks passed. This documentation-only
+closure did not rerun Unity.
+
+Resource and Node v1.0 further requires variable quantities and complete
+whole-node output, including several deterministic stacks or recoverable pending
+output when one stack cannot hold the yield. The recommended implementation
+split is B3C.2A definitions/canonical stacks, B3C.2B overflow recovery, B3C.3A
+active variable Colony Nodes and B3C.3B whole-node transaction cutover.
+
 ### WV-B3D candidate — Construction / Placement Integration
+
+The detailed target definition, audited legacy inventory and migration matrix
+are in [`ConstructionPlacementSpecification.md`](ConstructionPlacementSpecification.md).
 
 Scope: Placement slot and IDs; designation/site slot reservation; atomic
 staging-consumption/Placement creation; migration of functional Backgrounds one
@@ -586,10 +602,10 @@ ants locally; switch views repeatedly; make an entrance round trip; pause and
 change speeds; confirm cameras do not rebuild state; confirm existing Colony
 Extraction/Hauling/Construction still work; confirm clean Console.
 
-### Manual gate for WV-B3C
+### Manual gate for later mutable WV-B3C slices
 
 Extract Soil and Stone; inspect Node identity/quantity and Background retention;
-verify one output stack and merges; fill/block output candidates and observe a
+verify canonical output stacks and merges; fill/block output candidates and observe a
 recoverable pending state; unblock and retry; interrupt pickup/delivery; confirm
 quantity conservation; verify Surface nodes remain stable across view switches.
 

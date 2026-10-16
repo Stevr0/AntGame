@@ -1,5 +1,46 @@
 # Design Decision Log
 
+## 2026-10-16 — Define Construction and Placement metadata and migration
+
+**Decision:** Natural Backgrounds remain present and own no colony function.
+Construction Sites own recipes, staged resources and work but expose no function
+before completion. Exact-once completion consumes staging and creates a
+Placement instance. Placement Definitions own stable metadata, footprint,
+compatibility, recipe/work, obstruction, interaction, capacity, function, room
+modifiers and lifecycle; instances own changing contents, reservations, users
+and revision. The current Sleeping/Food/Water/Material/Nursery Backgrounds and
+Prepared conversion are legacy representations. Doors and Refining Stations are
+future Placements, not invented current code.
+
+**Consequences:** Preserve one capacity unit for Sleeping, Food/Water/Material
+Storage and Nursery where applicable, but do not assign generic capacity to
+Doors, Prepared Surface or Refining Stations. Migrate one function at a time,
+starting with Material Storage, and never run legacy and replacement function in
+the same cell. Room bonuses apply to appropriate completed Placements; an
+unenclosed Nursery keeps base function. No runtime migration or WV-B3D work is
+authorised.
+
+## 2026-10-16 — Approve Resource and Node System v1.0 and close WV-B3C.1
+
+**Decision:** Every Solid terrain cell is a finite Resource Node with a specific
+Resource Definition and positive actual quantity. Normal Solid Extraction
+removes the whole Node, preserves the natural Background and commits its full
+remaining quantity to recoverable physical output. Variable quantities are
+approved. Output beyond one stack uses deterministic additional cells or a
+recoverable pending transaction. Water is finite and needs a liquid-compatible
+representation. Natural Backgrounds own no colony function; all Nursery,
+Sleeping, Storage, Workshop, Refining, Door and similar functions belong to
+constructed/placed improvements. Future timed Surface events create explicit
+Nodes or loose stacks and never regenerate extracted terrain.
+
+**Consequences:** `Documentation/ResourceAndNodeSystem.md` is authoritative.
+Current quantity-one Soil/Stone and functional Background systems remain
+compatibility implementations. B3C.2/B3C.3 should be split into smaller
+definition/stack, overflow-recovery, active-Node and transaction-cutover gates.
+No runtime work is authorised by this decision. The user accepted all 17/17
+WV-B3C.1 manual checks after its recorded green automated suites, so WV-B3C.1 is
+Complete. `WV-B3B-LIM-001` remains active.
+
 ## 2026-10-16 — Add inactive Colony Node identity without moving writers
 
 **Decision:** Implement WV-B3C.1 as an inactive, scenario-scoped diagnostic
@@ -14,7 +55,8 @@ mutation invalidates the matching diagnostic record without bidirectional
 synchronisation or a competing cell event. Old scenario handles reject reads
 after replacement. Surface Nodes, canonical loose stacks and authority cutover
 remain deferred to later gates; `WV-B3B-LIM-001` remains accepted. Automated
-tests pass, while manual WV-B3C.1 acceptance is pending.
+tests pass. The later user confirmation closed the manual 17/17 gate; see the
+newer decision above.
 
 ## 2026-10-15 — Close WV-B3B and retain whole-world atomicity limitation
 

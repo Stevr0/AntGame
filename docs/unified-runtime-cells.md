@@ -2,8 +2,8 @@
 
 ## WV-B3C.1 inactive Node foundation
 
-WV-B3C.1 is **implemented with automated tests passed and manual acceptance
-pending**. Each prepared Colony scenario now gets an inactive diagnostic
+WV-B3C.1 is **complete** after automated validation and user-confirmed **17/17
+manual Unity acceptance**. Each prepared Colony scenario gets an inactive diagnostic
 registry containing deterministic, typed, quantity-one records for registered
 Soil and Stone Solids. Relevant terrain mutation invalidates only the matching
 record; scenario replacement invalidates the old registry handle; reads and
@@ -16,6 +16,7 @@ cannot change quantity, terrain, jobs, output, navigation or cell change feeds.
 Surface Stone, Seed, Twig and Freshwater remain `GenerationOnly`. Automated
 results pass 8/8 focused Edit, 4/4 focused Play, 565/565 complete Edit and 78/78
 complete Play. B3C.2/B3C.3 are unstarted and `WV-B3B-LIM-001` remains active.
+This documentation-only closure did not rerun Unity tests.
 
 ## Status
 
@@ -32,6 +33,11 @@ cutover, WV-B3D and WV-C1 require separate approval. The authoritative detail is
 Every resident Colony or Surface cell has exactly one natural Background and
 may contain zero or one Node, Placement and one loose ground-resource stack.
 The layers are logical data, not a requirement for separate Tilemaps.
+
+The approved [Resource and Node System](resource-and-node-system.md) additionally
+requires every Solid to be a finite variable-quantity Node, whole-node
+Extraction and complete recoverable physical output. Natural Backgrounds own no
+colony function; current functional Backgrounds are compatibility only.
 
 | Layer | Owns | Key invariant |
 | --- | --- | --- |
@@ -65,7 +71,8 @@ quantity, Placement occupancy or a ground stack.
 - Hauling owns pickup and delivery.
 - Construction begins only when all site requirements are staged.
 - Completion consumes staging once and creates a Placement.
-- Failed output placement retains a recoverable pending transaction; it never
+- Output larger than one stack reserves deterministic additional cells.
+- Failed complete output placement retains a recoverable pending transaction; it never
   discards output or auto-fills inventory.
 
 Current `Excavation*` APIs, quantity-one Colony Solids, functional Backgrounds,
@@ -115,12 +122,13 @@ unloading or complex scenario restoration.
    revisions, central compatibility, atomic read-model publication and
    read-only adapters. Automated evidence: 6/6 focused Edit, 3/3 focused Play,
    557/557 complete Edit and 77/77 complete Play; manual acceptance 16/16.
-2. **WV-B3C.1 — inactive Colony Nodes (implemented; manual pending):** stable
+2. **WV-B3C.1 — inactive Colony Nodes (complete):** stable
    quantity-one candidate records and invalidation without moving writers.
-3. **WV-B3C.2/B3C.3 — Nodes and loose resources (unstarted):** canonical
-   one-stack occupancy, mutable authority, failed-output recovery and narrow
-   transaction adapters.
-4. **WV-B3D — Placements:** site/Placement occupancy and one-function-at-a-time
+3. **WV-B3C.2A/B — resources and physical output (unstarted):** Resource
+   Definitions, canonical stacks, deterministic overflow and pending recovery.
+4. **WV-B3C.3A/B — active Nodes and Extraction (unstarted):** variable Colony
+   quantity authority followed by whole-node transaction cutover.
+5. **WV-B3D — Placements:** site/Placement occupancy and one-function-at-a-time
    migration of functional Backgrounds, beginning with Material Storage.
 
 These are candidate scopes, not implementation authorisation. Each slice keeps

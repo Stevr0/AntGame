@@ -2,7 +2,8 @@
 
 ## WV-B3C.1 inactive Colony Resource Node registry — 16 October 2026
 
-**Implemented — Automated Tests Passed, Manual Acceptance Pending.** An
+**WV-B3C.1 — Complete.** Automated validation passed and the user explicitly
+accepted the full manual Unity checklist on 16 October 2026. An
 `InactiveColonyResourceNodeRegistry` is constructed once for each prepared
 development-fixture or generated Colony scenario. It records every registered
 Soil/Stone Solid as a typed, quantity-one diagnostic Node with immutable stable
@@ -68,7 +69,10 @@ site staging and compatibility Background conversion. Generated Surface Stone,
 Seed, Twig and Freshwater remain `GenerationOnly`; no Surface interaction was
 added.
 
-### Manual Unity acceptance — pending
+### Manual Unity acceptance — complete
+
+The user confirmed the complete **17/17 WV-B3C.1 manual Unity acceptance
+checklist passed**. The accepted procedure is retained below as evidence:
 
 Development fixture:
 
@@ -96,9 +100,35 @@ Generated scenario:
     invalidated and no duplicate Nodes or ants appear.
 17. Confirm the Console has no new errors or exceptions.
 
-WV-B3C.1 is not complete until the user confirms this checklist. WV-B3C.2
-canonical loose stacks, WV-B3C.3 authority/transaction cutover, WV-B3D and WV-C1
-remain unstarted.
+WV-B3C.1 is complete. This documentation-only closure did not rerun Unity tests.
+WV-B3C.2 canonical loose stacks, WV-B3C.3 authority/transaction cutover, WV-B3D
+and WV-C1 remain unstarted and require separate authorisation.
+
+### Resource and Node System v1.0 alignment
+
+The approved target is now recorded in
+[`ResourceAndNodeSystem.md`](ResourceAndNodeSystem.md). Every target Solid is a
+finite Resource Node with a specific Resource Definition and positive actual
+quantity; variable quantities and whole-node Extraction are approved. Natural
+Backgrounds are environmental only, Water is finite, overflow must use complete
+deterministic placement or recoverable pending output, and future timed Surface
+events create explicit Nodes/stacks rather than regenerating terrain.
+
+This is design alignment only. The completed WV-B3C.1 registry remains an
+inactive quantity-one Soil/Stone compatibility layer; generated Surface records
+remain `GenerationOnly`; current functional Backgrounds remain active legacy
+compatibility pending WV-B3D. No runtime, scene, prefab, test, asset or project
+setting changed for this amendment. `WV-B3B-LIM-001` remains active.
+
+The companion
+[`ConstructionPlacementSpecification.md`](ConstructionPlacementSpecification.md)
+audits the current natural and functional Background assets, six code-defined
+construction recipes, Construction Site staging, Survival interaction capacity
+and Material Storage ownership. The target keeps natural Backgrounds, gives
+function to completed Placement instances only, and preserves exact staged
+material/content/reservation state during one-function-at-a-time WV-B3D
+migration. No Door, room-scoring, Refining Station or brood runtime currently
+exists, and no migration was implemented by this documentation task.
 
 ## WV-B3B unified runtime cell authority foundation — 15 October 2026
 
@@ -572,7 +602,17 @@ Historical sections later in this file retain the evidence available at their da
 
 ## Founding-colony survival decisions — 14 October 2026
 
-**APPROVED DESIGN ONLY, NOT IMPLEMENTED:** eventual new game begins with a single founding queen and no prebuilt facilities. Natural food/water sources can satisfy needs directly; safe natural positions permit baseline rest; constructed Food/Water/Material Storage, Sleeping and Nursery Backgrounds are created through construction. Foraging locates resources; extraction generates physical recoverable output; hauling handles transport. WV-A now specifies source/entrance behavior and one-unit water accounting, while the listed balance/presentation decisions and all runtime work remain deferred. Existing Mara/Pip/Tala developer scene retains its finite survival fixtures for reproducible testing. Do not mark any natural-source, World View or brood gameplay implemented based on this decision.
+**APPROVED DESIGN ONLY, NOT IMPLEMENTED:** eventual new game begins with a
+single founding queen and no prebuilt facilities. Finite natural food/water
+sources may satisfy needs directly under later approved rules; safe natural
+positions permit baseline rest; Food/Water/Material Storage, Sleeping and
+Nursery are constructed Placements over natural Backgrounds. Foraging locates
+resources; Extraction generates complete recoverable physical output; Hauling
+handles transport. Resource and Node v1.0 supersedes the earlier one-unit-water
+assumption with finite whole-node output plus a liquid-compatible physical
+representation whose capacity/direct-drinking details remain unresolved.
+Existing Mara/Pip/Tala survival fixtures remain for reproducible testing. Do
+not mark natural-source, World View or brood gameplay implemented.
 
 
 ## Focused survival-needs balance correction — 14 October 2026
@@ -864,7 +904,12 @@ The time strip is deliberately temporary IMGUI, not the authored production uGUI
 
 ## Current implemented milestone — 3.4A Functional Background Conversion & Construction Jobs (13 October 2026)
 
-**Status: Implemented — Pending Manual Acceptance.** Milestone 3.3D and the Development UI Reorganisation are manually accepted. Milestone 3.4A adds only functional Background conversion and builder self-supply; doors, rooms, brood, production, crafting, combat and reproduction remain excluded.
+**Historical 3.4A checkpoint:** this section records the implementation before
+later acceptance and WV-B2B logistics correction. Its builder self-supply text
+is superseded: current Hauling delivers to site staging and Construction is
+work-only. Its functional Background result remains implemented compatibility,
+not the Resource and Node v1.0 target Placement model. Doors, rooms, brood,
+production, crafting, combat and reproduction remain excluded.
 
 The player can select Prepared, Nursery, Sleeping, Food Storage, Water Storage or Material Storage in the accepted **World** toolbar category, then click or bounded-drag exposed cells in Background Conversion mode. Covered, inaccessible, occupied, duplicate and same-type targets are rejected. Each accepted designation creates a Construction job in the existing `ColonyJobRegistry`; priorities, Disabled behavior, actual path-cost selection, exclusive reservation, survival precedence and player-order interruption remain shared with established colony work.
 

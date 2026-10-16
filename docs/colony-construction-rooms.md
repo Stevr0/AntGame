@@ -1,5 +1,20 @@
 # Colony Construction and Rooms
 
+## Natural Background rule
+
+Natural Backgrounds are environmental only. Nursery, Sleeping, Food/Water/
+Material Storage, Workshop, Refining, Doors and other functions are constructed
+Placements over the retained Background. Current functional Background IDs are
+legacy compatibility pending WV-B3D migration; they are not the approved target
+model. See [Resource and Node System](resource-and-node-system.md).
+
+The complete audited catalogue, Placement Definition contract and migration
+matrix are in
+[`Documentation/ConstructionPlacementSpecification.md`](https://github.com/Stevr0/AntGame/blob/main/Documentation/ConstructionPlacementSpecification.md).
+Existing recipes remain provisional: Prepared, Nursery, Sleeping, Food Storage
+and Material Storage cost 1 Soil; Water Storage costs 1 Stone; all use four base
+simulation hours. No Door, Refining Station or room-scoring runtime exists.
+
 ## WV-B3A Placement migration boundary
 
 Construction's staged workflow remains unchanged, but its approved end-state
@@ -39,7 +54,10 @@ progress and identities.
 
 Construction is physical, location-based work. Milestone 3.4A implements conversion of exposed Background cells after required materials are gathered and consumed. Recipes and balance remain provisional.
 
-The ant performing construction must personally gather and deliver its own materials, including multiple trips. A separate hauler must not silently complete the builder's supply responsibility. Reservations prevent double allocation; cancelling construction leaves unused delivered or reserved materials physical and recoverable.
+Hauling alone gathers and delivers physical materials, potentially through
+multiple trips. Construction performs work only after every site-owned
+requirement is staged. Reservations prevent double allocation; cancellation
+leaves unused staged or reserved material physical and recoverable.
 
 ## Functional Backgrounds (implemented compatibility representation)
 
@@ -53,7 +71,12 @@ Approved functions include:
 - production functions still to be specified
 - burial
 
-Each functional Background tile provides one unit of base capacity. Material Storage uses one tile per inventory slot and may later support optional filters. Function and locomotion remain separate properties: a functional tile can still be traversable and grippable.
+Each legacy functional Background tile currently provides one declared unit of
+base capacity. Material Storage uses one filtered slot; Sleeping uses one
+exclusive reservation; Food/Water each use one resource slot; Nursery declares
+one slot but has no brood runtime. This behavior migrates to completed
+Placements. Doors, Prepared Surface and Refining Stations do not inherit a
+meaningless generic capacity.
 
 Milestone 3.4A can construct Prepared, Nursery, Sleeping, Food Storage, Water Storage and Material Storage Background. Functional results expose one empty capacity unit; Nursery is capacity-only because brood remains excluded. Function, presentation and navigation refresh from the authoritative Background transaction.
 

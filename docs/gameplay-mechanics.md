@@ -1,5 +1,20 @@
 # Gameplay Mechanics
 
+## Resource and Node System v1.0
+
+The approved target makes every Solid a finite variable-quantity Resource Node.
+Normal Solid Extraction commits its complete remaining quantity as physical
+output while preserving the natural Background. Water is finite. Natural
+Backgrounds provide no colony function; constructed Placements do. Full details
+and the runtime compatibility catalogue are in
+[Resource and Node System](resource-and-node-system.md).
+
+Completed improvements follow the companion
+[`Construction and Placement Specification`](https://github.com/Stevr0/AntGame/blob/main/Documentation/ConstructionPlacementSpecification.md):
+Designation → Hauling → site-owned staging → Construction work → completed
+Placement. No Storage, Sleeping, Nursery or other function exists before
+completion, and completion does not replace the natural Background.
+
 ## WV-B3B compatibility boundary
 
 The runtime-cell foundation is observational. Extraction, loose resources,
@@ -28,10 +43,11 @@ all staging is complete and performs no pickup or transport.
 
 ## Unified resources and placements
 
-**Approved design; not implemented.** Extraction and excavation act on the same
+**Approved design; not fully implemented.** Extraction and excavation act on the same
 finite Solid/Resource Node model. Successful work reduces quantity exactly once,
-removes a depleted node while retaining natural Background, and creates/merges a
-physical loose stack exactly once. It never auto-fills inventory. Direct
+removes a depleted node while retaining natural Background, and commits complete
+physical output exactly once, using deterministic additional stacks or pending
+recovery if necessary. It never auto-fills inventory. Direct
 eating/drinking is a separate source-consumption transaction.
 
 Each cell permits at most one loose resource type/stack. Storage is a
@@ -95,13 +111,17 @@ The accepted player HUD provides roster selection, shared ant inspection, the gl
 - Terrain, resources, capacity, and work should exist at world locations rather than as unexplained global counters.
 - Extraction always produces loose physical output; pickup and transport are separate Hauling actions.
 - Ants must navigate to a valid adjacent interaction position before acting.
-- The constructing ant is responsible for gathering and delivering its own materials, including multiple trips.
+- Hauling alone gathers and delivers material; Construction starts after complete staging.
 - Valid partial work survives safe interruptions.
 - Reservations prevent duplicate consumption and must be released on cancellation or failure.
 
 The current systems prove these principles through location-owned food/water, sleeping reservations, real excavation, per-ant inventory, reserved loose-drop pickup and cell-owned Material Storage. Material remains in exactly one authoritative inventory, world drop or storage stack; no global resource wallet exists.
 
-Future natural sources preserve the same conservation rule. Direct consumption reserves and decrements a source exactly once without creating cargo. Extraction creates recoverable physical output before source quantity commits. Water uses a stable one-unit liquid payload/cache rather than an ordinary Soil/Stone drop. See [World View Foundation](world-view-foundation.md).
+Future natural sources preserve the same conservation rule. Direct consumption
+and Extraction must both reserve and decrement a finite source exactly once.
+Water requires a liquid-compatible cache/carrier rather than an ordinary
+Soil/Stone stack; exact capacity and direct-drinking behavior for Solid Water
+remain unresolved. See [World View Foundation](world-view-foundation.md).
 
 ## Progression and failure
 

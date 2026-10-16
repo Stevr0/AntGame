@@ -1,5 +1,15 @@
 # Procedural World Generation
 
+## Resource and Node v1.0 generation amendment
+
+Every target Solid is a finite Resource Node with a specific definition and
+positive actual quantity. Future generation selects variable quantity through a
+named, versioned seed domain containing generation identity, definition and
+stable Node location/identity; iteration order cannot affect it. Water is finite
+and a Solid Water Node follows whole-node depletion. Current version-2 Colony
+Soil/Stone quantity-one records and generation-only Surface sources remain
+unchanged compatibility behavior. See [Resource and Node System](resource-and-node-system.md).
+
 ## WV-B3B publication boundary
 
 The validated Colony and Surface outputs are now exposed together through the
@@ -65,7 +75,8 @@ observations are not invented.
 8. Choose **Restore Fixture**, confirm Mara/Pip/Tala return, and verify the Unity
    Console has no new errors.
 
-No item above is recorded as passed yet.
+The user accepted the combined scenario outcomes recorded above; this retained
+checklist is historical procedure rather than an unpassed current gate.
 
 ## Approved world shape
 

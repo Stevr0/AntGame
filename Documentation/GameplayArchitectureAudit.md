@@ -10,6 +10,16 @@ test, balance or milestone status was changed.
 
 ## Post-audit disposition — 15 October 2026
 
+**16 October 2026 amendment:**
+[`ResourceAndNodeSystem.md`](ResourceAndNodeSystem.md) now resolves the target
+resource model: every Solid is a finite variable-quantity Node; normal Solid
+Extraction removes the whole Node and commits all remaining quantity into
+recoverable physical output; Water is finite; and natural Backgrounds have no
+colony function. WV-B3C.1 is complete after 17/17 manual acceptance, but its
+registry is inactive and quantity-one. The original audit evidence remains a
+historical snapshot; the gaps below are reclassified, not rewritten as runtime
+implementation.
+
 WV-B3A now supersedes the audit's recommended mutable-cell design work with the
 authoritative `UnifiedRuntimeCellSpecification.md`. It resolves the design
 questions of runtime ownership, snapshot versus projection, transaction
@@ -271,13 +281,13 @@ would improve explainability.
 | --- | --- | --- | --- |
 | Generated Surface/Colony record shape | **Compliant at generation time** | Required Background plus optional node/placement/loose fields (`ProceduralWorldGeneration.cs:58-74`). | Preserve as generation DTO; do not make it a second mutable world. |
 | Colony Background | **Compliant** | `ChunkedWorldData` always stores resident Background. Extraction removes only Solid. | Keep. |
-| Colony Solid/node | **Compatible through adapter** | Generated identity/quantity becomes a material-only Solid (`ProceduralWorldGeneration.cs:137-159`); material definition supplies yield. | Before shared node gameplay, add runtime stable node identity/remaining quantity without replacing navigation/world data. |
+| Colony Solid/node | **Inactive foundation implemented; active target incomplete** | WV-B3C.1 adds stable typed quantity-one diagnostic records, but generated identity/quantity still projects to a material-only live Solid and `ChunkedWorldData` remains effective authority. | Add Resource Definitions and active variable quantity without replacing navigation/world data, then cut over atomically. |
 | Surface Background | **Partially compliant** | Generated Grass/Water is retained in snapshot/presentation, while `SurfaceWorldData` is navigation-only. | Add a Surface runtime cell/source authority for WV-C1. |
 | Surface obstacles | **Compatible through adapter** | Obstructing nodes and Water become blocked Surface cells (`ProceduralWorldGeneration.cs:122-135`). | Preserve adapter until shared mutable nodes own obstruction updates. |
 | Surface finite sources | **Not implemented at runtime** | Seed/Twig/Freshwater records exist, but there is no consumption/extraction mutation. `RemainingQuantity` is read-only after construction. | Essential for WV-C1/C2. |
 | Functional Backgrounds | **Incompatible target representation; active compatibility implementation** | Nursery/Sleeping/Storage functions replace Background material. | Migrate to placements before enabling generated-scenario construction; preserve contents/reservations. |
 | Construction staging | **Compliant** | Site owns multiple requirement lines, delivery reservations and quantities. | Generalise only the destination seam needed by Refining. |
-| Loose resources | **Partially compliant** | Registry rejects different types on a cell and bounds each stack, but can hold multiple same-type ownership records at one cell. | Decide whether “one stack” means one record or one resource type; consolidate only if the approved model requires one record. |
+| Loose resources | **Partially compliant** | Registry rejects different types on a cell and bounds each stack, but can hold multiple same-type ownership records at one cell. | v1.0 requires one canonical stack record/type per cell plus deterministic multi-cell overflow or pending-output recovery. |
 | Storage ownership | **Compatible through adapter** | One functional Background cell owns one filtered material slot. | Move slot to placement during functional-Background migration. |
 | Occupancy enforcement | **Partial** | Construction checks Solid and active functional capacity. It does not implement the final general node/placement/loose compatibility matrix. | Add one validation service before broader placement types. |
 
@@ -568,7 +578,7 @@ Missing high-value tests:
 | P0 | Complete the documented seed-2203 WV-B2B checklist and WV-B1 view/graphics checks. | Establishes whether the current generated bootstrap is acceptable. No code scope unless a defect appears. | Interactive Unity; risk is observational only. | WV-B2B acceptance | Existing approval; user must perform/confirm manual acceptance. |
 | P0 | Preserve open defect/regression IDs until evidence is attached and reviewed. | Keeps status honest. | Obtain XML or rerun targeted/full suite only if needed. | WV-B2B closure | User approval needed to close. |
 | P1 | Replace first-32 pre-reachability truncation with bounded fair/pageable evaluation or a maintained eligible index. | Prevents deterministic job starvation without changing priority rules. | Characterization and >32 regression; scheduler risk medium. | Post-WV-B2B foundation | Yes, runtime change. |
-| P1 | Define a mutable `ResourceNode` runtime authority with stable typed region location and remaining quantity, then adapt current Colony Solid and Surface records to it. | Enables exact shared node depletion while preserving world/navigation. | Must retain material definitions, generation IDs and current tests; risk high. | WV-C1 prerequisite | Yes. |
+| P1 | Continue beyond the accepted inactive WV-B3C.1 registry to Resource Definitions, canonical stacks, active variable Node quantity and whole-node Extraction. | Enables exact shared Node depletion and complete physical output while preserving world/navigation. | Must retain generation IDs, current authorities/tests and staged gates; risk high. | WV-B3C.2A–B3C.3B | Separate approval required. |
 | P1 | Introduce typed `RegionDestination` at the job/resource boundary before cross-region autonomy. | Prevents coordinate collision and duplicate schedulers. | WV-B1 residency/local navigators; risk medium. | Before WV-D | Yes. |
 | P1 | Migrate functional Backgrounds to placements, one function at a time, with contents/reservation rollback. | Aligns natural Background permanence and generated construction. | Node/occupancy validation and full construction/survival regressions; risk high. | Before generated-scenario Construction | Yes. |
 | P1 | Define reservation reconciliation for inactive/deceased ants and future load. | Prevents stranded jobs/resources. | Death/persistence decisions; risk medium. | Before death/save gameplay | Yes. |

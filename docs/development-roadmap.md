@@ -1,15 +1,25 @@
 # Development Roadmap
 
-## WV-B3C.1 — implemented; manual acceptance pending
+## WV-B3C.1 — complete
 
 The inactive Colony Node registry now provides deterministic typed
 quantity-one Soil/Stone candidate records, validation, local invalidation,
 scenario-handle lifecycle and bounded diagnostics without moving gameplay
 authority. Focused tests pass 8/8 Edit and 4/4 Play; complete suites pass
 565/565 Edit and 78/78 Play with no failures, skips or inconclusive results.
-Manual Unity acceptance is pending. `ChunkedWorldData`, Extraction/output,
+The user confirmed all **17/17 manual Unity checks passed**. `ChunkedWorldData`, Extraction/output,
 Hauling and Construction remain unchanged; Surface Nodes remain
-`GenerationOnly`. B3C.2/B3C.3, WV-B3D and WV-C1 are unstarted.
+`GenerationOnly`. The approved [Resource and Node System](resource-and-node-system.md)
+defines variable quantities, whole-node Extraction, finite Water, physical
+overflow recovery and natural-only Backgrounds as the future target. B3C.2/B3C.3,
+WV-B3D and WV-C1 are unstarted. This documentation closure did not rerun Unity.
+
+The audited
+[`Construction and Placement Specification`](https://github.com/Stevr0/AntGame/blob/main/Documentation/ConstructionPlacementSpecification.md)
+defines the separately gated WV-B3D target. Material Storage is the recommended
+first migration because it exercises contents, filters and reservations;
+Sleeping and survival Storage follow, then Nursery. Prepared Surface needs a
+representation decision. Doors and Refining Stations remain later features.
 
 ## WV-B3B — complete
 
@@ -27,16 +37,17 @@ pair is atomically replaced. Complete gameplay-scenario construction remains an
 in-place development-host workflow with existing rebuild/restore recovery. It
 must be reassessed before persistence, region unloading or complex restoration.
 
-The smallest next candidate is WV-B3C for one authoritative mutable Node type
-and its exact-once Extraction/output transfer. Placement migration remains a
-separate WV-B3D gate.
+The next recommended planning split is B3C.2A Resource Definitions/canonical
+stacks, B3C.2B deterministic overflow recovery, B3C.3A active variable Colony
+Nodes and B3C.3B whole-node Extraction cutover. These are not authorised
+implementation milestones. Placement migration remains a separate WV-B3D gate.
 
 The documentation-only
 [`ResourceNodeIntegrationPlan`](https://github.com/Stevr0/AntGame/blob/main/Documentation/ResourceNodeIntegrationPlan.md)
 maps current ownership and recommends separately gated B3C.1 Node authority,
 B3C.2 canonical loose stacks and B3C.3 transaction coordination. The next
-recommended first implementation prompt was B3C.1 only. It is now implemented
-with manual acceptance pending; the broader WV-B3C migration remains
+recommended first implementation prompt was B3C.1 only. It is now complete;
+the broader WV-B3C migration remains
 incomplete. Surface Nodes remain `GenerationOnly`, and `WV-B3B-LIM-001` still
 applies.
 
@@ -174,7 +185,7 @@ Milestones 3.4B and 3.4C are manually accepted. Milestone 3.4D remains **Impleme
 | 3.3B | Real excavation and loose Soil/Stone output | Complete |
 | 3.3C | Per-ant inventory and explicit physical material transfers | Complete |
 | 3.3D | Physical Material Storage and autonomous Soil/Stone hauling | Complete |
-| 3.4A | Functional Background conversion and builder self-supply | Complete |
+| 3.4A | Legacy functional-Background construction; supply later superseded by staged Hauling | Complete |
 | 3.4B | Unified simulation clock and normal gameplay mode | Complete |
 | 3.4C | Colony View player HUD and developer UI separation | Complete |
 | 3.4D | Colony management and work priorities UI | Implemented — Pending Manual Acceptance |

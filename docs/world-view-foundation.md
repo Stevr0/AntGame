@@ -165,7 +165,14 @@ flowchart LR
 
 Sources have stable IDs, Surface locations, resource IDs, remaining integer units, discovery state, revision and exclusive quantity reservations. The first sources are finite and non-regenerating. Discovery changes knowledge only. Depletion and consumption commit exactly once.
 
-Direct eating/drinking requires no storage and creates no cargo. Extraction creates recoverable output and never auto-fills inventory. Seed may use a future generic solid parcel. Water uses a stable one-unit ground cache/payload, never a Soil/Stone drop and never a first-slice stack. Ownership moves atomically through source, cache, inventory and Water Storage. An interruption leaves the unit with its current owner; if no valid release point exists, the ant retains it.
+Direct eating/drinking requires no Storage and creates no cargo, but must reduce
+the same finite source exactly once if approved for that Node definition.
+Extraction creates complete recoverable output and never auto-fills inventory.
+Seed may use a future generic solid parcel. Water requires liquid-compatible
+cache/carrier ownership rather than a Soil/Stone stack; whole-node output may
+need several bounded caches or pending recovery. Direct drinking from a Solid
+whole-node Water source remains unresolved. An interruption leaves quantity with
+its current owner; if no valid release point exists, it stays recoverable.
 
 ## Natural rest and founding queen
 

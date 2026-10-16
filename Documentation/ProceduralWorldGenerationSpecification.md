@@ -1,5 +1,26 @@
 # Procedural World Generation Specification
 
+## Resource and Node System v1.0 amendment — 16 October 2026
+
+[`ResourceAndNodeSystem.md`](ResourceAndNodeSystem.md) now governs generated
+resource identity and quantity. Every target Solid is a finite Node with a
+specific Resource Definition and positive actual quantity. Generation chooses
+that quantity deterministically from a named, versioned seed domain containing
+the world/generation identity, definition and stable Node location/identity;
+iteration order must not influence the result. The Node retains that actual
+quantity until an authorised gameplay transaction changes it.
+
+Normal Solid Nodes use whole-node Extraction. Water is finite and, when emitted
+as a Solid Node, follows the same depletion rule while requiring a
+liquid-compatible output representation. Future timed Surface events may create
+explicit new Nodes or loose stacks, but may not regenerate extracted terrain.
+
+The current generator remains compatibility implementation: Colony Soil/Stone
+records are quantity one, Surface Stone/Seed/Twig/Freshwater remain
+`GenerationOnly`, Water also appears as navigation Background/obstruction data,
+and no active variable-quantity or liquid transaction exists. This documentation
+amendment changes no runtime generation or version-2 seed results.
+
 ## WV-B3B runtime publication clarification — 15 October 2026
 
 Validated generated records now initialise existing Colony and Surface
@@ -128,10 +149,11 @@ on it and what happens on depletion. A node instance contains:
 
 Soil and Stone tiles are nodes. Seed, Twig and other future finite Surface
 sources are also nodes. Not every node blocks movement: a Soil wall may block,
-while a seed source may permit traversal. Excavation is a node-defined extraction
-activity and may consume the complete node in one successful job. Partial
-extraction decrements quantity; depletion removes the node. Generating a node
-does not generate a loose resource stack.
+while a seed source may permit traversal. Extraction is node-defined. Normal
+Solid terrain uses whole-node Extraction: one completed job removes/depletes the
+Node and commits its complete remaining quantity. Partial harvesting is allowed
+only for a future definition that explicitly authorises it; it cannot silently
+replace the normal Solid rule. Generating a Node does not generate a loose stack.
 
 ### Construction / Placement contract
 
@@ -169,8 +191,10 @@ A loose stack is a physical, recoverable resource object produced by extraction,
 excavation, dropping or cancellation recovery. It may occupy an accessible,
 traversable cell without Storage. Exactly one loose resource type is allowed per
 cell. Same-type units merge up to the applicable capacity; a different type
-cannot coexist in that cell. A full compatible stack requires a validated
-alternate cell or causes the prepared source operation to remain uncommitted.
+cannot coexist in that cell. A whole-node yield may reserve several
+deterministically ordered compatible cells. If complete output cannot be
+prepared, a recoverable pending transaction retains the Node/output reservation
+and the source operation does not deplete the Node.
 
 Loose ownership key, resource ID, quantity, capacity and reservations are
 authoritative. Pickup, transport, drop and storage use prepared exact-once

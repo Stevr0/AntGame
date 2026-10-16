@@ -1,5 +1,22 @@
 # Ant Colony WV-A — Two-View Technical Specification
 
+## Resource and Node System v1.0 water amendment — 16 October 2026
+
+[`ResourceAndNodeSystem.md`](ResourceAndNodeSystem.md) supersedes the earlier
+first-slice water-source recommendation below where they conflict. Water is a
+finite Resource Node, including when represented as a Solid. A Solid Water Node
+uses whole-node depletion and commits its complete remaining quantity to a
+liquid-compatible recoverable representation. It is never unlimited or
+implicitly replenished.
+
+Direct drinking and Extraction are distinct interactions but both must reserve
+and reduce the same finite authoritative source exactly once. Whether direct
+drinking is allowed to remove units from a still-solid multi-unit Node, or is
+unavailable for a whole-node-only Solid Water definition, remains unresolved and
+requires approval before WV-C implementation. The one-unit cache/payload model
+below remains a useful compatibility proposal for physical liquid ownership,
+not an approved limit on whole-node yield or permission to implement Water now.
+
 ## WV-B3A unified-cell integration clarification
 
 `UnifiedRuntimeCellSpecification.md` defines the shared runtime occupancy and
@@ -395,9 +412,16 @@ Solid seed parcels may adopt a future generic resource-parcel registry patterned
 
 ## 13. Water interaction and transport contract
 
-Direct drinking follows the same exact-once source reservation and need-restoration sequence as food, using freshwater and Thirst restoration. It requires no storage.
+Direct drinking, if approved for a given Water Node definition, follows the same
+exact-once source reservation and need-restoration sequence as food and requires
+no Storage. It must reduce finite source quantity. Its compatibility with the
+whole-node rule for a Solid Water Node is explicitly unresolved.
 
-Extraction produces a **one-unit recoverable liquid payload** with a stable `LiquidPayloadId`. This is not an ordinary solid loose drop and never stacks in the first slice.
+The earlier WV-A proposal used a **one-unit recoverable liquid payload** with a
+stable `LiquidPayloadId`. Resource and Node v1.0 instead requires Extraction to
+represent the complete whole-node yield, potentially through several bounded
+liquid-compatible caches/carriers or a recoverable pending-output transaction.
+Water is not an ordinary Soil/Stone loose stack.
 
 ```csharp
 enum LiquidOwnerKind { ReservedSource, GroundCache, AntInventory, WaterStorage }
@@ -412,7 +436,10 @@ sealed record LiquidPayload(
     long Revision);
 ```
 
-Recommended physical representation: a one-unit **water cache** at a validated traversable interaction anchor, with a stable identity and a future visible droplet/cache marker. It occupies no terrain Solid, is not a Soil/Stone stack, and is recoverable by hauling. This first-slice abstraction avoids inventing a container item while keeping water physical and conserved. The name/art treatment requires WV-C2 approval.
+Candidate physical representation: bounded **water cache** records at validated
+traversable interaction anchors, each with stable identity and future visible
+presentation. A cache is not a terrain Solid or Soil/Stone stack and is
+recoverable by Hauling. Capacity, container semantics and art require approval.
 
 Ownership changes atomically along one chain:
 
@@ -489,7 +516,9 @@ Minimal opening sequence:
    sustenance; the player can direct/permit direct eating, drinking and natural
    rest without storage.
 4. She excavates Soil; exact-once extraction leaves physical loose Soil without requiring inventory or storage.
-5. The queen collects loose construction material herself and builds initial Sleeping and storage Backgrounds through existing builder self-supply.
+5. Hauling delivers loose construction material to staged sites; the queen then
+   performs Construction work for initial Sleeping and Storage Placements. The
+   current functional-Background result remains compatibility implementation.
 6. Surface seed/water extraction and hauling can then stock constructed Food/Water Storage.
 7. Nursery and brood follow only in a later authorised milestone.
 

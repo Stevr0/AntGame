@@ -2,7 +2,7 @@
 
 ## 16 October 2026 — WV-B3C.1 Inactive Colony Resource Nodes
 
-**Implemented — Automated Tests Passed, Manual Acceptance Pending.** A private
+**Complete — Automated and Manual Acceptance Passed.** A private
 inactive registry now validates and exposes deterministic typed quantity-one
 Soil/Stone candidate records for the development fixture and generated Colony.
 Terrain Node changes invalidate only matching records; scenario replacement
@@ -13,8 +13,14 @@ unchanged.
 
 Unity `6000.3.8f1` passes 8/8 focused Edit, 4/4 focused Play, 565/565 complete
 graphics-enabled Edit and 78/78 complete Play with zero failures, skips or
-inconclusive results. The 17-step manual checklist remains pending. B3C.2,
-B3C.3, WV-B3D and WV-C1 have not started; `WV-B3B-LIM-001` remains active.
+inconclusive results. The user confirmed the complete **17/17 manual Unity
+checklist passed** on 16 October 2026. This closure and the accompanying
+Resource and Node v1.0 alignment are documentation-only and did not rerun Unity.
+B3C.2, B3C.3, WV-B3D and WV-C1 have not started; `WV-B3B-LIM-001` remains active.
+
+The same documentation amendment approved Resource/Node v1.0 and the companion
+Construction/Placement definition contract. It audited current compatibility
+assets/recipes and planned staged WV-B3D migration without changing runtime.
 
 ## 15 October 2026 — WV-B3B Unified Runtime Cell Foundation
 

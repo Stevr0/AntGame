@@ -1,5 +1,14 @@
 # Ant AI and Job Management
 
+## Resource and Node v1.0 job boundary
+
+Normal Solid Extraction is whole-node work: after complete output capacity is
+prepared, it depletes the Node and commits every remaining unit. Hauling alone
+moves physical output to Construction staging, Storage or future Refining.
+Construction never self-supplies. Variable quantities, overflow stacks and
+pending-output recovery are approved design but not current runtime behavior.
+See [Resource and Node System](resource-and-node-system.md).
+
 ## WV-B3B authority preservation
 
 Runtime-cell snapshots and change feeds are read-only inputs for future job
