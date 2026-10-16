@@ -257,7 +257,7 @@ The user confirmed all **23/23 authoritative manual checks passed** after the
 recorded automated suites passed. WV-B3C.2A is complete; this documentation-only
 closure did not rerun Unity tests.
 
-### WV-B3C.2B — acceptance recovery implemented; partial manual acceptance
+### WV-B3C.2B — Complete
 
 The approved physical rules above are implemented from the
 [Partial Hauling and Canonical Stack Transaction Plan](PartialHaulingIntegrationPlan.md).
@@ -280,7 +280,9 @@ replacement invalidates old transfers. Storage never automatically supplies
 Storage, preventing reorganisation loops. Same-type merges, capacity rejection
 and current-owner retention on no-fit remain authoritative. General deterministic
 multi-cell placement remains deferred and variable Node output is not enabled.
-B3C.2B is awaiting the revised recovery manual Unity acceptance checklist.
+B3C.2B is complete after the user confirmed the authoritative recovery manual
+Unity acceptance checklist passed **30/30**. Codex did not separately execute
+the full checklist during closure.
 
 The authoritative Hauling bands are 0–19 = 2 slots × 2 units, 20–39 = 3×2,
 40–59 = 3×3, 60–74 = 4×4, 75–89 = 5×5 and 90–100 = 6×6. The shared 0–100
@@ -314,8 +316,8 @@ gates:
 1. **B3C.2A — Resource Definitions and canonical stack authority (complete):** introduce
    Soil/Stone definitions, stable Stack IDs, one-stack/type/capacity validation,
    revisions and legacy-drop migration without changing Extraction yields.
-2. **B3C.2B — partial Hauling and stack transactions (implemented; manual
-   pending):** exact transfer identity/replay, partial pickup/delivery, carrier
+2. **B3C.2B — partial Hauling and stack transactions (complete):** exact
+   transfer identity/replay, partial pickup/delivery, carrier
    allocation, recovery and successive trips while retaining quantity-one Nodes.
    General bounded multi-cell output placement remains future work.
 3. **B3C.3A — active variable-quantity Colony Nodes:** make the registry the sole

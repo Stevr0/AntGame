@@ -1,6 +1,6 @@
 # Development Roadmap
 
-## WV-B3C.2B — acceptance recovery implemented; partial manual acceptance
+## WV-B3C.2B — complete
 
 The authoritative
 [`PartialHaulingIntegrationPlan`](https://github.com/Stevr0/AntGame/blob/main/Documentation/PartialHaulingIntegrationPlan.md)
@@ -16,14 +16,24 @@ Construction, in-flight carrier allocation, owner-only recovery and scenario inv
 approved six 0–100 Hauling capacity bands while reusing shared skill decay.
 Production Node yields, Surface Nodes, Placement migration and quantity-badge
 policy do not change. General multi-cell output placement remains deferred.
+Variable-yield whole-node Extraction, Surface resource interactions,
+Foraging/Fog of War, Refining, multi-destination routes, Storage reorganisation,
+automatic deceased-ant cargo recovery, persistence and unloaded-region
+simulation also remain future work.
 The first manual pass identified the former one-source, no-Storage-source and
-one-use fixture limitations. Recovery is implemented; the revised 30-step manual
-Unity acceptance is still required.
+one-use fixture limitations. Recovery is implemented, and the user subsequently
+confirmed the complete authoritative Unity checklist passed **30/30**.
 
 Recovery validation on Unity `6000.3.8f1` passes 28/28 focused Edit, 6/6
 focused Play, 588/588 complete graphics-enabled Edit and 80/80 complete Play,
 with no failures, skips or inconclusive tests. The complete suites include the
-earlier inventory-drop and broader gameplay regressions.
+earlier inventory-drop and broader gameplay regressions. The tested working tree
+was based on `6829b602` and was subsequently committed as `c6ae89b2`; the XML
+does not independently record a Git revision. Unity tests were not rerun for
+this documentation-only closure.
+
+The next recommended milestone is **WV-B3C.3A — active variable-quantity Colony
+Nodes**, requiring separate approval; it was not started by this closure.
 
 ## WV-B3C.2A — complete
 
@@ -40,7 +50,7 @@ graphics-enabled Edit and 79/79 complete Play, plus the 1/1 inventory-drop
 compatibility recheck. The user confirmed the full 23/23 authoritative manual
 checklist passed; the accepted checklist is in
 the authoritative [Current Game State](https://github.com/Stevr0/AntGame/blob/main/Documentation/CurrentGameState.md).
-B3C.2B manual acceptance, B3C.3, WV-B3D and WV-C1 remain outstanding; Surface Nodes remain
+B3C.3, WV-B3D and WV-C1 remain outstanding; Surface Nodes remain
 `GenerationOnly` and `WV-B3B-LIM-001`
 still applies.
 
@@ -81,8 +91,8 @@ pair is atomically replaced. Complete gameplay-scenario construction remains an
 in-place development-host workflow with existing rebuild/restore recovery. It
 must be reassessed before persistence, region unloading or complex restoration.
 
-The next recommended planning split is B3C.2A Resource Definitions/canonical
-stacks, B3C.2B deterministic overflow recovery, B3C.3A active variable Colony
+B3C.2A and the approved narrower B3C.2B Hauling/transaction slice subsequently
+completed. The next recommended planning split is B3C.3A active variable Colony
 Nodes and B3C.3B whole-node Extraction cutover. These are not authorised
 implementation milestones. Placement migration remains a separate WV-B3D gate.
 

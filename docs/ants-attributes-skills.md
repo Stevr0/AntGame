@@ -71,6 +71,8 @@ Level 0 ant may collect four compatible units from several one-unit ground
 stacks before one delivery. Pickup stops at the same band/resource/destination
 limits; the change does not add capacity, XP or decay exceptions. Completed
 Material Storage may supply Construction through the same allowance.
+WV-B3C.2B is complete after recorded green automated suites and
+user-confirmed **30/30** authoritative manual Unity acceptance.
 
 ## Planned individuality
 

@@ -1,6 +1,6 @@
 # Ant Colony Development Roadmap
 
-## WV-B3C.2B — acceptance recovery implemented; partial manual acceptance (16 October 2026)
+## WV-B3C.2B — Complete (16 October 2026)
 
 The approved
 [Partial Hauling and Canonical Stack Transaction Plan](PartialHaulingIntegrationPlan.md)
@@ -31,20 +31,28 @@ delivery/unloading.
 
 The first manual pass exposed one-source-only collection, absent Storage-source
 jobs and a non-reusable developer producer key. Those limitations are corrected,
-but WV-B3C.2B remains **Implemented — Partial Manual Acceptance** until the
-revised 30-step current-state checklist is user-confirmed. General
+and the user subsequently confirmed the complete authoritative recovery
+checklist passed **30/30**. WV-B3C.2B is **Complete**. General
 deterministic multi-cell overflow/pending-output distribution is retained as
 future work with variable Node output rather than activated here. Multi-destination
-routes and Storage reorganisation also remain excluded. B3C.3, WV-B3D and WV-C1
+routes, Storage reorganisation, Surface resource interactions, Foraging/Fog of
+War, Refining, automatic deceased-ant cargo recovery, persistence and
+unloaded-region simulation also remain excluded. B3C.3, WV-B3D and WV-C1
 remain unstarted; Surface Nodes remain `GenerationOnly`, and
 `WV-B3B-LIM-001` remains active.
+
+The next recommended milestone is **WV-B3C.3A — active variable-quantity Colony
+Nodes**, subject to separate user approval. This closure does not begin it.
 
 Unity `6000.3.8f1` recovery evidence passes **28/28 focused Edit**, **6/6
 focused Play**, **588/588 complete graphics-enabled Edit** and **80/80 complete
 Play**, with zero failures, skips or inconclusive results. The complete suites
 include the earlier inventory-drop and broader gameplay regressions. The tested
 working tree is based on implementation commit `6829b602`; the acceptance
-recovery is not claimed to exist in that parent commit.
+recovery is not claimed to exist in that parent commit. The tested recovery
+working tree was subsequently committed as `c6ae89b2`; the XML itself does not
+record a Git revision. Unity tests were not rerun for this documentation-only
+closure.
 
 ## WV-B3C.2A — Complete (16 October 2026)
 
@@ -67,8 +75,8 @@ zero failures, skips or inconclusive results. Manual Unity acceptance is
 confirmed at **23/23 passed**. WV-B3C.2A is complete. No Unity tests were rerun
 for this documentation-only closure.
 
-WV-B3C.2B partial Hauling and canonical stack transactions is now implemented
-and awaiting manual acceptance. Variable Node quantities/Extraction cutover
+WV-B3C.2B partial Hauling and canonical stack transactions subsequently
+completed with **30/30** manual acceptance. Variable Node quantities/Extraction cutover
 remain WV-B3C.3; Placement migration remains WV-B3D; Surface resource gameplay
 and WV-C1 remain deferred. Generated Surface Nodes stay `GenerationOnly`, and
 `WV-B3B-LIM-001` remains active.
@@ -95,13 +103,13 @@ The approved [Resource and Node System v1.0](ResourceAndNodeSystem.md) now makes
 variable quantities, whole-node Solid Extraction, complete physical output,
 finite Water and natural-only Backgrounds the target. B3C.1 remains a
 quantity-one inactive compatibility foundation, not that final mutable model.
-B3C.2A has since completed and B3C.2B is implemented pending manual acceptance;
+B3C.2A and B3C.2B have since completed;
 B3C.3, WV-B3D and WV-C1 have not started. `WV-B3B-LIM-001` remains active.
 
-The next recommended planning gates are B3C.2A Resource Definitions/canonical
-stacks, B3C.2B deterministic overflow/pending-output recovery, B3C.3A active
-variable Colony Nodes, and B3C.3B whole-node transaction cutover. These smaller
-gates are recommendations only and require separate approval.
+B3C.2A and the approved narrower B3C.2B Hauling/transaction slice subsequently
+completed. The next recommended planning gates are B3C.3A active variable
+Colony Nodes and B3C.3B whole-node transaction cutover. These recommendations
+require separate approval.
 
 The companion
 [Construction and Placement Specification](ConstructionPlacementSpecification.md)

@@ -1,6 +1,6 @@
 # Technical Architecture
 
-## WV-B3C.2B transaction coordinator — recovery implemented; manual recheck pending
+## WV-B3C.2B transaction coordinator — complete
 
 WV-B3C.2B implements one scenario-local coordination
 registry over existing physical owners. Its parent transfer ID is separate from
@@ -18,7 +18,8 @@ ground and Storage sources may feed the same carrier allocation, while Storage
 withdrawal is restricted to Construction staging. This is planning
 coordination only; no physical quantity authority moved. Scenario replacement
 invalidates the old registry and replay cannot run either physical commit twice.
-Revised manual Unity acceptance remains pending after the first partial pass. See the
+After the first partial pass exposed recovery defects, the corrected implementation
+received user-confirmed **30/30** authoritative manual Unity acceptance. See the
 [`Partial Hauling Integration Plan`](https://github.com/Stevr0/AntGame/blob/main/Documentation/PartialHaulingIntegrationPlan.md).
 
 ## WV-B3C.2A canonical ground-stack authority

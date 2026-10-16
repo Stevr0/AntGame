@@ -1,8 +1,8 @@
 # Milestone History
 
-## 16 October 2026 — WV-B3C.2B partial Hauling implementation
+## 16 October 2026 — WV-B3C.2B Partial Hauling — Complete
 
-**Acceptance recovery implemented; partial manual acceptance.** The first
+**WV-B3C.2B — Complete.** The first
 manual pass found that a run could use only one source, completed Storage could
 not supply Construction, and the seven-Soil control could not recreate an
 exhausted fixture. A scenario-local transfer registry now
@@ -21,7 +21,13 @@ The original automated evidence passed 54/54 focused Edit, 5/5 focused Play,
 583/583 full Edit and 79/79 full Play, plus the 1/1 inventory-drop recheck.
 Recovery validation passes 28/28 focused Edit, 6/6 focused Play, 588/588 full
 graphics-enabled Edit and 80/80 full Play, with zero failures, skips or
-inconclusive tests. Revised manual acceptance remains pending.
+inconclusive tests. The user confirmed the complete authoritative recovery
+checklist passed **30/30** after an initial **9/9** priority-summary pass and
+explicit follow-up confirmation of checks 1, 2, 5, 6, 7, 17, 25 and 26. Codex
+did not separately execute the full manual checklist. The tested working tree
+was based on `6829b602` and was subsequently committed as `c6ae89b2`; the XML
+does not independently record a Git revision. Unity tests were not rerun for
+this documentation-only closure.
 
 ## 16 October 2026 — WV-B3C.2A Canonical Ground Stack Foundation
 
@@ -62,7 +68,7 @@ graphics-enabled Edit and 78/78 complete Play with zero failures, skips or
 inconclusive results. The user confirmed the complete **17/17 manual Unity
 checklist passed** on 16 October 2026. This closure and the accompanying
 Resource and Node v1.0 alignment are documentation-only and did not rerun Unity.
-B3C.2A later completed and B3C.2B is implemented pending manual acceptance;
+B3C.2A and B3C.2B later completed;
 B3C.3, WV-B3D and WV-C1 have not started; `WV-B3B-LIM-001` remains active.
 
 The same documentation amendment approved Resource/Node v1.0 and the companion

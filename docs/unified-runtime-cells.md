@@ -42,7 +42,7 @@ cannot change quantity, terrain, jobs, output, navigation or cell change feeds.
 Surface Stone, Seed, Twig and Freshwater remain `GenerationOnly`. Automated
 results pass 8/8 focused Edit, 4/4 focused Play, 565/565 complete Edit and 78/78
 complete Play. This documentation-only closure did not rerun Unity tests. B3C.2A later
-completed and B3C.2B is implemented pending manual acceptance; B3C.3 remains
+completed and B3C.2B later completed with **30/30** manual acceptance; B3C.3 remains
 unstarted and `WV-B3B-LIM-001` remains active.
 
 ## Status
@@ -153,8 +153,8 @@ unloading or complex scenario restoration.
    quantity-one candidate records and invalidation without moving writers.
 3. **WV-B3C.2A — canonical stacks (complete):** Resource Definitions, stable
    stack identity, one stack/type per cell, capacity, reservations and revisions.
-4. **WV-B3C.2B — Hauling acceptance recovery (implemented; revised manual
-   pending):** replay-safe parent transfers with bounded multi-source pickup
+4. **WV-B3C.2B — Hauling acceptance recovery (complete):** replay-safe parent
+   transfers with bounded multi-source pickup
    operations, completed Storage-to-Construction withdrawal, one final delivery,
    carrier allocation/recovery and stale-scenario rejection. General multi-cell output
    placement remains deferred. See the

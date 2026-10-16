@@ -577,7 +577,8 @@ without moving any runtime-cell write authority. Ground and Storage change feeds
 still publish only their owners' committed quantity changes. General multi-cell overflow/pending
 output, B3C.3 variable Node authority and whole-node transaction cutover remain
 unimplemented. Surface Nodes remain `GenerationOnly`; `WV-B3B-LIM-001` is
-unchanged.
+unchanged. WV-B3C.2B is complete after user-confirmed **30/30** authoritative
+manual Unity acceptance and the recorded green automated suites.
 
 Resource and Node v1.0 further requires variable quantities and complete
 whole-node output, including several deterministic stacks or recoverable pending

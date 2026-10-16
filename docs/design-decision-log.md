@@ -36,8 +36,9 @@
 - Implement the approved 0–100 Hauling bands (2×2, 3×2, 3×3, 4×4, 5×5 and
   6×6), reuse shared decay above 50, retain threshold-crossing cargo as
   over-capacity and block only new pickup.
-- Runtime implementation is complete and automated validation is recorded;
-  manual acceptance remains pending. Variable Nodes, general multi-cell output,
+- Runtime implementation is complete, automated validation is recorded and the
+  user confirmed the authoritative manual Unity checklist passed **30/30**.
+  Variable Nodes, general multi-cell output,
   Surface resources, Placement migration, persistence and `WV-B3B-LIM-001`
   remain outside the slice.
 
@@ -64,7 +65,9 @@
   before consuming the incoming source.
 - Publish immutable ID/cell/resource/quantity/reservation/capacity/revision data
   through the unified adapter. Keep inventory, Storage and Construction staging
-  separate, and defer B3C.2B overflow recovery plus B3C.3 Node cutover.
+  separate. The later approved B3C.2B scope implemented partial Hauling and
+  replay-safe stack transfers; general overflow recovery and the B3C.3 Node
+  cutover remain deferred.
 
 ## 2026-10-16 — Define Construction and Placement metadata and migration
 

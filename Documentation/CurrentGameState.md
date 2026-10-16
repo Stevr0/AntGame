@@ -1,13 +1,13 @@
 # Ant Colony Current Game State
 
-## WV-B3C.2B Hauling acceptance recovery — implemented, manual re-acceptance pending (16 October 2026)
+## WV-B3C.2B Hauling acceptance recovery — Complete (16 October 2026)
 
-**Implemented — Partial Manual Acceptance.** The first manual pass exposed that
+**WV-B3C.2B — Complete.** The first manual pass exposed that
 one-source jobs could not fill spare carrier capacity from nearby stacks,
 completed Material Storage was not registered as a Hauling source, and the
 seven-Soil developer producer key could not be reused after its stack retired.
-The recovery implementation corrects those limits; the revised manual checklist
-below is not yet user-confirmed.
+The recovery implementation corrects those limits. The user subsequently
+confirmed the complete authoritative recovery checklist passed **30/30**.
 
 `MaterialTransferRegistry` now coordinates each exact single-destination Hauling run
 with a scenario-local `MaterialTransferId`, immutable snapshots, monotonically
@@ -75,8 +75,11 @@ Production Node yields remain quantity-one, Surface Nodes remain
 multi-cell overflow distribution and Placement migration remain unimplemented.
 `WV-B3B-LIM-001` remains active. Multi-destination routes, Storage
 reorganisation, variable Node yields, Surface Extraction, Placement migration
-and deceased-ant cargo placement remain deferred. WV-B3C.2B cannot be marked
-complete until the revised manual checklist below is confirmed.
+and automatic deceased-ant cargo recovery remain deferred. Exact-once
+whole-node Extraction of variable yields, general multi-cell output
+distribution, Surface resource interactions, Foraging/Fog of War, Refining,
+persistence and unloaded-region simulation are also unimplemented. These
+exclusions do not block the accepted WV-B3C.2B milestone.
 
 ### WV-B3C.2B automated verification
 
@@ -90,11 +93,20 @@ runtime-cell regressions. Evidence is retained in
 `Logs/WV-B3C2B-Recovery-Play-Final3.xml`,
 `Logs/WV-B3C2B-Recovery-Full-Edit.xml` and
 `Logs/WV-B3C2B-Recovery-Full-Play.xml`, with corresponding logs. The tested
-implementation is the current uncommitted working tree over implementation
-commit `6829b602`; that commit is provenance for the pre-recovery implementation,
-not a claim that it contains these corrections.
+implementation was an uncommitted working tree based on parent commit
+`6829b602`; that commit is provenance for the pre-recovery implementation,
+not a claim that it contains these corrections. The tested recovery working tree
+was subsequently committed as `c6ae89b2`; the XML itself does not independently
+record a Git revision. Unity tests were not rerun for this documentation-only
+closure.
 
-### WV-B3C.2B recovery manual Unity acceptance — pending (0/30)
+### WV-B3C.2B recovery manual Unity acceptance — passed (30/30)
+
+Acceptance was reported in two rounds: the initial nine priority-summary checks
+passed **9/9**, followed by explicit confirmation of authoritative checks 1, 2,
+5, 6, 7, 17, 25 and 26. The user then explicitly confirmed the complete
+authoritative checklist passed **30/30**. This records user-performed Unity
+acceptance; Codex did not separately execute the full checklist.
 
 1. Open `AntGameDevelopment` and enter Play Mode.
 2. Open **Developer Only → Resources**.
@@ -248,9 +260,10 @@ authoritative checks passed. The accepted checklist is retained as evidence:
     switch back and confirm authoritative quantities are unchanged.
 23. Confirm badges do not intercept selection, designation or camera input.
 
-WV-B3C.2B multi-cell overflow/pending-output recovery, WV-B3C.3 variable Node
+General multi-cell overflow/pending-output recovery, WV-B3C.3 variable Node
 authority/transaction cutover, WV-B3D Placement migration and WV-C1 remain
-unimplemented. Generated Surface Nodes remain `GenerationOnly`.
+unimplemented. WV-B3C.2B subsequently completed its narrower approved Hauling
+and transaction scope. Generated Surface Nodes remain `GenerationOnly`.
 `WV-B3B-LIM-001` remains active: only the unified read-model pair is published
 atomically; complete mutable scenario construction still uses the host's
 existing in-place rebuild/restore pathway.

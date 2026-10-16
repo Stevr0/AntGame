@@ -420,15 +420,18 @@ pickup/Hauling/Storage/Construction callers use the
 returned canonical ID; no parallel registry or legacy alias authority exists.
 Generated Surface Nodes remain `GenerationOnly`.
 
-This implements B3C.2A only. B3C.2B deterministic multi-cell overflow,
-prepared capacity reservation and recoverable pending output remains future.
-Variable Node quantities and Extraction cutover remain B3C.3.
+This section records the B3C.2A foundation. B3C.2B subsequently completed
+partial Hauling, replay-safe transfer coordination, bounded multi-source pickup
+and Storage-to-Construction withdrawal with **30/30** manual acceptance. General
+deterministic multi-cell output distribution and recoverable pending output
+remain future work alongside variable Node quantities and the B3C.3 Extraction
+cutover.
 
-For safer v1.0 delivery, approve this as two gates: **B3C.2A** introduces
+For safer v1.0 delivery, this was split into two gates: **B3C.2A** introduced
 Resource Definitions, stable canonical Stack IDs, one-stack/type/capacity rules,
-revisions and legacy migration; **B3C.2B** adds deterministic multi-cell output
-reservation, overflow placement, replay protection and recoverable pending
-output. Neither gate changes Node yields or live Extraction without separate
+revisions and legacy migration; **B3C.2B** added partial Hauling and replay-safe
+canonical stack transfers without activating general multi-cell output
+placement or recoverable pending output. Neither gate changes Node yields or live Extraction without separate
 approval.
 
 **Systems affected:** internals of `WorldMaterialDropRegistry`; Colony adapter;

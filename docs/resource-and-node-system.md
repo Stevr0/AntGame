@@ -1,6 +1,6 @@
 # Resource and Node System
 
-## WV-B3C.2B implementation status
+## WV-B3C.2B — complete
 
 The acceptance-recovery implementation coordinates one replay-safe,
 single-destination run across existing physical owners. A run may reserve and
@@ -15,8 +15,9 @@ badges. Storage never supplies Storage. Transfer-owned carrier allocation protec
 replayed commits are no-ops, and scenario replacement invalidates old transfer
 IDs. The approved capacity bands reach six slots × six base units at levels
 90–100 and reuse the shared decay-above-50 rules without cargo loss. Production
-Node yields are unchanged. The first manual pass was partial; revised recovery
-acceptance is pending. See the authoritative
+Node yields are unchanged. After the initial partial pass and recovery, the user
+confirmed the complete authoritative manual Unity checklist passed **30/30**.
+See the authoritative
 [`Partial Hauling Integration Plan`](https://github.com/Stevr0/AntGame/blob/main/Documentation/PartialHaulingIntegrationPlan.md).
 
 ## WV-B3C.2A acceptance status

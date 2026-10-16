@@ -1,6 +1,6 @@
 # Ant AI and Job Management
 
-## WV-B3C.2B transfer lifecycle — recovery implemented; manual recheck pending
+## WV-B3C.2B transfer lifecycle — complete
 
 The B3C.2B implementation keeps the existing shared job registry,
 priority-before-path-cost ordering, bounded fair scan, retry/backoff and
@@ -16,7 +16,8 @@ carrier's authoritative inventory; cancellation, inactivity or destination loss
 records recovery-required cargo for the owner-only self-deposit route. Scenario
 replacement invalidates old transfer IDs. A transfer-owned inventory allocation
 prevents unrelated work from consuming in-flight cargo. The first manual pass
-was partial; revised recovery acceptance is pending. See the
+identified the recovery defects; after correction, the user confirmed the full
+authoritative checklist passed **30/30**. See the
 [`Partial Hauling Integration Plan`](https://github.com/Stevr0/AntGame/blob/main/Documentation/PartialHaulingIntegrationPlan.md).
 
 ## WV-B3C.2A source identity and reservation visibility

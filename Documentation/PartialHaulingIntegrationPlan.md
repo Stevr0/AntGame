@@ -1,8 +1,13 @@
 # WV-B3C.2B Partial Hauling and Canonical Stack Transaction Plan
 
-**Status:** Acceptance recovery implemented on 16 October 2026 after partial
-manual acceptance exposed one-source collection, absent Storage-source hauling
-and a non-reusable developer fixture. Revised manual acceptance is pending.
+**Status:** **WV-B3C.2B — Complete.** Acceptance recovery was implemented on
+16 October 2026 after partial manual acceptance exposed one-source collection,
+absent Storage-source hauling and a non-reusable developer fixture. The user
+subsequently confirmed the complete authoritative Unity checklist passed
+**30/30**. Automated evidence remains 28/28 focused Edit, 6/6 focused Play,
+588/588 complete Edit and 80/80 complete Play, with zero failures, skips or
+inconclusive results; Unity tests were not rerun for this documentation-only
+closure.
 
 **Prepared:** 16 October 2026
 
@@ -480,7 +485,11 @@ host-only, deterministic, bounded to a known compatible cell and absent from
 normal player HUD/gameplay. It must not mutate Node yield or bypass stack
 capacity.
 
-## 13. Practical Unity acceptance — generated seed `2203`
+## 13. Historical initial Unity acceptance — generated seed `2203`
+
+This original checklist is retained as implementation history. The later
+30-step recovery checklist in `CurrentGameState.md` superseded it for final
+milestone acceptance and was user-confirmed **30/30 passed**.
 
 After focused and complete automated suites pass:
 
