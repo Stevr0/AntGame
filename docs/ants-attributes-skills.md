@@ -40,9 +40,31 @@ These values are development placeholders. The foundation is implemented and aut
 
 ## Implemented personal inventory
 
-Each Queen or Worker record owns an independent stack-based inventory. Natural slot capacity is based only on current Hauling level: one slot at 0–19, two at 20–39, three at 40–59, four at 60–79 and five at 80–100. Soil and Stone provisionally stack to 10. Compatible additions merge before opening another slot; incompatible resources never share a slot.
+Each Queen or Worker record owns an independent stack-based inventory. Normal
+capacity uses the approved current Hauling band:
 
-If Hauling decay lowers capacity, occupied overflow remains intact and recoverable. New additions are blocked until occupied usage is within the reduced capacity. Inventory survives visual rebinding and selection changes. Equipment slots, weight, saddlebags and final balance are not implemented.
+| Hauling level | Slots | Base units per slot |
+| --- | ---: | ---: |
+| 0–19 | 2 | 2 |
+| 20–39 | 3 | 2 |
+| 40–59 | 3 | 3 |
+| 60–74 | 4 | 4 |
+| 75–89 | 5 | 5 |
+| 90–100 | 6 | 6 |
+
+Soil and Stone retain a provisional resource maximum of 10, but the effective
+normal slot limit is the lower of that resource limit and the band's units per
+slot. Compatible additions merge before opening another slot; incompatible
+resources never share a slot.
+
+Hauling uses the same provisional 24-hour inactivity grace, 0.25 levels per
+inactive hour above 50, and floor of 50 as every other skill. Successful
+committed deliveries update XP and activity through the shared skill API. If
+decay lowers either slot or per-slot capacity, occupied overflow remains intact,
+over-capacity and recoverable. New additions are blocked while delivery and
+unloading remain available. Inventory survives visual rebinding and selection
+changes. Equipment slots, weight, saddlebags and final balance are not
+implemented.
 
 ## Planned individuality
 

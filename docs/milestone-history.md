@@ -1,14 +1,20 @@
 # Milestone History
 
-## 16 October 2026 — WV-B3C.2B implementation-readiness plan
+## 16 October 2026 — WV-B3C.2B partial Hauling implementation
 
-**Documentation complete; runtime unstarted.** The authoritative partial
-Hauling plan maps current physical owners and specifies transfer-owned exclusive
-reservations, replay-safe pickup/delivery phases, in-flight inventory allocation,
-successive one-trip jobs, recovery, merge/capacity rules and seed-`2203`
-acceptance using a Developer Only large-stack fixture. No gameplay, test, scene,
-prefab, asset or project-setting change was made. B3C.2B requires separate
-implementation approval; B3C.3 did not begin and `WV-B3B-LIM-001` remains active.
+**Implemented; manual acceptance pending.** A scenario-local transfer registry
+coordinates existing physical owners with transfer-owned exclusive reservations,
+replay-safe pickup/delivery phases, in-flight inventory allocation, successive
+one-trip jobs and explicit recovery. A Developer Only canonical 7 Soil fixture
+supports acceptance without changing production Node yields. The authoritative
+Hauling scale now uses six slots-and-units bands through level 100 and reuses the
+existing shared decay-above-50 rules; threshold loss retains over-capacity cargo.
+General multi-cell output distribution, B3C.3, WV-B3D and WV-C1 did not begin,
+and `WV-B3B-LIM-001` remains active.
+
+Automated evidence passes 54/54 focused Edit, 5/5 focused Play, 583/583 full
+Edit and 79/79 full Play, plus the 1/1 inventory-drop recheck. Manual acceptance
+remains pending.
 
 ## 16 October 2026 — WV-B3C.2A Canonical Ground Stack Foundation
 
@@ -49,7 +55,8 @@ graphics-enabled Edit and 78/78 complete Play with zero failures, skips or
 inconclusive results. The user confirmed the complete **17/17 manual Unity
 checklist passed** on 16 October 2026. This closure and the accompanying
 Resource and Node v1.0 alignment are documentation-only and did not rerun Unity.
-B3C.2, B3C.3, WV-B3D and WV-C1 have not started; `WV-B3B-LIM-001` remains active.
+B3C.2A later completed and B3C.2B is implemented pending manual acceptance;
+B3C.3, WV-B3D and WV-C1 have not started; `WV-B3B-LIM-001` remains active.
 
 The same documentation amendment approved Resource/Node v1.0 and the companion
 Construction/Placement definition contract. It audited current compatibility

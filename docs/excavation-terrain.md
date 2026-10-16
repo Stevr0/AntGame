@@ -40,8 +40,9 @@ drop. That terrain removal marks the matching diagnostic record
 through the registry. WV-B3C.1 is complete after 17/17 manual acceptance;
 B3C.2A canonical stack foundation is complete after automated validation and
 user-confirmed **23/23 authoritative manual acceptance**.
-B3C.2B overflow recovery and B3C.3 transaction cutover have not started. The
-inactive quantity-one records remain a transitional foundation.
+B3C.2B partial Hauling, transfer replay and carrier recovery are implemented;
+general multi-cell output overflow and the B3C.3 transaction cutover have not
+started. The inactive quantity-one records remain a transitional foundation.
 
 ## WV-B3B read projection
 

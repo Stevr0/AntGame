@@ -24,6 +24,12 @@ namespace AntColony.Tests.PlayMode
             Assert.That(host.SelectionController.AutonomousHaulingEnabled, Is.True);
             Assert.That(host.SelectionController.ResetMaterialHaulingFixtures(
                 out string error), Is.True, error);
+            Assert.That(host.SelectionController.CreatePartialHaulingSoilFixture(
+                out error), Is.True, error);
+            Assert.That(host.MaterialDrops.TryFindAtCell(
+                AntSelectionCommandController.PartialHaulingSoilFixture,
+                out WorldMaterialDrop largeStack), Is.True);
+            Assert.That(largeStack.Quantity, Is.EqualTo(7));
         }
 
         [UnityTest]
@@ -35,6 +41,7 @@ namespace AntColony.Tests.PlayMode
                 AntGameDevelopmentWorldHost.SoilDropFixture,
                 out WorldMaterialDrop before), Is.True);
             string oldContext = host.MaterialDrops.ScenarioContextId;
+            MaterialTransferRegistry oldTransfers = host.MaterialTransfers;
 
             host.TwoViewWorld.SwitchView(DevelopmentWorldView.Surface);
             Assert.That(host.SelectionController.ColonyWorldPresentationEnabled, Is.False);
@@ -48,6 +55,7 @@ namespace AntColony.Tests.PlayMode
             Assert.That(afterSwitch.Revision, Is.EqualTo(before.Revision));
 
             Assert.That(host.RebuildWorld(), Is.True);
+            Assert.That(oldTransfers.IsActive, Is.False);
             Assert.That(host.MaterialDrops.ScenarioContextId, Is.Not.EqualTo(oldContext));
             Assert.That(host.MaterialDrops.TryGet(before.OwnershipKey, out _), Is.False);
             Assert.That(host.MaterialDrops.TryFindAtCell(
@@ -146,12 +154,15 @@ namespace AntColony.Tests.PlayMode
             var plan = new MaterialHaulingPlan(haulJob,
                 MaterialHaulSourceKind.WorldDrop, "material.soil", source.OwnershipKey);
             Assert.That(MaterialHaulingOrder.TryCreate(host.ColonyJobRegistry,
-                host.GridNavigationMap, host.MaterialDrops, host.MaterialStorage,
+                host.GridNavigationMap, host.MaterialDrops, host.MaterialTransfers,
+                host.MaterialStorage,
                 host.ConstructionDesignations, queen.Record, plan, sourceApproach,
                 start, out MaterialHaulingOrder haul, out error), Is.True, error);
             Assert.That(haul.TryArrive(sourceApproach, 1d,
                 out Vector2Int siteApproach), Is.True);
             Assert.That(haul.TryArrive(siteApproach, 2d, out _), Is.True);
+            Assert.That(haul.Transfer.Phase,
+                Is.EqualTo(MaterialTransferPhase.Completed));
             Assert.That(site.Site.IsFullySupplied, Is.True);
             Assert.That(ConstructionJobOrder.TryCreate(host.ColonyJobRegistry,
                 host.GridNavigationMap, host.MaterialDrops, host.MaterialStorage,

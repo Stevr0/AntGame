@@ -124,6 +124,7 @@ namespace AntColony.Development
         public ColonyJobRegistry ColonyJobRegistry { get; private set; }
         public ExcavationDesignationRegistry ExcavationDesignations { get; private set; }
         public WorldMaterialDropRegistry MaterialDrops { get; private set; }
+        public MaterialTransferRegistry MaterialTransfers { get; private set; }
         public MaterialStorageWorld MaterialStorage { get; private set; }
         public ExcavationWorldTransaction ExcavationTransaction { get; private set; }
         public ConstructionRecipeCatalog ConstructionRecipes { get; private set; }
@@ -189,6 +190,10 @@ namespace AntColony.Development
                 return false;
             }
 
+            // A stale order must not commit through the previous scenario's
+            // transfer ledger while mutable world services are reconstructed.
+            MaterialTransfers?.Invalidate();
+
             if (Application.isPlaying)
             {
                 ClearStressGridAnts();
@@ -235,6 +240,8 @@ namespace AntColony.Development
             // A rebuild receives a fresh stack context and validates physical
             // placement against this scenario's authoritative terrain.
             MaterialDrops = new WorldMaterialDropRegistry(WorldData);
+            MaterialTransfers = new MaterialTransferRegistry(
+                MaterialDrops.ScenarioContextId);
             if (startingScenario == GeneratedWorldScenario.DevelopmentFixture &&
                 !BuildMaterialDropFixtures(out string fixtureError))
             {
@@ -295,7 +302,7 @@ namespace AntColony.Development
             selectionController.BindColonyJobs(ColonyJobRegistry);
             selectionController.BindExcavation(
                 ExcavationDesignations, ExcavationTransaction, MaterialDrops);
-            selectionController.BindMaterialStorage(MaterialStorage);
+            selectionController.BindMaterialStorage(MaterialStorage, MaterialTransfers);
             selectionController.BindConstruction(ConstructionDesignations,
                 ConstructionTransaction, ConstructionRecipes.Recipes);
             if (startingScenario == GeneratedWorldScenario.DevelopmentFixture &&

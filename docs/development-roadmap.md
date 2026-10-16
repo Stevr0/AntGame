@@ -1,19 +1,25 @@
 # Development Roadmap
 
-## WV-B3C.2B — implementation-ready planning; runtime unstarted
+## WV-B3C.2B — implemented; manual acceptance pending
 
 The authoritative
 [`PartialHaulingIntegrationPlan`](https://github.com/Stevr0/AntGame/blob/main/Documentation/PartialHaulingIntegrationPlan.md)
-defines replay-safe, scenario-local partial transfers across canonical ground
+is implemented as replay-safe, scenario-local partial transfers across canonical ground
 stacks, ant inventory, Construction staging and Material Storage. It preserves
 the shared fair scheduler and exclusive competition: one job moves one exact
 quantity, and a positive source remainder keeps its Stack ID for a later trip.
 
-The proposed implementation adds transfer-owned reservations, in-flight carrier
-allocation, owner-only recovery and deterministic prepared ground placement.
+The implementation adds transfer-owned reservations, in-flight carrier
+allocation, owner-only recovery and scenario invalidation. It also applies the
+approved six 0–100 Hauling capacity bands while reusing shared skill decay.
 Production Node yields, Surface Nodes, Placement migration and quantity-badge
-policy do not change. No runtime work or Unity validation occurred at this
-planning gate; B3C.2B still requires separate approval and acceptance.
+policy do not change. General multi-cell output placement remains deferred.
+Automated validation is recorded in the authoritative project state; manual
+Unity acceptance is still required.
+
+Recorded Unity `6000.3.8f1` results are 54/54 focused Edit, 5/5 focused Play,
+583/583 complete Edit and 79/79 complete Play, plus the 1/1 inventory-drop
+recheck, with no failures, skips or inconclusive tests.
 
 ## WV-B3C.2A — complete
 
@@ -30,7 +36,7 @@ graphics-enabled Edit and 79/79 complete Play, plus the 1/1 inventory-drop
 compatibility recheck. The user confirmed the full 23/23 authoritative manual
 checklist passed; the accepted checklist is in
 the authoritative [Current Game State](https://github.com/Stevr0/AntGame/blob/main/Documentation/CurrentGameState.md).
-B3C.2B runtime work, B3C.3, WV-B3D and WV-C1 have not begun; Surface Nodes remain
+B3C.2B manual acceptance, B3C.3, WV-B3D and WV-C1 remain outstanding; Surface Nodes remain
 `GenerationOnly` and `WV-B3B-LIM-001`
 still applies.
 

@@ -20,8 +20,10 @@ Creation, merge, reservation, release, pickup and removal publish one affected
 cell change. Reads, failed transactions and view switching do not. A scenario
 rebuild creates a new ID context and drops old reservations. Existing
 quantity-one Extraction, Hauling, Storage and staged Construction remain their
-current authorities. B3C.2B overflow recovery and B3C.3 Node/transaction cutover
-remain future; Surface Nodes remain `GenerationOnly` and `WV-B3B-LIM-001`
+current authorities. B3C.2B now coordinates partial transfer identity,
+allocation and recovery without becoming a cell writer. General overflow and
+B3C.3 Node/transaction cutover remain future; Surface Nodes remain
+`GenerationOnly` and `WV-B3B-LIM-001`
 continues to apply.
 
 ## WV-B3C.1 inactive Node foundation
@@ -39,8 +41,9 @@ transaction and `WorldMaterialDropRegistry` remain authoritative. The registry
 cannot change quantity, terrain, jobs, output, navigation or cell change feeds.
 Surface Stone, Seed, Twig and Freshwater remain `GenerationOnly`. Automated
 results pass 8/8 focused Edit, 4/4 focused Play, 565/565 complete Edit and 78/78
-complete Play. B3C.2/B3C.3 are unstarted and `WV-B3B-LIM-001` remains active.
-This documentation-only closure did not rerun Unity tests.
+complete Play. This documentation-only closure did not rerun Unity tests. B3C.2A later
+completed and B3C.2B is implemented pending manual acceptance; B3C.3 remains
+unstarted and `WV-B3B-LIM-001` remains active.
 
 ## Status
 
@@ -150,9 +153,10 @@ unloading or complex scenario restoration.
    quantity-one candidate records and invalidation without moving writers.
 3. **WV-B3C.2A — canonical stacks (complete):** Resource Definitions, stable
    stack identity, one stack/type per cell, capacity, reservations and revisions.
-4. **WV-B3C.2B — partial Hauling/stack transactions (implementation-ready plan;
-   runtime unstarted):** replay-safe exact transfers, successive partial trips,
-   carrier recovery and deterministic prepared multi-cell placement. See the
+4. **WV-B3C.2B — partial Hauling/stack transactions (implemented; manual
+   pending):** replay-safe exact transfers, successive partial trips, carrier
+   allocation/recovery and stale-scenario rejection. General multi-cell output
+   placement remains deferred. See the
    authoritative
    [`Partial Hauling Integration Plan`](https://github.com/Stevr0/AntGame/blob/main/Documentation/PartialHaulingIntegrationPlan.md).
 5. **WV-B3C.3A/B — active Nodes and Extraction (unstarted):** variable Colony

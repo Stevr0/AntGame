@@ -413,7 +413,7 @@ Before another gameplay milestone, perform a **read-only architecture/code-to-de
 ### Physical materials and inventories
 
 - Excavation produces physical resources under the 14 October 2026 rule above: successful output is always a recoverable loose world drop and never an automatic inventory transfer. Neither extraction nor later pickup can silently destroy or duplicate resources.
-- One inventory slot may hold a **stack of identical compatible items**. Stack maximum per material is **TBD**. Early carrying limits use **slot count only**, not a weight or mass simulation. The existing concept of Hauling skill increasing carrying slots remains a balancing/design constraint to be reconciled with stacks and later saddlebags.
+- One inventory slot may hold a **stack of identical compatible items**. Soil and Stone retain a provisional resource maximum of 10, while the ant's current Hauling band limits how many units may normally occupy each slot. Carrying uses slots and units-per-slot, not a weight or mass simulation; equipment and saddlebags remain future work.
 - Resources retain physical locations and quantities in world drops, ant inventory, storage tiles and delivered construction-site materials. The colony may display aggregated totals, but totals are **derived views**, not teleportable resources.
 - Add **Material Storage** as a Construction/Placement. As with other functional storage, one placement grants **one physical storage slot** (one compatible type/stack). Optional player-configured material filters can restrict accepted resource types. Food and Water Storage remain distinct shared stockpile types. Stored items are placement-owned physical contents, not ground stacks, and require adjacency to deposit/withdraw.
 - If an occupied storage tile is removed or changed, contents become loose, recoverable physical items, consistent with prior design decisions.
@@ -439,7 +439,7 @@ Before another gameplay milestone, perform a **read-only architecture/code-to-de
 ### First-colony bootstrap and unresolved balancing
 
 - The founding queen must be able to extract, haul and construct initial functional placements from reachable resources without existing workers, Storage or prior stockpiles. Initial nursery is functional before enclosure and doors.
-- **Unresolved (do not hardcode as approved):** construction recipes and costs, exact materials available at start, stack-size limits, carrying-slot progression and any equipment modifiers, conversion durations, reservation expiry, exact nearby placement choice when every candidate drop location is invalid, point of material consumption, whether partial construction persists, stockpile filters UI, clutter thresholds/penalties and performance update cadence.
+- **Unresolved (do not hardcode as approved):** construction recipes and costs, exact materials available at start, final stack/carry balance and equipment modifiers, conversion durations, reservation expiry, exact nearby placement choice when every candidate drop location is invalid, point of material consumption, whether partial construction persists, stockpile filters UI, clutter thresholds/penalties and performance update cadence. The initial Hauling bands in section 8.1 are approved and implemented, but remain balance values rather than a global XP-curve change.
 - Testing covers resource conservation (extract/pick up/drop/stage/store/consume), stacking, one-slot capacity, multi-trip Hauling, reservation contention, cancellation at multiple stages, ant death, tile removal, persistent save/load and bootstrap without stockpiles.
 
 ## Approved job and priority system — 12 October 2026
@@ -731,22 +731,23 @@ Gains may slow as a skill approaches 100. Higher skill may reduce completion tim
 
 ### 8.1 Personal inventory and Hauling capacity
 
-Every ant begins with **one personal inventory slot**, and the number of slots is determined by its **Hauling skill (0–100)**. Gain one additional slot at Hauling skill thresholds **20, 40, 60 and 80**, to a maximum of **five slots**. Skill 100 does not award a sixth slot.
+Every ant's normal carrying allowance is determined by its existing **Hauling skill (0–100)**. Both unlocked slots and base units per slot use the approved initial bands below. Resource-specific limits still apply, so a slot's effective limit is the lower of its resource limit and the current Hauling-band limit.
 
-| Hauling skill | Available slots |
-| --- | ---: |
-| 0–19 | 1 |
-| 20–39 | 2 |
-| 40–59 | 3 |
-| 60–79 | 4 |
-| 80–100 | 5 |
+| Hauling skill | Available slots | Base units per slot |
+| --- | ---: | ---: |
+| 0–19 | 2 | 2 |
+| 20–39 | 3 | 2 |
+| 40–59 | 3 | 3 |
+| 60–74 | 4 | 4 |
+| 75–89 | 5 | 5 |
+| 90–100 | 6 | 6 |
 
-- Each slot holds exactly one tile-derived resource or transportable object; **items do not stack** in the initial model.
+- Each slot holds one compatible resource type; stackable resources may occupy multiple units up to the effective per-slot limit. Different resource types never share a slot.
 - Extracted items remain loose until a separate Hauling interaction transfers them into an inventory and then to explicit staging or Storage.
 - Resource transport, storage, placement and consumption must conserve items. Background preparation may use carried or delivered Stone to create a completed grippable background.
-- If Hauling skill decays across a capacity threshold, carried items are **never destroyed**. Existing cargo is temporarily retained even if occupied slots exceed the new effective capacity; the ant cannot collect additional items until occupancy falls below its current capacity.
-- The one-item-per-slot rule also applies to transportable objects in the first playable colony. Larger-object capacity rules are deliberately deferred.
-- Hauling slots, cargo transfer, stockpiles and construction consumption are **approved design**, not implemented systems.
+- If Hauling skill decays across a capacity threshold, carried items are **never destroyed, compacted, merged or discarded**. Existing cargo is marked over-capacity and remains deliverable/recoverable; new pickup is blocked until the inventory is within the current slot and per-slot allowance.
+- Larger-object and non-stackable transport rules are deliberately deferred.
+- These capacity bands, partial transfer allocation and exact delivery are implemented for current Soil/Stone Hauling. Final balance, equipment and additional resource-specific transport rules remain future work.
 
 ### 8.2 Inactivity decay above 50
 
@@ -757,7 +758,7 @@ Every ant begins with **one personal inventory slot**, and the number of slots i
 - Decay never produces a negative value or reduces a skill below 50.
 - A configurable inactivity grace period should prevent ordinary rest, eating or short task changes from causing decay.
 
-The exact grace period and decay rate are not yet defined. For example, an ant with Extraction 85, Surface Preparation 72, Hauling 43 and Foraging 18 will gradually retain 50 in the two unused high skills, while Hauling and Foraging remain unchanged. Hauling decay can reduce future carrying capacity, but must never delete cargo already held.
+The current development settings use a 24-hour inactivity grace period and 0.25 levels per inactive hour above the floor of 50. These remain configurable provisional balance values shared by all skills; Hauling has no special protection. A successful committed Hauling delivery updates Hauling XP/activity through the same skill contract. Hauling decay can reduce future carrying capacity, but must never delete cargo already held.
 
 ## 9. Food, water and productivity
 

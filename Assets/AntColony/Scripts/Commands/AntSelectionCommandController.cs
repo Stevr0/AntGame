@@ -69,6 +69,7 @@ namespace AntColony.Commands
         private static readonly Vector2Int UnreachableMaterialStorageFixture = new(40, -20);
         private static readonly Vector2Int SoilDropFixture = new(-2, -8);
         private static readonly Vector2Int StoneDropFixture = new(8, -8);
+        public static readonly Vector2Int PartialHaulingSoilFixture = new(-7, -8);
 
         private static readonly string[] SkillDisplayNames =
             BuildSkillDisplayNames();
@@ -119,6 +120,7 @@ namespace AntColony.Commands
         private ExcavationWorldTransaction excavationTransaction;
         private WorldMaterialDropRegistry materialDrops;
         private MaterialStorageWorld materialStorage;
+        private MaterialTransferRegistry materialTransfers;
         private readonly Dictionary<ColonyJobId, MaterialHaulingPlan> haulingPlans = new();
         private ConstructionDesignationRegistry constructionDesignations;
         private ConstructionWorldTransaction constructionTransaction;
@@ -153,6 +155,7 @@ namespace AntColony.Commands
         public ExcavationDesignationRegistry ExcavationDesignations => excavationDesignations;
         public WorldMaterialDropRegistry MaterialDrops => materialDrops;
         public MaterialStorageWorld MaterialStorage => materialStorage;
+        public MaterialTransferRegistry MaterialTransfers => materialTransfers;
         public ConstructionDesignationRegistry ConstructionDesignations =>
             constructionDesignations;
         public ConstructionRecipe SelectedConstructionRecipe =>
@@ -296,12 +299,14 @@ namespace AntColony.Commands
                 ant?.BindExcavation(designations, transaction, drops);
         }
 
-        public void BindMaterialStorage(MaterialStorageWorld storage)
+        public void BindMaterialStorage(MaterialStorageWorld storage,
+            MaterialTransferRegistry transfers = null)
         {
             materialStorage = storage;
+            materialTransfers = transfers;
             haulingPlans.Clear();
             foreach (SelectableGridAnt ant in selectableAnts)
-                ant?.BindMaterialHauling(storage);
+                ant?.BindMaterialHauling(storage, transfers);
         }
 
         public void BindConstruction(ConstructionDesignationRegistry designations,
@@ -342,7 +347,7 @@ namespace AntColony.Commands
                 ant.BindColonyJobs(colonyJobs);
                 ant.BindExcavation(
                     excavationDesignations, excavationTransaction, materialDrops);
-                ant.BindMaterialHauling(materialStorage);
+                ant.BindMaterialHauling(materialStorage, materialTransfers);
                 ant.BindConstruction(constructionDesignations,
                     constructionTransaction);
                 autonomousStates[ant] = new AutonomousSurvivalAgentState();
@@ -463,6 +468,41 @@ namespace AntColony.Commands
             message = "Reset Material Storage, loose drops and ant inventories.";
             interactionMessage = message;
             return true;
+        }
+
+        /// <summary>
+        /// Creates the approved large-stack acceptance fixture through the same
+        /// canonical registry API used by gameplay producers. It is exposed only
+        /// from the Developer Mode diagnostics.
+        /// </summary>
+        public bool CreatePartialHaulingSoilFixture(out string message)
+        {
+            if (materialDrops == null)
+            {
+                message = "The material world is unavailable.";
+                interactionMessage = message;
+                return false;
+            }
+            if (materialDrops.TryFindAtCell(PartialHaulingSoilFixture,
+                    out WorldMaterialDrop existing))
+            {
+                message = existing.Material == ExcavatedMaterialType.Soil &&
+                    existing.Quantity == 7
+                    ? "Developer Only: the 7 Soil partial-hauling stack already exists."
+                    : "The partial-hauling fixture cell already contains another stack.";
+                interactionMessage = message;
+                return existing.Material == ExcavatedMaterialType.Soil &&
+                    existing.Quantity == 7;
+            }
+            bool created = materialDrops.TryAdd("development.partial-hauling.soil",
+                ExcavatedMaterialType.Soil, 7, PartialHaulingSoilFixture,
+                out _, out message);
+            interactionMessage = created
+                ? "Developer Only: created a 7 Soil partial-hauling stack."
+                : message;
+            message = interactionMessage;
+            nextWorkEvaluationTime = 0d;
+            return created;
         }
 
         public void SetAutonomousSurvivalEnabled(bool enabled)
@@ -2260,7 +2300,10 @@ namespace AntColony.Commands
             if (record?.Inventory == null) return;
             AntInventory inventory = record.Inventory;
             int haulingLevel = record.Skills.Get(AntSkillId.Hauling).Level;
-            int nextUnlock = haulingLevel >= 80 ? -1 : (haulingLevel / 20 + 1) * 20;
+            int nextUnlock = -1;
+            foreach (HaulingCapacityBand band in AntInventory.HaulingCapacityBands)
+                if (band.MinimumLevel > haulingLevel)
+                { nextUnlock = band.MinimumLevel; break; }
             int soilCapacity = inventory.GetAvailableCapacity(
                 MaterialResourceCatalog.GetStableId(ExcavatedMaterialType.Soil),
                 MaterialResourceCatalog.ProvisionalMaximumStack);
@@ -2271,18 +2314,21 @@ namespace AntColony.Commands
             GUILayout.Label("PERSONAL MATERIAL INVENTORY");
             GUILayout.Label(
                 $"Slots: {inventory.OccupiedSlotCount}/{inventory.NaturalSlotCapacity} | " +
+                $"{inventory.BaseUnitsPerSlot} units/slot | " +
                 $"Total carried: {inventory.TotalQuantity} | Hauling {haulingLevel}");
+            if (inventory.IsOverCapacity)
+                GUILayout.Label("Over capacity: delivery and unloading remain available; pickup is blocked.");
             GUILayout.Label(
                 $"Free capacity: Soil {soilCapacity} | Stone {stoneCapacity}");
             GUILayout.Label(nextUnlock < 0
-                ? "Natural slot capacity is at its maximum."
-                : $"Next natural slot unlock: Hauling {nextUnlock}");
+                ? "Approved carrying capacity is at its maximum."
+                : $"Next carrying-capacity band: Hauling {nextUnlock}");
             for (int index = 0; index < inventory.OccupiedSlots.Count; index++)
             {
                 AntInventorySlot slot = inventory.OccupiedSlots[index];
                 GUILayout.Label(
                     $"Slot {index + 1}: {slot.ResourceTypeId} " +
-                    $"{slot.Quantity}/{slot.MaximumStack}");
+                    $"{slot.Quantity}/{Mathf.Min(slot.MaximumStack, inventory.BaseUnitsPerSlot)} normal");
             }
             if (inventory.OccupiedSlotCount == 0) GUILayout.Label("Inventory empty.");
         }
@@ -2543,6 +2589,8 @@ namespace AntColony.Commands
             GUILayout.Label($"Dynamic hauling plans: {haulingPlans.Count}");
             if (GUILayout.Button("Reset Material Hauling Fixtures"))
                 ResetMaterialHaulingFixtures(out _);
+            if (GUILayout.Button("Create 7 Soil Partial-Haul Stack"))
+                CreatePartialHaulingSoilFixture(out _);
             if (materialStorage == null)
             {
                 GUILayout.Label("Material Storage unavailable.");
@@ -2583,6 +2631,10 @@ namespace AntColony.Commands
                 GUILayout.Label(
                     $"Selected haul: {order.Phase} | {order.Quantity} {order.ResourceTypeId} | " +
                     $"source {order.SourceCell} -> storage {order.DestinationCell}");
+                MaterialTransferSnapshot transfer = order.Transfer;
+                GUILayout.Label(transfer == null
+                    ? $"Transfer {order.TransferId}: stale"
+                    : $"Transfer {transfer.Id}: {transfer.Phase} revision {transfer.Revision}");
                 GUILayout.Label(
                     $"Source quantity/reserved: {sourceQuantity}/{sourceReserved} | " +
                     $"destination reserved: {destination?.ReservedIncomingQuantity ?? 0} | " +

@@ -45,6 +45,7 @@ namespace AntColony.Commands
         private readonly ColonyJobRegistry jobs;
         private readonly GridNavigationMap map;
         private readonly WorldMaterialDropRegistry drops;
+        private readonly MaterialTransferRegistry transfers;
         private readonly MaterialStorageWorld storage;
         private readonly ConstructionDesignationRegistry constructionDesignations;
         private readonly ConstructionSite destinationSite;
@@ -55,19 +56,24 @@ namespace AntColony.Commands
 
         private MaterialHaulingOrder(ColonyJobRegistry jobs, GridNavigationMap map,
             WorldMaterialDropRegistry drops, MaterialStorageWorld storage,
+            MaterialTransferRegistry transfers,
             ConstructionDesignationRegistry constructionDesignations,
             AntRecord ant, MaterialHaulingPlan plan, Vector2Int sourceApproach,
             Vector2Int destinationCell, Vector2Int destinationApproach,
             MaterialHaulDestinationKind destinationKind,
-            ConstructionSite destinationSite, int quantity, int maximumStack)
+            ConstructionSite destinationSite, int quantity, int maximumStack,
+            MaterialTransferId transferId)
         {
             this.jobs = jobs; this.map = map; this.drops = drops;
-            this.storage = storage; this.constructionDesignations = constructionDesignations;
+            this.storage = storage; this.transfers = transfers;
+            this.constructionDesignations = constructionDesignations;
             this.ant = ant; this.plan = plan;
             SourceApproachCell = sourceApproach; DestinationCell = destinationCell;
             DestinationApproachCell = destinationApproach; Quantity = quantity;
             DestinationKind = destinationKind; this.destinationSite = destinationSite;
             this.maximumStack = maximumStack;
+            TransferId = transferId;
+            sourceCollected = plan.SourceKind == MaterialHaulSourceKind.PersonalInventory;
             Phase = plan.SourceKind == MaterialHaulSourceKind.WorldDrop
                 ? MaterialHaulingPhase.TravellingToSource
                 : MaterialHaulingPhase.TravellingToDestination;
@@ -86,6 +92,10 @@ namespace AntColony.Commands
         public Vector2Int DestinationApproachCell { get; }
         public MaterialHaulDestinationKind DestinationKind { get; }
         public int Quantity { get; }
+        public MaterialTransferId TransferId { get; }
+        public MaterialTransferSnapshot Transfer =>
+            transfers.TryGet(TransferId, out MaterialTransferSnapshot transfer)
+                ? transfer : null;
         public MaterialHaulingPhase Phase { get; private set; }
         public string Status { get; private set; }
         public string FailureReason { get; private set; } = string.Empty;
@@ -96,25 +106,30 @@ namespace AntColony.Commands
                 ? SourceApproachCell : DestinationApproachCell;
 
         public static bool TryCreate(ColonyJobRegistry jobs, GridNavigationMap map,
-            WorldMaterialDropRegistry drops, MaterialStorageWorld storage,
+            WorldMaterialDropRegistry drops, MaterialTransferRegistry transfers,
+            MaterialStorageWorld storage,
             AntRecord ant, MaterialHaulingPlan plan, Vector2Int sourceApproach,
             Vector2Int startCell, out MaterialHaulingOrder order, out string error)
         {
-            return TryCreate(jobs, map, drops, storage, null, ant, plan,
+            return TryCreate(jobs, map, drops, transfers, storage, null, ant, plan,
                 sourceApproach, startCell, out order, out error);
         }
 
         public static bool TryCreate(ColonyJobRegistry jobs, GridNavigationMap map,
-            WorldMaterialDropRegistry drops, MaterialStorageWorld storage,
+            WorldMaterialDropRegistry drops, MaterialTransferRegistry transfers,
+            MaterialStorageWorld storage,
             ConstructionDesignationRegistry constructionDesignations,
             AntRecord ant, MaterialHaulingPlan plan, Vector2Int sourceApproach,
             Vector2Int startCell, out MaterialHaulingOrder order, out string error)
         {
             order = null;
-            if (jobs == null || map == null || drops == null || storage == null ||
+            if (jobs == null || map == null || drops == null || transfers == null ||
+                storage == null ||
                 ant == null || plan?.Job == null || !ant.CanAcceptMovementOrders ||
                 ant.Needs.HasDepletedHealth)
             { error = "Hauling requires an active ant and physical material authorities."; return false; }
+            if (transfers.ScenarioContextId != drops.ScenarioContextId)
+            { error = "Hauling transfer and ground-stack scenarios do not match."; return false; }
             if (plan.InventoryOwner.IsValid && !plan.InventoryOwner.Equals(ant.Id))
             { error = "Only the carrying ant may claim its self-deposit task."; return false; }
 
@@ -145,34 +160,103 @@ namespace AntColony.Commands
                     out ConstructionSite destinationSite,
                     out int quantity, out error)) return false;
 
-            string owner = ant.Id.Value;
+            GroundStackId sourceStackId = default;
+            long sourceRevision = 0;
+            if (plan.SourceKind == MaterialHaulSourceKind.WorldDrop &&
+                drops.TryGet(plan.DropKey, out WorldMaterialDrop preparedSource))
+            {
+                sourceStackId = preparedSource.StackId;
+                sourceRevision = preparedSource.Revision;
+            }
+            if (!transfers.TryPrepare(ant.Id, plan.SourceKind, sourceStackId,
+                    plan.ResourceTypeId, quantity, destinationKind, destination,
+                    plan.Job.Id, sourceRevision, 0,
+                    out MaterialTransferSnapshot preparedTransfer, out error))
+                return false;
+            MaterialTransferId transferId = preparedTransfer.Id;
+            string owner = transferId.Value;
             bool destinationReserved = destinationKind ==
                     MaterialHaulDestinationKind.ConstructionSite
                 ? destinationSite.TryReserveIncoming(plan.ResourceTypeId, owner,
                     quantity, out int reserved, out error)
                 : storage.TryReserveIncoming(destination, plan.ResourceTypeId,
                     maximumStack, owner, quantity, out reserved, out error);
-            if (!destinationReserved) return false;
-            quantity = reserved;
+            if (!destinationReserved)
+            {
+                transfers.Reject(transferId, error);
+                return false;
+            }
+            if (reserved != quantity)
+            {
+                ReleaseDestinationReservation(storage, destinationSite,
+                    destinationKind, destination, plan.ResourceTypeId, owner);
+                error = "The destination could not reserve the prepared exact quantity.";
+                transfers.Reject(transferId, error);
+                return false;
+            }
             int sourceReserved = quantity;
             if (plan.SourceKind == MaterialHaulSourceKind.WorldDrop &&
                 !drops.TryReserve(plan.DropKey, owner, quantity, out sourceReserved,
                     out error))
-            { ReleaseDestinationReservation(storage, destinationSite,
-                destinationKind, destination, plan.ResourceTypeId, owner); return false; }
+            {
+                ReleaseDestinationReservation(storage, destinationSite,
+                    destinationKind, destination, plan.ResourceTypeId, owner);
+                transfers.Reject(transferId, error);
+                return false;
+            }
             if (plan.SourceKind == MaterialHaulSourceKind.WorldDrop)
-                quantity = Math.Min(quantity, sourceReserved);
+            {
+                if (sourceReserved != quantity)
+                {
+                    drops.ReleaseReservation(plan.DropKey, owner);
+                    ReleaseDestinationReservation(storage, destinationSite,
+                        destinationKind, destination, plan.ResourceTypeId, owner);
+                    error = "The source could not reserve the prepared exact quantity.";
+                    transfers.Reject(transferId, error);
+                    return false;
+                }
+            }
+            else if (!ant.Inventory.TryAllocateExisting(owner,
+                    plan.ResourceTypeId, maximumStack, quantity, out error))
+            {
+                ReleaseDestinationReservation(storage, destinationSite,
+                    destinationKind, destination, plan.ResourceTypeId, owner);
+                transfers.Reject(transferId, error);
+                return false;
+            }
             if (!jobs.TryReserve(plan.Job.Id, ant.Id, out error))
             {
                 drops.ReleaseReservation(plan.DropKey, owner);
+                ant.Inventory.ReleaseAllocation(owner);
                 ReleaseDestinationReservation(storage, destinationSite,
                     destinationKind, destination, plan.ResourceTypeId, owner);
+                transfers.Reject(transferId, error);
+                return false;
+            }
+            if (!transfers.TryMarkReserved(transferId, out _, out error))
+            {
+                drops.ReleaseReservation(plan.DropKey, owner);
+                ant.Inventory.ReleaseAllocation(owner);
+                ReleaseDestinationReservation(storage, destinationSite,
+                    destinationKind, destination, plan.ResourceTypeId, owner);
+                jobs.PauseAndRelease(plan.Job.Id, ant.Id, error);
+                transfers.Reject(transferId, error);
+                return false;
+            }
+            if (plan.SourceKind == MaterialHaulSourceKind.PersonalInventory &&
+                !transfers.TryCommitPickup(transferId, () => true, out _, out error))
+            {
+                ant.Inventory.ReleaseAllocation(owner);
+                ReleaseDestinationReservation(storage, destinationSite,
+                    destinationKind, destination, plan.ResourceTypeId, owner);
+                jobs.PauseAndRelease(plan.Job.Id, ant.Id, error);
+                transfers.Reject(transferId, error);
                 return false;
             }
             order = new MaterialHaulingOrder(jobs, map, drops, storage,
-                constructionDesignations, ant, plan, sourceApproach, destination,
+                transfers, constructionDesignations, ant, plan, sourceApproach, destination,
                 destinationApproach, destinationKind, destinationSite, quantity,
-                maximumStack);
+                maximumStack, transferId);
             return true;
         }
 
@@ -258,6 +342,10 @@ namespace AntColony.Commands
             out Vector2Int nextApproach)
         {
             nextApproach = default;
+            // A duplicated arrival notification after completion is a replay,
+            // not a new delivery or XP event.
+            if (Phase == MaterialHaulingPhase.Completed) return true;
+            if (!IsActive) return false;
             if (Phase == MaterialHaulingPhase.TravellingToSource)
             {
                 if (!SurvivalInteractionOrder.IsValidAdjacentInteractionAnchor(
@@ -265,11 +353,14 @@ namespace AntColony.Commands
                 { Fail("The source approach became invalid."); return false; }
                 if (!jobs.TryBegin(Job.Id, ant.Id, out string beginError))
                 { Fail(beginError); return false; }
-                bool pickedUp = drops.TryCommitReservedPickup(plan.DropKey,
-                    ant.Id.Value, Quantity,
-                    () => ant.Inventory.TryAdd(plan.ResourceTypeId, Quantity,
-                        maximumStack, false, out int added, out _) && added == Quantity,
-                    out _, out string pickupError);
+                string owner = TransferId.Value;
+                string pickupError = string.Empty;
+                bool pickedUp = transfers.TryCommitPickup(TransferId,
+                    () => drops.TryCommitReservedPickup(plan.DropKey, owner, Quantity,
+                        () => ant.Inventory.TryAddAllocated(owner,
+                            plan.ResourceTypeId, Quantity, maximumStack, out _),
+                        out _, out pickupError), out _, out string transferError);
+                if (string.IsNullOrEmpty(pickupError)) pickupError = transferError;
                 if (!pickedUp) { Fail(pickupError); return false; }
                 sourceCollected = true;
                 Phase = MaterialHaulingPhase.TravellingToDestination;
@@ -285,21 +376,29 @@ namespace AntColony.Commands
             if (plan.SourceKind == MaterialHaulSourceKind.PersonalInventory &&
                 !jobs.TryBegin(Job.Id, ant.Id, out string error))
             { Fail(error); return false; }
-            bool deposited = DestinationKind == MaterialHaulDestinationKind.ConstructionSite
-                ? destinationSite.TryCommitReservedDelivery(plan.ResourceTypeId,
-                    ant.Id.Value, Quantity,
-                    () => ant.Inventory.TryRemoveResource(plan.ResourceTypeId,
-                        Quantity, maximumStack, out _), out string depositError)
-                : storage.TryCommitReservedDeposit(DestinationCell,
-                    plan.ResourceTypeId, maximumStack, ant.Id.Value, Quantity,
-                    () => ant.Inventory.TryRemoveResource(plan.ResourceTypeId,
-                        Quantity, maximumStack, out _), out depositError);
+            string transferOwner = TransferId.Value;
+            string depositError = string.Empty;
+            bool deposited = transfers.TryCommitDelivery(TransferId, () =>
+                DestinationKind == MaterialHaulDestinationKind.ConstructionSite
+                    ? destinationSite.TryCommitReservedDelivery(plan.ResourceTypeId,
+                        transferOwner, Quantity,
+                        () => ant.Inventory.TryRemoveAllocated(transferOwner,
+                            plan.ResourceTypeId, Quantity, maximumStack, out _),
+                        out depositError)
+                    : storage.TryCommitReservedDeposit(DestinationCell,
+                        plan.ResourceTypeId, maximumStack, transferOwner, Quantity,
+                        () => ant.Inventory.TryRemoveAllocated(transferOwner,
+                            plan.ResourceTypeId, Quantity, maximumStack, out _),
+                        out depositError), out _, out string deliveryError);
+            if (string.IsNullOrEmpty(depositError)) depositError = deliveryError;
             if (!deposited) { Fail(depositError); return false; }
             if (!jobs.TryAddProgress(Job.Id, ant.Id, 1d, out _, out string progressError))
             { Fail(progressError); return false; }
             ant.TryAwardSkillExperience(AntSkillId.Hauling,
                 Quantity * ExperiencePerDeliveredUnit, 1d, simulationHours,
                 out _, out _);
+            if (!transfers.TryComplete(TransferId, out _, out string completeError))
+            { Fail(completeError); return false; }
             Phase = MaterialHaulingPhase.Completed;
             Status = $"Delivered {Quantity} material to {DestinationLabel}.";
             return true;
@@ -308,8 +407,12 @@ namespace AntColony.Commands
         public void Cancel(string reason)
         {
             if (!IsActive) return;
-            drops.ReleaseReservation(plan.DropKey, ant.Id.Value);
+            string owner = TransferId.Value;
+            drops.ReleaseReservation(plan.DropKey, owner);
             ReleaseDestinationReservation();
+            ant.Inventory.ReleaseAllocation(owner);
+            if (sourceCollected) transfers.RequireRecovery(TransferId, reason);
+            else transfers.CancelBeforePickup(TransferId, reason);
             jobs.PauseAndRelease(Job.Id, ant.Id, reason);
             Phase = MaterialHaulingPhase.Cancelled;
             FailureReason = reason ?? string.Empty;
@@ -320,8 +423,12 @@ namespace AntColony.Commands
 
         private void Fail(string reason)
         {
-            drops.ReleaseReservation(plan.DropKey, ant.Id.Value);
+            string owner = TransferId.Value;
+            drops.ReleaseReservation(plan.DropKey, owner);
             ReleaseDestinationReservation();
+            ant.Inventory.ReleaseAllocation(owner);
+            if (sourceCollected) transfers.RequireRecovery(TransferId, reason);
+            else transfers.CancelBeforePickup(TransferId, reason);
             jobs.PauseAndRelease(Job.Id, ant.Id, reason);
             Phase = MaterialHaulingPhase.Failed;
             FailureReason = reason;
@@ -336,7 +443,7 @@ namespace AntColony.Commands
 
         private void ReleaseDestinationReservation() =>
             ReleaseDestinationReservation(storage, destinationSite, DestinationKind,
-                DestinationCell, plan.ResourceTypeId, ant.Id.Value);
+                DestinationCell, plan.ResourceTypeId, TransferId.Value);
 
         private static void ReleaseDestinationReservation(MaterialStorageWorld storage,
             ConstructionSite site, MaterialHaulDestinationKind kind,
@@ -440,14 +547,8 @@ namespace AntColony.Commands
         }
 
         private static int GetInventoryQuantity(AntInventory inventory,
-            string resourceTypeId, int maximumStack)
-        {
-            int total = 0;
-            foreach (AntInventorySlot slot in inventory.OccupiedSlots)
-                if (slot.ResourceTypeId == resourceTypeId &&
-                    slot.MaximumStack == maximumStack) total += slot.Quantity;
-            return total;
-        }
+            string resourceTypeId, int maximumStack) =>
+            inventory.GetUnallocatedQuantity(resourceTypeId, maximumStack);
 
         private static int CompareCell(Vector2Int first, Vector2Int second)
         {

@@ -1,27 +1,43 @@
 # Ant Colony Development Roadmap
 
-## WV-B3C.2B — implementation-ready plan; runtime unstarted (16 October 2026)
+## WV-B3C.2B — implemented; manual acceptance pending (16 October 2026)
 
-The documentation-only
+The approved
 [Partial Hauling and Canonical Stack Transaction Plan](PartialHaulingIntegrationPlan.md)
-maps current loose, carried, Storage and staged quantity ownership. It recommends
-one scenario-local transfer identity and replay ledger coordinating the existing
-authorities, with transfer-owned exclusive reservations, exact partial pickup
-and delivery, carrier allocation, owner-only recovery and explicit successive
-one-trip jobs from a remaining canonical stack.
+is implemented for current ground-stack-to-inventory-to-Storage/Construction
+flows. A scenario-local transfer registry records immutable identities and
+replay-safe phase commits; transfer IDs own the existing exclusive source and
+destination reservations, while a narrow inventory allocation protects exact
+in-flight cargo without replacing any physical quantity authority. Partial
+pickup preserves a positive remainder's `GroundStackId`, and normal dynamic-job
+refresh supports successive one-trip transfers.
 
-The smallest safe implementation preserves `ColonyJobRegistry`, work priorities,
-fair bounded selection, current destination ordering, fully staged Construction,
-Storage filters/capacity and all accepted B3C.2A identity/badge behavior. A
-test-only canonical 7-unit Soil stack will exercise repeated trips without
-changing production quantity-one Node yields. Deterministic prepared ground
-placement is included for conserving inventory recovery and tests; variable Node
-output stays in B3C.3.
+Cancellation before pickup preserves the source. Cancellation, carrier
+inactivity or invalid destination after pickup leaves cargo on the carrier with
+an explicit recovery-required outcome. Scenario rebuild invalidates the old
+transfer context. Committed delivery awards Hauling XP once through the existing
+skill contract. The development Resources panel can create a canonical 7 Soil
+fixture; normal quantity-one Node yields are unchanged.
 
-No runtime code, Unity content or tests changed at this gate. WV-B3C.2B remains
-unimplemented and needs separate approval, focused/full automation and seed
-`2203` manual acceptance. B3C.3, WV-B3D and WV-C1 remain unstarted; Surface Nodes
-remain `GenerationOnly`, and `WV-B3B-LIM-001` remains active.
+The authoritative Hauling capacity bands are 0–19 = 2 slots × 2 units, 20–39 =
+3×2, 40–59 = 3×3, 60–74 = 4×4, 75–89 = 5×5 and 90–100 = 6×6. Existing global
+0–100 XP and inactivity decay rules are unchanged. A threshold loss retains and
+marks excess cargo over-capacity, blocks new pickup, and permits safe
+delivery/unloading.
+
+WV-B3C.2B remains **Implemented — Automated Tests Passed, Manual Acceptance
+Pending** until the current-state checklist is user-confirmed. General
+deterministic multi-cell overflow/pending-output distribution is retained as
+future work with variable Node output rather than activated here. B3C.3, WV-B3D
+and WV-C1 remain unstarted; Surface Nodes remain `GenerationOnly`, and
+`WV-B3B-LIM-001` remains active.
+
+Unity `6000.3.8f1` evidence passes **54/54 focused Edit** (31 inventory/skill +
+23 transfer/Hauling), **5/5 focused Play**, **583/583 complete Edit** and
+**79/79 complete Play**, plus a **1/1 inventory-drop recheck**, with zero
+failures, skips or inconclusive results. The tested working tree is based on
+`ba8b4946c5d273b60ce90d25e946ac645b7b0876`; the implementation is not claimed
+to exist in that parent commit.
 
 ## WV-B3C.2A — Complete (16 October 2026)
 
@@ -44,12 +60,10 @@ zero failures, skips or inconclusive results. Manual Unity acceptance is
 confirmed at **23/23 passed**. WV-B3C.2A is complete. No Unity tests were rerun
 for this documentation-only closure.
 
-The next candidate milestone is **WV-B3C.2B** partial Hauling and canonical stack
-transactions, including deterministic prepared overflow placement for conserving
-recovery. Its implementation-ready plan is complete, but runtime work has not
-started or been authorised. Variable Node quantities/Extraction cutover remain
-WV-B3C.3; Placement migration remains WV-B3D; Surface resource gameplay and
-WV-C1 remain deferred. Generated Surface Nodes stay `GenerationOnly`, and
+WV-B3C.2B partial Hauling and canonical stack transactions is now implemented
+and awaiting manual acceptance. Variable Node quantities/Extraction cutover
+remain WV-B3C.3; Placement migration remains WV-B3D; Surface resource gameplay
+and WV-C1 remain deferred. Generated Surface Nodes stay `GenerationOnly`, and
 `WV-B3B-LIM-001` remains active.
 
 ## WV-B3C.1 — Complete (16 October 2026)
@@ -74,7 +88,8 @@ The approved [Resource and Node System v1.0](ResourceAndNodeSystem.md) now makes
 variable quantities, whole-node Solid Extraction, complete physical output,
 finite Water and natural-only Backgrounds the target. B3C.1 remains a
 quantity-one inactive compatibility foundation, not that final mutable model.
-B3C.2, B3C.3, WV-B3D and WV-C1 have not started. `WV-B3B-LIM-001` remains active.
+B3C.2A has since completed and B3C.2B is implemented pending manual acceptance;
+B3C.3, WV-B3D and WV-C1 have not started. `WV-B3B-LIM-001` remains active.
 
 The next recommended planning gates are B3C.2A Resource Definitions/canonical
 stacks, B3C.2B deterministic overflow/pending-output recovery, B3C.3A active
@@ -462,7 +477,7 @@ Verification passed **15/15 focused Edit Mode**, **3/3 focused Play Mode**, **44
 
 ## 3.3C implementation status — 13 October 2026
 
-**3.3C Ant Inventory, Automatic Excavation Pickup & Physical Material Handling: COMPLETE — manual 26/26 accepted; auto-pickup superseded by 3.5B.** Each authoritative ant record owns independent stack-based inventory. Hauling levels 0/20/40/60/80 grant one through five natural slots; Soil and Stone provisionally stack to 10. Capacity decay retains occupied overflow without permitting further additions. The historical excavation inventory/split rule is no longer current; 3.5B always produces a loose drop. Selected ants can still reserve and pick up a reachable drop or use Developer Only controls to drop a chosen quantity at their current valid anchor. Compatible world stacks merge, partial transfer is conserved, failures preserve the source and stable output keys prevent retries from duplicating resources.
+**3.3C Ant Inventory, Automatic Excavation Pickup & Physical Material Handling: COMPLETE — manual 26/26 accepted; auto-pickup superseded by 3.5B.** Each authoritative ant record owns independent stack-based inventory. The originally accepted one-through-five slot curve is historical and is superseded by the WV-B3C.2B six-band slots-and-units progression. Soil and Stone retain their provisional resource stack limit of 10. Capacity decay retains occupied overflow without permitting further additions. The historical excavation inventory/split rule is no longer current; 3.5B always produces a loose drop. Selected ants can still reserve and pick up a reachable drop or use Developer Only controls to drop a chosen quantity at their current valid anchor. Compatible world stacks merge, partial transfer is conserved, failures preserve the source and stable output keys prevent retries from duplicating resources.
 
 Automated verification passed **26/26 focused Edit Mode**, **5/5 focused Play Mode**, **432/432 complete graphics-enabled Edit Mode** and **42/42 complete Play Mode**, all with zero failures/skips. The user subsequently accepted all 26 manual checks. At the 3.3C boundary autonomous hauling and Material Storage were absent; 3.3D now implements that narrow follow-up. Construction and broader resource scheduling remain absent, while stack limits, fixture quantities and carrying balance remain provisional.
 
@@ -791,7 +806,7 @@ These milestones are ordered direction, not approved implementation work. Their 
 | 9 — Enemy colonies and hostile interactions | Reuse the same terrain navigation for other colonies and add high-level engage, retreat, avoid, defend and assistance responses. | Not started |
 | 10 — Skills, survival, growth and finished slice | Skills, needs, physical survival, autonomous survival and synthetic work foundations exist. Real work, queen/brood progression, onboarding, objectives and save/load remain future slices. | Synthetic work pending acceptance |
 
-The 3.3C carrying model is implemented: one initial slot plus one at Hauling 20/40/60/80, capped at five, with compatible resource stacks and a provisional maximum of 10 for Soil and Stone.
+The original 3.3C carrying model was one initial slot plus one at Hauling 20/40/60/80, capped at five. WV-B3C.2B supersedes that balance with the authoritative six slots-and-units bands while retaining the provisional resource maximum of 10 for Soil and Stone.
 
 No new milestone is complete without implementation and validation evidence.
 Milestone 2.4D remains pending its separately recorded manual acceptance.

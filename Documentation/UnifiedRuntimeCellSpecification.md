@@ -569,16 +569,21 @@ quantity commit.
 The Colony adapter reports this occupant as `Authoritative` and publishes one
 loose-resource cell change for each committed creation, merge, reservation,
 release, pickup or removal. Reads, failures and camera switches publish none.
-Scenario replacement constructs a new context with no old reservations. This
-does not implement B3C.2B overflow/pending-output recovery, B3C.3 variable Node
-authority or whole-node transaction cutover. Surface Nodes remain
-`GenerationOnly`; `WV-B3B-LIM-001` is unchanged.
+Scenario replacement constructs a new context with no old reservations.
+WV-B3C.2B now adds scenario-local transfer identity, exact partial pickup and
+delivery, carrier allocation, recovery outcomes and successive trips without
+moving any runtime-cell write authority. General multi-cell overflow/pending
+output, B3C.3 variable Node authority and whole-node transaction cutover remain
+unimplemented. Surface Nodes remain `GenerationOnly`; `WV-B3B-LIM-001` is
+unchanged.
 
 Resource and Node v1.0 further requires variable quantities and complete
 whole-node output, including several deterministic stacks or recoverable pending
 output when one stack cannot hold the yield. The recommended implementation
-split is B3C.2A definitions/canonical stacks, B3C.2B overflow recovery, B3C.3A
-active variable Colony Nodes and B3C.3B whole-node transaction cutover.
+split completed B3C.2A definitions/canonical stacks and implemented B3C.2B
+partial Hauling/transfer recovery. General output splitting remains future work
+alongside B3C.3A active variable Colony Nodes and B3C.3B whole-node transaction
+cutover.
 
 ### WV-B3D candidate — Construction / Placement Integration
 

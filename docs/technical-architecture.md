@@ -1,19 +1,22 @@
 # Technical Architecture
 
-## WV-B3C.2B planned transaction coordinator
+## WV-B3C.2B transaction coordinator — implemented; manual pending
 
-The implementation-ready B3C.2B plan proposes one scenario-local coordination
+WV-B3C.2B implements one scenario-local coordination
 registry over existing physical owners. Its transfer ID is separate from
 `GroundStackId`, `ColonyJobId`, `AntId` and producer operation keys. It records
-an immutable payload plus `Prepared → Reserved → PickedUp → Delivered` outcome,
+an immutable payload plus `Prepared → Reserved → PickedUp → Delivered → Completed`
+outcome,
 but never stores a second physical quantity: ground, inventory, Storage or
 Construction staging remains authoritative for each committed phase.
 
 The shared scheduler, navigation, priorities and current destination ordering
-remain unchanged. Exclusive source/destination reservations become
+remain unchanged. Exclusive source/destination reservations are
 transfer-owned, carrier inventory gains an in-flight allocation, and terminal
 jobs are explicitly recreated for a positive source remainder. This is planning
-only; no runtime ownership moved. See the
+coordination only; no physical quantity authority moved. Scenario replacement
+invalidates the old registry and replay cannot run either physical commit twice.
+Manual Unity acceptance remains pending. See the
 [`Partial Hauling Integration Plan`](https://github.com/Stevr0/AntGame/blob/main/Documentation/PartialHaulingIntegrationPlan.md).
 
 ## WV-B3C.2A canonical ground-stack authority

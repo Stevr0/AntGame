@@ -139,9 +139,12 @@ namespace AntColony.Tests.PlayMode
             while (ant.Record.Inventory.TotalQuantity == 0 && Time.time < timeout)
                 yield return null;
             Assert.That(ant.Record.Inventory.TotalQuantity, Is.GreaterThan(0));
-            int carried = ant.Record.Inventory.TotalQuantity;
-            Assert.That(controller.TryDropSelectedInventory(0, carried,
-                out string error), Is.True, error);
+            while (ant.Record.Inventory.OccupiedSlotCount > 0)
+            {
+                int carriedInSlot = ant.Record.Inventory.OccupiedSlots[0].Quantity;
+                Assert.That(controller.TryDropSelectedInventory(0, carriedInSlot,
+                    out string error), Is.True, error);
+            }
             Assert.That(ant.Record.Inventory.TotalQuantity, Is.Zero);
             Assert.That(host.MaterialDrops.GetQuantity(ExcavatedMaterialType.Soil),
                 Is.EqualTo(initialWorldQuantity));

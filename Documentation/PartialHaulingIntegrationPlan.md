@@ -1,7 +1,7 @@
 # WV-B3C.2B Partial Hauling and Canonical Stack Transaction Plan
 
-**Status:** Implementation-ready planning complete; runtime implementation has
-not started and requires separate approval.
+**Status:** Implemented on 16 October 2026; automated validation recorded in the
+current-state/roadmap evidence and manual Unity acceptance pending.
 
 **Prepared:** 16 October 2026
 
@@ -30,8 +30,19 @@ The following terms are intentionally distinct:
 One value must not substitute for another. In particular, an ant ID is not a
 safe replay key and a producer operation key is not a `GroundStackId`.
 
-This is documentation and read-only code inspection only. No C#, test, scene,
-prefab, asset or project-setting change is part of this planning task.
+This document began as the implementation plan and is retained as the contract
+and migration history. WV-B3C.2B now implements its scenario-local transfer
+ledger, transfer-owned reservations, carrier allocation, partial commits,
+successive trips and recovery states. General multi-cell output placement was
+not activated because production Nodes remain quantity-one and a failed
+inventory drop already preserves its current owner; that distributor remains a
+future variable-output requirement.
+
+The approved addendum supersedes the earlier slot-only carry assumptions. The
+authoritative 0–100 Hauling bands are 2×2 at 0–19, 3×2 at 20–39, 3×3 at 40–59,
+4×4 at 60–74, 5×5 at 75–89 and 6×6 at 90–100. The existing shared skill-decay
+implementation is reused unchanged. Threshold loss retains over-capacity cargo,
+blocks new pickup and permits delivery/recovery.
 
 ### Explicit exclusions
 

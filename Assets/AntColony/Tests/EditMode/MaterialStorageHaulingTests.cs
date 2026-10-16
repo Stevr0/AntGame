@@ -121,6 +121,10 @@ namespace AntColony.Tests.EditMode
                 Is.Zero);
             Assert.That(destination.ReservedIncomingQuantity, Is.Zero);
             Assert.That(host.MaterialDrops.TryGet(source.OwnershipKey, out _), Is.True);
+            Assert.That(host.MaterialTransfers.TryGet(order.TransferId,
+                out MaterialTransferSnapshot transfer), Is.True);
+            Assert.That(transfer.Phase,
+                Is.EqualTo(MaterialTransferPhase.CancelledBeforePickup));
         }
 
         [Test]
@@ -135,6 +139,131 @@ namespace AntColony.Tests.EditMode
             host.MaterialStorage.TryGet(order.DestinationCell,
                 out MaterialStorageSlot destination);
             Assert.That(destination.ReservedIncomingQuantity, Is.Zero);
+            Assert.That(host.MaterialTransfers.TryGet(order.TransferId,
+                out MaterialTransferSnapshot transfer), Is.True);
+            Assert.That(transfer.Phase,
+                Is.EqualTo(MaterialTransferPhase.RecoveryRequired));
+        }
+
+        [Test]
+        public void CompletedTransferPhasesAreReplaySafe()
+        {
+            AntGameDevelopmentWorldHost host = OpenHost();
+            MaterialHaulingOrder order = CreateDropOrder(host, "replay",
+                out AntRecord ant, out _);
+            Assert.That(host.MaterialTransfers.TryGet(order.TransferId,
+                out MaterialTransferSnapshot transfer), Is.True);
+            Assert.That(transfer.Phase, Is.EqualTo(MaterialTransferPhase.Reserved));
+
+            Assert.That(order.TryArrive(order.SourceApproachCell, 1d, out _), Is.True);
+            Assert.That(host.MaterialTransfers.TryGet(order.TransferId,
+                out transfer), Is.True);
+            Assert.That(transfer.Phase, Is.EqualTo(MaterialTransferPhase.PickedUp));
+            Assert.That(ant.Inventory.HasAllocation(order.TransferId.Value), Is.True);
+
+            Assert.That(order.TryArrive(order.DestinationApproachCell, 2d, out _),
+                Is.True);
+            Assert.That(host.MaterialTransfers.TryGet(order.TransferId,
+                out transfer), Is.True);
+            Assert.That(transfer.Phase, Is.EqualTo(MaterialTransferPhase.Completed));
+            Assert.That(ant.Inventory.HasAllocation(order.TransferId.Value), Is.False);
+            double experience = ant.Skills.Get(AntSkillId.Hauling).TotalExperience;
+            Assert.That(order.TryArrive(order.DestinationApproachCell, 3d, out _),
+                Is.True);
+            Assert.That(ant.Skills.Get(AntSkillId.Hauling).TotalExperience,
+                Is.EqualTo(experience));
+
+            int replayedCallbacks = 0;
+            Assert.That(host.MaterialTransfers.TryCommitPickup(order.TransferId,
+                () => { replayedCallbacks++; return true; }, out _, out _), Is.True);
+            Assert.That(host.MaterialTransfers.TryCommitDelivery(order.TransferId,
+                () => { replayedCallbacks++; return true; }, out _, out _), Is.True);
+            Assert.That(replayedCallbacks, Is.Zero);
+        }
+
+        [Test]
+        public void ScenarioRebuildInvalidatesOldTransferIdentity()
+        {
+            AntGameDevelopmentWorldHost host = OpenHost();
+            MaterialHaulingOrder order = CreateDropOrder(host, "old-scenario",
+                out _, out _);
+            MaterialTransferRegistry oldTransfers = host.MaterialTransfers;
+            MaterialTransferId oldId = order.TransferId;
+
+            Assert.That(host.RebuildWorld(), Is.True);
+            Assert.That(oldTransfers.IsActive, Is.False);
+            Assert.That(oldTransfers.TryGet(oldId, out _), Is.False);
+            int callbacks = 0;
+            Assert.That(oldTransfers.TryCommitPickup(oldId,
+                () => { callbacks++; return true; }, out _, out _), Is.False);
+            Assert.That(callbacks, Is.Zero);
+            Assert.That(host.MaterialTransfers.ScenarioContextId,
+                Is.Not.EqualTo(oldTransfers.ScenarioContextId));
+        }
+
+        [Test]
+        public void InactiveCarrierRetainsPickedUpCargoForRecovery()
+        {
+            AntGameDevelopmentWorldHost host = OpenHost();
+            MaterialHaulingOrder order = CreateDropOrder(host, "inactive-carrier",
+                out AntRecord ant, out _);
+            Assert.That(order.TryArrive(order.SourceApproachCell, 0d, out _), Is.True);
+
+            ant.MarkInactive();
+            order.Cancel("carrier inactive");
+
+            Assert.That(ant.Inventory.TotalQuantity, Is.EqualTo(order.Quantity));
+            Assert.That(host.MaterialTransfers.TryGet(order.TransferId,
+                out MaterialTransferSnapshot transfer), Is.True);
+            Assert.That(transfer.Phase,
+                Is.EqualTo(MaterialTransferPhase.RecoveryRequired));
+        }
+
+        [Test]
+        public void SevenUnitFixtureMovesAcrossSuccessiveCapacityBoundedTrips()
+        {
+            AntGameDevelopmentWorldHost host = OpenHost();
+            Assert.That(host.SelectionController.CreatePartialHaulingSoilFixture(
+                out string error), Is.True, error);
+            Assert.That(host.MaterialDrops.TryFindAtCell(
+                AntSelectionCommandController.PartialHaulingSoilFixture,
+                out WorldMaterialDrop source), Is.True);
+            Assert.That(source.Quantity, Is.EqualTo(7));
+            int storedBefore = host.MaterialStorage.Slots.Sum(slot => slot.Quantity);
+            AntRecord ant = CreateRecord("successive-trips");
+            Vector2Int start = new(-10, SampleWorldGenerator.MainPassageY);
+
+            for (int trip = 0; trip < 3 && host.MaterialDrops.TryGet(
+                     source.OwnershipKey, out WorldMaterialDrop remaining); trip++)
+            {
+                Assert.That(SurvivalInteractionOrder.TryMeasureApproach(
+                    host.GridNavigationMap, start, remaining.WorldCell,
+                    out Vector2Int sourceApproach, out _, out error), Is.True, error);
+                Assert.That(host.ColonyJobRegistry.TryAdd(
+                    new ColonyJobId($"haul.successive.{trip}"),
+                    AntWorkCategory.Hauling, remaining.WorldCell,
+                    out ColonyJob job, out error), Is.True, error);
+                var plan = new MaterialHaulingPlan(job,
+                    MaterialHaulSourceKind.WorldDrop, "material.soil",
+                    remaining.OwnershipKey);
+                Assert.That(MaterialHaulingOrder.TryCreate(host.ColonyJobRegistry,
+                    host.GridNavigationMap, host.MaterialDrops,
+                    host.MaterialTransfers, host.MaterialStorage, ant, plan,
+                    sourceApproach, start, out MaterialHaulingOrder order,
+                    out error), Is.True, error);
+                Assert.That(order.Quantity, Is.LessThanOrEqualTo(4));
+                Assert.That(order.TryArrive(sourceApproach, trip * 2d,
+                    out _), Is.True);
+                Assert.That(order.TryArrive(order.DestinationApproachCell,
+                    trip * 2d + 1d, out _), Is.True);
+                start = order.DestinationApproachCell;
+            }
+
+            Assert.That(host.MaterialDrops.TryGet(source.OwnershipKey, out _),
+                Is.False);
+            Assert.That(host.MaterialStorage.Slots.Sum(slot => slot.Quantity),
+                Is.EqualTo(storedBefore + 7));
+            Assert.That(ant.Inventory.TotalQuantity, Is.Zero);
         }
 
         [Test]
@@ -144,7 +273,8 @@ namespace AntColony.Tests.EditMode
             host.MaterialDrops.TryFindAtCell(AntGameDevelopmentWorldHost.SoilDropFixture,
                 out WorldMaterialDrop source);
             AntRecord ant = CreateRecord("partial-load");
-            ant.Inventory.TryAdd("material.soil", 8, 10, false, out _, out _);
+            Assert.That(ant.Inventory.TryAdd("material.soil", 2, 10, false,
+                out _, out string setupError), Is.True, setupError);
             Vector2Int start = new(-10, SampleWorldGenerator.MainPassageY);
             SurvivalInteractionOrder.TryMeasureApproach(host.GridNavigationMap,
                 start, source.WorldCell, out Vector2Int approach, out _, out _);
@@ -153,7 +283,8 @@ namespace AntColony.Tests.EditMode
             var plan = new MaterialHaulingPlan(job, MaterialHaulSourceKind.WorldDrop,
                 "material.soil", source.OwnershipKey);
             Assert.That(MaterialHaulingOrder.TryCreate(host.ColonyJobRegistry,
-                host.GridNavigationMap, host.MaterialDrops, host.MaterialStorage,
+                host.GridNavigationMap, host.MaterialDrops, host.MaterialTransfers,
+                host.MaterialStorage,
                 ant, plan, approach, start, out MaterialHaulingOrder order,
                 out string error), Is.True, error);
             Assert.That(order.Quantity, Is.EqualTo(2));
@@ -163,7 +294,7 @@ namespace AntColony.Tests.EditMode
             Assert.That(remainder.Quantity, Is.EqualTo(2));
             Assert.That(order.TryArrive(order.DestinationApproachCell, 0d, out _),
                 Is.True);
-            Assert.That(ant.Inventory.TotalQuantity, Is.EqualTo(8));
+            Assert.That(ant.Inventory.TotalQuantity, Is.EqualTo(2));
         }
 
         [Test]
@@ -207,7 +338,8 @@ namespace AntColony.Tests.EditMode
             var plan = new MaterialHaulingPlan(job, MaterialHaulSourceKind.WorldDrop,
                 MaterialResourceCatalog.GetStableId(source.Material), source.OwnershipKey);
             Assert.That(MaterialHaulingOrder.TryCreate(host.ColonyJobRegistry,
-                host.GridNavigationMap, host.MaterialDrops, host.MaterialStorage,
+                host.GridNavigationMap, host.MaterialDrops, host.MaterialTransfers,
+                host.MaterialStorage,
                 second, plan, first.SourceApproachCell, first.SourceApproachCell,
                 out _, out _), Is.False);
         }
@@ -226,7 +358,8 @@ namespace AntColony.Tests.EditMode
                 MaterialHaulSourceKind.PersonalInventory, soil,
                 inventoryOwner: owner.Id);
             Assert.That(MaterialHaulingOrder.TryCreate(host.ColonyJobRegistry,
-                host.GridNavigationMap, host.MaterialDrops, host.MaterialStorage,
+                host.GridNavigationMap, host.MaterialDrops, host.MaterialTransfers,
+                host.MaterialStorage,
                 CreateRecord("intruder"), plan, target,
                 new Vector2Int(-10, SampleWorldGenerator.MainPassageY),
                 out _, out _), Is.False);
@@ -257,7 +390,8 @@ namespace AntColony.Tests.EditMode
             SurvivalInteractionOrder.TryMeasureApproach(host.GridNavigationMap,
                 start, source.WorldCell, out Vector2Int approach, out _, out _);
             Assert.That(MaterialHaulingOrder.TryCreate(host.ColonyJobRegistry,
-                host.GridNavigationMap, host.MaterialDrops, host.MaterialStorage,
+                host.GridNavigationMap, host.MaterialDrops, host.MaterialTransfers,
+                host.MaterialStorage,
                 ant, plan, approach, start, out _, out _), Is.False);
             Assert.That(host.MaterialDrops.TryGet(
                 source.OwnershipKey, out WorldMaterialDrop unchanged), Is.True);
@@ -298,7 +432,8 @@ namespace AntColony.Tests.EditMode
             var plan = new MaterialHaulingPlan(haulJob,
                 MaterialHaulSourceKind.WorldDrop, "material.soil", source.OwnershipKey);
             Assert.That(MaterialHaulingOrder.TryCreate(host.ColonyJobRegistry,
-                host.GridNavigationMap, host.MaterialDrops, host.MaterialStorage,
+                host.GridNavigationMap, host.MaterialDrops, host.MaterialTransfers,
+                host.MaterialStorage,
                 host.ConstructionDesignations, queen.Record, plan, sourceApproach,
                 start, out MaterialHaulingOrder haul, out error), Is.True, error);
             Assert.That(haul.DestinationKind,
@@ -413,7 +548,8 @@ namespace AntColony.Tests.EditMode
             var plan = new MaterialHaulingPlan(job, MaterialHaulSourceKind.WorldDrop,
                 "material.soil", source.OwnershipKey);
             Assert.That(MaterialHaulingOrder.TryCreate(host.ColonyJobRegistry,
-                host.GridNavigationMap, host.MaterialDrops, host.MaterialStorage,
+                host.GridNavigationMap, host.MaterialDrops, host.MaterialTransfers,
+                host.MaterialStorage,
                 host.ConstructionDesignations, ant, plan, sourceApproach, start,
                 out MaterialHaulingOrder order, out error), Is.True, error);
 
@@ -475,7 +611,8 @@ namespace AntColony.Tests.EditMode
             var plan = new MaterialHaulingPlan(job, MaterialHaulSourceKind.WorldDrop,
                 MaterialResourceCatalog.GetStableId(source.Material), source.OwnershipKey);
             Assert.That(MaterialHaulingOrder.TryCreate(host.ColonyJobRegistry,
-                host.GridNavigationMap, host.MaterialDrops, host.MaterialStorage,
+                host.GridNavigationMap, host.MaterialDrops, host.MaterialTransfers,
+                host.MaterialStorage,
                 ant, plan, approach, start, out MaterialHaulingOrder order,
                 out error), Is.True, error);
             return order;

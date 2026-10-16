@@ -1,27 +1,115 @@
 # Ant Colony Current Game State
 
-## WV-B3C.2B partial Hauling planning — 16 October 2026
+## WV-B3C.2B partial Hauling — implemented, manual acceptance pending (16 October 2026)
 
-**Implementation-ready planning complete; runtime implementation has not
-started.** The
-[Partial Hauling and Canonical Stack Transaction Plan](PartialHaulingIntegrationPlan.md)
-maps every current quantity owner and defines a proposed scenario-local,
-replay-safe transfer record for exact partial pickup and delivery. The proposed
-slice retains the existing `ColonyJobRegistry`, priorities, bounded fair
-scheduler, exclusive source/destination competition, explicit Construction
-staging and Material Storage destinations. One job represents one trip; a
-positive source remainder keeps its `GroundStackId` and becomes eligible for a
-later trip.
+**Implemented — Automated Tests Passed, Manual Acceptance Pending.**
+`MaterialTransferRegistry` now coordinates each exact Hauling trip
+with a scenario-local `MaterialTransferId`, immutable snapshots, monotonically
+revised `Prepared → Reserved → PickedUp → Delivered → Completed` phases and
+explicit rejected, cancelled-before-pickup and recovery-required outcomes. It is
+a replay ledger, not a physical inventory: ground quantity remains owned by
+`WorldMaterialDropRegistry`, carried quantity by `AntInventory`, and delivered
+quantity by `MaterialStorageWorld` or `ConstructionSite`.
 
-Current runtime behavior is unchanged. It already computes a bounded partial
-trip and conserves ordinary pickup/delivery through callbacks, but reservations
-are owned by ant ID and there is no transfer replay ledger or in-flight inventory
-allocation. The plan proposes transfer-owned reservations, exact-once phase
-records, owner-only cargo recovery and deterministic prepared ground placement.
+Source and destination reservations now use the transfer ID rather than the ant
+ID. Ground pickup adds exactly the reserved quantity to a transfer-owned
+inventory allocation and subtracts it from the canonical stack in the existing
+conserving callback. Delivery removes that allocation and credits the exact
+reserved destination quantity once. Replaying a committed pickup or delivery
+returns its recorded outcome without running the physical callback again. A
+positive source remainder keeps its `GroundStackId`; normal dynamic-job refresh
+creates the next one-trip opportunity. The existing fair scheduler, priorities,
+Construction-first destination ordering and owner-only self-deposit route are
+preserved.
+
+Cancellation before pickup releases both reservations and leaves the source
+unchanged. Cancellation, inactivity or destination invalidation after pickup
+releases the destination promise, keeps cargo in the ant's authoritative
+inventory and records `RecoveryRequired`. Scenario rebuild invalidates the old
+transfer registry before mutable services are reconstructed, so old IDs and
+callbacks cannot act on the replacement scenario. Transfer terminal history is
+bounded in memory; persistence and unloaded-region replay are not implemented.
+
+### Authoritative Hauling capacity and decay
+
+The existing 0–100 skill and shared decay contract remain unchanged. Normal
+carrying allowance is now data-driven by the approved six bands: 0–19 = 2 slots
+at 2 units each; 20–39 = 3×2; 40–59 = 3×3; 60–74 = 4×4; 75–89 = 5×5; and
+90–100 = 6×6. Resource-specific limits remain an additional cap. Successful
+committed delivery still awards 5 base Hauling XP per unit through the existing
+skill API and updates activity tracking; Hauling above 50 receives the same
+24-hour grace and 0.25-level-per-inactive-hour provisional decay as other skills.
+
+If decay crosses a band, normal slot and per-slot allowance recalculate
+immediately without deleting, merging or moving cargo. Excess occupied slots or
+overfilled slots remain physically owned and are reported as over-capacity.
+Pickup is blocked, while delivery, unloading and recovery remain available and
+reduce the condition safely. A 90→89 regression retains all six carried stacks,
+then clears over-capacity only as sufficient cargo is delivered.
+
+The development-only Resources panel can create one canonical **7 Soil** stack
+at the validated Colony fixture cell. It uses the same registry API as gameplay
+producers and does not alter normal quantity-one Node yields. Existing badge
+rules are retained: loose stacks and non-empty Storage show committed quantity
+continuously; Nodes show quantity only when designated; reservations are never
+presented as moved material.
+
 Production Node yields remain quantity-one, Surface Nodes remain
-`GenerationOnly`, and the accepted B3C.2A quantity-badge rules are unchanged.
-`WV-B3B-LIM-001` remains active. WV-B3C.2B requires separate implementation,
-automated validation and manual Unity acceptance before it can be complete.
+`GenerationOnly`, and partial Node Extraction, variable Node yields, general
+multi-cell overflow distribution and Placement migration remain unimplemented.
+`WV-B3B-LIM-001` remains active. WV-B3C.2B cannot be marked complete until the
+manual checklist below is confirmed.
+
+### WV-B3C.2B automated verification
+
+Unity `6000.3.8f1` XML evidence records **54/54 focused Edit Mode** across the
+inventory/skill suite (31/31) and transfer/Hauling suite (23/23), **5/5 focused
+Play Mode**, **583/583 complete graphics-enabled Edit Mode**, **79/79 complete
+Play Mode**, and a separate **1/1 inventory-drop compatibility recheck**. All
+record zero failures, skips and inconclusive results. Evidence is retained in
+`Logs/WV-B3C2B-Inventory-EditMode.xml`,
+`Logs/WV-B3C2B-Hauling-EditMode.xml`,
+`Logs/WV-B3C2B-Focused-PlayMode.xml`,
+`Logs/WV-B3C2B-Full-EditMode.xml`,
+`Logs/WV-B3C2B-Full-PlayMode.xml` and
+`Logs/WV-B3C2B-InventoryDrop-Recheck.xml`, with corresponding logs. The tested
+implementation is the current uncommitted working tree over parent baseline
+`ba8b4946c5d273b60ce90d25e946ac645b7b0876`; that parent is provenance, not a
+claim that it contains WV-B3C.2B.
+
+### WV-B3C.2B manual Unity acceptance — pending
+
+1. Start the development fixture and create the Developer Only 7 Soil stack.
+2. Confirm its continuous initial badge shows 7 and record its Stack ID.
+3. Enable compatible Hauling and confirm the first trip reserves no more than
+   the ant's current allowance and destination capacity.
+4. While only reserved/travelling, confirm the ground badge remains 7.
+5. On pickup, confirm the badge drops by the exact carried quantity and the
+   positive remainder keeps the same Stack ID.
+6. Confirm the ant inventory owns exactly the picked-up amount.
+7. Confirm delivery increases Storage or Construction staging exactly once.
+8. Confirm later trips continue automatically until the stack reaches zero.
+9. Confirm the ground stack disappears only at zero.
+10. Cancel before pickup; confirm the source and both capacities are unchanged.
+11. Cancel after pickup; confirm cargo remains on the carrier and is recoverable.
+12. Invalidate or fill a destination; confirm carried material is not lost or
+    duplicated and another valid destination/recovery can be used.
+13. Confirm an over-capacity carrier caused by a Hauling threshold loss cannot
+    pick up more material but can unload all existing cargo safely.
+14. Confirm level 90 allows six slots at six base units and level 100 adds no
+    further carrying capacity.
+15. Generate founding-colony seed `2203` and confirm quantity-one Soil/Stone
+    Extraction, Hauling, staging and Construction still function.
+16. Confirm existing Hauling XP/activity and ordinary inactivity decay work;
+    Extraction, Construction and Foraging progression remain unchanged.
+17. Confirm job priorities/fair selection and Mara/Pip/Tala development-fixture
+    behavior remain functional.
+18. Switch Colony/World views and traverse the entrance; confirm no badge leaks
+    and quantities/identities remain stable.
+19. Rebuild the scenario and confirm prior Stack and transfer IDs cannot act on
+    the restored scenario and no reservation survives.
+20. Confirm generated Surface Nodes remain `GenerationOnly`.
+21. Exit Play Mode and confirm there are no new Console errors or exceptions.
 
 ## WV-B3C.2A canonical ground stacks — 16 October 2026
 
@@ -1245,13 +1333,13 @@ Material Storage is pre-authored for this slice; ants cannot construct or conver
 
 **Status: COMPLETE — all 26 manual Unity Play Mode acceptance checks confirmed by the user on 13 October 2026.** Previously reported focused Edit Mode 26/26, focused Play Mode 5/5, full graphics-enabled Edit Mode 432/432 and full Play Mode 42/42 passed; no new tests were run in this documentation-only update. Milestone 3.3B is also complete. Milestone 3.3C adds only authoritative personal inventory and explicit physical material transfers; it does not add autonomous hauling, stockpiles, Material Storage, construction or a colony resource wallet.
 
-Every `AntRecord` owns one plain-C# `AntInventory`, so inventory survives visual replacement and remains independent of selection, navigation and UI. Soil and Stone use stable resource IDs and a provisional maximum stack of **10**. Compatible material first fills compatible partial stacks, then empty natural slots. Hauling determines natural slot count: levels 0–19 grant one slot; 20–39 two; 40–59 three; 60–79 four; and 80–100 five. Caste and Strength do not affect this value. If inactivity decay reduces capacity below occupied slot count, existing stacks remain intact and recoverable, while new additions are refused until usage is again within natural capacity.
+Every `AntRecord` owns one plain-C# `AntInventory`, so inventory survives visual replacement and remains independent of selection, navigation and UI. Soil and Stone use stable resource IDs and a provisional resource maximum stack of **10**. The later WV-B3C.2B capacity contract supersedes the original 3.3C slot-only progression: levels 0–19 grant 2 slots at 2 base units each; 20–39 grant 3×2; 40–59 grant 3×3; 60–74 grant 4×4; 75–89 grant 5×5; and 90–100 grant 6×6. Compatible material fills slots only to the lower resource/band limit. Caste and Strength do not affect this value. If inactivity decay lowers either allowance, existing cargo remains intact and recoverable, over-capacity inventory refuses new additions, and safe delivery/unloading remains enabled.
 
 Historical 3.3C behavior sent excavation output to inventory first. Milestone 3.5B supersedes that path: `ExcavationWorldTransaction` now preflights the full loose-drop yield before foreground removal and never mutates the excavator's inventory. The stable job output key prevents retry duplication. If the required output cannot be represented, the foreground Solid remains intact. The accepted Background preservation, projection refresh, collision update, navigation invalidation, progress and XP rules remain unchanged.
 
 Loose `WorldMaterialDrop` data now includes maximum stack size, compatible same-cell merging, partial removal and a single-owner pickup reservation. A selected active ant can right-click a drop, navigate through the existing grid motor to the least-cost valid adjacent anchor, revalidate capacity and transfer its reserved quantity. Cancellation, replacement, failure, disable/death handling and world replacement release the reservation. Developer Only selected-ant controls can add/fill/remove test material, drop a selected quantity at the ant's valid current anchor, or reset only that ant's inventory. All successful pickup/drop operations remove from one authoritative owner and add the same quantity to the other; failed operations preserve the source.
 
-The deterministic development scene contains a four-unit Soil drop and a three-unit Stone drop in addition to the accepted excavation fixtures. World rebuild recreates records with empty independent inventories and restores these authored drops without stale reservations. The selected-ant panel shows natural capacity, occupied slots, each resource/quantity/maximum, free compatible capacity, total carried quantity, Hauling level and the next unlock.
+The deterministic development scene contains a four-unit Soil drop and a three-unit Stone drop in addition to the accepted excavation fixtures. WV-B3C.2B adds a Developer Only action for a validated seven-unit Soil stack. World rebuild recreates records with empty independent inventories and restores authored defaults without stale reservations. The selected-ant panel shows the current slot and units-per-slot allowance, occupied slots, effective normal per-slot quantities, over-capacity state, free compatible capacity, total carried quantity, Hauling level and the next band.
 
 ### 3.3C automated verification
 
@@ -1946,7 +2034,7 @@ Milestones through accepted 3.3C retain their recorded status. Milestone 2.4D re
 - Navigation connections may be directional; diagonal corner-cutting through blocking geometry remains invalid.
 - Every ant starts every ordinary skill at 0, can perform ordinary tasks without a specialist gate, and improves from successful work on a 0–100 scale. Roles remain preferences and priorities.
 - Independently tracked skills above 50 slowly decay after inactivity and stop at exactly 50; skills at or below 50 do not decay through inactivity.
-- The proposed carrying system remains future work: one initial carrying slot plus one slot per 20 Hauling skill, capped at five slots, with one item per slot.
+- Historical note: the then-proposed one-through-five carrying model was later implemented and has since been superseded by WV-B3C.2B's approved six slots-and-units capacity bands.
 - Multiple ants may share a tile and use hybrid separation, local avoidance and bounded recovery rather than universal one-ant-per-tile occupancy.
 - Friendly, neutral and hostile colonies share the same terrain navigation model.
 - The proposed architecture separates world tile data, terrain/excavation and preparation changes, physical clearance, Background movement capability, directional navigation, colony task decisions, per-ant route following, continuous movement, local avoidance and authoritative collision.

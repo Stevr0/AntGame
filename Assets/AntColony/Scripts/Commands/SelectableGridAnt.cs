@@ -46,6 +46,7 @@ namespace AntColony.Commands
         private WorldMaterialDropRegistry materialDrops;
         private MaterialPickupOrder pickupOrder;
         private MaterialStorageWorld materialStorage;
+        private MaterialTransferRegistry materialTransfers;
         private MaterialHaulingOrder haulingOrder;
         private ConstructionDesignationRegistry constructionDesignations;
         private ConstructionWorldTransaction constructionTransaction;
@@ -204,10 +205,12 @@ namespace AntColony.Commands
             pickupOrder = null;
         }
 
-        public void BindMaterialHauling(MaterialStorageWorld storage)
+        public void BindMaterialHauling(MaterialStorageWorld storage,
+            MaterialTransferRegistry transfers = null)
         {
             haulingOrder?.Cancel("Material Storage world was replaced.");
             materialStorage = storage;
+            materialTransfers = transfers;
             haulingOrder = null;
         }
 
@@ -434,7 +437,8 @@ namespace AntColony.Commands
             motor.CancelMovement("Hauling is choosing physical transfer positions.");
             Vector2Int start = WorldTileCoordinates.WorldPositionToCell(motor.Position);
             if (!MaterialHaulingOrder.TryCreate(colonyJobs,
-                    motor.NavigationWorld?.Map, materialDrops, materialStorage,
+                    motor.NavigationWorld?.Map, materialDrops, materialTransfers,
+                    materialStorage,
                     constructionDesignations, Record, plan, sourceApproach, start,
                     out haulingOrder, out string error))
             {

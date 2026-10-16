@@ -1,10 +1,10 @@
 # WV-B3C Resource Node and Loose Resource Integration Plan
 
 **Status:** B3C.1 and B3C.2A are complete after their recorded automated and
-user-confirmed manual acceptance. The dedicated
-[`PartialHaulingIntegrationPlan.md`](PartialHaulingIntegrationPlan.md) makes
-B3C.2B implementation-ready, but no B3C.2B runtime work is authorised or
-complete. B3C.3 remains planning only.
+user-confirmed manual acceptance. B3C.2B partial Hauling and replay-safe stack
+transactions are implemented from
+[`PartialHaulingIntegrationPlan.md`](PartialHaulingIntegrationPlan.md) and await
+manual Unity acceptance. B3C.3 remains planning only.
 
 **Prepared:** 15 October 2026
 
@@ -24,13 +24,14 @@ Completed improvements and their migration are defined separately in
 [`ConstructionPlacementSpecification.md`](ConstructionPlacementSpecification.md);
 no Placement migration belongs to B3C.2 or B3C.3.
 
-**B3C.2B planning amendment — 16 October 2026:** Partial Hauling is specified as
+**B3C.2B implementation amendment — 16 October 2026:** Partial Hauling uses
 successive exact one-trip transfers over the B3C.2A canonical stack authority.
 The transfer ID is distinct from Stack, job, ant and producer operation IDs;
 exclusive reservations become transfer-owned; committed carrier quantity stays
 in `AntInventory`; replay and recovery are explicit. Deterministic prepared
-multi-cell placement is limited to conserving recovery/tests until B3C.3
-activates variable whole-node output.
+general multi-cell placement remains deferred until a separately approved gate;
+B3C.3 has not activated variable whole-node output. The approved 0–100 Hauling
+capacity bands and existing shared skill-decay contract apply to carrier space.
 
 ## 1. Scope and decision labels
 

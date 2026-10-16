@@ -1,6 +1,6 @@
 # Design Decision Log
 
-## 2026-10-16 — Prepare partial Hauling around one exact transfer identity
+## 2026-10-16 — Implement partial Hauling around one exact transfer identity
 
 - Keep physical quantity in the current ground, ant inventory, Material Storage
   or Construction staging authority; a transaction coordinator records phases
@@ -14,9 +14,13 @@
 - Keep cancellation/invalidation cargo in authoritative carrier inventory and
   recover it through an explicit owner-only transfer. Badges continue to show
   committed quantities, not reservations.
-- This records an implementation-ready recommendation, not runtime approval or
-  completion. Variable Nodes, Surface resources, Placement migration,
-  persistence and `WV-B3B-LIM-001` remain outside the slice.
+- Implement the approved 0–100 Hauling bands (2×2, 3×2, 3×3, 4×4, 5×5 and
+  6×6), reuse shared decay above 50, retain threshold-crossing cargo as
+  over-capacity and block only new pickup.
+- Runtime implementation is complete and automated validation is recorded;
+  manual acceptance remains pending. Variable Nodes, general multi-cell output,
+  Surface resources, Placement migration, persistence and `WV-B3B-LIM-001`
+  remain outside the slice.
 
 ## 2026-10-16 — Keep high-density Node quantities contextual
 

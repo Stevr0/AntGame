@@ -28,22 +28,29 @@ namespace AntColony.Tests.EditMode
             EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
         }
 
-        [TestCase(0, 1)]
-        [TestCase(19, 1)]
-        [TestCase(20, 2)]
-        [TestCase(39, 2)]
-        [TestCase(40, 3)]
-        [TestCase(59, 3)]
-        [TestCase(60, 4)]
-        [TestCase(79, 4)]
-        [TestCase(80, 5)]
-        [TestCase(100, 5)]
-        public void HaulingLevelDeterminesNaturalSlotCapacity(int level, int expected)
+        [TestCase(0, 2, 2)]
+        [TestCase(19, 2, 2)]
+        [TestCase(20, 3, 2)]
+        [TestCase(39, 3, 2)]
+        [TestCase(40, 3, 3)]
+        [TestCase(59, 3, 3)]
+        [TestCase(60, 4, 4)]
+        [TestCase(74, 4, 4)]
+        [TestCase(75, 5, 5)]
+        [TestCase(89, 5, 5)]
+        [TestCase(90, 6, 6)]
+        [TestCase(100, 6, 6)]
+        public void HaulingLevelDeterminesApprovedCapacityBand(int level,
+            int expectedSlots, int expectedUnitsPerSlot)
         {
             AntRecord ant = CreateRecord($"level-{level}");
             SetExactHaulingLevel(ant, level);
 
-            Assert.That(ant.Inventory.NaturalSlotCapacity, Is.EqualTo(expected));
+            Assert.That(ant.Inventory.NaturalSlotCapacity, Is.EqualTo(expectedSlots));
+            Assert.That(ant.Inventory.BaseUnitsPerSlot,
+                Is.EqualTo(expectedUnitsPerSlot));
+            Assert.That(ant.Inventory.NormalTotalCapacity,
+                Is.EqualTo(expectedSlots * expectedUnitsPerSlot));
         }
 
         [Test]
@@ -63,43 +70,43 @@ namespace AntColony.Tests.EditMode
         public void InventoryMergesThenSplitsIntoBoundedStacks()
         {
             AntRecord ant = CreateRecord("stacking");
-            SetExactHaulingLevel(ant, 20);
+            SetExactHaulingLevel(ant, 90);
 
             Assert.That(ant.Inventory.TryAdd(MaterialResourceCatalog.GetStableId(
-                ExcavatedMaterialType.Soil), 16, 10, false, out int added,
+                ExcavatedMaterialType.Soil), 14, 10, false, out int added,
                 out string error), Is.True, error);
-            Assert.That(added, Is.EqualTo(16));
+            Assert.That(added, Is.EqualTo(14));
             Assert.That(ant.Inventory.OccupiedSlots.Select(slot => slot.Quantity),
-                Is.EqualTo(new[] { 10, 6 }));
+                Is.EqualTo(new[] { 6, 6, 2 }));
             Assert.That(ant.Inventory.GetAvailableCapacity(
                 MaterialResourceCatalog.GetStableId(ExcavatedMaterialType.Soil), 10),
-                Is.EqualTo(4));
+                Is.EqualTo(22));
         }
 
         [Test]
         public void IncompatibleMaterialNeedsItsOwnSlotAndFullAddIsAtomic()
         {
             AntRecord ant = CreateRecord("incompatible");
-            Assert.That(ant.Inventory.TryAdd("material.soil", 5, 10, false,
+            Assert.That(ant.Inventory.TryAdd("material.soil", 2, 10, false,
                 out _, out _), Is.True);
 
-            Assert.That(ant.Inventory.TryAdd("material.stone", 1, 10, false,
+            Assert.That(ant.Inventory.TryAdd("material.stone", 3, 10, false,
                 out int added, out _), Is.False);
             Assert.That(added, Is.Zero);
-            Assert.That(ant.Inventory.TotalQuantity, Is.EqualTo(5));
+            Assert.That(ant.Inventory.TotalQuantity, Is.EqualTo(2));
         }
 
         [Test]
         public void PartialAddUsesOnlyAvailableCapacity()
         {
             AntRecord ant = CreateRecord("partial");
-            Assert.That(ant.Inventory.TryAdd("material.soil", 8, 10, false,
+            Assert.That(ant.Inventory.TryAdd("material.soil", 3, 10, false,
                 out _, out _), Is.True);
 
             Assert.That(ant.Inventory.TryAdd("material.soil", 5, 10, true,
                 out int added, out string error), Is.True, error);
-            Assert.That(added, Is.EqualTo(2));
-            Assert.That(ant.Inventory.TotalQuantity, Is.EqualTo(10));
+            Assert.That(added, Is.EqualTo(1));
+            Assert.That(ant.Inventory.TotalQuantity, Is.EqualTo(4));
         }
 
         [Test]
@@ -123,15 +130,63 @@ namespace AntColony.Tests.EditMode
                 100d, 10d, inactivityGraceHours: 0d, decayLevelsPerHour: 10d);
             AntRecord ant = CreateRecord("decay", settings);
             SetExactHaulingLevel(ant, 60);
-            Assert.That(ant.Inventory.TryAdd("material.soil", 40, 10, false,
+            Assert.That(ant.Inventory.TryAdd("material.soil", 16, 10, false,
                 out _, out _), Is.True);
 
             Assert.That(ant.TryAdvanceSkillDecay(1d, out _), Is.True);
             Assert.That(ant.Inventory.NaturalSlotCapacity, Is.EqualTo(3));
             Assert.That(ant.Inventory.OccupiedSlotCount, Is.EqualTo(4));
-            Assert.That(ant.Inventory.TotalQuantity, Is.EqualTo(40));
+            Assert.That(ant.Inventory.BaseUnitsPerSlot, Is.EqualTo(3));
+            Assert.That(ant.Inventory.TotalQuantity, Is.EqualTo(16));
+            Assert.That(ant.Inventory.IsOverCapacity, Is.True);
             Assert.That(ant.Inventory.TryAdd("material.soil", 1, 10, true,
                 out _, out _), Is.False);
+        }
+
+        [Test]
+        public void DecayFromNinetyToEightyNinePreservesCargoUntilSafeDelivery()
+        {
+            var settings = new AntSkillProgressionSettings(
+                100d, 10d, inactivityGraceHours: 0d, decayLevelsPerHour: 1d);
+            AntRecord ant = CreateRecord("decay-90", settings);
+            SetExactHaulingLevel(ant, 90);
+            Assert.That(ant.Inventory.TryAdd("material.soil", 36, 10, false,
+                out _, out string error), Is.True, error);
+
+            Assert.That(ant.TryAdvanceSkillDecay(1d, out error), Is.True, error);
+            Assert.That(ant.Skills.Get(AntSkillId.Hauling).Level, Is.EqualTo(89));
+            Assert.That(ant.Inventory.NaturalSlotCapacity, Is.EqualTo(5));
+            Assert.That(ant.Inventory.BaseUnitsPerSlot, Is.EqualTo(5));
+            Assert.That(ant.Inventory.TotalQuantity, Is.EqualTo(36));
+            Assert.That(ant.Inventory.IsOverCapacity, Is.True);
+            Assert.That(ant.Inventory.TryAdd("material.soil", 1, 10, true,
+                out _, out _), Is.False);
+
+            Assert.That(ant.Inventory.TryRemoveResource("material.soil", 11, 10,
+                out error), Is.True, error);
+            Assert.That(ant.Inventory.TotalQuantity, Is.EqualTo(25));
+            Assert.That(ant.Inventory.IsOverCapacity, Is.False);
+        }
+
+        [Test]
+        public void TransferAllocationProtectsCargoUntilDeliveryOrRecovery()
+        {
+            AntRecord ant = CreateRecord("allocated");
+            Assert.That(ant.Inventory.TryAddAllocated("transfer.1", "material.soil",
+                3, 10, out string error), Is.True, error);
+            Assert.That(ant.Inventory.AllocatedQuantity, Is.EqualTo(3));
+            Assert.That(ant.Inventory.TryRemoveResource("material.soil", 1, 10,
+                out _), Is.False);
+            Assert.That(ant.Inventory.TryRemoveAllocated("transfer.1",
+                "material.soil", 3, 10, out error), Is.True, error);
+            Assert.That(ant.Inventory.TotalQuantity, Is.Zero);
+            Assert.That(ant.Inventory.AllocatedQuantity, Is.Zero);
+
+            Assert.That(ant.Inventory.TryAddAllocated("transfer.2", "material.soil",
+                2, 10, out error), Is.True, error);
+            ant.Inventory.ReleaseAllocation("transfer.2");
+            Assert.That(ant.Inventory.GetUnallocatedQuantity("material.soil", 10),
+                Is.EqualTo(2));
         }
 
         [Test]
@@ -160,6 +215,7 @@ namespace AntColony.Tests.EditMode
             WorldMaterialDropRegistry drops = CreateExcavationWorld(1,
                 out _, out ExcavationWorldTransaction transaction);
             AntRecord ant = CreateRecord("partial");
+            SetExactHaulingLevel(ant, 40);
             Assert.That(ant.Inventory.TryAdd("material.soil", 5, 10, false,
                 out _, out _), Is.True);
 
@@ -175,6 +231,7 @@ namespace AntColony.Tests.EditMode
             WorldMaterialDropRegistry drops = CreateExcavationWorld(1,
                 out _, out ExcavationWorldTransaction transaction);
             AntRecord ant = CreateRecord("fallback");
+            SetExactHaulingLevel(ant, 90);
             ant.Inventory.TryAdd("material.soil", 10, 10, false, out _, out _);
 
             Assert.That(transaction.TryCommit("excavate.fallback", Vector2Int.zero,
@@ -282,7 +339,7 @@ namespace AntColony.Tests.EditMode
             Assert.That(MaterialPickupOrder.TryCreate(host.MaterialDrops,
                 host.GridNavigationMap, ant, drop, approach,
                 out MaterialPickupOrder order, out string error), Is.True, error);
-            ant.Inventory.TryAdd("material.stone", 10, 10, false, out _, out _);
+            ant.Inventory.TryAdd("material.stone", 4, 10, false, out _, out _);
 
             Assert.That(order.TryComplete(approach), Is.False);
             Assert.That(host.MaterialDrops.TryGet(drop.OwnershipKey,
@@ -299,7 +356,7 @@ namespace AntColony.Tests.EditMode
             host.MaterialDrops.TryFindAtCell(AntGameDevelopmentWorldHost.SoilDropFixture,
                 out WorldMaterialDrop drop);
             AntRecord ant = CreateRecord("pickup");
-            ant.Inventory.TryAdd("material.soil", 8, 10, false, out _, out _);
+            ant.Inventory.TryAdd("material.soil", 2, 10, false, out _, out _);
             Vector2Int start = new(-10, SampleWorldGenerator.MainPassageY);
             SurvivalInteractionOrder.TryMeasureApproach(host.GridNavigationMap,
                 start, drop.WorldCell, out Vector2Int approach, out _, out _);
@@ -309,7 +366,7 @@ namespace AntColony.Tests.EditMode
 
             Assert.That(order.TryComplete(approach), Is.True);
             Assert.That(order.CollectedQuantity, Is.EqualTo(2));
-            Assert.That(ant.Inventory.TotalQuantity, Is.EqualTo(10));
+            Assert.That(ant.Inventory.TotalQuantity, Is.EqualTo(4));
             Assert.That(host.MaterialDrops.TryGet(drop.OwnershipKey,
                 out WorldMaterialDrop remainder), Is.True);
             Assert.That(remainder.Quantity, Is.EqualTo(drop.Quantity - 2));
@@ -324,6 +381,7 @@ namespace AntColony.Tests.EditMode
             drops.TryAdd("existing", ExcavatedMaterialType.Soil, 5, cell,
                 out _, out _);
             AntRecord ant = CreateRecord("dropper");
+            SetExactHaulingLevel(ant, 90);
             ant.Inventory.TryAdd("material.soil", 4, 10, false, out _, out _);
 
             Assert.That(MaterialDropTransaction.TryDrop(ant.Inventory, 0, 4,
@@ -340,6 +398,7 @@ namespace AntColony.Tests.EditMode
             AntGameDevelopmentWorldHost host = OpenHost();
             var drops = new WorldMaterialDropRegistry();
             AntRecord ant = CreateRecord("blocked-drop");
+            SetExactHaulingLevel(ant, 90);
             ant.Inventory.TryAdd("material.soil", 4, 10, false, out _, out _);
 
             Assert.That(MaterialDropTransaction.TryDrop(ant.Inventory, 0, 4,

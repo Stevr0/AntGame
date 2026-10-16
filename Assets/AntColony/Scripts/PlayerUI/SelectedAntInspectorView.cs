@@ -57,9 +57,13 @@ namespace AntColony.PlayerUI
                 builder.AppendLine($"  {skill.Definition.DisplayName}: {skill.Level}");
             builder.AppendLine();
             builder.AppendLine("Inventory");
+            builder.AppendLine($"  Allowance: {record.Inventory.NaturalSlotCapacity} slots × " +
+                $"{record.Inventory.BaseUnitsPerSlot} units" +
+                (record.Inventory.IsOverCapacity ? " · Over capacity" : string.Empty));
             if (record.Inventory.OccupiedSlots.Count == 0) builder.AppendLine("  Empty");
             foreach (AntInventorySlot slot in record.Inventory.OccupiedSlots)
-                builder.AppendLine($"  {ReadableResource(slot.ResourceTypeId)} {slot.Quantity}/{slot.MaximumStack}");
+                builder.AppendLine($"  {ReadableResource(slot.ResourceTypeId)} " +
+                    $"{slot.Quantity}/{Mathf.Min(slot.MaximumStack, record.Inventory.BaseUnitsPerSlot)} normal");
             builder.AppendLine();
             builder.AppendLine("Activity");
             builder.AppendLine($"  {ant.ControlState}: {ant.OrderStatus}");

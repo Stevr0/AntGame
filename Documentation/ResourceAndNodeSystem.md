@@ -248,31 +248,40 @@ the ID; cell reuse creates a new ID; scenario replacement creates a new context.
 
 The unified-cell snapshot reads this registry directly. Ant inventory,
 Construction staging and Material Storage remain distinct capacities and
-authorities. Current quantity-one Node Extraction, partial pickup/Hauling and
-Construction behavior are preserved. B3C.2B multi-cell overflow recovery and
+authorities. Current quantity-one Node Extraction and Construction behavior are
+preserved. B3C.2B partial Hauling and replay-safe canonical stack transactions
+are implemented; general multi-cell overflow/pending-output distribution and
 B3C.3 variable Node authority/transaction cutover remain unimplemented.
 
 The user confirmed all **23/23 authoritative manual checks passed** after the
 recorded automated suites passed. WV-B3C.2A is complete; this documentation-only
 closure did not rerun Unity tests.
 
-### WV-B3C.2B — implementation-ready planning; runtime unstarted
+### WV-B3C.2B — implemented; manual acceptance pending
 
-The approved physical rules above are elaborated by the documentation-only
+The approved physical rules above are implemented from the
 [Partial Hauling and Canonical Stack Transaction Plan](PartialHaulingIntegrationPlan.md).
-It proposes a scenario-local transfer identity distinct from Stack, job, ant and
+The runtime uses a scenario-local transfer identity distinct from Stack, job, ant and
 producer-operation identity. One exact transfer quantity is bounded by available
 source, compatible ant capacity and reserved destination capacity; the source
 keeps its Stack ID while positive. Pickup and delivery become replay-safe phase
 commits while physical quantity remains in the current ground, inventory,
 Storage or Construction-staging authority.
 
-The proposed first implementation retains exclusive source/destination
+The implementation retains exclusive transfer-owned source/destination
 reservations and performs multiple large-stack moves as successive one-trip
-jobs. Same-type merges, capacity rejection and current-owner retention on no-fit
-remain authoritative. Prepared deterministic multi-cell placement supports
-conserving recovery/tests without enabling variable Node output. Runtime code is
-unchanged, and B3C.2B is not complete or authorised by this plan.
+jobs. A transfer-owned inventory allocation prevents unrelated removal of
+in-flight cargo. Replay cannot reapply pickup or delivery; cancellation and
+destination failure retain cargo with an explicit recovery outcome; scenario
+replacement invalidates old transfers. Same-type merges, capacity rejection and
+current-owner retention on no-fit remain authoritative. General deterministic
+multi-cell placement remains deferred and variable Node output is not enabled.
+B3C.2B is awaiting manual Unity acceptance.
+
+The authoritative Hauling bands are 0–19 = 2 slots × 2 units, 20–39 = 3×2,
+40–59 = 3×3, 60–74 = 4×4, 75–89 = 5×5 and 90–100 = 6×6. The shared 0–100
+progression and decay rules are unchanged. Capacity loss retains all cargo,
+marks it over-capacity, blocks pickup and permits delivery/recovery.
 
 ### Quantity-badge presentation contract
 
@@ -301,9 +310,10 @@ gates:
 1. **B3C.2A — Resource Definitions and canonical stack authority (complete):** introduce
    Soil/Stone definitions, stable Stack IDs, one-stack/type/capacity validation,
    revisions and legacy-drop migration without changing Extraction yields.
-2. **B3C.2B — deterministic placement and pending-output recovery:** add bounded
-   multi-cell capacity reservation, overflow placement, replay protection and
-   recovery while retaining quantity-one Nodes.
+2. **B3C.2B — partial Hauling and stack transactions (implemented; manual
+   pending):** exact transfer identity/replay, partial pickup/delivery, carrier
+   allocation, recovery and successive trips while retaining quantity-one Nodes.
+   General bounded multi-cell output placement remains future work.
 3. **B3C.3A — active variable-quantity Colony Nodes:** make the registry the sole
    Soil/Stone quantity owner and project Solid occupancy without changing
    Surface resources.
