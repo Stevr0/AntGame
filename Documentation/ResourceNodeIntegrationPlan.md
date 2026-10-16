@@ -383,12 +383,9 @@ B3C.3 makes the atomic writer/read cutover.
 
 ### B3C.2 — Canonical loose-resource authority
 
-**B3C.2A implementation update — 16 October 2026:** automated validation passed
-and manual acceptance is partially confirmed. The user accepted 20/20 summary
-checks, but their item text is unavailable and cannot be mapped safely to the
-authoritative 23-step checklist; presentation checks 18–23 require explicit
-reconciliation. `GroundStackId` uses a fresh
-controlled scenario context plus monotonic local creation sequence; operation
+**B3C.2A closure — 16 October 2026:** complete after automated validation and
+user-confirmed **23/23 authoritative manual acceptance**. `GroundStackId` uses
+a fresh controlled scenario context plus monotonic local creation sequence; operation
 keys remain separate exact-once replay guards. The registry now enforces one
 stack/type per cell, stable identity across merges and partial pickup,
 resource-defined provisional Soil/Stone capacity 10, reservation/availability
@@ -401,8 +398,9 @@ Solids/Nodes, completed functional Placements and unknown details fail before
 source consumption. Extraction retains a narrow preflight exception for its
 exact source Solid. The explicit inventory-drop command also retains its
 validated current-anchor behavior on legacy functional Backgrounds until WV-B3D;
-ordinary producers cannot use that compatibility exception. The unified read adapter exposes authoritative immutable
-stack details. Existing pickup/Hauling/Storage/Construction callers use the
+ordinary producers cannot use that compatibility exception. The unified read
+adapter exposes authoritative immutable stack details. Existing
+pickup/Hauling/Storage/Construction callers use the
 returned canonical ID; no parallel registry or legacy alias authority exists.
 Generated Surface Nodes remain `GenerationOnly`.
 

@@ -1,6 +1,6 @@
 # Ant Colony Development Roadmap
 
-## WV-B3C.2A — Automated tests passed; manual acceptance partially confirmed (16 October 2026)
+## WV-B3C.2A — Complete (16 October 2026)
 
 The existing `WorldMaterialDropRegistry` now owns canonical Soil/Stone ground
 stacks: stable scenario-local IDs, one stack and one resource type per cell,
@@ -16,14 +16,13 @@ Hauling, Construction staging, Material Storage and Construction are preserved.
 Scenario rebuilds create a new identity context and cannot resolve old stack
 IDs or reservations. XML-backed validation passes **16/16 focused Edit**,
 **21/21 focused Play**, **575/575 complete graphics-enabled Edit** and **79/79
-complete Play**, with zero failures, skips or inconclusive results. Manual Unity
-summary acceptance is recorded as **20/20 passed**, but the summary text cannot
-be mapped safely onto the authoritative 23-step checklist. Checks 18–23 require
-explicit reconciliation, so WV-B3C.2A is not yet complete. No Unity tests were
-rerun for this documentation-only status update.
+complete Play**, plus the **1/1 inventory-drop compatibility recheck**, with
+zero failures, skips or inconclusive results. Manual Unity acceptance is
+confirmed at **23/23 passed**. WV-B3C.2A is complete. No Unity tests were rerun
+for this documentation-only closure.
 
-The next smallest milestone after acceptance is **WV-B3C.2B** deterministic
-multi-cell overflow and recoverable pending output. It has not started. Variable
+The next candidate milestone is **WV-B3C.2B** deterministic multi-cell overflow
+and recoverable pending output. It has not started or been authorised. Variable
 Node quantities/Extraction cutover remain WV-B3C.3; Placement migration remains
 WV-B3D; Surface resource gameplay and WV-C1 remain deferred. Generated Surface
 Nodes stay `GenerationOnly`, and `WV-B3B-LIM-001` remains active.

@@ -2,10 +2,9 @@
 
 ## WV-B3C.2A canonical ground stacks
 
-Automated validation passed. Manual acceptance is partially confirmed: the user
-accepted 20/20 supplied summary checks, but their text cannot be mapped safely
-to the authoritative 23-step checklist. Presentation checks 18–23 remain open;
-this documentation-only reconciliation did not rerun Unity tests.
+**Complete.** Automated validation passed and the user confirmed all **23/23
+authoritative manual checks passed**. This documentation-only closure did not
+rerun Unity tests.
 
 The Colony loose occupant now reads one canonical `WorldMaterialDropRegistry`
 stack rather than aggregating operation-keyed records. Each active stack exposes
@@ -149,11 +148,13 @@ unloading or complex scenario restoration.
    557/557 complete Edit and 77/77 complete Play; manual acceptance 16/16.
 2. **WV-B3C.1 — inactive Colony Nodes (complete):** stable
    quantity-one candidate records and invalidation without moving writers.
-3. **WV-B3C.2A/B — resources and physical output (unstarted):** Resource
-   Definitions, canonical stacks, deterministic overflow and pending recovery.
-4. **WV-B3C.3A/B — active Nodes and Extraction (unstarted):** variable Colony
+3. **WV-B3C.2A — canonical stacks (complete):** Resource Definitions, stable
+   stack identity, one stack/type per cell, capacity, reservations and revisions.
+4. **WV-B3C.2B — overflow recovery (unstarted):** deterministic multi-cell
+   overflow and recoverable pending output.
+5. **WV-B3C.3A/B — active Nodes and Extraction (unstarted):** variable Colony
    quantity authority followed by whole-node transaction cutover.
-5. **WV-B3D — Placements:** site/Placement occupancy and one-function-at-a-time
+6. **WV-B3D — Placements:** site/Placement occupancy and one-function-at-a-time
    migration of functional Backgrounds, beginning with Material Storage.
 
 These are candidate scopes, not implementation authorisation. Each slice keeps

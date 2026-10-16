@@ -2,11 +2,9 @@
 
 ## WV-B3C.2A acceptance status
 
-Automated validation is complete and the user confirmed 20/20 supplied manual
-summary checks. Because the summary text is unavailable for safe comparison
-with the authoritative 23-step checklist, manual acceptance remains partially
-confirmed. Presentation checks 18–23 require explicit reconciliation. No Unity
-tests were rerun for this documentation-only update.
+**Complete.** Automated validation passed and the user confirmed all **23/23
+authoritative manual checks passed**. No Unity tests were rerun for this
+documentation-only closure.
 
 ## Quantity badges
 

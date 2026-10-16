@@ -1,6 +1,6 @@
 # Development Roadmap
 
-## WV-B3C.2A — automated tests passed; manual acceptance partially confirmed
+## WV-B3C.2A — complete
 
 `WorldMaterialDropRegistry` now provides the canonical Soil/Stone ground-stack
 authority: scenario-local IDs, one stack/type per cell, provisional
@@ -11,12 +11,12 @@ the registry directly. Existing Extraction, Hauling, Storage, staged
 Construction and quantity-one Nodes remain otherwise unchanged.
 
 XML-backed suites pass 16/16 focused Edit, 21/21 focused Play, 575/575 complete
-graphics-enabled Edit and 79/79 complete Play. The 23-step pending manual checklist is in
+graphics-enabled Edit and 79/79 complete Play, plus the 1/1 inventory-drop
+compatibility recheck. The user confirmed the full 23/23 authoritative manual
+checklist passed; the accepted checklist is in
 the authoritative [Current Game State](https://github.com/Stevr0/AntGame/blob/main/Documentation/CurrentGameState.md).
-The user confirmed 20/20 summary checks, but their text cannot be mapped safely
-to that checklist; presentation checks 18–23 remain explicitly unresolved.
-B3C.2B, B3C.3, WV-B3D and WV-C1
-have not begun; Surface Nodes remain `GenerationOnly` and `WV-B3B-LIM-001`
+B3C.2B, B3C.3, WV-B3D and WV-C1 have not begun; Surface Nodes remain
+`GenerationOnly` and `WV-B3B-LIM-001`
 still applies.
 
 ## WV-B3C.1 — complete

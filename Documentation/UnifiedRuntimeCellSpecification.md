@@ -555,10 +555,8 @@ closure did not rerun Unity.
 
 #### WV-B3C.2A implementation status — 16 October 2026
 
-**Automated Tests Passed — Manual Acceptance Partially Confirmed.** The user
-confirmed 20/20 summary checks, but the summary text is unavailable for a safe
-item-by-item mapping to the authoritative 23-step checklist. Presentation checks
-18–23 require explicit reconciliation before closure. The
+**WV-B3C.2A — Complete.** Automated validation passed and the user confirmed all
+**23/23 authoritative manual acceptance checks passed**. The
 existing `WorldMaterialDropRegistry` remains sole mutable authority and now
 stores one canonical Soil/Stone stack per resident Colony cell. Controlled
 scenario-local `GroundStackId` allocation is separate from exact-once operation

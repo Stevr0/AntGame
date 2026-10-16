@@ -38,9 +38,8 @@ preflights output, removes the authoritative Solid and commits the physical
 drop. That terrain removal marks the matching diagnostic record
 `DepletedOrAbsent`; it does not decrement registry quantity or route gameplay
 through the registry. WV-B3C.1 is complete after 17/17 manual acceptance;
-B3C.2A canonical stack foundation has passed automated validation with manual
-acceptance partially confirmed; the accepted 20-check summary cannot yet be
-mapped safely to the authoritative 23-step checklist.
+B3C.2A canonical stack foundation is complete after automated validation and
+user-confirmed **23/23 authoritative manual acceptance**.
 B3C.2B overflow recovery and B3C.3 transaction cutover have not started. The
 inactive quantity-one records remain a transitional foundation.
 
