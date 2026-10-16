@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using AntColony.Ants;
 using AntColony.Commands;
@@ -61,12 +62,15 @@ namespace AntColony.Tests.EditMode
             Vector2Int cell = AntGameDevelopmentWorldHost.GeneralMaterialStorageFixture;
             Assert.That(host.MaterialStorage.TryReserveIncoming(
                 cell, soil, 10, "carrier", 2, out _, out _), Is.True);
+            Assert.That(host.MaterialStorage.TryReserveWithdrawal(
+                cell, soil, "withdrawer", 1, out _, out _), Is.True);
             Assert.That(host.MaterialStorage.TrySetFilter(
                 cell, MaterialStorageFilter.Stone, out _), Is.True);
             host.MaterialStorage.TryGet(cell, out MaterialStorageSlot slot);
             Assert.That(slot.Quantity, Is.EqualTo(5));
             Assert.That(slot.ResourceTypeId, Is.EqualTo(soil));
             Assert.That(slot.ReservedIncomingQuantity, Is.Zero);
+            Assert.That(slot.ReservedWithdrawalQuantity, Is.Zero);
             Assert.That(host.MaterialStorage.GetAvailableCapacity(cell, soil, 10),
                 Is.Zero);
         }
@@ -223,6 +227,9 @@ namespace AntColony.Tests.EditMode
         public void SevenUnitFixtureMovesAcrossSuccessiveCapacityBoundedTrips()
         {
             AntGameDevelopmentWorldHost host = OpenHost();
+            // Keep this legacy partial-stack test focused on one source. The
+            // multi-source cases below cover topping up from neighbouring stacks.
+            host.MaterialDrops.Clear();
             Assert.That(host.SelectionController.CreatePartialHaulingSoilFixture(
                 out string error), Is.True, error);
             Assert.That(host.MaterialDrops.TryFindAtCell(
@@ -255,7 +262,7 @@ namespace AntColony.Tests.EditMode
                 Assert.That(order.TryArrive(sourceApproach, trip * 2d,
                     out _), Is.True);
                 Assert.That(order.TryArrive(order.DestinationApproachCell,
-                    trip * 2d + 1d, out _), Is.True);
+                    trip * 2d + 1d, out _), Is.True, order.FailureReason);
                 start = order.DestinationApproachCell;
             }
 
@@ -577,6 +584,186 @@ namespace AntColony.Tests.EditMode
         }
 
         [Test]
+        public void LevelZeroAntCollectsFourOneUnitStacksBeforeOneDelivery()
+        {
+            AntGameDevelopmentWorldHost host = OpenHost();
+            host.MaterialDrops.Clear();
+            IReadOnlyList<Vector2Int> cells = CreateOneUnitSoilSources(
+                host, "multi-source", out WorldMaterialDrop first);
+            AntRecord ant = CreateRecord("multi-source");
+            Vector2Int start = new(-10, SampleWorldGenerator.MainPassageY);
+            Assert.That(SurvivalInteractionOrder.TryMeasureApproach(
+                host.GridNavigationMap, start, first.WorldCell,
+                out Vector2Int approach, out _, out string error), Is.True, error);
+            Assert.That(host.ColonyJobRegistry.TryAdd(
+                new ColonyJobId("haul.multi-source"), AntWorkCategory.Hauling,
+                first.WorldCell, out ColonyJob job, out error), Is.True, error);
+            var plan = new MaterialHaulingPlan(job, MaterialHaulSourceKind.WorldDrop,
+                "material.soil", first.OwnershipKey);
+            Assert.That(MaterialHaulingOrder.TryCreate(host.ColonyJobRegistry,
+                host.GridNavigationMap, host.MaterialDrops, host.MaterialTransfers,
+                host.MaterialStorage, ant, plan, approach, start,
+                out MaterialHaulingOrder order, out error), Is.True, error);
+            Assert.That(order.Quantity, Is.EqualTo(4));
+            Assert.That(order.SourceCount, Is.EqualTo(4));
+
+            Vector2Int arrival = order.InitialApproachCell;
+            while (order.Phase == MaterialHaulingPhase.TravellingToSource)
+                Assert.That(order.TryArrive(arrival, 1d,
+                    out arrival), Is.True, order.FailureReason);
+
+            Assert.That(ant.Inventory.TotalQuantity, Is.EqualTo(4));
+            Assert.That(ant.Inventory.OccupiedSlotCount, Is.EqualTo(2));
+            Assert.That(order.Transfer.Pickups.Count, Is.EqualTo(4));
+            Assert.That(order.Transfer.Pickups.All(item => item.Committed), Is.True);
+            MaterialPickupOperationId firstPickup = order.Transfer.Pickups[0].Id;
+            Assert.That(host.MaterialTransfers.TryCommitPickup(order.TransferId,
+                firstPickup, () => false, out _, out error), Is.True, error);
+            Assert.That(ant.Inventory.TotalQuantity, Is.EqualTo(4),
+                "Replaying a committed child pickup must not run its callback.");
+            foreach (Vector2Int cell in cells)
+                Assert.That(host.MaterialDrops.TryFindAtCell(cell, out _), Is.False);
+
+            int storedBefore = host.MaterialStorage.Slots.Sum(slot => slot.Quantity);
+            Assert.That(order.TryArrive(order.DestinationApproachCell, 2d,
+                out _), Is.True, order.FailureReason);
+            Assert.That(host.MaterialStorage.Slots.Sum(slot => slot.Quantity),
+                Is.EqualTo(storedBefore + 4));
+            Assert.That(ant.Inventory.TotalQuantity, Is.Zero);
+        }
+
+        [Test]
+        public void CompletedStorageSuppliesConstructionWithoutGroundExtraction()
+        {
+            AntGameDevelopmentWorldHost host = OpenHost();
+            Vector2Int sourceCell = AntGameDevelopmentWorldHost.GeneralMaterialStorageFixture;
+            Assert.That(host.MaterialStorage.TryGet(sourceCell,
+                out MaterialStorageSlot source), Is.True);
+            int before = source.Quantity;
+            ConstructionRecipe recipe = host.ConstructionRecipes.Recipes.Single(
+                item => item.Result.Function == BackgroundFunction.Sleeping);
+            Vector2Int siteCell = new(11, SampleWorldGenerator.MainPassageY);
+            Assert.That(host.ConstructionDesignations.TryDesignate(siteCell,
+                recipe.Result.StableMaterialId, out ConstructionDesignation site,
+                out string error), Is.True, error);
+            AntRecord ant = CreateRecord("storage-source");
+            Vector2Int start = new(-10, SampleWorldGenerator.MainPassageY);
+            Assert.That(SurvivalInteractionOrder.TryMeasureApproach(
+                host.GridNavigationMap, start, sourceCell,
+                out Vector2Int approach, out _, out error), Is.True, error);
+            Assert.That(host.ColonyJobRegistry.TryAdd(
+                new ColonyJobId("haul.storage-source"), AntWorkCategory.Hauling,
+                sourceCell, out ColonyJob job, out error), Is.True, error);
+            var plan = new MaterialHaulingPlan(job,
+                MaterialHaulSourceKind.MaterialStorage, "material.soil",
+                sourceCell: sourceCell);
+            Assert.That(MaterialHaulingOrder.TryCreate(host.ColonyJobRegistry,
+                host.GridNavigationMap, host.MaterialDrops, host.MaterialTransfers,
+                host.MaterialStorage, host.ConstructionDesignations, ant, plan,
+                approach, start, out MaterialHaulingOrder order, out error),
+                Is.True, error);
+            Assert.That(order.DestinationKind,
+                Is.EqualTo(MaterialHaulDestinationKind.ConstructionSite));
+            Assert.That(order.Quantity, Is.EqualTo(recipe.RequiredQuantity));
+            host.ColonyJobRegistry.TryAdd(new ColonyJobId("haul.storage-source.competing"),
+                AntWorkCategory.Hauling, sourceCell, out ColonyJob competingJob, out _);
+            var competingPlan = new MaterialHaulingPlan(competingJob,
+                MaterialHaulSourceKind.MaterialStorage, "material.soil",
+                sourceCell: sourceCell);
+            Assert.That(MaterialHaulingOrder.CanStart(host.GridNavigationMap,
+                host.MaterialDrops, host.MaterialStorage,
+                host.ConstructionDesignations, CreateRecord("storage-competitor"),
+                competingPlan, start, out _), Is.False,
+                "Reserved Storage quantity cannot be claimed by a second run.");
+            Assert.That(order.TryArrive(approach, 1d,
+                out Vector2Int destination), Is.True, order.FailureReason);
+            Assert.That(host.MaterialStorage.TryGet(sourceCell, out source), Is.True);
+            Assert.That(source.Quantity, Is.EqualTo(before - recipe.RequiredQuantity));
+            Assert.That(order.TryArrive(destination, 2d, out _),
+                Is.True, order.FailureReason);
+            Assert.That(site.Site.DeliveredQuantity,
+                Is.EqualTo(recipe.RequiredQuantity));
+            Assert.That(ant.Inventory.TotalQuantity, Is.Zero);
+        }
+
+        [Test]
+        public void StorageSourceCannotCreateStorageToStorageLoop()
+        {
+            AntGameDevelopmentWorldHost host = OpenHost();
+            Vector2Int sourceCell = AntGameDevelopmentWorldHost.GeneralMaterialStorageFixture;
+            AntRecord ant = CreateRecord("no-storage-loop");
+            host.ColonyJobRegistry.TryAdd(new ColonyJobId("haul.no-storage-loop"),
+                AntWorkCategory.Hauling, sourceCell, out ColonyJob job, out _);
+            var plan = new MaterialHaulingPlan(job,
+                MaterialHaulSourceKind.MaterialStorage, "material.soil",
+                sourceCell: sourceCell);
+
+            Assert.That(MaterialHaulingOrder.CanStart(host.GridNavigationMap,
+                host.MaterialDrops, host.MaterialStorage, null, ant, plan,
+                new Vector2Int(-10, SampleWorldGenerator.MainPassageY),
+                out string reason), Is.False);
+            Assert.That(reason, Does.Contain("Construction"));
+        }
+
+        [Test]
+        public void CancellingAfterSeveralPickupsPreservesCargoAndReleasesRemainder()
+        {
+            AntGameDevelopmentWorldHost host = OpenHost();
+            host.MaterialDrops.Clear();
+            CreateOneUnitSoilSources(host, "cancel-multi",
+                out WorldMaterialDrop first);
+            AntRecord ant = CreateRecord("cancel-multi");
+            Vector2Int start = new(-10, SampleWorldGenerator.MainPassageY);
+            SurvivalInteractionOrder.TryMeasureApproach(host.GridNavigationMap,
+                start, first.WorldCell, out Vector2Int approach, out _, out _);
+            host.ColonyJobRegistry.TryAdd(new ColonyJobId("haul.cancel-multi"),
+                AntWorkCategory.Hauling, first.WorldCell, out ColonyJob job, out _);
+            var plan = new MaterialHaulingPlan(job, MaterialHaulSourceKind.WorldDrop,
+                "material.soil", first.OwnershipKey);
+            Assert.That(MaterialHaulingOrder.TryCreate(host.ColonyJobRegistry,
+                host.GridNavigationMap, host.MaterialDrops, host.MaterialTransfers,
+                host.MaterialStorage, ant, plan, approach, start,
+                out MaterialHaulingOrder order, out string error), Is.True, error);
+            Assert.That(order.TryArrive(order.SourceApproachCell, 1d,
+                out Vector2Int second), Is.True, order.FailureReason);
+            Assert.That(order.TryArrive(second, 2d, out _), Is.True, order.FailureReason);
+
+            order.Cancel("acceptance cancellation");
+
+            Assert.That(ant.Inventory.TotalQuantity, Is.EqualTo(2));
+            Assert.That(ant.Inventory.AllocatedQuantity, Is.Zero);
+            Assert.That(order.Transfer.Phase,
+                Is.EqualTo(MaterialTransferPhase.RecoveryRequired));
+            Assert.That(host.MaterialDrops.Drops.Sum(item => item.ReservedQuantity), Is.Zero);
+            host.MaterialStorage.TryGet(order.DestinationCell,
+                out MaterialStorageSlot destination);
+            Assert.That(destination.ReservedIncomingQuantity, Is.Zero);
+        }
+
+        [Test]
+        public void SevenSoilControlCanBeReusedAfterPriorStackIsGone()
+        {
+            AntGameDevelopmentWorldHost host = OpenHost();
+            host.MaterialDrops.Clear();
+            Assert.That(host.SelectionController.CreatePartialHaulingSoilFixture(
+                out string firstMessage), Is.True, firstMessage);
+            Assert.That(host.MaterialDrops.TryFindAtCell(
+                AntSelectionCommandController.PartialHaulingSoilFixture,
+                out WorldMaterialDrop first), Is.True);
+            Assert.That(first.Quantity, Is.EqualTo(7));
+
+            host.MaterialDrops.Clear();
+            Assert.That(host.SelectionController.CreatePartialHaulingSoilFixture(
+                out string secondMessage), Is.True, secondMessage);
+            Assert.That(host.MaterialDrops.TryFindAtCell(
+                AntSelectionCommandController.PartialHaulingSoilFixture,
+                out WorldMaterialDrop second), Is.True);
+            Assert.That(second.Quantity, Is.EqualTo(7));
+            Assert.That(second.StackId, Is.Not.EqualTo(first.StackId));
+            Assert.That(secondMessage, Does.Contain(second.StackId.ToString()));
+        }
+
+        [Test]
         public void DevelopmentResetRestoresStorageDropsAndEmptyInventories()
         {
             AntGameDevelopmentWorldHost host = OpenHostWithAnts();
@@ -616,6 +803,28 @@ namespace AntColony.Tests.EditMode
                 ant, plan, approach, start, out MaterialHaulingOrder order,
                 out error), Is.True, error);
             return order;
+        }
+
+        private static IReadOnlyList<Vector2Int> CreateOneUnitSoilSources(
+            AntGameDevelopmentWorldHost host, string keyPrefix,
+            out WorldMaterialDrop first)
+        {
+            var cells = new System.Collections.Generic.List<Vector2Int>();
+            first = default;
+            for (int x = -10; x <= 10 && cells.Count < 4; x++)
+            {
+                Vector2Int cell = new(x, SampleWorldGenerator.MainPassageY);
+                if (host.MaterialDrops.ValidatePlacement(cell).Compatibility !=
+                    GroundStackPlacementCompatibility.Valid) continue;
+                Assert.That(host.MaterialDrops.TryAdd($"{keyPrefix}.{cells.Count}",
+                    ExcavatedMaterialType.Soil, 1, cell,
+                    out WorldMaterialDrop created, out string error), Is.True, error);
+                if (cells.Count == 0) first = created;
+                cells.Add(cell);
+            }
+            Assert.That(cells.Count, Is.EqualTo(4),
+                "The development passage must expose four valid fixture cells.");
+            return cells;
         }
 
         private static void AssertSlot(AntGameDevelopmentWorldHost host,

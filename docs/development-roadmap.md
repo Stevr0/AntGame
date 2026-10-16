@@ -1,25 +1,29 @@
 # Development Roadmap
 
-## WV-B3C.2B — implemented; manual acceptance pending
+## WV-B3C.2B — acceptance recovery implemented; partial manual acceptance
 
 The authoritative
 [`PartialHaulingIntegrationPlan`](https://github.com/Stevr0/AntGame/blob/main/Documentation/PartialHaulingIntegrationPlan.md)
-is implemented as replay-safe, scenario-local partial transfers across canonical ground
-stacks, ant inventory, Construction staging and Material Storage. It preserves
-the shared fair scheduler and exclusive competition: one job moves one exact
-quantity, and a positive source remainder keeps its Stack ID for a later trip.
+is implemented as replay-safe, scenario-local single-destination runs across
+canonical ground stacks, completed Material Storage, ant inventory and
+Construction staging. Several compatible sources may fill one carrier before
+one delivery; each pickup and the final delivery commit exactly once. A positive
+ground remainder keeps its Stack ID.
 
-The implementation adds transfer-owned reservations, in-flight carrier
-allocation, owner-only recovery and scenario invalidation. It also applies the
+The implementation adds per-source pickup identities, bounded deterministic
+route evaluation, transfer-owned reservations, Storage withdrawal for
+Construction, in-flight carrier allocation, owner-only recovery and scenario invalidation. It also applies the
 approved six 0–100 Hauling capacity bands while reusing shared skill decay.
 Production Node yields, Surface Nodes, Placement migration and quantity-badge
 policy do not change. General multi-cell output placement remains deferred.
-Automated validation is recorded in the authoritative project state; manual
+The first manual pass identified the former one-source, no-Storage-source and
+one-use fixture limitations. Recovery is implemented; the revised 30-step manual
 Unity acceptance is still required.
 
-Recorded Unity `6000.3.8f1` results are 54/54 focused Edit, 5/5 focused Play,
-583/583 complete Edit and 79/79 complete Play, plus the 1/1 inventory-drop
-recheck, with no failures, skips or inconclusive tests.
+Recovery validation on Unity `6000.3.8f1` passes 28/28 focused Edit, 6/6
+focused Play, 588/588 complete graphics-enabled Edit and 80/80 complete Play,
+with no failures, skips or inconclusive tests. The complete suites include the
+earlier inventory-drop and broader gameplay regressions.
 
 ## WV-B3C.2A — complete
 

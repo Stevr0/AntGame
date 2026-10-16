@@ -1,7 +1,8 @@
 # WV-B3C.2B Partial Hauling and Canonical Stack Transaction Plan
 
-**Status:** Implemented on 16 October 2026; automated validation recorded in the
-current-state/roadmap evidence and manual Unity acceptance pending.
+**Status:** Acceptance recovery implemented on 16 October 2026 after partial
+manual acceptance exposed one-source collection, absent Storage-source hauling
+and a non-reusable developer fixture. Revised manual acceptance is pending.
 
 **Prepared:** 16 October 2026
 
@@ -14,17 +15,20 @@ publication authority.
 ## 1. Scope and terminology
 
 This plan defines the smallest safe integration of partial autonomous Hauling
-with canonical ground stacks. It covers exact quantity selection, source and
-destination reservations, replay-safe pickup and delivery, successive trips,
-interruption recovery, same-resource merging and test-only large stacks.
+with canonical ground stacks. It covers exact quantity selection, several
+compatible pickups under one single-destination run, ground and completed
+Storage sources, source and destination reservations, replay-safe pickup and
+delivery, successive runs, interruption recovery, same-resource merging and
+test-only large stacks.
 
 The following terms are intentionally distinct:
 
 - **stack identity** identifies one physical ground stack;
 - **job identity** identifies one scheduler opportunity;
 - **ant identity** identifies the carrier;
-- **transfer identity** identifies one exact source-to-carrier-to-destination
-  operation; and
+- **transfer identity** identifies one exact single-destination Hauling run;
+- **pickup operation identity** identifies one exact source-to-carrier commit
+  within that run; and
 - **producer operation identity** prevents Extraction/drop output replay.
 
 One value must not substitute for another. In particular, an ant ID is not a
@@ -32,8 +36,9 @@ safe replay key and a producer operation key is not a `GroundStackId`.
 
 This document began as the implementation plan and is retained as the contract
 and migration history. WV-B3C.2B now implements its scenario-local transfer
-ledger, transfer-owned reservations, carrier allocation, partial commits,
-successive trips and recovery states. General multi-cell output placement was
+ledger, per-source pickup operations, transfer-owned reservations, carrier
+allocation, partial commits, bounded multi-source collection, Storage
+withdrawal, successive runs and recovery states. General multi-cell output placement was
 not activated because production Nodes remain quantity-one and a failed
 inventory drop already preserves its current owner; that distributor remains a
 future variable-output requirement.
@@ -54,6 +59,24 @@ blocks new pickup and permits delivery/recovery.
 - new resources, balance changes or production Node-yield changes;
 - persistence, region unloading or whole-world transaction publication; and
 - concurrent multi-ant claims against one stack in the first implementation.
+
+### Acceptance-recovery routing contract
+
+- One run uses one resource type, one carrier, one destination and one final
+  delivery, but may commit several independently identified pickups.
+- Planning evaluates at most 24 source candidates and visits at most eight.
+  Reachable actual route cost and stable source identity break ties; an additive
+  detour guard prevents remote top-ups when the destination is already close.
+- The run reserves its full destination quantity and every chosen source before
+  travel. If no further useful compatible source exists, it departs with the
+  partial quantity already planned instead of searching indefinitely.
+- Completed `MaterialStorageWorld` slots may supply Construction staging through
+  their existing filter, quantity and withdrawal reservation APIs. They never
+  supply optional Storage filling, so Storage-to-Storage loops and reorganisation
+  routes are not created.
+- Cancellation before a pickup releases that source unchanged. Cancellation
+  after any pickup releases only unused promises, removes transfer allocation
+  metadata and leaves all collected units physically owned by the ant.
 
 `WV-B3B-LIM-001` remains active. Scenario-local transfer atomicity does not make
 construction or publication of the complete mutable gameplay world atomic.
@@ -195,7 +218,7 @@ even when their current numeric values happen to match.
 
 For a ground-source haul, calculate:
 
-`Q = min(source available, carrier compatible free capacity, destination reservable capacity, resource transport limit)`
+`Q = min(total useful eligible source quantity, carrier compatible free capacity, destination reservable capacity, resource transport limit)`
 
 The current Soil/Stone transport limit is the compatible inventory capacity; no
 new weight or caste rule is approved. Future Resource Definitions may add an
@@ -204,26 +227,26 @@ explicit transport constraint.
 Preparation is read-only. Commit reservations in this order:
 
 1. reserve exact destination capacity for the transfer ID;
-2. reserve exact source quantity for the same transfer ID; and
+2. reserve every planned source pickup quantity for the same transfer ID; and
 3. reserve the existing scheduler job for the carrier.
 
 If a later reservation fails, release every earlier reservation owned by that
 transfer. The first implementation should preserve one active pickup reservation
 per ground stack and one active incoming reservation per destination line. This
 keeps current exclusive competition semantics and is enough for successive
-trips. Multiple simultaneous quantity reservations on one stack are deferred
+runs. Multiple simultaneous quantity reservations on one stack are deferred
 until scale evidence justifies the extra bookkeeping.
 
 ### 6.2 Pickup commit
 
-At the valid adjacent source anchor:
+At each valid adjacent source anchor:
 
 1. validate scenario, transfer phase, Stack ID, stack/resource identity,
    reservation ownership and exact `Q`;
 2. recheck compatible inventory capacity;
 3. add exactly `Q` to `AntInventory` and subtract exactly `Q` from the canonical
    stack through one conserving commit;
-4. end the source reservation and mark the transfer `PickedUp`; and
+4. end that source reservation and mark its pickup operation committed; and
 5. retain the destination reservation during travel.
 
 If positive quantity remains, the source keeps the same `GroundStackId` and
@@ -251,7 +274,8 @@ At a valid adjacent destination anchor:
    one conserving callback transaction;
 3. release the carrier allocation and destination reservation;
 4. mark the transfer `Delivered`; and
-5. complete the one-trip scheduler job and award Hauling XP once for `Q`.
+5. complete the single-destination scheduler run and award Hauling XP once for
+   the combined delivered `Q`.
 
 Construction staging may reserve at most its still-undelivered requirement.
 Storage may reserve at most its compatible free slot capacity. If an ant already
@@ -333,13 +357,15 @@ Retain `ColonyJobRegistry`, per-ant work priorities, priority-before-path-cost,
 the bounded fair candidate pass, deterministic ties and current retry/backoff.
 Do not add a transfer-specific scheduler.
 
-One dynamic ground-stack job represents one trip, not an instruction to empty an
-arbitrary stack. Its eligibility calculation must use the current unreserved
-quantity and a currently compatible destination. After a successful partial
-delivery:
+One dynamic source job starts one hauling run, not an instruction to empty that
+source. The run may reserve and collect compatible quantities from several
+bounded, route-valid sources of the same resource before making one final
+delivery. Its eligibility calculation must use current unreserved source
+quantity, carrier capacity and a currently compatible destination. After a
+successful delivery:
 
 - complete that trip and its transfer;
-- if the source stack still has unreserved quantity, remove/recreate the terminal
+- if any source still has unreserved quantity, remove/recreate its terminal
   dynamic job deterministically on the normal refresh;
 - reuse the existing stable opportunity job ID only for the fresh job record,
   while allocating a new transfer identity for the next trip; and
@@ -496,12 +522,12 @@ The manual report must distinguish these observations from automated evidence.
 
 | Risk | Evidence in current implementation | Mitigation / rollback |
 | --- | --- | --- |
-| Quantity-one assumptions | Production Soil/Stone Extraction currently yields one; many flows rarely exercise repeated trips. | Use test-only canonical large stacks and keep production yields unchanged. Feature-gate the new coordinator so the old one-trip path can be restored during implementation. |
+| Quantity-one assumptions | Production Soil/Stone Extraction currently yields one; many flows rarely exercise capacity-filling collection. | Use test-only canonical large stacks and deterministic multi-source fixtures while keeping production yields unchanged. |
 | Ant ID used as reservation identity | Source, Storage and staging reservations use the ant ID. | Introduce transfer ID ownership through compatibility overloads; keep old APIs until all call sites/tests migrate. |
 | No transfer replay ledger | Conserving callbacks are atomic once, but successful requests are not replay-idempotent. | Record immutable payload and terminal outcomes before replacing old entry points. Keep bounded scenario-local diagnostics. |
 | Inventory has no in-flight allocation | Matching cargo can be removed by unrelated inventory operations. | Add transfer-owned inventory reservation/allocation checks without moving inventory authority. Preserve existing ordinary inventory APIs through unreserved-quantity adapters. |
 | One reservation per stack/destination | It serialises competition and can make `AvailableQuantity` look usable although a stack is exclusively held. | Preserve exclusive first-slice semantics, report exclusive-held availability clearly in scheduler diagnostics, and defer concurrent split claims. |
-| Dynamic job terminal lifecycle | One trip completes a stack-keyed job; refresh implicitly recreates it. | Add explicit successive-trip tests and deterministic remove/recreate rules. Never treat job completion as source depletion. |
+| Dynamic job terminal lifecycle | One run completes its originating stack- or Storage-keyed job; refresh implicitly recreates any still-valid source opportunity. | Test deterministic remove/recreate rules for every source kind. Never treat job completion as source depletion. |
 | Storage one-slot semantics | Each legacy Storage cell accepts one type, capacity 10 and one incoming owner. | Keep filters and capacity authoritative; do not generalise Storage or begin Placement migration. |
 | Construction staging semantics | One reservation owner per resource requirement; reserved is not delivered. | Use transfer IDs and exact remaining-requirement bounds; preserve fully-staged eligibility. |
 | Deterministic Stack ID allocation | Multi-cell commit order affects allocated IDs. | Freeze source-first, versioned candidate order and assert identities across repeated test construction. |
@@ -520,14 +546,18 @@ steps, with tests added before each caller migration:
 2. Add transfer-ID compatibility overloads for exclusive ground, Storage and
    Construction reservations plus carrier allocations.
 3. Route autonomous ground pickup and destination delivery through the
-   coordinator; retain current destination selection and one-trip order shape.
-4. Make terminal dynamic-job cleanup/recreation explicitly support successive
-   trips and owner-only recovery.
-5. Add deterministic prepared ground-placement splitting for conserving
+   coordinator; retain current destination selection and initial one-source
+   order shape.
+4. Acceptance recovery: extend that order to bounded, route-cost-aware
+   multi-source ground pickup and completed Storage-to-Construction withdrawal,
+   with one final destination commit and no Storage reorganisation.
+5. Make terminal dynamic-job cleanup/recreation explicitly support successive
+   runs and owner-only recovery.
+6. Add deterministic prepared ground-placement splitting for conserving
    inventory recovery/test operations, without enabling variable Node output.
-6. Add the Developer Only large-stack fixture, diagnostics and badge/read-model
+7. Add the Developer Only large-stack fixture, diagnostics and badge/read-model
    assertions.
-7. Run focused and complete Unity suites, strict documentation validation and
+8. Run focused and complete Unity suites, strict documentation validation and
    the seed-`2203` manual checklist before marking WV-B3C.2B complete.
 
 Rollback is removal of the new coordinator routing behind its composition seam,
@@ -540,7 +570,8 @@ explicit cleanup.
 - One transfer has one exact quantity and commits each leg at most once.
 - Reservations are transfer-owned but remain exclusive per source/destination in
   the first slice.
-- One scheduler job represents one trip; a remaining stack creates a later trip.
+- One scheduler job starts one run; that run may collect from several compatible
+  sources, and each remaining source creates a later opportunity after refresh.
 - In-flight quantity remains in `AntInventory`, with a transfer-owned allocation.
 - Cancellation after pickup and destination invalidation use owner-only recovery.
 - A no-fit ground operation leaves quantity with its current owner.

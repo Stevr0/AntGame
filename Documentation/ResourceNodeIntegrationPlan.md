@@ -2,9 +2,9 @@
 
 **Status:** B3C.1 and B3C.2A are complete after their recorded automated and
 user-confirmed manual acceptance. B3C.2B partial Hauling and replay-safe stack
-transactions are implemented from
+transactions and their acceptance recovery are implemented from
 [`PartialHaulingIntegrationPlan.md`](PartialHaulingIntegrationPlan.md) and await
-manual Unity acceptance. B3C.3 remains planning only.
+revised manual Unity acceptance after a partial first pass. B3C.3 remains planning only.
 
 **Prepared:** 15 October 2026
 
@@ -25,10 +25,15 @@ Completed improvements and their migration are defined separately in
 no Placement migration belongs to B3C.2 or B3C.3.
 
 **B3C.2B implementation amendment — 16 October 2026:** Partial Hauling uses
-successive exact one-trip transfers over the B3C.2A canonical stack authority.
+exact single-destination runs over the B3C.2A canonical stack authority. One run
+may commit several independently identified compatible ground pickups, and
+completed Material Storage may supply Construction staging through its existing
+withdrawal authority.
 The transfer ID is distinct from Stack, job, ant and producer operation IDs;
-exclusive reservations become transfer-owned; committed carrier quantity stays
-in `AntInventory`; replay and recovery are explicit. Deterministic prepared
+pickup operation IDs are distinct children; exclusive reservations become
+transfer-owned; committed carrier quantity stays in `AntInventory`; replay and
+recovery are explicit. Evaluation is bounded and route-cost-aware, and Storage
+never supplies Storage. Deterministic prepared
 general multi-cell placement remains deferred until a separately approved gate;
 B3C.3 has not activated variable whole-node output. The approved 0–100 Hauling
 capacity bands and existing shared skill-decay contract apply to carrier space.

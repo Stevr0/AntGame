@@ -1,22 +1,24 @@
 # Technical Architecture
 
-## WV-B3C.2B transaction coordinator — implemented; manual pending
+## WV-B3C.2B transaction coordinator — recovery implemented; manual recheck pending
 
 WV-B3C.2B implements one scenario-local coordination
-registry over existing physical owners. Its transfer ID is separate from
+registry over existing physical owners. Its parent transfer ID is separate from
 `GroundStackId`, `ColonyJobId`, `AntId` and producer operation keys. It records
-an immutable payload plus `Prepared → Reserved → PickedUp → Delivered → Completed`
-outcome,
+one immutable single-destination payload plus individually identified source
+pickup operations and a `Prepared → Reserved → PickedUp → Delivered → Completed` outcome,
 but never stores a second physical quantity: ground, inventory, Storage or
 Construction staging remains authoritative for each committed phase.
 
-The shared scheduler, navigation, priorities and current destination ordering
-remain unchanged. Exclusive source/destination reservations are
+The shared scheduler, navigation, priorities and Construction-first destination
+ordering remain unchanged. Planning is bounded to 24 evaluated sources and
+eight pickups with deterministic route-cost ties and a detour guard. Exclusive source/destination reservations are
 transfer-owned, carrier inventory gains an in-flight allocation, and terminal
-jobs are explicitly recreated for a positive source remainder. This is planning
+ground and Storage sources may feed the same carrier allocation, while Storage
+withdrawal is restricted to Construction staging. This is planning
 coordination only; no physical quantity authority moved. Scenario replacement
 invalidates the old registry and replay cannot run either physical commit twice.
-Manual Unity acceptance remains pending. See the
+Revised manual Unity acceptance remains pending after the first partial pass. See the
 [`Partial Hauling Integration Plan`](https://github.com/Stevr0/AntGame/blob/main/Documentation/PartialHaulingIntegrationPlan.md).
 
 ## WV-B3C.2A canonical ground-stack authority

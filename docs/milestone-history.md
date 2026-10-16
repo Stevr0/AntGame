@@ -2,19 +2,26 @@
 
 ## 16 October 2026 — WV-B3C.2B partial Hauling implementation
 
-**Implemented; manual acceptance pending.** A scenario-local transfer registry
+**Acceptance recovery implemented; partial manual acceptance.** The first
+manual pass found that a run could use only one source, completed Storage could
+not supply Construction, and the seven-Soil control could not recreate an
+exhausted fixture. A scenario-local transfer registry now
 coordinates existing physical owners with transfer-owned exclusive reservations,
-replay-safe pickup/delivery phases, in-flight inventory allocation, successive
-one-trip jobs and explicit recovery. A Developer Only canonical 7 Soil fixture
-supports acceptance without changing production Node yields. The authoritative
+individually replay-safe multi-source pickups, one final delivery, in-flight
+inventory allocation, completed Storage withdrawal for Construction and
+explicit recovery. The Developer Only canonical 7 Soil fixture now uses fresh
+producer keys, deterministic fallback cells and explicit feedback without
+changing production Node yields. The authoritative
 Hauling scale now uses six slots-and-units bands through level 100 and reuses the
 existing shared decay-above-50 rules; threshold loss retains over-capacity cargo.
 General multi-cell output distribution, B3C.3, WV-B3D and WV-C1 did not begin,
 and `WV-B3B-LIM-001` remains active.
 
-Automated evidence passes 54/54 focused Edit, 5/5 focused Play, 583/583 full
-Edit and 79/79 full Play, plus the 1/1 inventory-drop recheck. Manual acceptance
-remains pending.
+The original automated evidence passed 54/54 focused Edit, 5/5 focused Play,
+583/583 full Edit and 79/79 full Play, plus the 1/1 inventory-drop recheck.
+Recovery validation passes 28/28 focused Edit, 6/6 focused Play, 588/588 full
+graphics-enabled Edit and 80/80 full Play, with zero failures, skips or
+inconclusive tests. Revised manual acceptance remains pending.
 
 ## 16 October 2026 — WV-B3C.2A Canonical Ground Stack Foundation
 

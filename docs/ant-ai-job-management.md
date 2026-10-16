@@ -1,20 +1,22 @@
 # Ant AI and Job Management
 
-## WV-B3C.2B transfer lifecycle — implemented; manual pending
+## WV-B3C.2B transfer lifecycle — recovery implemented; manual recheck pending
 
 The B3C.2B implementation keeps the existing shared job registry,
 priority-before-path-cost ordering, bounded fair scan, retry/backoff and
-exclusive competition. One dynamic Hauling job represents one exact trip. A
-remaining canonical stack keeps its identity and receives a later job rather
-than leaving one permanently blocked whole-stack job.
+exclusive competition. A dynamic source job starts one single-destination run;
+that run can collect the same resource from several nearby ground stacks before
+delivery. Completed Material Storage also creates a source job when compatible
+Construction staging exists. Storage never supplies Storage.
 
-The scenario-local transfer ID owns source/destination reservations and
-records replay-safe pickup/delivery phases. After pickup, quantity remains in the
+The scenario-local transfer ID owns source/destination reservations and each
+source has its own replay-safe pickup operation ID. Planning evaluates at most
+24 sources, visits at most eight and rejects excessive detours. After pickup, quantity remains in the
 carrier's authoritative inventory; cancellation, inactivity or destination loss
 records recovery-required cargo for the owner-only self-deposit route. Scenario
 replacement invalidates old transfer IDs. A transfer-owned inventory allocation
-prevents unrelated work from consuming in-flight cargo. Manual Unity acceptance
-is pending. See the
+prevents unrelated work from consuming in-flight cargo. The first manual pass
+was partial; revised recovery acceptance is pending. See the
 [`Partial Hauling Integration Plan`](https://github.com/Stevr0/AntGame/blob/main/Documentation/PartialHaulingIntegrationPlan.md).
 
 ## WV-B3C.2A source identity and reservation visibility
@@ -99,8 +101,8 @@ Milestones through 3.3D are accepted, and 3.4A extends that foundation with phys
 - Work takes a provisional four simulation hours, uses Rested and relevant-skill speed, and awards proportional XP only for committed progress.
 - Player orders and critical survival pause work and release ownership while preserving progress. Ordinary survival waits for active work.
 - Explicit player pickup reserves one loose drop quantity and travels through the same shared navigation/adjacency seam. This is an order, not an autonomous Hauling job.
-- Autonomous Hauling jobs reserve loose source quantity and compatible Material Storage capacity, then use the same motor to visit valid adjacent source and destination anchors. Already-carried Soil/Stone creates an owner-only self-deposit task.
-- Dynamic Hauling performs a read-only source, carrying-capacity, route and compatible-destination check before autonomous selection. A compatible Construction Site is valid without Storage; otherwise the haul remains paused/unowned and leaves the loose source unreserved. It is reconsidered when staging or Storage capacity changes.
+- Autonomous Hauling jobs reserve one or more compatible loose sources and one Construction/Storage destination, then use the same motor to visit each valid source anchor before one destination commit. Completed Material Storage may be a Construction source; already-carried Soil/Stone creates an owner-only self-deposit task.
+- Dynamic Hauling performs read-only source, carrying-capacity, bounded route and compatible-destination checks before autonomous selection. A compatible Construction Site is valid without Storage; stored material never creates a Storage-to-Storage route. Otherwise the haul remains paused/unowned and is reconsidered when source, staging or Storage capacity changes.
 - Actual A* travel cost selects the closest reachable compatible storage with deterministic ties. Disabled Hauling blocks dynamic claims; critical survival and explicit player orders interrupt safely.
 - The development scene exposes deterministic job, excavation and loose-drop fixtures plus priority, inventory, cancellation, reset, and diagnostic controls.
 - Background Conversion designations create real Construction jobs. The exclusive builder uses inventory first, otherwise reserves reachable storage/drop material, stages it at the site, performs timed work and commits the Background transaction.

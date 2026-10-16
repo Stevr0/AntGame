@@ -186,6 +186,29 @@ namespace AntColony.Ants
             return true;
         }
 
+        /// <summary>
+        /// Adds another committed pickup to an existing transfer allocation.
+        /// Multi-source hauling keeps one delivery owner while every source
+        /// remains an independent transaction.
+        /// </summary>
+        public bool TryAddToAllocation(string allocationId, string resourceTypeId,
+            int quantity, int maximumStack, out string error)
+        {
+            if (!allocations.TryGetValue(allocationId ?? string.Empty,
+                    out InventoryAllocation allocation) ||
+                allocation.ResourceTypeId != resourceTypeId ||
+                allocation.MaximumStack != maximumStack || quantity <= 0 ||
+                GetAvailableCapacity(resourceTypeId, maximumStack) < quantity)
+            {
+                error = "The inventory cannot extend this transfer allocation.";
+                return false;
+            }
+            AddUnchecked(resourceTypeId, quantity, maximumStack);
+            allocation.Quantity += quantity;
+            error = string.Empty;
+            return true;
+        }
+
         /// <summary>Earmarks already-carried unallocated material for delivery.</summary>
         public bool TryAllocateExisting(string allocationId, string resourceTypeId,
             int maximumStack, int quantity, out string error)
@@ -382,7 +405,7 @@ namespace AntColony.Ants
 
             public string ResourceTypeId { get; }
             public int MaximumStack { get; }
-            public int Quantity { get; }
+            public int Quantity { get; set; }
         }
     }
 }

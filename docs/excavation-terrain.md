@@ -40,7 +40,9 @@ drop. That terrain removal marks the matching diagnostic record
 through the registry. WV-B3C.1 is complete after 17/17 manual acceptance;
 B3C.2A canonical stack foundation is complete after automated validation and
 user-confirmed **23/23 authoritative manual acceptance**.
-B3C.2B partial Hauling, transfer replay and carrier recovery are implemented;
+B3C.2B bounded multi-source Hauling, Storage-to-Construction withdrawal,
+transfer replay and carrier recovery are implemented; revised manual acceptance
+is pending after a partial first pass;
 general multi-cell output overflow and the B3C.3 transaction cutover have not
 started. The inactive quantity-one records remain a transitional foundation.
 
@@ -174,7 +176,7 @@ Loose Soil and Stone stacks have stable identity, quantity, cell and provisional
 
 Foraging means discovering or identifying resources. Extraction means physically removing them and producing loose material. Hauling is the separate pickup/transport activity and may deliver to site staging or Storage. Construction performs work only after staging is complete. A no-storage colony can haul directly to its first Storage construction site.
 
-Material Storage remains physical rather than a global wallet. Each functional Background cell owns one compatible stack and incoming reservation. Autonomous haulers reserve source and destination, carry partial loads through personal inventory, and deposit only after reaching a valid adjacent anchor. Already-carried material produces an owner-only self-deposit task.
+Material Storage remains physical rather than a global wallet. Each functional Background cell owns one compatible stack plus independent incoming and withdrawal reservations. Autonomous haulers may collect several compatible loose sources before one delivery, or withdraw stored material for Construction staging. Storage never supplies Storage. Already-carried material produces an owner-only self-deposit task.
 
 ## Surface Preparation
 

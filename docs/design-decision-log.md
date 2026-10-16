@@ -1,13 +1,32 @@
 # Design Decision Log
 
+## 2026-10-16 — Extend one Hauling run across bounded sources
+
+- Keep one resource, carrier and destination per run, while giving every ground
+  or Storage pickup its own child operation identity and exact-once commit.
+- Evaluate at most 24 source candidates and visit at most eight, using reachable
+  route cost, deterministic ties and an excessive-detour guard. Depart with a
+  partial load when no further useful source exists.
+- Allow completed filtered Material Storage to supply Construction staging
+  through its existing withdrawal authority. Never create Storage-to-Storage
+  or multi-destination routes.
+- Reserve the combined destination before travel. Cancellation after any pickup
+  releases unused source/destination reservations but leaves collected material
+  physically owned and recoverable in the carrier inventory.
+- Make the seven-Soil developer fixture reusable with fresh producer keys,
+  deterministic fallback cells and visible success/failure identity details.
+- This acceptance recovery does not change capacity bands, XP/decay, Node yields,
+  Surface gameplay, Placement authority or `WV-B3B-LIM-001`.
+
 ## 2026-10-16 — Implement partial Hauling around one exact transfer identity
 
 - Keep physical quantity in the current ground, ant inventory, Material Storage
   or Construction staging authority; a transaction coordinator records phases
   and replay outcomes without becoming a resource wallet.
 - Use an identity separate from Stack, job, ant and producer-operation identity.
-  Make one trip carry one exact quantity bounded by source, carrier and reserved
-  destination capacity.
+  Make one run carry one exact quantity bounded by eligible sources, carrier and
+  reserved destination capacity. The later recovery decision above adds child
+  pickup identities without replacing this parent identity.
 - Preserve exclusive first-slice reservations and the existing shared fair job
   scheduler. A positive stack remainder keeps its identity and creates a later
   trip rather than one permanently blocked whole-stack job.

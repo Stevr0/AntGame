@@ -28,6 +28,51 @@ namespace AntColony.Commands
         public override string ToString() => Value ?? string.Empty;
     }
 
+    /// <summary>Scenario-local identity for one source pickup within a transfer.</summary>
+    public readonly struct MaterialPickupOperationId : IEquatable<MaterialPickupOperationId>
+    {
+        public MaterialPickupOperationId(string value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                throw new ArgumentException("A material pickup operation ID cannot be empty.",
+                    nameof(value));
+            Value = value.Trim();
+        }
+
+        public string Value { get; }
+        public bool IsValid => !string.IsNullOrWhiteSpace(Value);
+        public bool Equals(MaterialPickupOperationId other) =>
+            StringComparer.Ordinal.Equals(Value, other.Value);
+        public override bool Equals(object obj) =>
+            obj is MaterialPickupOperationId other && Equals(other);
+        public override int GetHashCode() => Value == null ? 0 :
+            StringComparer.Ordinal.GetHashCode(Value);
+        public override string ToString() => Value ?? string.Empty;
+    }
+
+    /// <summary>Immutable evidence for one reserved source pickup.</summary>
+    public sealed class MaterialPickupSnapshot
+    {
+        internal MaterialPickupSnapshot(MaterialPickupRecord record)
+        {
+            Id = record.Id;
+            SourceKind = record.SourceKind;
+            SourceStackId = record.SourceStackId;
+            SourceCell = record.SourceCell;
+            Quantity = record.Quantity;
+            SourceRevision = record.SourceRevision;
+            Committed = record.Committed;
+        }
+
+        public MaterialPickupOperationId Id { get; }
+        public MaterialHaulSourceKind SourceKind { get; }
+        public GroundStackId SourceStackId { get; }
+        public Vector2Int SourceCell { get; }
+        public int Quantity { get; }
+        public long SourceRevision { get; }
+        public bool Committed { get; }
+    }
+
     public enum MaterialTransferPhase
     {
         Prepared,
@@ -62,6 +107,16 @@ namespace AntColony.Commands
             PickupCommitted = record.PickupCommitted;
             DeliveryCommitted = record.DeliveryCommitted;
             RecoveryReason = record.RecoveryReason;
+            var pickups = new MaterialPickupSnapshot[record.Pickups.Count];
+            int collected = 0;
+            for (int index = 0; index < pickups.Length; index++)
+            {
+                pickups[index] = new MaterialPickupSnapshot(record.Pickups[index]);
+                if (record.Pickups[index].Committed)
+                    collected += record.Pickups[index].Quantity;
+            }
+            Pickups = pickups;
+            CollectedQuantity = collected;
         }
 
         public MaterialTransferId Id { get; }
@@ -81,6 +136,8 @@ namespace AntColony.Commands
         public bool PickupCommitted { get; }
         public bool DeliveryCommitted { get; }
         public string RecoveryReason { get; }
+        public IReadOnlyList<MaterialPickupSnapshot> Pickups { get; }
+        public int CollectedQuantity { get; }
     }
 
     /// <summary>
@@ -120,7 +177,8 @@ namespace AntColony.Commands
         }
 
         public bool TryPrepare(AntId antId, MaterialHaulSourceKind sourceKind,
-            GroundStackId sourceStackId, string resourceTypeId, int quantity,
+            GroundStackId sourceStackId, Vector2Int sourceCell,
+            string resourceTypeId, int quantity,
             MaterialHaulDestinationKind destinationKind, Vector2Int destinationCell,
             ColonyJobId jobId, long sourceRevision, long destinationRevision,
             out MaterialTransferSnapshot transfer, out string error)
@@ -140,9 +198,53 @@ namespace AntColony.Commands
             var record = new MaterialTransferRecord(id, ScenarioContextId, antId,
                 sourceKind, sourceStackId, resourceTypeId, quantity, destinationKind,
                 destinationCell, jobId, sourceRevision, destinationRevision);
+            record.AddPickup(sourceKind, sourceStackId, sourceCell, quantity,
+                sourceRevision);
             records.Add(id, record);
             transfer = new MaterialTransferSnapshot(record);
             error = string.Empty;
+            return true;
+        }
+
+        /// <summary>
+        /// Adjusts the compatibility-created first pickup before reservation.
+        /// The parent quantity remains the full single-destination load.
+        /// </summary>
+        public bool TrySetFirstPickupQuantity(MaterialTransferId id, int quantity,
+            out string error)
+        {
+            if (!TryRequirePhase(id, MaterialTransferPhase.Prepared,
+                    out MaterialTransferRecord record, out error) || quantity <= 0 ||
+                record.Pickups.Count == 0)
+            {
+                if (string.IsNullOrEmpty(error))
+                    error = "A prepared transfer and positive pickup quantity are required.";
+                return false;
+            }
+            record.Pickups[0].Quantity = quantity;
+            error = string.Empty;
+            return true;
+        }
+
+        /// <summary>Adds another independently replay-safe source pickup.</summary>
+        public bool TryAddPickup(MaterialTransferId id,
+            MaterialHaulSourceKind sourceKind, GroundStackId sourceStackId,
+            Vector2Int sourceCell, int quantity, long sourceRevision,
+            out MaterialPickupSnapshot pickup, out string error)
+        {
+            pickup = null;
+            if (!TryRequirePhase(id, MaterialTransferPhase.Prepared,
+                    out MaterialTransferRecord record, out error) || quantity <= 0 ||
+                sourceKind == MaterialHaulSourceKind.WorldDrop &&
+                    string.IsNullOrWhiteSpace(sourceStackId.Value))
+            {
+                if (string.IsNullOrEmpty(error))
+                    error = "A pickup requires a valid source identity and quantity.";
+                return false;
+            }
+            MaterialPickupRecord added = record.AddPickup(sourceKind,
+                sourceStackId, sourceCell, quantity, sourceRevision);
+            pickup = new MaterialPickupSnapshot(added);
             return true;
         }
 
@@ -163,6 +265,21 @@ namespace AntColony.Commands
         public bool TryCommitPickup(MaterialTransferId id, Func<bool> commitPhysical,
             out MaterialTransferSnapshot transfer, out string error)
         {
+            if (!isActive || !records.TryGetValue(id, out MaterialTransferRecord record) ||
+                record.Pickups.Count == 0)
+            {
+                transfer = null;
+                error = "The material transfer is stale or has no pickup operation.";
+                return false;
+            }
+            return TryCommitPickup(id, record.Pickups[0].Id, commitPhysical,
+                out transfer, out error);
+        }
+
+        public bool TryCommitPickup(MaterialTransferId id,
+            MaterialPickupOperationId pickupId, Func<bool> commitPhysical,
+            out MaterialTransferSnapshot transfer, out string error)
+        {
             transfer = null;
             if (!isActive)
             {
@@ -174,13 +291,21 @@ namespace AntColony.Commands
                 error = "The material transfer is stale or belongs to another scenario.";
                 return false;
             }
-            if (record.PickupCommitted)
+            MaterialPickupRecord pickup = record.Pickups.Find(candidate =>
+                candidate.Id.Equals(pickupId));
+            if (pickup == null)
+            {
+                error = "The pickup operation does not belong to this transfer.";
+                return false;
+            }
+            if (pickup.Committed)
             {
                 transfer = new MaterialTransferSnapshot(record);
                 error = string.Empty;
                 return true;
             }
-            if (record.Phase != MaterialTransferPhase.Reserved ||
+            if (record.Phase is not MaterialTransferPhase.Reserved and
+                    not MaterialTransferPhase.PickedUp ||
                 commitPhysical == null || !commitPhysical())
             {
                 error = record.Phase != MaterialTransferPhase.Reserved
@@ -188,6 +313,7 @@ namespace AntColony.Commands
                     : "The physical pickup authority rejected the prepared transfer.";
                 return false;
             }
+            pickup.Committed = true;
             record.PickupCommitted = true;
             SetPhase(record, MaterialTransferPhase.PickedUp);
             transfer = new MaterialTransferSnapshot(record);
@@ -216,10 +342,11 @@ namespace AntColony.Commands
                 return true;
             }
             if (record.Phase != MaterialTransferPhase.PickedUp ||
+                record.Pickups.Exists(pickup => !pickup.Committed) ||
                 commitPhysical == null || !commitPhysical())
             {
                 error = record.Phase != MaterialTransferPhase.PickedUp
-                    ? "The material transfer has not committed pickup."
+                    ? "The material transfer has not committed every pickup."
                     : "The physical destination rejected the prepared transfer.";
                 return false;
             }
@@ -368,7 +495,7 @@ namespace AntColony.Commands
         public MaterialHaulSourceKind SourceKind { get; }
         public GroundStackId SourceStackId { get; }
         public string ResourceTypeId { get; }
-        public int Quantity { get; }
+        public int Quantity { get; set; }
         public MaterialHaulDestinationKind DestinationKind { get; }
         public Vector2Int DestinationCell { get; }
         public ColonyJobId JobId { get; }
@@ -379,5 +506,40 @@ namespace AntColony.Commands
         public bool PickupCommitted { get; set; }
         public bool DeliveryCommitted { get; set; }
         public string RecoveryReason { get; set; }
+        public List<MaterialPickupRecord> Pickups { get; } = new();
+
+        public MaterialPickupRecord AddPickup(MaterialHaulSourceKind sourceKind,
+            GroundStackId sourceStackId, Vector2Int sourceCell, int quantity,
+            long sourceRevision)
+        {
+            var id = new MaterialPickupOperationId($"{Id.Value}.pickup.{Pickups.Count + 1:D3}");
+            var pickup = new MaterialPickupRecord(id, sourceKind, sourceStackId,
+                sourceCell, quantity, sourceRevision);
+            Pickups.Add(pickup);
+            return pickup;
+        }
+    }
+
+    internal sealed class MaterialPickupRecord
+    {
+        public MaterialPickupRecord(MaterialPickupOperationId id,
+            MaterialHaulSourceKind sourceKind, GroundStackId sourceStackId,
+            Vector2Int sourceCell, int quantity, long sourceRevision)
+        {
+            Id = id;
+            SourceKind = sourceKind;
+            SourceStackId = sourceStackId;
+            SourceCell = sourceCell;
+            Quantity = quantity;
+            SourceRevision = sourceRevision;
+        }
+
+        public MaterialPickupOperationId Id { get; }
+        public MaterialHaulSourceKind SourceKind { get; }
+        public GroundStackId SourceStackId { get; }
+        public Vector2Int SourceCell { get; }
+        public int Quantity { get; set; }
+        public long SourceRevision { get; }
+        public bool Committed { get; set; }
     }
 }

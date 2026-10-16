@@ -257,26 +257,30 @@ The user confirmed all **23/23 authoritative manual checks passed** after the
 recorded automated suites passed. WV-B3C.2A is complete; this documentation-only
 closure did not rerun Unity tests.
 
-### WV-B3C.2B — implemented; manual acceptance pending
+### WV-B3C.2B — acceptance recovery implemented; partial manual acceptance
 
 The approved physical rules above are implemented from the
 [Partial Hauling and Canonical Stack Transaction Plan](PartialHaulingIntegrationPlan.md).
 The runtime uses a scenario-local transfer identity distinct from Stack, job, ant and
-producer-operation identity. One exact transfer quantity is bounded by available
-source, compatible ant capacity and reserved destination capacity; the source
-keeps its Stack ID while positive. Pickup and delivery become replay-safe phase
-commits while physical quantity remains in the current ground, inventory,
-Storage or Construction-staging authority.
+producer-operation identity. One exact single-destination load is bounded by
+total eligible source quantity, compatible ant capacity and reserved destination
+capacity. Individually identified pickup operations may collect the same
+resource from several bounded, reachable ground stacks before delivery; every
+positive remainder keeps its Stack ID. Completed Material Storage may instead
+provide a reserved withdrawal to Construction staging. Physical quantity remains
+in the current ground, Storage, inventory or Construction-staging authority.
 
 The implementation retains exclusive transfer-owned source/destination
-reservations and performs multiple large-stack moves as successive one-trip
-jobs. A transfer-owned inventory allocation prevents unrelated removal of
-in-flight cargo. Replay cannot reapply pickup or delivery; cancellation and
+reservations and uses bounded deterministic route evaluation (24 candidates,
+eight pickups maximum, plus a detour guard). A transfer-owned inventory
+allocation prevents unrelated removal of in-flight cargo. Replay cannot reapply
+any pickup or the final delivery; cancellation and
 destination failure retain cargo with an explicit recovery outcome; scenario
-replacement invalidates old transfers. Same-type merges, capacity rejection and
-current-owner retention on no-fit remain authoritative. General deterministic
+replacement invalidates old transfers. Storage never automatically supplies
+Storage, preventing reorganisation loops. Same-type merges, capacity rejection
+and current-owner retention on no-fit remain authoritative. General deterministic
 multi-cell placement remains deferred and variable Node output is not enabled.
-B3C.2B is awaiting manual Unity acceptance.
+B3C.2B is awaiting the revised recovery manual Unity acceptance checklist.
 
 The authoritative Hauling bands are 0–19 = 2 slots × 2 units, 20–39 = 3×2,
 40–59 = 3×3, 60–74 = 4×4, 75–89 = 5×5 and 90–100 = 6×6. The shared 0–100

@@ -165,8 +165,10 @@ The approved sequence is:
 
 1. Designation validates every footprint cell and creates one site with no
    completed function.
-2. Hauling reserves physical sources and site capacity, then delivers exact
-   quantities into site-owned staging.
+2. Hauling reserves one or more compatible physical sources and site capacity,
+   then delivers one exact combined load into site-owned staging. Current
+   sources may be canonical ground stacks or completed filtered Material Storage;
+   Storage retains quantity ownership until its reserved withdrawal commits.
 3. Construction becomes eligible only after every requirement is delivered.
 4. The builder works from valid interaction positions using Construction skill.
 5. One transaction revalidates footprint/site revisions, consumes staging and
@@ -178,6 +180,12 @@ Cancellation releases reservations and returns staged resources to recoverable
 physical output. Interruption preserves committed staging and valid work
 progress. Construction never calls loose pickup, Storage withdrawal or inventory
 collection on its own.
+
+The current compatibility `MaterialStorageWorld` may supply Construction but
+never another Storage destination. This preserves filters, prevents automatic
+Storage reorganisation loops and does not begin Placement migration. A future
+Placement cutover must retain both incoming-capacity and outgoing-quantity
+reservations plus in-flight Hauling recovery.
 
 ## 6. Rooms and quality
 

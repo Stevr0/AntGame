@@ -181,6 +181,53 @@ namespace AntColony.Tests.PlayMode
             Assert.That(queen.Record.Inventory.TotalQuantity, Is.Zero);
         }
 
+        [UnityTest]
+        public IEnumerator LevelZeroCarrierCombinesFourGroundSourcesInOneRun()
+        {
+            yield return LoadScene();
+            AntGameDevelopmentWorldHost host = FindHost();
+            host.MaterialDrops.Clear();
+            WorldMaterialDrop first = default;
+            int createdCount = 0;
+            for (int x = -10; x <= 10 && createdCount < 4; x++)
+            {
+                Vector2Int cell = new(x, SampleWorldGenerator.MainPassageY);
+                if (host.MaterialDrops.ValidatePlacement(cell).Compatibility !=
+                    GroundStackPlacementCompatibility.Valid) continue;
+                Assert.That(host.MaterialDrops.TryAdd($"play.multi.{createdCount}",
+                    ExcavatedMaterialType.Soil, 1, cell,
+                    out WorldMaterialDrop created, out string addError), Is.True, addError);
+                if (createdCount == 0) first = created;
+                createdCount++;
+            }
+            Assert.That(createdCount, Is.EqualTo(4));
+            SelectableGridAnt carrier = host.SelectionController.SelectableAnts[0];
+            Vector2Int start = new(-10, SampleWorldGenerator.MainPassageY);
+            Assert.That(SurvivalInteractionOrder.TryMeasureApproach(
+                host.GridNavigationMap, start, first.WorldCell,
+                out Vector2Int approach, out _, out string error), Is.True, error);
+            Assert.That(host.ColonyJobRegistry.TryAdd(new ColonyJobId("play.multi-haul"),
+                AntWorkCategory.Hauling, first.WorldCell, out ColonyJob job,
+                out error), Is.True, error);
+            var plan = new MaterialHaulingPlan(job,
+                MaterialHaulSourceKind.WorldDrop, "material.soil", first.OwnershipKey);
+            Assert.That(MaterialHaulingOrder.TryCreate(host.ColonyJobRegistry,
+                host.GridNavigationMap, host.MaterialDrops, host.MaterialTransfers,
+                host.MaterialStorage, carrier.Record, plan, approach, start,
+                out MaterialHaulingOrder order, out error), Is.True, error);
+
+            Vector2Int arrival = order.InitialApproachCell;
+            while (order.Phase == MaterialHaulingPhase.TravellingToSource)
+                Assert.That(order.TryArrive(arrival, 1d,
+                    out arrival), Is.True, order.FailureReason);
+            Assert.That(order.SourceCount, Is.EqualTo(4));
+            Assert.That(carrier.Record.Inventory.TotalQuantity, Is.EqualTo(4));
+            Assert.That(carrier.Record.Inventory.OccupiedSlotCount, Is.EqualTo(2));
+            Assert.That(order.TryArrive(order.DestinationApproachCell, 2d,
+                out _), Is.True, order.FailureReason);
+            Assert.That(carrier.Record.Inventory.TotalQuantity, Is.Zero);
+        }
+
         private static IEnumerator LoadScene()
         {
             yield return SceneManager.LoadSceneAsync(

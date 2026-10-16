@@ -70,6 +70,13 @@ namespace AntColony.Commands
         private static readonly Vector2Int SoilDropFixture = new(-2, -8);
         private static readonly Vector2Int StoneDropFixture = new(8, -8);
         public static readonly Vector2Int PartialHaulingSoilFixture = new(-7, -8);
+        private static readonly Vector2Int[] PartialHaulingSoilFixtureCandidates =
+        {
+            PartialHaulingSoilFixture,
+            new(-8, -8),
+            new(-9, -8),
+            new(-10, -8)
+        };
 
         private static readonly string[] SkillDisplayNames =
             BuildSkillDisplayNames();
@@ -115,6 +122,7 @@ namespace AntColony.Commands
         private int selectedWorkCategoryIndex;
         private int nextDevelopmentJobNumber = 1;
         private int nextDevelopmentDropNumber = 1;
+        private int nextPartialHaulingFixtureNumber = 1;
         private int selectedInventorySlotIndex;
         private ExcavationDesignationRegistry excavationDesignations;
         private ExcavationWorldTransaction excavationTransaction;
@@ -483,26 +491,41 @@ namespace AntColony.Commands
                 interactionMessage = message;
                 return false;
             }
-            if (materialDrops.TryFindAtCell(PartialHaulingSoilFixture,
-                    out WorldMaterialDrop existing))
+            string lastFailure = string.Empty;
+            foreach (Vector2Int candidate in PartialHaulingSoilFixtureCandidates)
             {
-                message = existing.Material == ExcavatedMaterialType.Soil &&
-                    existing.Quantity == 7
-                    ? "Developer Only: the 7 Soil partial-hauling stack already exists."
-                    : "The partial-hauling fixture cell already contains another stack.";
-                interactionMessage = message;
-                return existing.Material == ExcavatedMaterialType.Soil &&
-                    existing.Quantity == 7;
+                if (materialDrops.TryFindAtCell(candidate, out WorldMaterialDrop existing))
+                {
+                    if (existing.Material == ExcavatedMaterialType.Soil &&
+                        existing.Quantity == 7)
+                    {
+                        message = $"Developer Only: 7 Soil already exists at {candidate} " +
+                            $"as {existing.StackId}.";
+                        interactionMessage = message;
+                        return true;
+                    }
+                    lastFailure = $"{candidate} contains {existing.Quantity} " +
+                        $"{existing.Material}.";
+                    continue;
+                }
+                string key = $"development.partial-hauling.soil." +
+                    $"{nextPartialHaulingFixtureNumber++:D4}";
+                if (materialDrops.TryAdd(key, ExcavatedMaterialType.Soil, 7,
+                        candidate, out WorldMaterialDrop created, out string error))
+                {
+                    interactionMessage = $"Developer Only: created 7 Soil at " +
+                        $"{candidate} as {created.StackId}.";
+                    message = interactionMessage;
+                    nextWorkEvaluationTime = 0d;
+                    return true;
+                }
+                lastFailure = $"{candidate}: {error}";
             }
-            bool created = materialDrops.TryAdd("development.partial-hauling.soil",
-                ExcavatedMaterialType.Soil, 7, PartialHaulingSoilFixture,
-                out _, out message);
-            interactionMessage = created
-                ? "Developer Only: created a 7 Soil partial-hauling stack."
-                : message;
+            interactionMessage = "Developer Only: could not create 7 Soil. " +
+                (string.IsNullOrEmpty(lastFailure)
+                    ? "No valid fixture cell is available." : lastFailure);
             message = interactionMessage;
-            nextWorkEvaluationTime = 0d;
-            return created;
+            return false;
         }
 
         public void SetAutonomousSurvivalEnabled(bool enabled)
@@ -1691,7 +1714,14 @@ namespace AntColony.Commands
                 bool missingDrop = entry.Value.SourceKind == MaterialHaulSourceKind.WorldDrop &&
                     !materialDrops.TryGet(entry.Value.DropKey, out _) &&
                     job.Status is not ColonyJobStatus.Reserved and not ColonyJobStatus.InProgress;
-                if (terminal || missingDrop) stale.Add(entry.Key);
+                bool missingStorage = entry.Value.SourceKind ==
+                        MaterialHaulSourceKind.MaterialStorage &&
+                    (!materialStorage.TryGet(entry.Value.SourceCell,
+                        out MaterialStorageSlot sourceStorage) ||
+                     sourceStorage.ResourceTypeId != entry.Value.ResourceTypeId ||
+                     sourceStorage.Quantity <= 0) &&
+                    job.Status is not ColonyJobStatus.Reserved and not ColonyJobStatus.InProgress;
+                if (terminal || missingDrop || missingStorage) stale.Add(entry.Key);
             }
             foreach (ColonyJobId id in stale)
             {
@@ -1708,6 +1738,21 @@ namespace AntColony.Commands
                         out ColonyJob job, out _))
                     haulingPlans.Add(id, new MaterialHaulingPlan(job,
                         MaterialHaulSourceKind.WorldDrop, resourceId, drop.OwnershipKey));
+            }
+
+            // Completed Storage is a source only for Construction staging. CanStart
+            // enforces that destination rule, preventing Storage-to-Storage loops.
+            foreach (MaterialStorageSlot slot in materialStorage.Slots)
+            {
+                if (slot.Quantity <= 0 || string.IsNullOrEmpty(slot.ResourceTypeId)) continue;
+                ColonyJobId id = new($"hauling.storage.{slot.Cell.x}.{slot.Cell.y}." +
+                    slot.ResourceTypeId);
+                if (haulingPlans.ContainsKey(id)) continue;
+                if (colonyJobs.TryAdd(id, AntWorkCategory.Hauling, slot.Cell,
+                        out ColonyJob job, out _))
+                    haulingPlans.Add(id, new MaterialHaulingPlan(job,
+                        MaterialHaulSourceKind.MaterialStorage, slot.ResourceTypeId,
+                        sourceCell: slot.Cell));
             }
 
             foreach (SelectableGridAnt selectable in selectableAnts)
@@ -2630,7 +2675,7 @@ namespace AntColony.Commands
                     out MaterialStorageSlot destination);
                 GUILayout.Label(
                     $"Selected haul: {order.Phase} | {order.Quantity} {order.ResourceTypeId} | " +
-                    $"source {order.SourceCell} -> storage {order.DestinationCell}");
+                    $"source {order.SourceCell} -> {order.DestinationKind} {order.DestinationCell}");
                 MaterialTransferSnapshot transfer = order.Transfer;
                 GUILayout.Label(transfer == null
                     ? $"Transfer {order.TransferId}: stale"
@@ -2639,6 +2684,12 @@ namespace AntColony.Commands
                     $"Source quantity/reserved: {sourceQuantity}/{sourceReserved} | " +
                     $"destination reserved: {destination?.ReservedIncomingQuantity ?? 0} | " +
                     $"job progress: {order.Job.Progress:P0}");
+                GUILayout.Label(
+                    $"Source available {order.SourceAvailableAtPlanning} | " +
+                    $"Inventory free capacity {order.InventoryFreeCapacityAtPlanning} | " +
+                    $"Destination free capacity {order.DestinationFreeCapacityAtPlanning} | " +
+                    $"Planned load {order.Quantity} | Collected load {order.CollectedQuantity}");
+                GUILayout.Label($"Sources {order.SourceCount} | Current {order.CurrentSourceIdentity}");
                 string failure = string.IsNullOrEmpty(order.FailureReason)
                     ? "None" : order.FailureReason;
                 GUILayout.Label($"Failure: {failure}");

@@ -85,6 +85,9 @@ namespace AntColony.World
             if (!string.IsNullOrEmpty(slot.ReservationOwnerId) &&
                 !Accepts(filter, slot.ReservedResourceTypeId))
                 ReleaseIncoming(cell, slot.ReservationOwnerId);
+            if (!string.IsNullOrEmpty(slot.WithdrawalOwnerId) &&
+                !Accepts(filter, slot.ResourceTypeId))
+                ReleaseWithdrawal(cell, slot.WithdrawalOwnerId);
             error = string.Empty;
             return true;
         }
@@ -163,7 +166,8 @@ namespace AntColony.World
             if (!slots.TryGetValue(cell, out MaterialStorageSlot slot) ||
                 string.IsNullOrWhiteSpace(ownerId) || requested <= 0 ||
                 slot.ResourceTypeId != resourceTypeId || slot.AvailableQuantity <= 0 ||
-                !string.IsNullOrEmpty(slot.WithdrawalOwnerId))
+                !string.IsNullOrEmpty(slot.WithdrawalOwnerId) ||
+                !HasStorageFunction(cell) || !Accepts(slot.Filter, resourceTypeId))
             {
                 error = "Material Storage has no compatible unreserved contents.";
                 return false;
@@ -183,7 +187,8 @@ namespace AntColony.World
             if (!slots.TryGetValue(cell, out MaterialStorageSlot slot) ||
                 slot.ResourceTypeId != resourceTypeId ||
                 slot.WithdrawalOwnerId != ownerId || quantity <= 0 ||
-                quantity > slot.ReservedWithdrawalQuantity || quantity > slot.Quantity)
+                quantity > slot.ReservedWithdrawalQuantity || quantity > slot.Quantity ||
+                !HasStorageFunction(cell) || !Accepts(slot.Filter, resourceTypeId))
             {
                 error = "The reserved Material Storage withdrawal is no longer valid.";
                 return false;

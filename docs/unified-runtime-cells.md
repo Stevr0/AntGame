@@ -153,9 +153,10 @@ unloading or complex scenario restoration.
    quantity-one candidate records and invalidation without moving writers.
 3. **WV-B3C.2A — canonical stacks (complete):** Resource Definitions, stable
    stack identity, one stack/type per cell, capacity, reservations and revisions.
-4. **WV-B3C.2B — partial Hauling/stack transactions (implemented; manual
-   pending):** replay-safe exact transfers, successive partial trips, carrier
-   allocation/recovery and stale-scenario rejection. General multi-cell output
+4. **WV-B3C.2B — Hauling acceptance recovery (implemented; revised manual
+   pending):** replay-safe parent transfers with bounded multi-source pickup
+   operations, completed Storage-to-Construction withdrawal, one final delivery,
+   carrier allocation/recovery and stale-scenario rejection. General multi-cell output
    placement remains deferred. See the
    authoritative
    [`Partial Hauling Integration Plan`](https://github.com/Stevr0/AntGame/blob/main/Documentation/PartialHaulingIntegrationPlan.md).

@@ -1,9 +1,15 @@
 # Ant Colony Current Game State
 
-## WV-B3C.2B partial Hauling — implemented, manual acceptance pending (16 October 2026)
+## WV-B3C.2B Hauling acceptance recovery — implemented, manual re-acceptance pending (16 October 2026)
 
-**Implemented — Automated Tests Passed, Manual Acceptance Pending.**
-`MaterialTransferRegistry` now coordinates each exact Hauling trip
+**Implemented — Partial Manual Acceptance.** The first manual pass exposed that
+one-source jobs could not fill spare carrier capacity from nearby stacks,
+completed Material Storage was not registered as a Hauling source, and the
+seven-Soil developer producer key could not be reused after its stack retired.
+The recovery implementation corrects those limits; the revised manual checklist
+below is not yet user-confirmed.
+
+`MaterialTransferRegistry` now coordinates each exact single-destination Hauling run
 with a scenario-local `MaterialTransferId`, immutable snapshots, monotonically
 revised `Prepared → Reserved → PickedUp → Delivered → Completed` phases and
 explicit rejected, cancelled-before-pickup and recovery-required outcomes. It is
@@ -11,16 +17,23 @@ a replay ledger, not a physical inventory: ground quantity remains owned by
 `WorldMaterialDropRegistry`, carried quantity by `AntInventory`, and delivered
 quantity by `MaterialStorageWorld` or `ConstructionSite`.
 
-Source and destination reservations now use the transfer ID rather than the ant
-ID. Ground pickup adds exactly the reserved quantity to a transfer-owned
-inventory allocation and subtracts it from the canonical stack in the existing
-conserving callback. Delivery removes that allocation and credits the exact
-reserved destination quantity once. Replaying a committed pickup or delivery
-returns its recorded outcome without running the physical callback again. A
-positive source remainder keeps its `GroundStackId`; normal dynamic-job refresh
-creates the next one-trip opportunity. The existing fair scheduler, priorities,
-Construction-first destination ordering and owner-only self-deposit route are
-preserved.
+Source and destination reservations use the transfer ID rather than the ant ID.
+Each ground or Storage source has a distinct `MaterialPickupOperationId`, source
+identity, exact quantity and commit state under the parent run. A bounded plan
+evaluates at most 24 sources and visits at most eight, follows reachable actual
+route costs with stable ties, refuses excessive top-up detours and departs
+partially when no further useful source exists. All pickups share one resource,
+carrier allocation, destination and final delivery. Level 0 can therefore fill
+both slots with four units from four compatible one-unit stacks. A positive
+ground remainder keeps its `GroundStackId`.
+
+Completed Material Storage is now an authoritative source for pending
+Construction staging. Its existing filter, reachability, withdrawal reservation
+and quantity owner remain in force. Source jobs participate in the existing
+priority/path scheduler; ground and Storage are not given an unconditional
+source preference. Storage withdrawal cannot target Storage, so automatic
+Storage-to-Storage reorganisation and loops remain excluded. Construction demand
+continues to precede optional Storage filling.
 
 Cancellation before pickup releases both reservations and leaves the source
 unchanged. Cancellation, inactivity or destination invalidation after pickup
@@ -47,9 +60,12 @@ Pickup is blocked, while delivery, unloading and recovery remain available and
 reduce the condition safely. A 90→89 regression retains all six carried stacks,
 then clears over-capacity only as sufficient cargo is delivered.
 
-The development-only Resources panel can create one canonical **7 Soil** stack
-at the validated Colony fixture cell. It uses the same registry API as gameplay
-producers and does not alter normal quantity-one Node yields. Existing badge
+The development-only **Developer Only → Resources** panel creates one canonical
+**7 Soil** stack at the first valid deterministic fixture cell. Each new
+creation uses a fresh producer operation key, so the control remains usable after
+an earlier stack is exhausted. Success reports the cell and `GroundStackId`;
+blocked candidates produce a clear failure reason. It uses the same registry API
+as gameplay producers and does not alter normal quantity-one Node yields. Existing badge
 rules are retained: loose stacks and non-empty Storage show committed quantity
 continuously; Nodes show quantity only when designated; reservations are never
 presented as moved material.
@@ -57,59 +73,65 @@ presented as moved material.
 Production Node yields remain quantity-one, Surface Nodes remain
 `GenerationOnly`, and partial Node Extraction, variable Node yields, general
 multi-cell overflow distribution and Placement migration remain unimplemented.
-`WV-B3B-LIM-001` remains active. WV-B3C.2B cannot be marked complete until the
-manual checklist below is confirmed.
+`WV-B3B-LIM-001` remains active. Multi-destination routes, Storage
+reorganisation, variable Node yields, Surface Extraction, Placement migration
+and deceased-ant cargo placement remain deferred. WV-B3C.2B cannot be marked
+complete until the revised manual checklist below is confirmed.
 
 ### WV-B3C.2B automated verification
 
-Unity `6000.3.8f1` XML evidence records **54/54 focused Edit Mode** across the
-inventory/skill suite (31/31) and transfer/Hauling suite (23/23), **5/5 focused
-Play Mode**, **583/583 complete graphics-enabled Edit Mode**, **79/79 complete
-Play Mode**, and a separate **1/1 inventory-drop compatibility recheck**. All
-record zero failures, skips and inconclusive results. Evidence is retained in
-`Logs/WV-B3C2B-Inventory-EditMode.xml`,
-`Logs/WV-B3C2B-Hauling-EditMode.xml`,
-`Logs/WV-B3C2B-Focused-PlayMode.xml`,
-`Logs/WV-B3C2B-Full-EditMode.xml`,
-`Logs/WV-B3C2B-Full-PlayMode.xml` and
-`Logs/WV-B3C2B-InventoryDrop-Recheck.xml`, with corresponding logs. The tested
-implementation is the current uncommitted working tree over parent baseline
-`ba8b4946c5d273b60ce90d25e946ac645b7b0876`; that parent is provenance, not a
-claim that it contains WV-B3C.2B.
+Unity `6000.3.8f1` recovery XML evidence records **28/28 focused Edit Mode** and
+**6/6 focused Play Mode**, **588/588 complete graphics-enabled Edit Mode** and
+**80/80 complete Play Mode**, all with zero failures, skips and inconclusive
+results. The complete suites include the prior inventory/skill, inventory-drop,
+Extraction, Construction, scheduler, both-scenario, entrance, rendering and
+runtime-cell regressions. Evidence is retained in
+`Logs/WV-B3C2B-Recovery-Edit-Final.xml`,
+`Logs/WV-B3C2B-Recovery-Play-Final3.xml`,
+`Logs/WV-B3C2B-Recovery-Full-Edit.xml` and
+`Logs/WV-B3C2B-Recovery-Full-Play.xml`, with corresponding logs. The tested
+implementation is the current uncommitted working tree over implementation
+commit `6829b602`; that commit is provenance for the pre-recovery implementation,
+not a claim that it contains these corrections.
 
-### WV-B3C.2B manual Unity acceptance — pending
+### WV-B3C.2B recovery manual Unity acceptance — pending (0/30)
 
-1. Start the development fixture and create the Developer Only 7 Soil stack.
-2. Confirm its continuous initial badge shows 7 and record its Stack ID.
-3. Enable compatible Hauling and confirm the first trip reserves no more than
-   the ant's current allowance and destination capacity.
-4. While only reserved/travelling, confirm the ground badge remains 7.
-5. On pickup, confirm the badge drops by the exact carried quantity and the
-   positive remainder keeps the same Stack ID.
-6. Confirm the ant inventory owns exactly the picked-up amount.
-7. Confirm delivery increases Storage or Construction staging exactly once.
-8. Confirm later trips continue automatically until the stack reaches zero.
-9. Confirm the ground stack disappears only at zero.
-10. Cancel before pickup; confirm the source and both capacities are unchanged.
-11. Cancel after pickup; confirm cargo remains on the carrier and is recoverable.
-12. Invalidate or fill a destination; confirm carried material is not lost or
-    duplicated and another valid destination/recovery can be used.
-13. Confirm an over-capacity carrier caused by a Hauling threshold loss cannot
-    pick up more material but can unload all existing cargo safely.
-14. Confirm level 90 allows six slots at six base units and level 100 adds no
-    further carrying capacity.
-15. Generate founding-colony seed `2203` and confirm quantity-one Soil/Stone
-    Extraction, Hauling, staging and Construction still function.
-16. Confirm existing Hauling XP/activity and ordinary inactivity decay work;
-    Extraction, Construction and Foraging progression remain unchanged.
-17. Confirm job priorities/fair selection and Mara/Pip/Tala development-fixture
-    behavior remain functional.
-18. Switch Colony/World views and traverse the entrance; confirm no badge leaks
-    and quantities/identities remain stable.
-19. Rebuild the scenario and confirm prior Stack and transfer IDs cannot act on
-    the restored scenario and no reservation survives.
-20. Confirm generated Surface Nodes remain `GenerationOnly`.
-21. Exit Play Mode and confirm there are no new Console errors or exceptions.
+1. Open `AntGameDevelopment` and enter Play Mode.
+2. Open **Developer Only → Resources**.
+3. Create the seven-unit Soil test stack.
+4. Confirm its badge displays `7`.
+5. Confirm diagnostics show its canonical Stack ID and quantity.
+6. Select an available Level 0 ant.
+7. Provide a destination with at least four units of free capacity.
+8. Confirm the ant collects four Soil into both slots.
+9. Confirm the ground remainder is `3` under the same Stack ID.
+10. Confirm one delivery commits exactly four and another trip handles the remainder.
+11. Prepare four reachable one-unit Soil stacks.
+12. Confirm one run collects from all four before delivery.
+13. Confirm two slots contain four Soil before delivery.
+14. Confirm only one destination delivery occurs.
+15. Confirm all four empty source identities and badges retire.
+16. Fill completed Material Storage with Soil.
+17. Designate nearby Soil-requiring construction.
+18. Confirm Hauling withdraws the required Soil from Storage.
+19. Confirm Storage decrements and staging increments exactly once.
+20. Confirm Construction completes without additional Extraction.
+21. Cancel after several pickups; confirm carried units remain and unused
+    source/destination reservations release.
+22. Confirm unavailable, cancelled or full destinations preserve cargo safely.
+23. Confirm a capacity threshold loss preserves cargo, blocks new pickup and
+    still permits safe delivery.
+24. Confirm Hauling XP/activity, decay and all six capacity bands remain correct.
+25. Confirm existing Extraction, fully staged Construction, work priorities and
+    scheduler fairness still operate.
+26. Confirm both development and founding-queen scenarios operate.
+27. Switch Colony/World views and traverse the entrance without badge leakage or
+    state loss.
+28. Restore/rebuild the fixture and confirm stale Stack, pickup and transfer IDs
+    cannot operate on the replacement scenario.
+29. Confirm Surface Nodes remain `GenerationOnly` and no excluded milestone
+    behaviour appeared.
+30. Exit Play Mode and confirm a clean Console.
 
 ## WV-B3C.2A canonical ground stacks — 16 October 2026
 

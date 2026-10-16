@@ -570,9 +570,11 @@ The Colony adapter reports this occupant as `Authoritative` and publishes one
 loose-resource cell change for each committed creation, merge, reservation,
 release, pickup or removal. Reads, failures and camera switches publish none.
 Scenario replacement constructs a new context with no old reservations.
-WV-B3C.2B now adds scenario-local transfer identity, exact partial pickup and
-delivery, carrier allocation, recovery outcomes and successive trips without
-moving any runtime-cell write authority. General multi-cell overflow/pending
+WV-B3C.2B now adds scenario-local transfer identity, individually identified
+multi-source pickup operations, one exact single-destination delivery, completed
+Storage-to-Construction withdrawal, carrier allocation and recovery outcomes
+without moving any runtime-cell write authority. Ground and Storage change feeds
+still publish only their owners' committed quantity changes. General multi-cell overflow/pending
 output, B3C.3 variable Node authority and whole-node transaction cutover remain
 unimplemented. Surface Nodes remain `GenerationOnly`; `WV-B3B-LIM-001` is
 unchanged.

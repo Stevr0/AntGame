@@ -2,19 +2,21 @@
 
 ## WV-B3C.2B implementation status
 
-Partial Hauling is implemented as an exact,
-replay-safe transaction coordinated across the existing physical owners. One
-trip is bounded by unreserved source quantity, compatible carrier capacity and
-reserved Construction-staging or Material-Storage capacity. A positive ground
-remainder retains its Stack ID and is moved by later trips.
+The acceptance-recovery implementation coordinates one replay-safe,
+single-destination run across existing physical owners. A run may reserve and
+commit several compatible ground pickups before one delivery, or withdraw from
+completed filtered Material Storage for Construction staging. Each pickup has a
+separate operation identity; a positive ground remainder retains its Stack ID.
 
-The implementation preserves exclusive first-slice reservations, current-owner retention
-when capacity is unavailable, fully staged Construction and committed-only
-quantity badges. Transfer-owned carrier allocation protects in-flight material,
+The implementation uses a bounded 24-candidate/eight-pickup route evaluation,
+exclusive source and destination reservations, current-owner retention when
+capacity is unavailable, fully staged Construction and committed-only quantity
+badges. Storage never supplies Storage. Transfer-owned carrier allocation protects in-flight material,
 replayed commits are no-ops, and scenario replacement invalidates old transfer
 IDs. The approved capacity bands reach six slots × six base units at levels
 90–100 and reuse the shared decay-above-50 rules without cargo loss. Production
-Node yields are unchanged. Manual Unity acceptance is pending. See the authoritative
+Node yields are unchanged. The first manual pass was partial; revised recovery
+acceptance is pending. See the authoritative
 [`Partial Hauling Integration Plan`](https://github.com/Stevr0/AntGame/blob/main/Documentation/PartialHaulingIntegrationPlan.md).
 
 ## WV-B3C.2A acceptance status

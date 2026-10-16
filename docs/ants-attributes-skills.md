@@ -66,6 +66,12 @@ unloading remain available. Inventory survives visual rebinding and selection
 changes. Equipment slots, weight, saddlebags and final balance are not
 implemented.
 
+The WV-B3C.2B acceptance recovery makes this capacity useful across sources: a
+Level 0 ant may collect four compatible units from several one-unit ground
+stacks before one delivery. Pickup stops at the same band/resource/destination
+limits; the change does not add capacity, XP or decay exceptions. Completed
+Material Storage may supply Construction through the same allowance.
+
 ## Planned individuality
 
 The approved design expects equipment, permanent death, work efficiency from skills, and persistent individual histories. Roles will affect autonomous priorities rather than lock ants out of normal skills. Exact attribute formulas, equipment effects, ageing, and save serialization remain unresolved or unimplemented.

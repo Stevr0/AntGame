@@ -1,23 +1,27 @@
 # Ant Colony Development Roadmap
 
-## WV-B3C.2B — implemented; manual acceptance pending (16 October 2026)
+## WV-B3C.2B — acceptance recovery implemented; partial manual acceptance (16 October 2026)
 
 The approved
 [Partial Hauling and Canonical Stack Transaction Plan](PartialHaulingIntegrationPlan.md)
-is implemented for current ground-stack-to-inventory-to-Storage/Construction
-flows. A scenario-local transfer registry records immutable identities and
+is implemented for bounded multi-source ground/Storage-to-inventory-to-
+Storage/Construction flows. A scenario-local transfer registry records immutable identities and
 replay-safe phase commits; transfer IDs own the existing exclusive source and
 destination reservations, while a narrow inventory allocation protects exact
-in-flight cargo without replacing any physical quantity authority. Partial
-pickup preserves a positive remainder's `GroundStackId`, and normal dynamic-job
-refresh supports successive one-trip transfers.
+in-flight cargo without replacing any physical quantity authority. Individually
+identified pickup operations let one run collect compatible material from
+several reachable ground stacks before one delivery. Completed Material Storage
+can supply Construction staging through its own withdrawal authority. Partial
+pickup preserves a positive remainder's `GroundStackId`.
 
 Cancellation before pickup preserves the source. Cancellation, carrier
 inactivity or invalid destination after pickup leaves cargo on the carrier with
 an explicit recovery-required outcome. Scenario rebuild invalidates the old
 transfer context. Committed delivery awards Hauling XP once through the existing
-skill contract. The development Resources panel can create a canonical 7 Soil
-fixture; normal quantity-one Node yields are unchanged.
+skill contract. The development Resources panel can repeatedly create a
+canonical 7 Soil fixture with a fresh producer key, deterministic fallback cells
+and explicit cell/Stack-ID or blocked-placement feedback; normal quantity-one
+Node yields are unchanged.
 
 The authoritative Hauling capacity bands are 0–19 = 2 slots × 2 units, 20–39 =
 3×2, 40–59 = 3×3, 60–74 = 4×4, 75–89 = 5×5 and 90–100 = 6×6. Existing global
@@ -25,19 +29,22 @@ The authoritative Hauling capacity bands are 0–19 = 2 slots × 2 units, 20–3
 marks excess cargo over-capacity, blocks new pickup, and permits safe
 delivery/unloading.
 
-WV-B3C.2B remains **Implemented — Automated Tests Passed, Manual Acceptance
-Pending** until the current-state checklist is user-confirmed. General
+The first manual pass exposed one-source-only collection, absent Storage-source
+jobs and a non-reusable developer producer key. Those limitations are corrected,
+but WV-B3C.2B remains **Implemented — Partial Manual Acceptance** until the
+revised 30-step current-state checklist is user-confirmed. General
 deterministic multi-cell overflow/pending-output distribution is retained as
-future work with variable Node output rather than activated here. B3C.3, WV-B3D
-and WV-C1 remain unstarted; Surface Nodes remain `GenerationOnly`, and
+future work with variable Node output rather than activated here. Multi-destination
+routes and Storage reorganisation also remain excluded. B3C.3, WV-B3D and WV-C1
+remain unstarted; Surface Nodes remain `GenerationOnly`, and
 `WV-B3B-LIM-001` remains active.
 
-Unity `6000.3.8f1` evidence passes **54/54 focused Edit** (31 inventory/skill +
-23 transfer/Hauling), **5/5 focused Play**, **583/583 complete Edit** and
-**79/79 complete Play**, plus a **1/1 inventory-drop recheck**, with zero
-failures, skips or inconclusive results. The tested working tree is based on
-`ba8b4946c5d273b60ce90d25e946ac645b7b0876`; the implementation is not claimed
-to exist in that parent commit.
+Unity `6000.3.8f1` recovery evidence passes **28/28 focused Edit**, **6/6
+focused Play**, **588/588 complete graphics-enabled Edit** and **80/80 complete
+Play**, with zero failures, skips or inconclusive results. The complete suites
+include the earlier inventory-drop and broader gameplay regressions. The tested
+working tree is based on implementation commit `6829b602`; the acceptance
+recovery is not claimed to exist in that parent commit.
 
 ## WV-B3C.2A — Complete (16 October 2026)
 
