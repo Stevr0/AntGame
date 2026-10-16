@@ -81,16 +81,20 @@ namespace AntColony.World
         private readonly ChunkedWorldData world;
         private readonly WorldMaterialDropRegistry drops;
         private readonly GeneratedWorldSnapshot generated;
+        private readonly ColonyResourceNodeRegistry resourceNodes;
 
         public ColonyRuntimeCellRegionAdapter(ChunkedWorldData world,
-            WorldMaterialDropRegistry drops, GeneratedWorldSnapshot generated = null)
+            WorldMaterialDropRegistry drops, GeneratedWorldSnapshot generated = null,
+            ColonyResourceNodeRegistry resourceNodes = null)
             : base(AntRegionIds.Colony, RegionLocationKind.Colony)
         {
             this.world = world ?? throw new ArgumentNullException(nameof(world));
             this.drops = drops ?? throw new ArgumentNullException(nameof(drops));
             this.generated = generated;
+            this.resourceNodes = resourceNodes;
             world.CellChanged += OnTerrainChanged;
             drops.GroundCellChanged += OnGroundCellChanged;
+            if (resourceNodes != null) resourceNodes.NodeChanged += OnNodeChanged;
         }
 
         public override RuntimeCellReadResult TryGetCell(RegionCellId cellId,
@@ -110,7 +114,8 @@ namespace AntColony.World
             RuntimePlacementSnapshot placement = CreatePlacement(cell, data);
             RuntimeLooseStackSnapshot loose = CreateLooseStack(cell);
             snapshot = new RuntimeCellSnapshot(cellId, data.BackgroundMaterialId,
-                GetPublishedCellRevision(cellId, world.GetCellRevision(cell)),
+                GetPublishedCellRevision(cellId, Math.Max(world.GetCellRevision(cell),
+                    node?.NodeRevision ?? 0L)),
                 PublicationRevision, node, placement, loose);
             return RuntimeCellReadResult.Success;
         }
@@ -132,12 +137,30 @@ namespace AntColony.World
         {
             world.CellChanged -= OnTerrainChanged;
             drops.GroundCellChanged -= OnGroundCellChanged;
+            if (resourceNodes != null) resourceNodes.NodeChanged -= OnNodeChanged;
         }
 
         private RuntimeNodeSnapshot CreateNode(Vector2Int cell,
             WorldTileCellData data)
         {
             if (!data.HasSolidTile) return null;
+            RegionCellId cellId = RegionCellId.Colony(RegionId,
+                new ColonyCell(cell.x, cell.y));
+            if (resourceNodes != null &&
+                resourceNodes.TryGet(cellId, out ColonyResourceNodeSnapshot active) ==
+                    ColonyResourceNodeReadResult.Success)
+            {
+                RuntimeNodeInteractionState interaction = active.ExtractionStatus ==
+                    ColonyResourceNodeExtractionStatus.LegacyQuantityOneCompatible
+                        ? RuntimeNodeInteractionState.Interactive
+                        : RuntimeNodeInteractionState.CompatibilityOnly;
+                return new RuntimeNodeSnapshot(
+                    RuntimeOccupantProjectionState.Authoritative,
+                    active.NodeId, active.DefinitionId, active.BlocksMovement,
+                    active.InitialQuantity, active.RemainingQuantity, interaction,
+                    active.OutputResourceId, active.Revision, active.Lifecycle,
+                    active.ExtractionStatus);
+            }
             string stableId = string.Empty;
             if (TryGetGeneratedCell(cell, out GeneratedCellRecord generatedCell) &&
                 generatedCell.Node != null)
@@ -202,6 +225,11 @@ namespace AntColony.World
             PublishCellChange(RegionCellId.Colony(RegionId,
                 new ColonyCell(cell.x, cell.y)),
                 RuntimeCellChangeCategory.LooseResource);
+        }
+
+        private void OnNodeChanged(RegionCellId cellId, long nodeRevision)
+        {
+            PublishCellChange(cellId, RuntimeCellChangeCategory.Node, nodeRevision);
         }
     }
 

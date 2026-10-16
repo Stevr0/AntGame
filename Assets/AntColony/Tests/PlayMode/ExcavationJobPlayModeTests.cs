@@ -80,6 +80,49 @@ namespace AntColony.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator GeneratedVariableNodeDesignationRemainsUnownedAndConserved()
+        {
+            yield return LoadScene();
+            AntGameDevelopmentWorldHost host = FindHost();
+            Assert.That(host.TryStartScenario(GeneratedWorldScenario.FoundingQueen,
+                2203L, out string error), Is.True, error);
+            yield return null;
+            AntSelectionCommandController controller = host.SelectionController;
+            Vector2Int cell = new(ProceduralWorldGenerator.FoundingStoneFace.X,
+                ProceduralWorldGenerator.FoundingStoneFace.Y);
+            Assert.That(host.ColonyResourceNodes.TryGet(RegionCellId.Colony(
+                AntRegionIds.Colony, ProceduralWorldGenerator.FoundingStoneFace),
+                out ColonyResourceNodeSnapshot before),
+                Is.EqualTo(ColonyResourceNodeReadResult.Success));
+            Assert.That(controller.TryDesignateExcavation(cell, out error),
+                Is.True, error);
+            ExcavationDesignation designation = host.ExcavationDesignations
+                .Designations.Single();
+            double experienceBefore = controller.SelectableAnts[0].Record.Skills
+                .Get(AntColony.Ants.AntSkillId.Extraction).TotalExperience;
+
+            controller.SetAutonomousColonyWorkEnabled(true);
+            Assert.That(controller.EvaluateAutonomousColonyWorkNow(
+                controller.SelectableAnts[0], 1d), Is.False);
+            yield return null;
+
+            Assert.That(designation.Job.ReservationOwner.IsValid, Is.False);
+            Assert.That(controller.SelectableAnts[0].ExcavationOrder, Is.Null);
+            Assert.That(controller.SelectableAnts[0].Record.Skills
+                .Get(AntColony.Ants.AntSkillId.Extraction).TotalExperience,
+                Is.EqualTo(experienceBefore));
+            Assert.That(host.ColonyResourceNodes.TryGet(before.NodeId,
+                out ColonyResourceNodeSnapshot after),
+                Is.EqualTo(ColonyResourceNodeReadResult.Success));
+            Assert.That(after.RemainingQuantity, Is.EqualTo(before.RemainingQuantity));
+            Assert.That(after.Revision, Is.EqualTo(before.Revision));
+            Assert.That(host.MaterialDrops.Count, Is.Zero);
+            Assert.That(host.WorldData.GetCell(cell, out WorldTileCellData terrain),
+                Is.EqualTo(WorldCellQueryResult.Available));
+            Assert.That(terrain.HasSolidTile, Is.True);
+        }
+
+        [UnityTest]
         public IEnumerator CancelledSolidCanBeDesignatedAgainInTheRunningScene()
         {
             yield return LoadScene();

@@ -1677,6 +1677,17 @@ namespace AntColony.Commands
                 return false;
             }
 
+            if (excavationDesignations != null &&
+                excavationDesignations.TryGet(job.Id, out _) &&
+                !excavationDesignations.CanExecuteLegacyExtraction(job.Id,
+                    out string extractionReason))
+            {
+                colonyJobs.RecordPendingDependency(job.Id, extractionReason);
+                if (string.IsNullOrEmpty(waitingDependency))
+                    waitingDependency = $"{job.Id}: {extractionReason}";
+                return false;
+            }
+
             if (constructionDesignations == null ||
                 !constructionDesignations.TryGet(job.Id,
                     out ConstructionDesignation construction)) return true;
@@ -2223,12 +2234,15 @@ namespace AntColony.Commands
                         new Color(border.r, border.g, border.b, 0.10f),
                         designation.State == ExcavationDesignationState.Active
                             ? "A" : "X");
-                    // Current Colony Solids are quantity-one compatibility
-                    // Nodes. Show their amount contextually after designation,
-                    // not across every underground wall cell.
+                    int quantity = 0;
+                    bool hasQuantity = excavationDesignations.TryGetResourceNode(
+                        designation.Cell, out ColonyResourceNodeSnapshot node);
+                    if (hasQuantity) quantity = node.RemainingQuantity;
+                    // Node quantities stay contextual after designation so a
+                    // generated underground world does not become badge noise.
                     if (ResourceQuantityBadgeRules.ShouldShowNode(true, false,
-                            true, true, false, 1))
-                        DrawQuantityBadge(designation.Cell, "1", border);
+                            true, hasQuantity, false, quantity))
+                        DrawQuantityBadge(designation.Cell, quantity.ToString(), border);
                 }
             }
             if (constructionDesignations != null)

@@ -47,7 +47,10 @@ namespace AntColony.World
         public RuntimeNodeSnapshot(RuntimeOccupantProjectionState projectionState,
             string stableId, string definitionId, bool? obstructsMovement,
             int? initialQuantity, int? remainingQuantity,
-            RuntimeNodeInteractionState interactionState)
+            RuntimeNodeInteractionState interactionState,
+            string resourceDefinitionId = "", long? nodeRevision = null,
+            ColonyResourceNodeLifecycle? lifecycle = null,
+            ColonyResourceNodeExtractionStatus? extractionStatus = null)
         {
             ProjectionState = projectionState;
             StableId = stableId ?? string.Empty;
@@ -56,6 +59,10 @@ namespace AntColony.World
             InitialQuantity = initialQuantity;
             RemainingQuantity = remainingQuantity;
             InteractionState = interactionState;
+            ResourceDefinitionId = resourceDefinitionId ?? string.Empty;
+            NodeRevision = nodeRevision;
+            Lifecycle = lifecycle;
+            ExtractionStatus = extractionStatus;
         }
 
         public RuntimeOccupantProjectionState ProjectionState { get; }
@@ -65,6 +72,10 @@ namespace AntColony.World
         public int? InitialQuantity { get; }
         public int? RemainingQuantity { get; }
         public RuntimeNodeInteractionState InteractionState { get; }
+        public string ResourceDefinitionId { get; }
+        public long? NodeRevision { get; }
+        public ColonyResourceNodeLifecycle? Lifecycle { get; }
+        public ColonyResourceNodeExtractionStatus? ExtractionStatus { get; }
         public bool HasCompleteDetails => !string.IsNullOrEmpty(StableId) &&
             !string.IsNullOrEmpty(DefinitionId) && ObstructsMovement.HasValue &&
             InitialQuantity.HasValue && RemainingQuantity.HasValue;

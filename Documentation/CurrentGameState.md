@@ -1,5 +1,105 @@
 # Ant Colony Current Game State
 
+## WV-B3C.3A active variable-quantity Colony Nodes — Implemented, Automated Tests Passed, Manual Acceptance Pending (16 October 2026)
+
+The existing Colony Resource Node registry is now the sole mutable quantity
+authority for supported underground Soil and Stone Nodes. `ChunkedWorldData`
+continues to own the supporting Solid identity, occupancy, Background and
+navigation blocking; it does not own a second mutable resource quantity. Each
+active Node exposes a stable scenario-local ID, typed Colony cell, definition,
+initial and remaining quantity, revision, lifecycle, Extraction work metadata,
+Solid identity, provenance and reservation/operation metadata through immutable
+snapshots.
+
+Generated Colony quantities are deterministic per Node and independent of
+generation traversal order: Soil uses the approved provisional range **8–12**
+and Stone **5–15**. Inputs include seed, generation configuration/version,
+definition and coordinates. Seed `2203` therefore reproduces the same per-Node
+quantities. The Mara/Pip/Tala fixture deliberately retains quantity-one Nodes
+and its accepted balance. Generation creates no loose stacks.
+
+The active lifecycle is `Active`, `Reserved`, `PendingExtractionCommit`,
+`Depleted`, `Invalidated` or `ScenarioRetired`. Expected revisions, exclusive
+owners and replay IDs protect prospective quantity mutations. Reads and failed
+or replayed writes do not advance quantity/revision; committed authority changes
+publish one affected Colony Node change. Scenario replacement retires old IDs
+and releases their reservations.
+
+### WV-B3C.3A Extraction safety boundary
+
+WV-B3C.3A does **not** implement whole-node Extraction. Quantity-one fixture
+Nodes retain the existing safe one-unit Extraction, physical output, Background
+preservation and XP rules. A generated variable-quantity Node can be inspected
+and designated, but legacy one-unit execution is rejected before work ownership,
+terrain removal, quantity change, output or completion XP with the exact reason:
+
+`Variable-quantity Node awaiting whole-node Extraction support (WV-B3C.3B)`
+
+Deferred jobs remain unowned so they cannot monopolise ants. A scenario-local
+Solid-mutation guard rejects direct supported-Solid replacement/removal; the
+fixture debug toggle and quantity-one Extraction receive narrow one-use tokens.
+Generated-scenario debug mutation is disabled. Natural Background data is never
+removed by permitted Extraction.
+
+The Colony unified-cell adapter now reads authoritative Node ID, resource ID,
+initial/remaining quantity, Node revision, lifecycle and Extraction status from
+the registry. Designated Colony Node badges show the actual remaining quantity;
+undesignated Nodes remain uncluttered. Existing loose-stack and non-empty Storage
+badges, Surface `GenerationOnly` records and cross-region isolation are unchanged.
+Development diagnostics show bounded totals and selected-Node identity,
+quantity, revision, lifecycle, Solid, reservation and compatibility reason.
+
+### Automated verification
+
+Unity `6000.3.8f1` XML evidence records **11/11 focused Edit Mode**, **16/16
+focused Play Mode**, **594/594 complete graphics-enabled Edit Mode** and **81/81
+complete Play Mode**, with zero failures, skips or inconclusive results. The
+complete suites retain Hauling, multi-source pickup, Storage withdrawal,
+Construction staging, scheduler fairness, entrance and scenario restoration
+coverage. Evidence is retained in `Logs/WV-B3C3A-FocusedEdit.xml`,
+`Logs/WV-B3C3A-FocusedPlay.xml`, `Logs/WV-B3C3A-FullEdit.xml` and
+`Logs/WV-B3C3A-FullPlay.xml`, with corresponding logs. Tests ran against the
+uncommitted WV-B3C.3A working tree based on parent revision `1fab6541`; that
+parent is provenance, not a claim that it contains this implementation.
+
+### Manual Unity acceptance — pending (0/25 confirmed)
+
+Codex has not performed or claimed this visual/manual acceptance. Repeat in
+Unity Play Mode and report the result:
+
+1. Start generated founding-colony scenario with seed `2203`.
+2. Confirm Surface and Colony regions generate correctly.
+3. Confirm the queen spawns in the starting chamber.
+4. Inspect several Soil Nodes.
+5. Confirm Soil quantities vary within 8–12.
+6. Inspect several Stone Nodes.
+7. Confirm Stone quantities vary within 5–15.
+8. Designate a Soil Node for Extraction.
+9. Confirm its badge shows the actual Node quantity.
+10. Confirm variable-quantity Extraction is safely deferred.
+11. Confirm no Solid is removed or physical resource lost.
+12. Confirm deferred Extraction does not monopolise the queen.
+13. Confirm other available eligible work can proceed.
+14. Switch views and confirm quantities remain stable.
+15. Restore Mara/Pip/Tala.
+16. Confirm legacy quantity-one Nodes remain functional.
+17. Extract a quantity-one Soil or Stone Node.
+18. Confirm one physical resource is produced.
+19. Confirm the natural Background is preserved.
+20. Confirm Hauling and Construction still function.
+21. Confirm old scenario Node identities are invalidated.
+22. Confirm existing loose-stack and Storage badges remain correct.
+23. Confirm entrance transitions remain bidirectional.
+24. Confirm simulation Pause/1×/2×/3× remains functional.
+25. Exit Play Mode and confirm no new Unity Console errors or exceptions.
+
+WV-B3C.3B whole-node output, multi-stack output distribution and partial Node
+harvesting remain unimplemented. Hauling, Storage capacities, construction
+recipes, Surface interactions and Placement authority were not changed.
+`WV-B3B-LIM-001` remains active: only the unified read-model pair publishes
+atomically; complete mutable scenario construction/restoration is not one
+whole-world transaction.
+
 ## WV-B3C.2B Hauling acceptance recovery — Complete (16 October 2026)
 
 **WV-B3C.2B — Complete.** The first manual pass exposed that
@@ -70,7 +170,8 @@ rules are retained: loose stacks and non-empty Storage show committed quantity
 continuously; Nodes show quantity only when designated; reservations are never
 presented as moved material.
 
-Production Node yields remain quantity-one, Surface Nodes remain
+At WV-B3C.2B closure, production Node yields remained quantity-one. WV-B3C.3A
+subsequently activated generated Colony variable quantities. Surface Nodes remain
 `GenerationOnly`, and partial Node Extraction, variable Node yields, general
 multi-cell overflow distribution and Placement migration remain unimplemented.
 `WV-B3B-LIM-001` remains active. Multi-destination routes, Storage

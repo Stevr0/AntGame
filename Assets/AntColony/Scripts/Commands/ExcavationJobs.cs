@@ -50,14 +50,16 @@ namespace AntColony.Commands
         public const int MaximumAreaCells = 256;
         private readonly ChunkedWorldData world;
         private readonly ColonyJobRegistry jobs;
+        private readonly ColonyResourceNodeRegistry resourceNodes;
         private readonly Dictionary<Vector2Int, ExcavationDesignation> byCell = new();
         private readonly Dictionary<ColonyJobId, ExcavationDesignation> byJob = new();
 
         public ExcavationDesignationRegistry(ChunkedWorldData world,
-            ColonyJobRegistry jobs)
+            ColonyJobRegistry jobs, ColonyResourceNodeRegistry resourceNodes = null)
         {
             this.world = world ?? throw new ArgumentNullException(nameof(world));
             this.jobs = jobs ?? throw new ArgumentNullException(nameof(jobs));
+            this.resourceNodes = resourceNodes;
         }
 
         public IEnumerable<ExcavationDesignation> Designations => byCell.Values;
@@ -158,6 +160,48 @@ namespace AntColony.Commands
 
         public bool TryGet(ColonyJobId jobId, out ExcavationDesignation designation) =>
             byJob.TryGetValue(jobId, out designation);
+
+        /// <summary>
+        /// Designation remains legal for inspection, but generated multi-unit
+        /// Nodes stay unowned until the whole-node transaction exists.
+        /// </summary>
+        public bool CanExecuteLegacyExtraction(ColonyJobId jobId, out string reason)
+        {
+            if (!byJob.TryGetValue(jobId, out ExcavationDesignation designation))
+            { reason = "The Extraction designation is unavailable."; return false; }
+            if (resourceNodes == null)
+            {
+                reason = string.Empty;
+                return true;
+            }
+            return resourceNodes.CanUseLegacyExtraction(designation.Cell, out reason);
+        }
+
+        public bool TryGetResourceNode(Vector2Int cell,
+            out ColonyResourceNodeSnapshot node)
+        {
+            node = null;
+            if (resourceNodes == null) return false;
+            RegionCellId cellId = RegionCellId.Colony(AntRegionIds.Colony,
+                new ColonyCell(cell.x, cell.y));
+            return resourceNodes.TryGet(cellId, out node) ==
+                ColonyResourceNodeReadResult.Success;
+        }
+
+        public int DeferredVariableExtractionCount
+        {
+            get
+            {
+                int count = 0;
+                foreach (ExcavationDesignation designation in byCell.Values)
+                    if (designation.State is ExcavationDesignationState.Pending &&
+                        TryGetResourceNode(designation.Cell, out var node) &&
+                        node.ExtractionStatus == ColonyResourceNodeExtractionStatus
+                            .DeferredUntilWholeNodeExtraction)
+                        count++;
+                return count;
+            }
+        }
     }
 
     public enum ExcavationOrderPhase

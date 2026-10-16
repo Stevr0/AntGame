@@ -12,11 +12,12 @@ and World View to one conceptual runtime cell architecture without replacing
 their local navigation, movement, rendering, cameras or entrance transaction.
 It refines the approved unified-cell model in the GDD and procedural generation
 specification. Where older technical proposals conflict with this document,
-this document controls the WV-B3 migration. WV-B3B now implements the read-only
-foundation described below, and WV-B3C.1 implements the accepted inactive
-quantity-one Colony Node seam. The resource-specific end-state is governed by
-[`ResourceAndNodeSystem.md`](ResourceAndNodeSystem.md). Later mutable WV-B3C,
-WV-B3D, WV-C1 and their gameplay migrations remain unapproved/unimplemented.
+this document controls the WV-B3 migration. WV-B3B implements the read-only
+foundation, WV-B3C.1 established the Node seam, WV-B3C.2 completed canonical
+stacks/Hauling transactions, and WV-B3C.3A now activates variable Colony Node
+quantity ownership. The resource-specific end-state is governed by
+[`ResourceAndNodeSystem.md`](ResourceAndNodeSystem.md). Whole-node Extraction,
+WV-B3D, WV-C1 and their later gameplay migrations remain unimplemented.
 
 The migration must preserve the working resource chain:
 
@@ -531,6 +532,28 @@ Completion requires exact conservation under success, replay, cancellation and
 failed placement; Background preservation; Surface and Colony typed identity;
 and proof that generated records no longer own mutable quantity.
 
+#### WV-B3C.3A implementation status — 16 October 2026
+
+**Implemented — Automated Tests Passed, Manual Acceptance Pending.** The Colony
+adapter now reads its Node projection from the active scenario-local registry,
+including Node/resource identity, initial and remaining quantity, Node revision,
+lifecycle and Extraction status. Soil 8–12 and Stone 5–15 quantities are derived
+independently per generated Node. `ChunkedWorldData` still owns the Solid and
+Background; guarded terrain writes prevent the quantity authority being
+bypassed.
+
+Committed Node authority changes publish one region-scoped Node change. Failed
+and replayed changes, reads and view switching publish none. Fixture
+quantity-one Nodes remain interactive. Generated variable Nodes can be
+designated and inspected but the legacy one-unit transaction rejects before
+terrain, quantity, output or completion XP changes. Surface records remain
+`GenerationOnly`.
+
+Focused Unity evidence passes 11/11 Edit and 16/16 Play; complete suites pass
+594/594 Edit and 81/81 Play. Manual acceptance is pending. WV-B3C.3B must still
+coordinate whole-node depletion and complete physical output; B3C.3A does not
+provide that transaction.
+
 #### WV-B3C.1 implementation status — 16 October 2026
 
 **Complete — Automated and Manual Acceptance Passed.** The
@@ -575,8 +598,9 @@ multi-source pickup operations, one exact single-destination delivery, completed
 Storage-to-Construction withdrawal, carrier allocation and recovery outcomes
 without moving any runtime-cell write authority. Ground and Storage change feeds
 still publish only their owners' committed quantity changes. General multi-cell overflow/pending
-output, B3C.3 variable Node authority and whole-node transaction cutover remain
-unimplemented. Surface Nodes remain `GenerationOnly`; `WV-B3B-LIM-001` is
+output and B3C.3B whole-node transaction cutover remain unimplemented. B3C.3A
+active variable Node authority is implemented. Surface Nodes remain
+`GenerationOnly`; `WV-B3B-LIM-001` is
 unchanged. WV-B3C.2B is complete after user-confirmed **30/30** authoritative
 manual Unity acceptance and the recorded green automated suites.
 
@@ -584,9 +608,9 @@ Resource and Node v1.0 further requires variable quantities and complete
 whole-node output, including several deterministic stacks or recoverable pending
 output when one stack cannot hold the yield. The recommended implementation
 split completed B3C.2A definitions/canonical stacks and implemented B3C.2B
-partial Hauling/transfer recovery. General output splitting remains future work
-alongside B3C.3A active variable Colony Nodes and B3C.3B whole-node transaction
-cutover.
+partial Hauling/transfer recovery. B3C.3A active variable Colony Nodes are now
+implemented; general output splitting and B3C.3B whole-node transaction cutover
+remain future work.
 
 ### WV-B3D candidate — Construction / Placement Integration
 

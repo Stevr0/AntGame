@@ -268,7 +268,7 @@ namespace AntColony.Development
             textBuilder.Append("Rendered Background cell: ")
                 .Append(tilemapCell)
                 .AppendLine();
-            AppendInactiveNodeRegistryDiagnostics(textBuilder);
+            AppendNodeRegistryDiagnostics(textBuilder);
             AppendAutonomousAntDiagnostics(textBuilder);
             AppendGridAntDiagnostics(textBuilder);
 
@@ -331,19 +331,19 @@ namespace AntColony.Development
             return textBuilder.ToString();
         }
 
-        private void AppendInactiveNodeRegistryDiagnostics(StringBuilder builder)
+        private void AppendNodeRegistryDiagnostics(StringBuilder builder)
         {
-            InactiveColonyResourceNodeRegistry registry =
+            ColonyResourceNodeRegistry registry =
                 worldHost?.ColonyResourceNodes;
             if (registry == null)
             {
-                builder.AppendLine("Inactive Node registry: unavailable");
+                builder.AppendLine("Active Node registry: unavailable");
                 return;
             }
 
             ColonyResourceNodeRegistryDiagnostics diagnostics =
                 registry.Diagnostics;
-            builder.Append("Inactive Node registry: ")
+            builder.Append("Active Node registry: ")
                 .Append(diagnostics.Lifecycle)
                 .Append("   revision ")
                 .Append(diagnostics.Revision)
@@ -361,19 +361,42 @@ namespace AntColony.Development
                 .Append(diagnostics.UnsupportedSolidCount).Append(" / ")
                 .Append(diagnostics.DuplicateNodeCount)
                 .AppendLine();
+            builder.Append("Initial / remaining Soil: ")
+                .Append(diagnostics.TotalInitialSoil).Append(" / ")
+                .Append(diagnostics.TotalRemainingSoil).AppendLine();
+            builder.Append("Initial / remaining Stone: ")
+                .Append(diagnostics.TotalInitialStone).Append(" / ")
+                .Append(diagnostics.TotalRemainingStone).AppendLine();
+            builder.Append("Mismatched / deferred variable jobs: ")
+                .Append(diagnostics.MismatchedNodeCount).Append(" / ")
+                .Append(worldHost?.ExcavationDesignations?
+                    .DeferredVariableExtractionCount ?? 0).AppendLine();
 
             RegionCellId selected = RegionCellId.Colony(AntRegionIds.Colony,
                 new ColonyCell(selectedCell.x, selectedCell.y));
-            InactiveColonyNodeReadResult result = registry.TryGet(
-                selected, out InactiveColonyResourceNodeSnapshot node);
-            builder.Append("Selected inactive Node: ").Append(result);
-            if (result == InactiveColonyNodeReadResult.Success)
+            ColonyResourceNodeReadResult result = registry.TryGet(
+                selected, out ColonyResourceNodeSnapshot node);
+            builder.Append("Selected Node: ").Append(result);
+            if (result == ColonyResourceNodeReadResult.Success)
             {
                 builder.Append("   ").Append(node.DefinitionId)
                     .Append("   ").Append(node.Lifecycle)
                     .Append("   revision ").Append(node.Revision)
                     .AppendLine();
                 builder.Append("Node ID: ").Append(node.NodeId).AppendLine();
+                builder.Append("Resource / initial / remaining: ")
+                    .Append(node.OutputResourceId).Append(" / ")
+                    .Append(node.InitialQuantity).Append(" / ")
+                    .Append(node.RemainingQuantity).AppendLine();
+                builder.Append("Supporting Solid: ").Append(node.DefinitionId)
+                    .Append("   extraction: ").Append(node.ExtractionStatus)
+                    .AppendLine();
+                builder.Append("Reservation: ")
+                    .Append(string.IsNullOrEmpty(node.ReservationOwner)
+                        ? "none" : node.ReservationOwner).AppendLine();
+                if (!string.IsNullOrEmpty(node.ExtractionCompatibilityReason))
+                    builder.Append("Deferred: ")
+                        .Append(node.ExtractionCompatibilityReason).AppendLine();
             }
             else
             {

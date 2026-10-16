@@ -1,5 +1,34 @@
 # Ant Colony Development Roadmap
 
+## WV-B3C.3A — Implemented; automated tests passed; manual acceptance pending (16 October 2026)
+
+The established Colony Resource Node registry now actively owns all supported
+Soil/Stone Node quantities while `ChunkedWorldData` retains terrain/Solid
+occupancy. Generated Soil quantities are deterministic in **8–12** and Stone in
+**5–15**; the development fixture remains an explicit quantity-one compatibility
+scenario. Stable scenario-local identity, immutable snapshots, revisions,
+exclusive reservation states, replay-safe prospective mutation contracts,
+scenario retirement and bounded diagnostics are implemented.
+
+The unified Colony adapter publishes authoritative Node quantity/lifecycle/status
+and designated badges read the actual remaining quantity. Direct Solid mutation
+cannot bypass quantity conservation. Quantity-one fixture Extraction remains
+functional, while generated variable Nodes are designatable but remain unowned
+and reject legacy one-unit completion with
+`Variable-quantity Node awaiting whole-node Extraction support (WV-B3C.3B)`.
+
+Unity `6000.3.8f1` passes **11/11 focused Edit**, **16/16 focused Play**,
+**594/594 complete Edit** and **81/81 complete Play**, all with zero failures,
+skips or inconclusive results. The authoritative 25-step Unity manual checklist
+is pending, so the milestone is not Complete. The next implementation gate is
+**WV-B3C.3B whole-node Extraction and complete physical output**, but it is not
+started or authorised by this milestone. Surface interactions, Placement
+migration, persistence and unloaded simulation remain deferred.
+
+`WV-B3B-LIM-001` remains accepted: scenario-local authority and atomic
+Colony/Surface read-model replacement do not provide whole-world transactional
+construction or restoration.
+
 ## WV-B3C.2B — Complete (16 October 2026)
 
 The approved
@@ -41,8 +70,8 @@ unloaded-region simulation also remain excluded. B3C.3, WV-B3D and WV-C1
 remain unstarted; Surface Nodes remain `GenerationOnly`, and
 `WV-B3B-LIM-001` remains active.
 
-The next recommended milestone is **WV-B3C.3A — active variable-quantity Colony
-Nodes**, subject to separate user approval. This closure does not begin it.
+WV-B3C.3A subsequently implemented active variable-quantity Colony Nodes and is
+awaiting its 25-step manual acceptance. WV-B3C.3B has not begun.
 
 Unity `6000.3.8f1` recovery evidence passes **28/28 focused Edit**, **6/6
 focused Play**, **588/588 complete graphics-enabled Edit** and **80/80 complete
@@ -104,7 +133,8 @@ variable quantities, whole-node Solid Extraction, complete physical output,
 finite Water and natural-only Backgrounds the target. B3C.1 remains a
 quantity-one inactive compatibility foundation, not that final mutable model.
 B3C.2A and B3C.2B have since completed;
-B3C.3, WV-B3D and WV-C1 have not started. `WV-B3B-LIM-001` remains active.
+At WV-B3C.1 closure, B3C.3, WV-B3D and WV-C1 had not started. B3C.3A is now
+implemented pending manual acceptance; `WV-B3B-LIM-001` remains active.
 
 B3C.2A and the approved narrower B3C.2B Hauling/transaction slice subsequently
 completed. The next recommended planning gates are B3C.3A active variable

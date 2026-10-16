@@ -192,7 +192,7 @@ namespace AntColony.Tests.EditMode
         }
 
         [Test]
-        public void GeneratedFoundingStoneCanBeWorkedByZeroConstructionQueen()
+        public void GeneratedFoundingStoneCanBeDesignatedButLegacyCommitIsDeferred()
         {
             AntGameDevelopmentWorldHost host = OpenHost();
             Assert.That(host.TryStartScenario(
@@ -204,30 +204,41 @@ namespace AntColony.Tests.EditMode
             host.WorldData.GetCell(cell, out WorldTileCellData before);
             Assert.That(host.ExcavationDesignations.TryDesignate(cell,
                 out ExcavationDesignation designation, out error), Is.True, error);
+            Assert.That(host.ExcavationDesignations.CanExecuteLegacyExtraction(
+                designation.Job.Id, out error), Is.False);
+            Assert.That(error, Is.EqualTo(
+                ColonyResourceNodeRegistry.VariableExtractionDeferredReason));
             var queen = new AntRecord(new AntId("generated-queen"), "Founding Queen",
                 new ColonyId("generated-colony"), AntCaste.Queen,
                 new AntAttributes(5, 5, 5));
             Assert.That(queen.Skills.Get(AntSkillId.Construction).Level, Is.Zero);
-            Vector2Int start = new(ProceduralWorldGenerator.QueenSpawn.X,
-                ProceduralWorldGenerator.QueenSpawn.Y);
-            Assert.That(SurvivalInteractionOrder.TryMeasureApproach(
-                host.GridNavigationMap, start, cell, out Vector2Int approach,
-                out _, out error), Is.True, error);
-            Assert.That(ExcavationJobOrder.TryCreate(host.ColonyJobRegistry,
-                host.GridNavigationMap, queen, designation, approach,
-                host.ExcavationTransaction, out ExcavationJobOrder order,
-                out error), Is.True, error);
-            Assert.That(order.TryBegin(approach), Is.True);
-            order.Advance(4d, 4d);
+            double experienceBefore = queen.Skills.Get(
+                AntSkillId.Extraction).TotalExperience;
+            int dropsBefore = host.MaterialDrops.Count;
+            Assert.That(host.ColonyResourceNodes.TryGet(
+                RegionCellId.Colony(AntRegionIds.Colony,
+                    new ColonyCell(cell.x, cell.y)), out var nodeBefore),
+                Is.EqualTo(ColonyResourceNodeReadResult.Success));
+
+            Assert.That(host.ExcavationTransaction.TryCommit(
+                designation.Job.Id.Value, cell, before.SolidMaterialId,
+                out _, out error), Is.False);
+            Assert.That(error, Is.EqualTo(
+                ColonyResourceNodeRegistry.VariableExtractionDeferredReason));
 
             host.WorldData.GetCell(cell, out WorldTileCellData after);
-            Assert.That(order.Phase, Is.EqualTo(ExcavationOrderPhase.Completed));
-            Assert.That(after.HasSolidTile, Is.False);
+            Assert.That(after.HasSolidTile, Is.True);
+            Assert.That(after.SolidMaterialId, Is.EqualTo(before.SolidMaterialId));
             Assert.That(after.BackgroundMaterialId, Is.EqualTo(before.BackgroundMaterialId));
-            Assert.That(host.MaterialDrops.TryFindAtCell(
-                cell, out WorldMaterialDrop output), Is.True);
-            Assert.That(output.Material, Is.EqualTo(ExcavatedMaterialType.Stone));
-            Assert.That(output.Quantity, Is.EqualTo(1));
+            Assert.That(host.MaterialDrops.Count, Is.EqualTo(dropsBefore));
+            Assert.That(queen.Skills.Get(AntSkillId.Extraction).TotalExperience,
+                Is.EqualTo(experienceBefore));
+            Assert.That(designation.Job.ReservationOwner.IsValid, Is.False);
+            Assert.That(host.ColonyResourceNodes.TryGet(nodeBefore.NodeId,
+                out var nodeAfter), Is.EqualTo(ColonyResourceNodeReadResult.Success));
+            Assert.That(nodeAfter.RemainingQuantity,
+                Is.EqualTo(nodeBefore.RemainingQuantity));
+            Assert.That(nodeAfter.Revision, Is.EqualTo(nodeBefore.Revision));
         }
 
         [Test]

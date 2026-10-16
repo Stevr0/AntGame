@@ -1,5 +1,19 @@
 # Resource and Node System
 
+## WV-B3C.3A — automated acceptance passed; manual pending
+
+The existing Colony registry is now the active Soil/Stone Node quantity
+authority. Generated Soil contains 8–12 units and Stone 5–15, derived
+deterministically per Node; Mara/Pip/Tala remains quantity one. Terrain still
+owns Solid occupancy and Backgrounds, with guarded mutation preventing resource
+loss. Variable Nodes can be inspected and designated, but legacy one-unit
+Extraction is explicitly deferred to WV-B3C.3B and remains unowned.
+
+Runtime snapshots and designated badges read actual remaining quantity and Node
+revision/lifecycle directly from the authority. Surface Nodes remain
+`GenerationOnly`. Unity evidence passes 11/11 focused Edit, 16/16 focused Play,
+594/594 full Edit and 81/81 full Play. The 25-step manual checklist is pending.
+
 ## WV-B3C.2B — complete
 
 The acceptance-recovery implementation coordinates one replay-safe,
@@ -30,8 +44,8 @@ documentation-only closure.
 
 WV-B3C.2A continuously shows quantity for visible loose stacks and non-empty
 legacy Material Storage, using each existing authority directly. Node badges are
-contextual for scale: current quantity-one Colony Solids show `1` after
-Extraction designation, while undesignated Nodes stay uncluttered.
+contextual for scale: active Colony Nodes show their authoritative remaining
+quantity after Extraction designation, while undesignated Nodes stay uncluttered.
 Generation-only Surface Nodes and unknown quantities are never shown as live
 interactive resources. General Node selection, selected-site staging details,
 Fog-of-War discovery and one-badge-per-future-Placement integration remain
@@ -71,8 +85,8 @@ The authoritative detailed contract is
 
 | Resource | Current status |
 | --- | --- |
-| Soil | Implemented Colony resource; quantity-one compatibility Node/yield |
-| Stone | Implemented Colony resource; Surface Stone is generation-only |
+| Soil | Active generated Colony Node quantity 8–12; fixture quantity one |
+| Stone | Active generated Colony Node quantity 5–15; Surface Stone generation-only |
 | Seeds | Generated Surface record; interaction future |
 | Twigs | Generated Surface record; interaction future |
 | Food | Category; current fixture supply is not a generic material definition |
@@ -87,8 +101,10 @@ WV-B3C.1 is **Complete**. The user accepted its manual Unity checklist after
 focused Edit `8/8`, focused Play `4/4`, full Edit `565/565` and full Play
 `78/78` passed with no failures, skips or inconclusive results. It supplies only
 an inactive quantity-one Soil/Stone registry. `ChunkedWorldData`, existing loose
-drops, Hauling, Construction and the `GenerationOnly` Surface records retain
-their existing ownership.
+drops, Hauling, Construction and the `GenerationOnly` Surface records retained
+their ownership through that foundation. WV-B3C.3A subsequently activated the
+same Colony registry as sole Node quantity owner without implementing the
+WV-B3C.3B output transaction.
 
 Functional Backgrounds remain an active legacy compatibility representation
 pending WV-B3D Placement migration. No gameplay behavior changed in the v1.0

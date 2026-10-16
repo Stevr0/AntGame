@@ -1,5 +1,21 @@
 # Design Decision Log
 
+## 2026-10-16 — Activate Colony Node quantity before whole-node output
+
+- Make the established scenario-local Colony registry the sole mutable
+  Soil/Stone Node quantity owner; keep `ChunkedWorldData` authoritative for
+  supporting Solid occupancy and natural Backgrounds.
+- Derive generated Soil 8–12 and Stone 5–15 quantities independently per Node
+  from stable generation inputs. Retain quantity-one fixture compatibility.
+- Guard all Solid removal/replacement. Permit only narrow one-use fixture/debug
+  and quantity-one Extraction tokens.
+- Allow variable Nodes to be inspected/designated, but keep legacy one-unit
+  Extraction unowned and reject it without terrain, quantity, output or XP
+  changes until WV-B3C.3B.
+- Publish authoritative immutable Node snapshots and one change set per
+  committed mutation. Preserve Surface `GenerationOnly` state and
+  `WV-B3B-LIM-001`.
+
 ## 2026-10-16 — Extend one Hauling run across bounded sources
 
 - Keep one resource, carrier and destination per run, while giving every ground

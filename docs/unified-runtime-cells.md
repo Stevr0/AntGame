@@ -18,11 +18,10 @@ functional-Background anchor behavior until Placement migration.
 
 Creation, merge, reservation, release, pickup and removal publish one affected
 cell change. Reads, failed transactions and view switching do not. A scenario
-rebuild creates a new ID context and drops old reservations. Existing
-quantity-one Extraction, Hauling, Storage and staged Construction remain their
-current authorities. B3C.2B now coordinates partial transfer identity,
+rebuild creates a new ID context and drops old reservations. Hauling, Storage
+and staged Construction retain their current authorities. B3C.2B coordinates partial transfer identity,
 allocation and recovery without becoming a cell writer. General overflow and
-B3C.3 Node/transaction cutover remain future; Surface Nodes remain
+B3C.3B whole-node transaction cutover remains future; Surface Nodes remain
 `GenerationOnly` and `WV-B3B-LIM-001`
 continues to apply.
 
@@ -42,8 +41,23 @@ cannot change quantity, terrain, jobs, output, navigation or cell change feeds.
 Surface Stone, Seed, Twig and Freshwater remain `GenerationOnly`. Automated
 results pass 8/8 focused Edit, 4/4 focused Play, 565/565 complete Edit and 78/78
 complete Play. This documentation-only closure did not rerun Unity tests. B3C.2A later
-completed and B3C.2B later completed with **30/30** manual acceptance; B3C.3 remains
-unstarted and `WV-B3B-LIM-001` remains active.
+completed and B3C.2B later completed with **30/30** manual acceptance. B3C.3A
+subsequently activated Colony quantity authority and awaits manual acceptance;
+B3C.3B remains unstarted and `WV-B3B-LIM-001` remains active.
+
+## WV-B3C.3A active Colony Node authority
+
+Generated Colony Soil/Stone snapshots now come from the active registry and
+include resource identity, initial/remaining quantity, Node revision, lifecycle
+and Extraction status. Soil ranges 8–12 and Stone 5–15 through stable per-Node
+derivation. Guarded terrain writes prevent Solid removal from bypassing
+quantity. One committed authority mutation produces one Colony Node change;
+reads, failures, replay and view switching produce none.
+
+Quantity-one fixture Nodes remain interactive. Variable Nodes are designatable
+but legacy one-unit execution is deferred and stays unowned until WV-B3C.3B.
+Automated suites pass 11/11 focused Edit, 16/16 focused Play, 594/594 full Edit
+and 81/81 full Play; the 25-step manual checklist is pending.
 
 ## Status
 
@@ -160,9 +174,11 @@ unloading or complex scenario restoration.
    placement remains deferred. See the
    authoritative
    [`Partial Hauling Integration Plan`](https://github.com/Stevr0/AntGame/blob/main/Documentation/PartialHaulingIntegrationPlan.md).
-5. **WV-B3C.3A/B — active Nodes and Extraction (unstarted):** variable Colony
-   quantity authority followed by whole-node transaction cutover.
-6. **WV-B3D — Placements:** site/Placement occupancy and one-function-at-a-time
+5. **WV-B3C.3A — active Nodes (implemented; manual pending):** variable Colony
+   quantity authority with guarded legacy Extraction.
+6. **WV-B3C.3B — whole-node Extraction (unstarted):** coordinated depletion,
+   Solid removal and complete recoverable output.
+7. **WV-B3D — Placements:** site/Placement occupancy and one-function-at-a-time
    migration of functional Backgrounds, beginning with Material Storage.
 
 These are candidate scopes, not implementation authorisation. Each slice keeps

@@ -14,7 +14,7 @@ preflight/remove/output ordering. It alone may prepare output at its exact
 currently obstructed source cell. Reservations now advance observable stack and
 runtime-cell revisions; reads and view switching do not. Partial pickup remains
 the accepted existing compatibility behavior, not a new B3C.2B splitting
-system. Multi-cell overflow, variable Node yields and Surface Extraction remain
+system. Multi-cell overflow, whole-node variable output and Surface Extraction remain
 unimplemented. The existing explicit inventory-drop command retains its narrow
 validated current-anchor compatibility on legacy functional Backgrounds until
 Placement migration; ordinary producer placement remains conservative.
@@ -43,8 +43,22 @@ user-confirmed **23/23 authoritative manual acceptance**.
 B3C.2B bounded multi-source Hauling, Storage-to-Construction withdrawal,
 transfer replay and carrier recovery are implemented; revised manual acceptance
 is pending after a partial first pass;
-general multi-cell output overflow and the B3C.3 transaction cutover have not
-started. The inactive quantity-one records remain a transitional foundation.
+general multi-cell output overflow and the B3C.3 transaction cutover had not
+started at that milestone. Those inactive quantity-one records were the
+transitional foundation for the active authority below.
+
+## WV-B3C.3A active quantity and legacy safety gate
+
+The Colony registry now actively owns generated Soil 8–12 and Stone 5–15
+quantities while terrain owns the supporting Solid and Background. Direct Solid
+removal/replacement is guarded. Quantity-one fixture Extraction uses a narrow
+one-use authority token and still produces one physical unit. A variable Node
+may be designated, but the legacy transaction reports
+`Variable-quantity Node awaiting whole-node Extraction support (WV-B3C.3B)` and
+changes no Node, terrain, output or completion XP. The job remains unowned.
+
+WV-B3C.3B still must coordinate complete remaining quantity, Solid depletion
+and recoverable output; partial harvesting was not added.
 
 ## WV-B3B read projection
 

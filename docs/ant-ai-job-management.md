@@ -37,8 +37,17 @@ Normal Solid Extraction is whole-node work: after complete output capacity is
 prepared, it depletes the Node and commits every remaining unit. Hauling alone
 moves physical output to Construction staging, Storage or future Refining.
 Construction never self-supplies. Variable quantities, overflow stacks and
-pending-output recovery are approved design but not current runtime behavior.
+pending-output recovery are approved design. WV-B3C.3A implements variable
+Colony quantity ownership but not whole-node output, overflow or recovery.
 See [Resource and Node System](resource-and-node-system.md).
+
+## WV-B3C.3A deferred Extraction eligibility
+
+Generated variable-quantity Colony Nodes can be designated and inspected, but
+the shared selector rejects them before reservation with the explicit WV-B3C.3B
+dependency reason. They remain pending and unowned, so the queen can select
+other eligible work and does not loop on impossible legacy Extraction. Fixture
+quantity-one jobs retain their existing execution and XP behavior.
 
 ## WV-B3B authority preservation
 

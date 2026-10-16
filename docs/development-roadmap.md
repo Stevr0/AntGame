@@ -1,5 +1,20 @@
 # Development Roadmap
 
+## WV-B3C.3A — implemented; manual acceptance pending
+
+The Colony Resource Node registry now actively owns generated Soil 8–12 and
+Stone 5–15 quantities with stable identity, revisions, lifecycle, reservation
+and replay contracts. `ChunkedWorldData` retains guarded Solid occupancy.
+Runtime-cell snapshots, designated quantity badges and developer diagnostics
+read this authority. Quantity-one fixture Extraction remains compatible;
+variable Nodes are designatable but cannot be claimed or completed by legacy
+one-unit Extraction.
+
+Unity `6000.3.8f1` passes 11/11 focused Edit, 16/16 focused Play, 594/594 full
+Edit and 81/81 full Play. Manual acceptance remains 0/25 confirmed, so the
+milestone is not Complete. WV-B3C.3B whole-node output has not begun.
+`WV-B3B-LIM-001` remains active.
+
 ## WV-B3C.2B — complete
 
 The authoritative
@@ -32,8 +47,8 @@ was based on `6829b602` and was subsequently committed as `c6ae89b2`; the XML
 does not independently record a Git revision. Unity tests were not rerun for
 this documentation-only closure.
 
-The next recommended milestone is **WV-B3C.3A — active variable-quantity Colony
-Nodes**, requiring separate approval; it was not started by this closure.
+WV-B3C.3A subsequently implemented active variable-quantity Colony Nodes and
+awaits manual acceptance. WV-B3C.3B remains a separate future gate.
 
 ## WV-B3C.2A — complete
 

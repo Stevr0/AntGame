@@ -15,11 +15,22 @@ as a Solid Node, follows the same depletion rule while requiring a
 liquid-compatible output representation. Future timed Surface events may create
 explicit new Nodes or loose stacks, but may not regenerate extracted terrain.
 
-The current generator remains compatibility implementation: Colony Soil/Stone
-records are quantity one, Surface Stone/Seed/Twig/Freshwater remain
-`GenerationOnly`, Water also appears as navigation Background/obstruction data,
-and no active variable-quantity or liquid transaction exists. This documentation
-amendment changes no runtime generation or version-2 seed results.
+WV-B3C.3A now derives active generated Colony Soil quantities in the provisional
+range 8–12 and Stone in 5–15 through an independent per-Node deterministic
+domain. Surface Stone/Seed/Twig/Freshwater remain `GenerationOnly`; Water also
+appears as navigation Background/obstruction data. No liquid or whole-node
+Extraction transaction exists yet. Colony layout/version-2 identity is retained;
+the quantity domain is explicitly `colony-node-quantity.v1`.
+
+### WV-B3C.3A deterministic quantity rule — 16 October 2026
+
+Each Colony quantity is derived from world seed, configuration ID/version,
+definition ID and Colony generation coordinates. It does not consume the shared
+layout stream, so evaluation order and view switching cannot reroll another
+Node. The generated record is copied into the active registry at scenario
+construction; the registry then owns remaining quantity for the Node lifetime.
+The Mara/Pip/Tala fixture remains quantity one. Automated generation and full
+regression suites pass; the 25-step manual Unity checklist remains pending.
 
 ## WV-B3B runtime publication clarification — 15 October 2026
 
@@ -83,7 +94,7 @@ start WV-C1.
 - Surface approach/arrival are `(32,31)`/`(32,32)`. Colony approach/arrival are
   `(0,-2)`/`(0,-1)`. The chamber occupies columns `61..67`, depths `5..9`; the
   passage occupies columns `63..65`, depths `0..4`; queen spawn is `(0,-8)`.
-  A quantity-one `solid.stone` node is guaranteed at `(-4,-8)`, adjacent to the
+  A variable-quantity `solid.stone` Node is guaranteed at `(-4,-8)`, adjacent to the
   chamber, so the opening excavation loop never depends on a buried cluster.
 - Generated placements and loose stacks are empty. Existing functional
   Background, storage and multi-stack authorities are deliberately not migrated.

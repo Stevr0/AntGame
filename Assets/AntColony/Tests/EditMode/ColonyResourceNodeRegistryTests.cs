@@ -24,306 +24,335 @@ namespace AntColony.Tests.EditMode
         }
 
         [Test]
-        public void SoilAndStoneCreateUniqueQuantityOneInactiveRecords()
+        public void FixtureCreatesUniqueActiveQuantityOneNodes()
         {
             ChunkedWorldData world = CreateWorld();
-            SetSolid(world, new Vector2Int(0, 0), SoilId);
-            SetSolid(world, new Vector2Int(1, 0), StoneId);
-
+            SetSolid(world, Vector2Int.zero, SoilId);
+            SetSolid(world, Vector2Int.right, StoneId);
             Assert.That(TryCreate(world, FixtureIdentity(2203), null,
-                out InactiveColonyResourceNodeRegistry registry,
+                out ColonyResourceNodeRegistry registry,
                 out ColonyResourceNodeRegistryBuildReport report), Is.True,
                 report.Summary);
 
             Assert.That(registry.Nodes.Count, Is.EqualTo(2));
-            Assert.That(registry.Nodes.Select(node => node.NodeId).Distinct().Count(),
-                Is.EqualTo(2));
-            Assert.That(registry.Nodes.All(node => node.InitialQuantity == 1 &&
-                node.RemainingQuantity == 1 &&
-                node.Revision == InactiveColonyResourceNodeRegistry.InitialRevision &&
-                node.Lifecycle ==
-                    InactiveColonyNodeLifecycle.ValidInactiveCandidate), Is.True);
-            Assert.That(registry.Diagnostics.SoilCount, Is.EqualTo(1));
-            Assert.That(registry.Diagnostics.StoneCount, Is.EqualTo(1));
-            Assert.That(registry.Nodes.Single(node => node.DefinitionId == SoilId)
-                .OutputMaterial, Is.EqualTo(ExcavatedMaterialType.Soil));
-            Assert.That(registry.Nodes.Single(node => node.DefinitionId == StoneId)
-                .OutputMaterial, Is.EqualTo(ExcavatedMaterialType.Stone));
+            Assert.That(registry.Nodes.Select(n => n.NodeId).Distinct().Count(), Is.EqualTo(2));
+            Assert.That(registry.Nodes.All(n => n.InitialQuantity == 1 &&
+                n.RemainingQuantity == 1 && n.Revision == ColonyResourceNodeRegistry.InitialRevision &&
+                n.Lifecycle == ColonyResourceNodeLifecycle.Active &&
+                n.IsLegacyQuantityOneFixture), Is.True);
+            Assert.That(registry.Diagnostics.TotalInitialSoil, Is.EqualTo(1));
+            Assert.That(registry.Diagnostics.TotalInitialStone, Is.EqualTo(1));
+            registry.Dispose();
+        }
+
+        [Test]
+        public void GeneratedRegistryOwnsGeneratedVariableQuantities()
+        {
+            CreateGeneratedRegistry(2203L, out GeneratedWorldSnapshot generated,
+                out _, out ColonyResourceNodeRegistry registry);
+            foreach (ColonyResourceNodeSnapshot node in registry.Nodes)
+            {
+                GeneratedResourceNodeRecord source = generated.Nodes.Single(n =>
+                    n.Location.Kind == RegionLocationKind.Colony &&
+                    n.Location.ColonyCell.Equals(node.CellId.ColonyCell));
+                Assert.That(node.InitialQuantity, Is.EqualTo(source.InitialQuantity));
+                Assert.That(node.RemainingQuantity, Is.EqualTo(source.InitialQuantity));
+                Assert.That(node.IsLegacyQuantityOneFixture, Is.False);
+                if (node.OutputMaterial == ExcavatedMaterialType.Soil)
+                    Assert.That(node.InitialQuantity, Is.InRange(8, 12));
+                else Assert.That(node.InitialQuantity, Is.InRange(5, 15));
+            }
+            Assert.That(registry.Diagnostics.MismatchedNodeCount, Is.Zero);
             registry.Dispose();
         }
 
         [Test]
         public void IdentityIsDeterministicAndScenarioScoped()
         {
-            ChunkedWorldData world = CreateWorld();
-            SetSolid(world, Vector2Int.zero, SoilId);
-
-            Assert.That(TryCreate(world, FixtureIdentity(2203), null,
-                out InactiveColonyResourceNodeRegistry first, out _), Is.True);
-            Assert.That(TryCreate(world, FixtureIdentity(2203), null,
-                out InactiveColonyResourceNodeRegistry repeated, out _), Is.True);
-            Assert.That(TryCreate(world, FixtureIdentity(2204), null,
-                out InactiveColonyResourceNodeRegistry otherScenario, out _), Is.True);
-
-            Assert.That(first.Nodes[0].NodeId,
-                Is.EqualTo(repeated.Nodes[0].NodeId));
-            Assert.That(otherScenario.Nodes[0].NodeId,
-                Is.Not.EqualTo(first.Nodes[0].NodeId));
-            Assert.That(first.Nodes[0].CellId.Kind,
-                Is.EqualTo(RegionLocationKind.Colony));
-            first.Dispose(); repeated.Dispose(); otherScenario.Dispose();
+            ChunkedWorldData firstWorld = CreateWorld();
+            SetSolid(firstWorld, Vector2Int.zero, SoilId);
+            Assert.That(TryCreate(firstWorld, FixtureIdentity(2203), null,
+                out ColonyResourceNodeRegistry first, out _), Is.True);
+            ChunkedWorldData repeatedWorld = CreateWorld();
+            SetSolid(repeatedWorld, Vector2Int.zero, SoilId);
+            Assert.That(TryCreate(repeatedWorld, FixtureIdentity(2203), null,
+                out ColonyResourceNodeRegistry repeated, out _), Is.True);
+            ChunkedWorldData otherWorld = CreateWorld();
+            SetSolid(otherWorld, Vector2Int.zero, SoilId);
+            Assert.That(TryCreate(otherWorld, FixtureIdentity(2204), null,
+                out ColonyResourceNodeRegistry other, out _), Is.True);
+            Assert.That(first.Nodes[0].NodeId, Is.EqualTo(repeated.Nodes[0].NodeId));
+            Assert.That(other.Nodes[0].NodeId, Is.Not.EqualTo(first.Nodes[0].NodeId));
+            first.Dispose(); repeated.Dispose(); other.Dispose();
         }
 
         [Test]
-        public void GeneratedRegistryReusesVersionedGenerationProvenance()
+        public void ReadsDoNotAdvanceRevisionOrQuantity()
+        {
+            ChunkedWorldData world = CreateWorld();
+            SetSolid(world, Vector2Int.zero, SoilId);
+            Assert.That(TryCreate(world, FixtureIdentity(7), null,
+                out ColonyResourceNodeRegistry registry, out _), Is.True);
+            RegionCellId cell = ColonyCell(Vector2Int.zero);
+            long registryRevision = registry.Revision;
+            Assert.That(registry.TryGet(cell, out var first), Is.EqualTo(ColonyResourceNodeReadResult.Success));
+            Assert.That(registry.TryGet(cell, out var second), Is.EqualTo(ColonyResourceNodeReadResult.Success));
+            Assert.That(second.NodeId, Is.EqualTo(first.NodeId));
+            Assert.That(second.RemainingQuantity, Is.EqualTo(1));
+            Assert.That(registry.Revision, Is.EqualTo(registryRevision));
+            Assert.That(registry.TryGet(RegionCellId.Surface(AntRegionIds.Colony,
+                new SurfaceCell(0, 0)), out _), Is.EqualTo(ColonyResourceNodeReadResult.InvalidCoordinateKind));
+            registry.Dispose();
+        }
+
+        [Test]
+        public void DirectSolidRemovalAndReplacementAreRejected()
+        {
+            CreateGeneratedRegistry(2203L, out _, out ChunkedWorldData world,
+                out ColonyResourceNodeRegistry registry);
+            ColonyResourceNodeSnapshot node = registry.Nodes.First();
+            Vector2Int cell = new(node.CellId.ColonyCell.X, node.CellId.ColonyCell.Y);
+            long terrainRevision = world.GetCellRevision(cell);
+            Assert.That(world.RemoveSolidMaterial(cell), Is.EqualTo(WorldCellMutationResult.AuthorityRejected));
+            Assert.That(world.SetSolidMaterial(cell, node.OutputMaterial == ExcavatedMaterialType.Soil
+                ? StoneId : SoilId), Is.EqualTo(WorldCellMutationResult.AuthorityRejected));
+            Assert.That(world.GetCellRevision(cell), Is.EqualTo(terrainRevision));
+            registry.TryGet(node.NodeId, out ColonyResourceNodeSnapshot after);
+            Assert.That(after.RemainingQuantity, Is.EqualTo(node.RemainingQuantity));
+            registry.Dispose();
+        }
+
+        [Test]
+        public void AuthorizedFixtureRemovalDepletesNodeAndPreservesBackground()
+        {
+            ChunkedWorldData world = CreateWorld();
+            SetSolid(world, Vector2Int.zero, SoilId);
+            Assert.That(TryCreate(world, FixtureIdentity(7), null,
+                out ColonyResourceNodeRegistry registry, out _), Is.True);
+            Assert.That(registry.TryPrepareLegacyExtractionRemoval(Vector2Int.zero,
+                "job.1", out string token, out string error), Is.True, error);
+            Assert.That(world.RemoveSolidMaterial(Vector2Int.zero, token),
+                Is.EqualTo(WorldCellMutationResult.Success));
+            Assert.That(registry.TryGet(ColonyCell(Vector2Int.zero), out var after),
+                Is.EqualTo(ColonyResourceNodeReadResult.Success));
+            Assert.That(after.RemainingQuantity, Is.Zero);
+            Assert.That(after.Lifecycle, Is.EqualTo(ColonyResourceNodeLifecycle.Depleted));
+            Assert.That(world.GetCell(Vector2Int.zero, out WorldTileCellData cell),
+                Is.EqualTo(WorldCellQueryResult.Available));
+            Assert.That(cell.BackgroundMaterialId, Is.EqualTo(EarthId));
+            registry.Dispose();
+        }
+
+        [Test]
+        public void QuantityMutationValidatesRevisionOwnerBoundsAndReplay()
+        {
+            CreateGeneratedRegistry(2203L, out _, out _, out ColonyResourceNodeRegistry registry);
+            ColonyResourceNodeSnapshot initial = registry.Nodes.First(n => n.InitialQuantity > 2);
+            Assert.That(registry.TryReserve(initial.NodeId, "operation.owner",
+                initial.Revision, out string error), Is.True, error);
+            registry.TryGet(initial.NodeId, out ColonyResourceNodeSnapshot reserved);
+            Assert.That(registry.TryBeginPendingExtraction(initial.NodeId,
+                "operation.owner", reserved.Revision, out error), Is.True, error);
+            registry.TryGet(initial.NodeId, out ColonyResourceNodeSnapshot pending);
+            long beforeFailedRevision = pending.Revision;
+            Assert.That(registry.TryCommitQuantityReduction(initial.NodeId,
+                "wrong.owner", "operation.bad", 1, pending.Revision,
+                out _, out _), Is.False);
+            registry.TryGet(initial.NodeId, out ColonyResourceNodeSnapshot unchanged);
+            Assert.That(unchanged.Revision, Is.EqualTo(beforeFailedRevision));
+            Assert.That(unchanged.RemainingQuantity, Is.EqualTo(initial.RemainingQuantity));
+            Assert.That(registry.TryCommitQuantityReduction(initial.NodeId,
+                "operation.owner", "operation.good", 2, pending.Revision,
+                out ColonyResourceNodeSnapshot committed, out error), Is.True, error);
+            long committedRevision = committed.Revision;
+            Assert.That(committed.RemainingQuantity, Is.EqualTo(initial.RemainingQuantity - 2));
+            Assert.That(registry.TryCommitQuantityReduction(initial.NodeId,
+                "operation.owner", "operation.good", 2, pending.Revision,
+                out ColonyResourceNodeSnapshot replay, out error), Is.True, error);
+            Assert.That(replay.RemainingQuantity, Is.EqualTo(committed.RemainingQuantity));
+            Assert.That(replay.Revision, Is.EqualTo(committedRevision));
+            registry.Dispose();
+        }
+
+        [Test]
+        public void CompetingReservationAndStaleRevisionFailWithoutMutation()
+        {
+            CreateGeneratedRegistry(2203L, out _, out _, out ColonyResourceNodeRegistry registry);
+            ColonyResourceNodeSnapshot node = registry.Nodes.First();
+            Assert.That(registry.TryReserve(node.NodeId, "first", node.Revision, out _), Is.True);
+            registry.TryGet(node.NodeId, out ColonyResourceNodeSnapshot reserved);
+            Assert.That(registry.TryReserve(node.NodeId, "second", node.Revision, out _), Is.False);
+            Assert.That(registry.TryBeginPendingExtraction(node.NodeId, "first",
+                node.Revision, out _), Is.False);
+            registry.TryGet(node.NodeId, out ColonyResourceNodeSnapshot unchanged);
+            Assert.That(unchanged.Revision, Is.EqualTo(reserved.Revision));
+            Assert.That(unchanged.ReservationOwner, Is.EqualTo("first"));
+            Assert.That(registry.TryReleaseReservation(node.NodeId, "first", out _), Is.True);
+            registry.Dispose();
+        }
+
+        [Test]
+        public void RuntimeSnapshotUsesActiveAuthorityAndPublishesOneChangePerMutation()
+        {
+            CreateGeneratedRegistry(2203L, out GeneratedWorldSnapshot generated,
+                out ChunkedWorldData world, out ColonyResourceNodeRegistry registry);
+            var drops = new WorldMaterialDropRegistry(world);
+            var adapter = new ColonyRuntimeCellRegionAdapter(world, drops,
+                generated, registry);
+            ColonyResourceNodeSnapshot node = registry.Nodes.First();
+
+            Assert.That(adapter.TryGetCell(node.CellId,
+                out RuntimeCellSnapshot before), Is.EqualTo(RuntimeCellReadResult.Success));
+            Assert.That(before.Node.ProjectionState,
+                Is.EqualTo(RuntimeOccupantProjectionState.Authoritative));
+            Assert.That(before.Node.StableId, Is.EqualTo(node.NodeId));
+            Assert.That(before.Node.ResourceDefinitionId,
+                Is.EqualTo(node.OutputResourceId));
+            Assert.That(before.Node.InitialQuantity, Is.EqualTo(node.InitialQuantity));
+            Assert.That(before.Node.RemainingQuantity, Is.EqualTo(node.RemainingQuantity));
+            Assert.That(before.Node.NodeRevision, Is.EqualTo(node.Revision));
+            Assert.That(before.Node.Lifecycle,
+                Is.EqualTo(ColonyResourceNodeLifecycle.Active));
+            Assert.That(before.Node.ExtractionStatus, Is.EqualTo(
+                ColonyResourceNodeExtractionStatus.DeferredUntilWholeNodeExtraction));
+
+            long sequence = adapter.Changes.CurrentSequence;
+            Assert.That(registry.TryReserve(node.NodeId, "worker",
+                node.Revision, out string error), Is.True, error);
+            Assert.That(adapter.Changes.CurrentSequence, Is.EqualTo(sequence + 1));
+            Assert.That(adapter.Changes.ReadAfter(sequence, out var changes),
+                Is.EqualTo(RuntimeCellChangeReadResult.Success));
+            Assert.That(changes.Count, Is.EqualTo(1));
+            Assert.That(changes[0].Changes.Count, Is.EqualTo(1));
+            Assert.That(changes[0].Changes[0].Category,
+                Is.EqualTo(RuntimeCellChangeCategory.Node));
+            Assert.That(adapter.TryGetCell(node.CellId, out RuntimeCellSnapshot reserved),
+                Is.EqualTo(RuntimeCellReadResult.Success));
+            Assert.That(reserved.Node.NodeRevision, Is.EqualTo(node.Revision + 1));
+            Assert.That(reserved.Node.Lifecycle,
+                Is.EqualTo(ColonyResourceNodeLifecycle.Reserved));
+
+            long afterReserve = adapter.Changes.CurrentSequence;
+            Assert.That(registry.TryReserve(node.NodeId, "other",
+                node.Revision, out _), Is.False);
+            Assert.That(adapter.Changes.CurrentSequence, Is.EqualTo(afterReserve),
+                "A failed stale mutation must not publish a change set.");
+            adapter.Dispose();
+            registry.Dispose();
+        }
+
+        [Test]
+        public void ScenarioReplacementInvalidatesOldIdentityAndReservation()
+        {
+            ChunkedWorldData oldWorld = CreateWorld();
+            SetSolid(oldWorld, Vector2Int.zero, SoilId);
+            Assert.That(TryCreate(oldWorld, FixtureIdentity(7), null,
+                out ColonyResourceNodeRegistry oldRegistry, out _), Is.True);
+            ColonyResourceNodeSnapshot oldNode = oldRegistry.Nodes.Single();
+            Assert.That(oldRegistry.TryReserve(oldNode.NodeId, "owner",
+                oldNode.Revision, out _), Is.True);
+            oldRegistry.InvalidateContext();
+            Assert.That(oldRegistry.Lifecycle,
+                Is.EqualTo(ColonyResourceNodeRegistryLifecycle.ContextInvalidated));
+            Assert.That(oldRegistry.TryGet(oldNode.NodeId, out _),
+                Is.EqualTo(ColonyResourceNodeReadResult.ContextInvalidated));
+            Assert.That(oldRegistry.TryReleaseReservation(oldNode.NodeId,
+                "owner", out _), Is.False);
+        }
+
+        [Test]
+        public void UnsupportedSolidIsReportedWithoutBecomingNode()
+        {
+            ChunkedWorldData world = CreateWorld(includeUnsupported: true);
+            SetSolid(world, Vector2Int.zero, SoilId);
+            SetSolid(world, Vector2Int.right, UnsupportedId);
+            Assert.That(TryCreate(world, FixtureIdentity(1), null,
+                out ColonyResourceNodeRegistry registry,
+                out ColonyResourceNodeRegistryBuildReport report), Is.True,
+                report.Summary);
+            Assert.That(registry.Nodes.Count, Is.EqualTo(1));
+            Assert.That(registry.Diagnostics.UnsupportedSolidCount, Is.EqualTo(1));
+            registry.Dispose();
+        }
+
+        private void CreateGeneratedRegistry(long seed,
+            out GeneratedWorldSnapshot generated, out ChunkedWorldData world,
+            out ColonyResourceNodeRegistry registry)
         {
             WorldMaterialRegistry materials = CreateMaterialRegistry();
-            Assert.That(ProceduralWorldGenerator.TryGenerate(2203L,
-                new WorldGenerationConfiguration(), out GeneratedWorldSnapshot generated,
+            Assert.That(ProceduralWorldGenerator.TryGenerate(seed,
+                new WorldGenerationConfiguration(), out generated,
                 out GeneratedWorldValidationReport generationReport), Is.True,
                 generationReport.Summary);
-            ChunkedWorldData world = generated.CreateColonyWorld(materials,
+            world = generated.CreateColonyWorld(materials,
                 new SampleWorldMaterialIds(EarthId, EarthId, EarthId, EarthId,
                     SoilId, StoneId));
             var identity = new ColonyResourceNodeScenarioIdentity(
                 generated.Metadata.ConfigurationId, generated.Metadata.Version,
                 generated.Metadata.Seed);
-
-            Assert.That(TryCreate(world, identity, generated,
-                out InactiveColonyResourceNodeRegistry registry,
+            Assert.That(TryCreate(world, identity, generated, out registry,
                 out ColonyResourceNodeRegistryBuildReport report), Is.True,
                 report.Summary);
-            GeneratedResourceNodeRecord source = generated.Nodes.First(node =>
-                node.Location.Kind == RegionLocationKind.Colony &&
-                node.Location.ColonyCell.Equals(
-                    ProceduralWorldGenerator.FoundingStoneFace));
-            RegionCellId cell = RegionCellId.Colony(AntRegionIds.Colony,
-                source.Location.ColonyCell);
-            Assert.That(registry.TryGet(cell, out var record),
-                Is.EqualTo(InactiveColonyNodeReadResult.Success));
-            Assert.That(record.NodeId, Does.Contain(source.Id));
-            Assert.That(record.NodeId, Does.Contain(
-                $"{generated.Metadata.ConfigurationId}.v{generated.Metadata.Version}"));
-            Assert.That(registry.TryGet(RegionCellId.Colony(AntRegionIds.Colony,
-                generated.QueenSpawn), out _),
-                Is.EqualTo(InactiveColonyNodeReadResult.NotRegistered));
-            registry.Dispose();
-        }
-
-        [Test]
-        public void InvalidAndUnsupportedSolidsAreHandledWithoutTerrainMutation()
-        {
-            ChunkedWorldData world = CreateWorld(includeUnsupported: true);
-            SetSolid(world, Vector2Int.zero, SoilId);
-            SetSolid(world, Vector2Int.right, UnsupportedId);
-            long soilRevision = world.GetCellRevision(Vector2Int.zero);
-            long unsupportedRevision = world.GetCellRevision(Vector2Int.right);
-
-            Assert.That(TryCreate(world, FixtureIdentity(1), null,
-                out InactiveColonyResourceNodeRegistry registry,
-                out ColonyResourceNodeRegistryBuildReport report), Is.True,
-                report.Summary);
-            Assert.That(registry.Nodes.Count, Is.EqualTo(1));
-            Assert.That(registry.Diagnostics.UnsupportedSolidCount, Is.EqualTo(1));
-            Assert.That(world.GetCellRevision(Vector2Int.zero), Is.EqualTo(soilRevision));
-            Assert.That(world.GetCellRevision(Vector2Int.right),
-                Is.EqualTo(unsupportedRevision));
-            Assert.That(world.GetSolidMaterialId(Vector2Int.right, out string solid),
-                Is.EqualTo(WorldCellQueryResult.Available));
-            Assert.That(solid, Is.EqualTo(UnsupportedId));
-            registry.Dispose();
-
-            Assert.That(InactiveColonyResourceNodeRegistry.TryCreate(world,
-                FixtureIdentity(1), SoilId, "solid.missing", null,
-                out registry, out report), Is.False);
-            Assert.That(registry, Is.Null);
-            Assert.That(report.Summary, Does.Contain("not a valid registered"));
-            Assert.That(world.GetSolidMaterialId(Vector2Int.zero, out solid),
-                Is.EqualTo(WorldCellQueryResult.Available));
-            Assert.That(solid, Is.EqualTo(SoilId));
-        }
-
-        [Test]
-        public void ReadsAreTypedAndDoNotAdvanceRevisionsOrQuantity()
-        {
-            ChunkedWorldData world = CreateWorld();
-            SetSolid(world, Vector2Int.zero, SoilId);
-            Assert.That(TryCreate(world, FixtureIdentity(7), null,
-                out InactiveColonyResourceNodeRegistry registry, out _), Is.True);
-            RegionCellId cell = ColonyCell(Vector2Int.zero);
-            long registryRevision = registry.Revision;
-
-            Assert.That(registry.TryGet(cell, out var first),
-                Is.EqualTo(InactiveColonyNodeReadResult.Success));
-            Assert.That(registry.TryGet(cell, out var second),
-                Is.EqualTo(InactiveColonyNodeReadResult.Success));
-            Assert.That(second.NodeId, Is.EqualTo(first.NodeId));
-            Assert.That(second.RemainingQuantity, Is.EqualTo(1));
-            Assert.That(registry.Revision, Is.EqualTo(registryRevision));
-            Assert.That(registry.TryGet(RegionCellId.Surface(AntRegionIds.Colony,
-                new SurfaceCell(0, 0)), out _),
-                Is.EqualTo(InactiveColonyNodeReadResult.InvalidCoordinateKind));
-            Assert.That(registry.TryGet(RegionCellId.Colony(AntRegionIds.Surface,
-                new ColonyCell(0, 0)), out _),
-                Is.EqualTo(InactiveColonyNodeReadResult.InvalidRegion));
-            Assert.That(registry.TryGet(ColonyCell(Vector2Int.one), out _),
-                Is.EqualTo(InactiveColonyNodeReadResult.NotRegistered));
-            registry.Dispose();
-        }
-
-        [Test]
-        public void TerrainMutationInvalidatesOnlyTheAffectedRecord()
-        {
-            ChunkedWorldData world = CreateWorld();
-            Vector2Int affected = Vector2Int.zero;
-            Vector2Int unaffected = Vector2Int.right;
-            SetSolid(world, affected, SoilId);
-            SetSolid(world, unaffected, StoneId);
-            Assert.That(TryCreate(world, FixtureIdentity(7), null,
-                out InactiveColonyResourceNodeRegistry registry, out _), Is.True);
-            registry.TryGet(ColonyCell(affected), out var beforeAffected);
-            registry.TryGet(ColonyCell(unaffected), out var beforeUnaffected);
-
-            Assert.That(world.RemoveSolidMaterial(affected),
-                Is.EqualTo(WorldCellMutationResult.Success));
-            Assert.That(registry.TryGet(ColonyCell(affected), out var afterAffected),
-                Is.EqualTo(InactiveColonyNodeReadResult.Success));
-            Assert.That(afterAffected.Lifecycle,
-                Is.EqualTo(InactiveColonyNodeLifecycle.DepletedOrAbsent));
-            Assert.That(afterAffected.Revision, Is.EqualTo(beforeAffected.Revision + 1));
-            Assert.That(afterAffected.RemainingQuantity, Is.EqualTo(1),
-                "The inactive registry must not perform a gameplay quantity write.");
-            Assert.That(registry.TryGet(ColonyCell(unaffected), out var afterUnaffected),
-                Is.EqualTo(InactiveColonyNodeReadResult.Success));
-            Assert.That(afterUnaffected.NodeId, Is.EqualTo(beforeUnaffected.NodeId));
-            Assert.That(afterUnaffected.Revision, Is.EqualTo(beforeUnaffected.Revision));
-            Assert.That(registry.Diagnostics.InvalidOrStaleCount, Is.EqualTo(1));
-            registry.Dispose();
-        }
-
-        [Test]
-        public void BackgroundMutationDoesNotInvalidateNodeAndRemovedNodeCannotRevive()
-        {
-            ChunkedWorldData world = CreateWorld();
-            SetSolid(world, Vector2Int.zero, SoilId);
-            Assert.That(TryCreate(world, FixtureIdentity(7), null,
-                out InactiveColonyResourceNodeRegistry registry, out _), Is.True);
-            registry.TryGet(ColonyCell(Vector2Int.zero), out var before);
-
-            Assert.That(world.SetBackgroundMaterial(Vector2Int.zero, EarthId),
-                Is.EqualTo(WorldCellMutationResult.Success));
-            registry.TryGet(ColonyCell(Vector2Int.zero), out var unchanged);
-            Assert.That(unchanged.Revision, Is.EqualTo(before.Revision));
-            Assert.That(world.RemoveSolidMaterial(Vector2Int.zero),
-                Is.EqualTo(WorldCellMutationResult.Success));
-            Assert.That(world.SetSolidMaterial(Vector2Int.zero, SoilId),
-                Is.EqualTo(WorldCellMutationResult.Success));
-            registry.TryGet(ColonyCell(Vector2Int.zero), out var restored);
-            Assert.That(restored.Lifecycle,
-                Is.EqualTo(InactiveColonyNodeLifecycle.DepletedOrAbsent));
-            Assert.That(restored.NodeId, Is.EqualTo(before.NodeId));
-            registry.Dispose();
-        }
-
-        [Test]
-        public void ScenarioReplacementInvalidatesOldHandleAndRepeatedBuildDoesNotDuplicate()
-        {
-            ChunkedWorldData world = CreateWorld();
-            SetSolid(world, Vector2Int.zero, SoilId);
-            Assert.That(TryCreate(world, FixtureIdentity(7), null,
-                out InactiveColonyResourceNodeRegistry oldRegistry, out _), Is.True);
-            Assert.That(TryCreate(world, FixtureIdentity(7), null,
-                out InactiveColonyResourceNodeRegistry replacement, out _), Is.True);
-            string replacementId = replacement.Nodes.Single().NodeId;
-
-            oldRegistry.InvalidateContext();
-            Assert.That(oldRegistry.Lifecycle,
-                Is.EqualTo(InactiveColonyNodeRegistryLifecycle.ContextInvalidated));
-            Assert.That(oldRegistry.TryGet(ColonyCell(Vector2Int.zero), out _),
-                Is.EqualTo(InactiveColonyNodeReadResult.ContextInvalidated));
-            Assert.That(oldRegistry.Diagnostics.InvalidOrStaleCount, Is.EqualTo(1));
-            Assert.That(replacement.Nodes.Count, Is.EqualTo(1));
-            Assert.That(replacement.Nodes.Single().NodeId, Is.EqualTo(replacementId));
-            replacement.Dispose();
         }
 
         private bool TryCreate(ChunkedWorldData world,
             ColonyResourceNodeScenarioIdentity identity,
-            GeneratedWorldSnapshot generated,
-            out InactiveColonyResourceNodeRegistry registry,
+            GeneratedWorldSnapshot generated, out ColonyResourceNodeRegistry registry,
             out ColonyResourceNodeRegistryBuildReport report) =>
-            InactiveColonyResourceNodeRegistry.TryCreate(world, identity,
-                SoilId, StoneId, generated, out registry, out report);
+            ColonyResourceNodeRegistry.TryCreate(world, identity, SoilId,
+                StoneId, generated, out registry, out report);
 
         private ChunkedWorldData CreateWorld(bool includeUnsupported = false)
         {
-            WorldMaterialRegistry registry = CreateMaterialRegistry(includeUnsupported);
-            var world = new ChunkedWorldData(registry, 2203L);
+            var world = new ChunkedWorldData(CreateMaterialRegistry(includeUnsupported), 2203L);
             Assert.That(world.CreateChunk(Vector2Int.zero, EarthId),
                 Is.EqualTo(WorldChunkCreationResult.Success));
             return world;
         }
 
-        private WorldMaterialRegistry CreateMaterialRegistry(
-            bool includeUnsupported = false)
+        private WorldMaterialRegistry CreateMaterialRegistry(bool includeUnsupported = false)
         {
             BackgroundTileMaterialDefinition earth = CreateBackground(EarthId);
-            SolidTileMaterialDefinition soil = CreateSolid(
-                SoilId, ExcavatedMaterialType.Soil, 1);
-            SolidTileMaterialDefinition stone = CreateSolid(
-                StoneId, ExcavatedMaterialType.Stone, 1);
-            var solids = new List<SolidTileMaterialDefinition> { soil, stone };
+            var solids = new List<SolidTileMaterialDefinition>
+            {
+                CreateSolid(SoilId, ExcavatedMaterialType.Soil, 1),
+                CreateSolid(StoneId, ExcavatedMaterialType.Stone, 1)
+            };
             if (includeUnsupported)
-                solids.Add(CreateSolid(UnsupportedId, ExcavatedMaterialType.None, 0,
-                    isExcavatable: false));
+                solids.Add(CreateSolid(UnsupportedId, ExcavatedMaterialType.None, 0, false));
             return new WorldMaterialRegistry(new[] { earth }, solids);
         }
 
         private BackgroundTileMaterialDefinition CreateBackground(string stableId)
         {
-            BackgroundTileMaterialDefinition definition =
-                ScriptableObject.CreateInstance<BackgroundTileMaterialDefinition>();
-            SetBaseFields(definition, stableId);
-            definitions.Add(definition);
-            return definition;
+            var definition = ScriptableObject.CreateInstance<BackgroundTileMaterialDefinition>();
+            SetBaseFields(definition, stableId); definitions.Add(definition); return definition;
         }
-
         private SolidTileMaterialDefinition CreateSolid(string stableId,
-            ExcavatedMaterialType material, int extractionYield,
-            bool isExcavatable = true)
+            ExcavatedMaterialType material, int yield, bool isExcavatable = true)
         {
-            SolidTileMaterialDefinition definition =
-                ScriptableObject.CreateInstance<SolidTileMaterialDefinition>();
+            var definition = ScriptableObject.CreateInstance<SolidTileMaterialDefinition>();
             SetBaseFields(definition, stableId);
             var serialized = new SerializedObject(definition);
             serialized.FindProperty("isExcavatable").boolValue = isExcavatable;
             serialized.FindProperty("excavatedMaterial").enumValueIndex = (int)material;
-            serialized.FindProperty("excavationYield").intValue = extractionYield;
+            serialized.FindProperty("excavationYield").intValue = yield;
             serialized.ApplyModifiedPropertiesWithoutUndo();
-            definitions.Add(definition);
-            return definition;
+            definitions.Add(definition); return definition;
         }
-
-        private static void SetBaseFields(WorldTileMaterialDefinition definition,
-            string stableId)
+        private static void SetBaseFields(WorldTileMaterialDefinition definition, string stableId)
         {
             var serialized = new SerializedObject(definition);
             serialized.FindProperty("stableMaterialId").stringValue = stableId;
             serialized.FindProperty("displayName").stringValue = stableId;
             serialized.ApplyModifiedPropertiesWithoutUndo();
         }
-
-        private static void SetSolid(ChunkedWorldData world,
-            Vector2Int cell, string solidId) =>
-            Assert.That(world.SetSolidMaterial(cell, solidId),
-                Is.EqualTo(WorldCellMutationResult.Success));
-
+        private static void SetSolid(ChunkedWorldData world, Vector2Int cell, string solidId) =>
+            Assert.That(world.SetSolidMaterial(cell, solidId), Is.EqualTo(WorldCellMutationResult.Success));
         private static RegionCellId ColonyCell(Vector2Int cell) =>
-            RegionCellId.Colony(AntRegionIds.Colony,
-                new ColonyCell(cell.x, cell.y));
-
+            RegionCellId.Colony(AntRegionIds.Colony, new ColonyCell(cell.x, cell.y));
         private static ColonyResourceNodeScenarioIdentity FixtureIdentity(long seed) =>
-            new(InactiveColonyResourceNodeRegistry.DevelopmentFixtureNamespace,
-                InactiveColonyResourceNodeRegistry.DevelopmentFixtureVersion, seed);
+            new(ColonyResourceNodeRegistry.DevelopmentFixtureNamespace,
+                ColonyResourceNodeRegistry.DevelopmentFixtureVersion, seed);
     }
 }

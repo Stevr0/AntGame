@@ -132,7 +132,7 @@ namespace AntColony.Development
         public ConstructionWorldTransaction ConstructionTransaction { get; private set; }
         public SurfaceWorldData SurfaceWorld { get; private set; }
         public RuntimeCellPublicationRegistry RuntimeCells { get; private set; }
-        public InactiveColonyResourceNodeRegistry ColonyResourceNodes
+        public ColonyResourceNodeRegistry ColonyResourceNodes
         {
             get;
             private set;
@@ -248,10 +248,18 @@ namespace AntColony.Development
                 Debug.LogError(fixtureError, this);
                 return false;
             }
+
+            if (!TryBuildColonyResourceNodes(
+                    out ColonyResourceNodeRegistry nodeCandidate,
+                    out string nodeRegistryError))
+            {
+                Debug.LogError(nodeRegistryError, this);
+                return false;
+            }
             ExcavationDesignations = new ExcavationDesignationRegistry(
-                WorldData, ColonyJobRegistry);
+                WorldData, ColonyJobRegistry, nodeCandidate);
             ExcavationTransaction = new ExcavationWorldTransaction(
-                WorldData, MaterialDrops, OnExcavationCommitted);
+                WorldData, MaterialDrops, OnExcavationCommitted, nodeCandidate);
             navigationWorldService ??= GetComponent<GridNavigationWorldService>();
             navigationWorldService?.BindSimulationClock(simulationClock);
             if (navigationWorldService == null ||
@@ -259,6 +267,7 @@ namespace AntColony.Development
                     generatedWorld.WorldData,
                     AntCollisionProfile.OrdinaryAnt))
             {
+                nodeCandidate.Dispose();
                 Debug.LogError(
                     "Grid navigation services could not initialise.",
                     this);
@@ -274,18 +283,10 @@ namespace AntColony.Development
                 WorldData, SurvivalInteractionWorld, MaterialStorage,
                 OnConstructionCommitted);
 
-            if (!TryBuildInactiveColonyResourceNodes(
-                    out InactiveColonyResourceNodeRegistry nodeCandidate,
-                    out string nodeRegistryError))
-            {
-                Debug.LogError(nodeRegistryError, this);
-                return false;
-            }
-
             SurfaceWorldData nextSurfaceWorld = proceduralWorld?
                 .CreateSurfaceNavigationWorld() ??
                 SurfaceWorldData.CreateDevelopmentFixture();
-            if (!TryPublishRuntimeCells(nextSurfaceWorld,
+            if (!TryPublishRuntimeCells(nextSurfaceWorld, nodeCandidate,
                     out string publicationError))
             {
                 nodeCandidate.Dispose();
@@ -329,8 +330,8 @@ namespace AntColony.Development
             return true;
         }
 
-        private bool TryBuildInactiveColonyResourceNodes(
-            out InactiveColonyResourceNodeRegistry candidate,
+        private bool TryBuildColonyResourceNodes(
+            out ColonyResourceNodeRegistry candidate,
             out string error)
         {
             ColonyResourceNodeScenarioIdentity identity = proceduralWorld != null
@@ -339,10 +340,10 @@ namespace AntColony.Development
                     proceduralWorld.Metadata.Version,
                     proceduralWorld.Metadata.Seed)
                 : new ColonyResourceNodeScenarioIdentity(
-                    InactiveColonyResourceNodeRegistry.DevelopmentFixtureNamespace,
-                    InactiveColonyResourceNodeRegistry.DevelopmentFixtureVersion,
+                    ColonyResourceNodeRegistry.DevelopmentFixtureNamespace,
+                    ColonyResourceNodeRegistry.DevelopmentFixtureVersion,
                     worldSeed);
-            bool created = InactiveColonyResourceNodeRegistry.TryCreate(
+            bool created = ColonyResourceNodeRegistry.TryCreate(
                 WorldData, identity, soilSolid.StableMaterialId,
                 stoneSolid.StableMaterialId, proceduralWorld,
                 out candidate, out ColonyResourceNodeRegistryBuildReport report);
@@ -355,10 +356,11 @@ namespace AntColony.Development
         /// Gameplay mutation ownership remains with the existing services.
         /// </summary>
         private bool TryPublishRuntimeCells(SurfaceWorldData surfaceWorld,
+            ColonyResourceNodeRegistry resourceNodes,
             out string error)
         {
             var colony = new ColonyRuntimeCellRegionAdapter(WorldData,
-                MaterialDrops, proceduralWorld);
+                MaterialDrops, proceduralWorld, resourceNodes);
             var surface = new SurfaceRuntimeCellRegionAdapter(surfaceWorld,
                 proceduralWorld);
             RuntimeCells ??= new RuntimeCellPublicationRegistry();
@@ -446,9 +448,16 @@ namespace AntColony.Development
                 return false;
             }
 
+            if (ColonyResourceNodes == null ||
+                !ColonyResourceNodes.TryPrepareDevelopmentFixtureMutation(
+                    worldCell, out string authorityToken, out _))
+                return false;
+            // This debug-only fixture operation is intentionally unavailable in
+            // generated scenarios, where every Solid owns variable quantity.
             WorldCellMutationResult result = cell.HasSolidTile
-                ? WorldData.RemoveSolidMaterial(worldCell)
-                : WorldData.SetSolidMaterial(worldCell, soilSolid.StableMaterialId);
+                ? WorldData.RemoveSolidMaterial(worldCell, authorityToken)
+                : WorldData.SetSolidMaterial(worldCell,
+                    soilSolid.StableMaterialId, authorityToken);
             if (result != WorldCellMutationResult.Success)
             {
                 return false;

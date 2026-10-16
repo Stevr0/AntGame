@@ -134,7 +134,7 @@ namespace AntColony.Tests.PlayMode
         }
 
         [UnityTest]
-        public IEnumerator GeneratedFoundingScenarioPublishesOnceAndPreservesMutationAcrossViews()
+        public IEnumerator GeneratedFoundingScenarioPublishesOnceAndPreservesNodeAcrossViews()
         {
             yield return SceneManager.LoadSceneAsync("AntGameDevelopment",
                 LoadSceneMode.Single);
@@ -161,13 +161,14 @@ namespace AntColony.Tests.PlayMode
             Assert.That(host.WorldData.GetCell(generatedSolid,
                 out WorldTileCellData before), Is.EqualTo(WorldCellQueryResult.Available));
             Assert.That(before.HasSolidTile, Is.True);
-            Assert.That(host.ToggleForegroundSolid(generatedSolid), Is.True);
+            Assert.That(host.ToggleForegroundSolid(generatedSolid), Is.False,
+                "Generated Node terrain cannot bypass the active Node authority.");
             host.TwoViewWorld.SwitchView(DevelopmentWorldView.Surface);
             host.TwoViewWorld.SwitchView(DevelopmentWorldView.Colony);
             Assert.That(host.WorldData.GetCell(generatedSolid,
                 out WorldTileCellData after), Is.EqualTo(WorldCellQueryResult.Available));
-            Assert.That(after.HasSolidTile, Is.False,
-                "View switching must not regenerate the Colony.");
+            Assert.That(after.HasSolidTile, Is.True,
+                "Rejected direct mutation and view switching must preserve the Node Solid.");
 
             SelectableGridAnt queen = host.SelectionController.SelectableAnts[0];
             AntColony.Ants.AntId queenId = queen.Record.Id;

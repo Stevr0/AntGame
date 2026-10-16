@@ -627,14 +627,18 @@ namespace AntColony.World
     {
         private readonly ChunkedWorldData world;
         private readonly WorldMaterialDropRegistry drops;
+        private readonly ColonyResourceNodeRegistry resourceNodes;
         private readonly Action<Vector2Int> terrainCommitted;
 
         public ExcavationWorldTransaction(ChunkedWorldData world,
-            WorldMaterialDropRegistry drops, Action<Vector2Int> terrainCommitted = null)
+            WorldMaterialDropRegistry drops,
+            Action<Vector2Int> terrainCommitted = null,
+            ColonyResourceNodeRegistry resourceNodes = null)
         {
             this.world = world ?? throw new ArgumentNullException(nameof(world));
             this.drops = drops ?? throw new ArgumentNullException(nameof(drops));
             this.terrainCommitted = terrainCommitted;
+            this.resourceNodes = resourceNodes;
         }
 
         public bool TryCommit(string ownershipKey, Vector2Int cell,
@@ -661,12 +665,25 @@ namespace AntColony.World
                 return false;
             }
             int maximumStack = resource.GroundStackCapacity;
+            string authorityToken = string.Empty;
+            // Check compatibility first so a variable Node always reports its
+            // deliberate WV-B3C.3B deferral instead of a downstream drop error.
+            if (resourceNodes != null &&
+                !resourceNodes.CanUseLegacyExtraction(cell, out error)) return false;
             if (!drops.CanCommitOutput(ownershipKey, definition.ExcavatedMaterial,
                     definition.ExcavationYield, cell, maximumStack, true, true, false,
                     out error)) return false;
-            if (world.RemoveSolidMaterial(cell) != WorldCellMutationResult.Success)
+            // Mint the one-use terrain token only after every other fallible
+            // preflight has succeeded, so failed attempts leave no authority.
+            if (resourceNodes != null &&
+                !resourceNodes.TryPrepareLegacyExtractionRemoval(cell, ownershipKey,
+                    out authorityToken, out error)) return false;
+            if (world.RemoveSolidMaterial(cell, authorityToken) !=
+                    WorldCellMutationResult.Success)
             {
-                error = "The foreground Solid could not be removed.";
+                error = string.IsNullOrWhiteSpace(world.LastSolidMutationRejection)
+                    ? "The foreground Solid could not be removed."
+                    : world.LastSolidMutationRejection;
                 return false;
             }
             // Extraction leaves physical material for later explicit hauling.

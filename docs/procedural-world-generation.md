@@ -3,12 +3,12 @@
 ## Resource and Node v1.0 generation amendment
 
 Every target Solid is a finite Resource Node with a specific definition and
-positive actual quantity. Future generation selects variable quantity through a
+positive actual quantity. Generation selects Colony variable quantity through a
 named, versioned seed domain containing generation identity, definition and
 stable Node location/identity; iteration order cannot affect it. Water is finite
-and a Solid Water Node follows whole-node depletion. Current version-2 Colony
-Soil/Stone quantity-one records and generation-only Surface sources remain
-unchanged compatibility behavior. See [Resource and Node System](resource-and-node-system.md).
+and a Solid Water Node follows whole-node depletion. WV-B3C.3A uses Soil 8–12
+and Stone 5–15 for version-2 Colony records and copies them into the active
+registry. Surface sources remain generation-only. See [Resource and Node System](resource-and-node-system.md).
 
 ## WV-B3B publication boundary
 
@@ -42,7 +42,7 @@ and entrance use. Surface Seed/Freshwater survival interaction remains WV-C1.
 
 Version `2` / `wv-b2b.default.002` uses one signed 64-bit seed, domain-derived
 `surface` and `colony` SplitMix64 streams and a validate-before-publish result.
-Version 2 also guarantees a quantity-one Stone foreground node at Colony
+Version 2 also guarantees a variable-quantity Stone foreground Node at Colony
 `(-4,-8)`, immediately west of the starting chamber. Stone-coloured natural
 Background in a cleared cell is not itself an excavation target.
 Use the top development toolbar's **Seed**, **Start Generated**, and **Restore

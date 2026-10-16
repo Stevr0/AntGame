@@ -1,6 +1,7 @@
 # Resource and Node System v1.0
 
-**Status:** Approved design; runtime migration is incomplete.
+**Status:** Approved design; Colony quantity authority implemented through
+WV-B3C.3A, with whole-node output and broader migration still incomplete.
 
 **Approved:** 16 October 2026
 
@@ -60,8 +61,8 @@ implemented material unless a concrete food Resource Definition is approved.
 
 | Resource | Classification | Current evidence and approved role |
 | --- | --- | --- |
-| Soil | Implemented gameplay resource; target model approved | Colony Soil Solids Extract into physical `material.soil`; current Nodes/yields are quantity-one compatibility. Future normal Soil Nodes have variable quantities. |
-| Stone | Implemented Colony gameplay resource; generated Surface record | Colony Stone Solids Extract into physical `material.stone`; current Nodes/yields are quantity-one compatibility. Surface Stone exists only as `GenerationOnly` metadata/obstruction. |
+| Soil | Active variable-quantity Colony Node | Generated Colony Nodes hold deterministic 8–12 quantities in the active registry. Fixture Nodes remain quantity-one compatible; variable-node Extraction is deferred to WV-B3C.3B. |
+| Stone | Active variable-quantity Colony Node; generated Surface record | Generated Colony Nodes hold deterministic 5–15 quantities. Fixture Nodes remain quantity-one compatible; Surface Stone remains `GenerationOnly`. |
 | Seeds | Generated, non-interactive record; approved future resource | Deterministic Surface records use `resource.food.seed`; no runtime source mutation, loose parcel, hauling or consumption path exists. |
 | Twigs | Generated, non-interactive record; approved future resource | Deterministic Surface records use `resource.material.twig`; no runtime Extraction or loose-resource path exists. |
 | Food | Category / unresolved concrete identity | Development survival fixtures use `resource.food.development`; this does not establish a generic Food material. Future fruit, fungi, insects or seeds require concrete definitions. |
@@ -250,8 +251,9 @@ The unified-cell snapshot reads this registry directly. Ant inventory,
 Construction staging and Material Storage remain distinct capacities and
 authorities. Current quantity-one Node Extraction and Construction behavior are
 preserved. B3C.2B partial Hauling and replay-safe canonical stack transactions
-are implemented; general multi-cell overflow/pending-output distribution and
-B3C.3 variable Node authority/transaction cutover remain unimplemented.
+are implemented. B3C.3A subsequently activated variable Node quantity authority;
+general multi-cell overflow/pending-output distribution and the B3C.3B
+transaction cutover remain unimplemented.
 
 The user confirmed all **23/23 authoritative manual checks passed** after the
 recorded automated suites passed. WV-B3C.2A is complete; this documentation-only
@@ -289,14 +291,34 @@ The authoritative Hauling bands are 0–19 = 2 slots × 2 units, 20–39 = 3×2,
 progression and decay rules are unchanged. Capacity loss retains all cargo,
 marks it over-capacity, blocks pickup and permits delivery/recovery.
 
+### WV-B3C.3A — implemented; manual acceptance pending
+
+The existing Colony registry is now the only mutable Soil/Stone Node quantity
+owner. Generated quantities use stable per-Node derivation from seed,
+configuration/version, definition and coordinates: Soil 8–12 and Stone 5–15.
+`ChunkedWorldData` still owns Solid occupancy, identity, Background and
+navigation blocking. Immutable runtime-cell snapshots expose Node/resource IDs,
+initial/remaining quantity, Node revision, lifecycle and Extraction status.
+
+Expected revisions, exclusive owners and operation IDs protect the active
+lifecycle. Direct Solid replacement/removal is guarded so it cannot discard
+quantity. Quantity-one fixture Extraction uses a narrow one-use compatibility
+token. Generated variable Nodes may be designated and inspected, but cannot be
+claimed or completed by the old one-unit transaction; no terrain, quantity,
+output or completion XP changes on rejection. Whole-node output and any required
+multi-stack distribution remain WV-B3C.3B.
+
+Automated evidence passes 11/11 focused Edit, 16/16 focused Play, 594/594 full
+Edit and 81/81 full Play. The 25-step manual Unity checklist is pending.
+
 ### Quantity-badge presentation contract
 
 Visible loose stacks show their current quantity continuously and disappear at
 zero. Visible completed Material Storage compatibility cells show actual stored
 quantity continuously, with zero hidden. Node quantities are intentionally
 contextual for scalability: display only after selection or Extraction
-designation. WV-B3C.2A supports designated quantity-one Colony Solids; a general
-Node-selection authority does not yet exist. Generation-only Surface Nodes and
+designation. WV-B3C.3A shows the authoritative remaining quantity for designated
+Colony Nodes; a general Node-selection authority does not yet exist. Generation-only Surface Nodes and
 unknown quantities never appear as live interactive quantities. Badge reads do
 not mutate quantities or revisions, and Colony presentation is gated off in
 World View.
@@ -320,9 +342,9 @@ gates:
    transfer identity/replay, partial pickup/delivery, carrier
    allocation, recovery and successive trips while retaining quantity-one Nodes.
    General bounded multi-cell output placement remains future work.
-3. **B3C.3A — active variable-quantity Colony Nodes:** make the registry the sole
-   Soil/Stone quantity owner and project Solid occupancy without changing
-   Surface resources.
+3. **B3C.3A — active variable-quantity Colony Nodes (implemented; manual
+   acceptance pending):** the registry is the sole Soil/Stone quantity owner and
+   projects existing Solid occupancy without changing Surface resources.
 4. **B3C.3B — whole-node Extraction cutover:** coordinate Node, terrain and
    canonical stack changes atomically, then retire the quantity-one compatibility
    path after full conservation/regression acceptance.

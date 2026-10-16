@@ -22,7 +22,22 @@ namespace AntColony.World
         Success,
         ChunkUnavailable,
         InvalidMaterial,
-        SolidTileNotPresent
+        SolidTileNotPresent,
+        AuthorityRejected
+    }
+
+    /// <summary>
+    /// Optional scenario-local guard for Solid replacement/removal after a
+    /// Resource Node authority has been published. World data still owns the
+    /// Solid; the guard only prevents a terrain write from bypassing resource
+    /// conservation.
+    /// </summary>
+    public interface IWorldSolidMutationGuard
+    {
+        bool CanReplaceSolid(Vector2Int cell, string currentSolidId,
+            string replacementSolidId, string authorityToken, out string reason);
+        bool CanRemoveSolid(Vector2Int cell, string currentSolidId,
+            string authorityToken, out string reason);
     }
 
     /// <summary>Notification emitted only after an authoritative terrain write.</summary>
@@ -69,6 +84,7 @@ namespace AntColony.World
         private readonly Dictionary<Vector2Int, WorldChunk> chunks = new();
         private readonly Dictionary<Vector2Int, long> cellRevisions = new();
         private readonly WorldMaterialRegistry materials;
+        private IWorldSolidMutationGuard solidMutationGuard;
 
         public ChunkedWorldData(WorldMaterialRegistry materials, long worldSeed = 0)
         {
@@ -87,6 +103,18 @@ namespace AntColony.World
         public event Action<WorldCellAuthorityChange> CellChanged;
         public float MaximumBackgroundMovementSpeedMultiplier =>
             materials.MaximumBackgroundMovementSpeedMultiplier;
+
+        public string LastSolidMutationRejection { get; private set; } = string.Empty;
+
+        public void BindSolidMutationGuard(IWorldSolidMutationGuard guard)
+        {
+            solidMutationGuard = guard;
+        }
+
+        public void UnbindSolidMutationGuard(IWorldSolidMutationGuard guard)
+        {
+            if (ReferenceEquals(solidMutationGuard, guard)) solidMutationGuard = null;
+        }
 
         public bool ContainsChunk(Vector2Int chunkCoordinate)
         {
@@ -191,6 +219,14 @@ namespace AntColony.World
             Vector2Int worldCell,
             string solidMaterialId)
         {
+            return SetSolidMaterial(worldCell, solidMaterialId, string.Empty);
+        }
+
+        public WorldCellMutationResult SetSolidMaterial(
+            Vector2Int worldCell,
+            string solidMaterialId,
+            string authorityToken)
+        {
             if (!materials.ContainsSolidMaterial(solidMaterialId))
             {
                 return WorldCellMutationResult.InvalidMaterial;
@@ -203,23 +239,49 @@ namespace AntColony.World
 
             // One array slot represents the optional Solid Tile, so assigning a
             // material can never create two authoritative solids at one cell.
-            if (string.Equals(chunk.GetSolidMaterialId(localCell),
+            string currentSolidId = chunk.GetSolidMaterialId(localCell);
+            if (string.Equals(currentSolidId,
                     solidMaterialId, StringComparison.Ordinal))
                 return WorldCellMutationResult.Success;
+            if (solidMutationGuard != null &&
+                !solidMutationGuard.CanReplaceSolid(worldCell, currentSolidId,
+                    solidMaterialId, authorityToken, out string rejection))
+            {
+                LastSolidMutationRejection = rejection ?? string.Empty;
+                return WorldCellMutationResult.AuthorityRejected;
+            }
             chunk.SetSolidMaterialId(localCell, solidMaterialId);
+            LastSolidMutationRejection = string.Empty;
             PublishChange(worldCell, RuntimeCellChangeCategory.Node);
             return WorldCellMutationResult.Success;
         }
 
         public WorldCellMutationResult RemoveSolidMaterial(Vector2Int worldCell)
         {
+            return RemoveSolidMaterial(worldCell, string.Empty);
+        }
+
+        public WorldCellMutationResult RemoveSolidMaterial(Vector2Int worldCell,
+            string authorityToken)
+        {
             if (!TryGetCellChunk(worldCell, out WorldChunk chunk, out Vector2Int localCell))
             {
                 return WorldCellMutationResult.ChunkUnavailable;
             }
 
+            string currentSolidId = chunk.GetSolidMaterialId(localCell);
+            if (currentSolidId == null)
+                return WorldCellMutationResult.SolidTileNotPresent;
+            if (solidMutationGuard != null &&
+                !solidMutationGuard.CanRemoveSolid(worldCell, currentSolidId,
+                    authorityToken, out string rejection))
+            {
+                LastSolidMutationRejection = rejection ?? string.Empty;
+                return WorldCellMutationResult.AuthorityRejected;
+            }
             if (!chunk.RemoveSolidMaterial(localCell))
                 return WorldCellMutationResult.SolidTileNotPresent;
+            LastSolidMutationRejection = string.Empty;
             PublishChange(worldCell, RuntimeCellChangeCategory.Node);
             return WorldCellMutationResult.Success;
         }

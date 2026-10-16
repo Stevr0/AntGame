@@ -1,10 +1,9 @@
 # WV-B3C Resource Node and Loose Resource Integration Plan
 
-**Status:** B3C.1 and B3C.2A are complete after their recorded automated and
-user-confirmed manual acceptance. B3C.2B partial Hauling and replay-safe stack
-transactions and their acceptance recovery are implemented from
-[`PartialHaulingIntegrationPlan.md`](PartialHaulingIntegrationPlan.md) and await
-revised manual Unity acceptance after a partial first pass. B3C.3 remains planning only.
+**Status:** B3C.1, B3C.2A and B3C.2B are complete after recorded automated and
+user-confirmed manual acceptance. B3C.3A active variable-quantity Colony Node
+authority is implemented with green automated suites and awaits its 25-step
+manual Unity acceptance. B3C.3B whole-node Extraction remains unimplemented.
 
 **Prepared:** 15 October 2026
 
@@ -35,8 +34,18 @@ transfer-owned; committed carrier quantity stays in `AntInventory`; replay and
 recovery are explicit. Evaluation is bounded and route-cost-aware, and Storage
 never supplies Storage. Deterministic prepared
 general multi-cell placement remains deferred until a separately approved gate;
-B3C.3 has not activated variable whole-node output. The approved 0–100 Hauling
+B3C.3B has not activated variable whole-node output. The approved 0–100 Hauling
 capacity bands and existing shared skill-decay contract apply to carrier space.
+
+**B3C.3A implementation amendment — 16 October 2026:** The established Colony
+registry is now the sole mutable Soil/Stone Node quantity owner. Generated Soil
+uses deterministic per-Node quantities 8–12 and Stone 5–15; fixture Nodes remain
+quantity one. Terrain retains Solid occupancy, but an authority guard rejects
+unapproved replacement/removal. Active revisions, reservations, prospective
+commit/replay contracts, scenario retirement, unified-cell projections,
+quantity badges and diagnostics are implemented. Variable Nodes can be
+designated but the legacy one-unit transaction is explicitly deferred and stays
+unowned. No whole-node output, output splitting or partial harvesting was added.
 
 ## 1. Scope and decision labels
 
@@ -477,6 +486,18 @@ Colony Node ownership followed by **B3C.3B** whole-node Extraction cutover. The
 first establishes and validates sole quantity ownership; the second coordinates
 Node depletion, Solid removal, multi-stack output and coherent publication.
 
+**B3C.3A implementation status — 16 October 2026:** Implemented with active
+quantity ownership, deterministic Soil 8–12/Stone 5–15 quantities, lifecycle and
+revision validation, direct-terrain guards, authoritative runtime snapshots and
+designated-Node badges. Quantity-one fixture Extraction remains compatible.
+Variable-node legacy Extraction rejects without consuming state or monopolising
+an ant. Automated results are 11/11 focused Edit, 16/16 focused Play, 594/594
+full Edit and 81/81 full Play. Manual acceptance remains pending.
+
+**B3C.3B status:** not implemented. The coordinator, whole-node depletion,
+complete physical output, overflow/pending-output recovery and coherent
+Node/terrain/stack commit described below remain future requirements.
+
 **Systems affected:** `ExcavationWorldTransaction`, `ExcavationJobOrder`, Node
 registry, loose registry, authorised terrain mutation seam, runtime-cell change
 publication and navigation/render invalidation.
@@ -489,9 +510,10 @@ publisher; replay/recovery result query.
 quantity, depleted Solid projection and loose output. Jobs continue to own work;
 the underlying authorities own their final records.
 
-**Compatibility adapter:** keep the `Excavation*` names and callers while
+**B3C.3B compatibility adapter:** keep the `Excavation*` names and callers while
 delegating final commit to the shared coordinator. Soil/Stone remain
-quantity-one; Surface actions remain disabled.
+quantity-one only in the development fixture; generated variable Nodes remain
+deferred until the coordinator is complete. Surface actions remain disabled.
 
 **Automated tests:** success, cancellation, replay, stale revisions, competing
 reservations, full/mixed output cell, bounded alternate placement, pending

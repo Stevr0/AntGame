@@ -26,6 +26,11 @@ namespace AntColony.World
         public int TwigQuantity => 5;
         public int FreshwaterQuantity => 12;
         public int SurfaceStoneQuantity => 6;
+        public int ColonySoilMinimumQuantity => 8;
+        public int ColonySoilMaximumQuantity => 12;
+        public int ColonyStoneMinimumQuantity => 5;
+        public int ColonyStoneMaximumQuantity => 15;
+        public string ColonyNodeQuantityDomain => "colony-node-quantity.v1";
     }
 
     public sealed class GeneratedResourceNodeRecord
@@ -172,9 +177,15 @@ namespace AntColony.World
             Add(Metadata.Seed.ToString()); Add(Metadata.Version.ToString());
             Add(Metadata.ConfigurationId);
             foreach (GeneratedCellRecord cell in SurfaceCells)
-            { Add(cell.BackgroundDefinitionId); Add(cell.Node?.DefinitionId); Add(cell.Node?.Id); }
+            {
+                Add(cell.BackgroundDefinitionId); Add(cell.Node?.DefinitionId);
+                Add(cell.Node?.Id); Add(cell.Node?.InitialQuantity.ToString());
+            }
             foreach (GeneratedCellRecord cell in ColonyCells)
-            { Add(cell.BackgroundDefinitionId); Add(cell.Node?.DefinitionId); }
+            {
+                Add(cell.BackgroundDefinitionId); Add(cell.Node?.DefinitionId);
+                Add(cell.Node?.InitialQuantity.ToString());
+            }
             return hash.ToString("X16");
         }
 
@@ -322,10 +333,12 @@ namespace AntColony.World
                     isStone ? StoneBackgroundId : EarthBackgroundId);
                 ColonyCell location = ToTypedColonyCell(column, depth);
                 string definition = isStone ? StoneNodeId : SoilNodeId;
+                int quantity = DetermineColonyNodeQuantity(seed, config, column,
+                    depth, definition);
                 var node = new GeneratedResourceNodeRecord(
                     NodeId(seed, "colony", column, depth, definition),
                     RegionDestination.Colony(AntRegionIds.Colony, location), definition,
-                    1, true, "extraction", "extraction",
+                    quantity, true, "extraction", "extraction",
                     isStone ? "material.stone" : "material.soil", "generated:colony");
                 cells[column, depth].Node = node; nodes.Add(node);
             }
@@ -346,10 +359,12 @@ namespace AntColony.World
             const int stoneDepth = 7;
             GeneratedCellRecord stoneFace = new(StoneBackgroundId);
             ColonyCell stoneLocation = ToTypedColonyCell(stoneColumn, stoneDepth);
+            int stoneQuantity = DetermineColonyNodeQuantity(seed, config,
+                stoneColumn, stoneDepth, StoneNodeId);
             var stoneNode = new GeneratedResourceNodeRecord(
                 NodeId(seed, "colony", stoneColumn, stoneDepth, StoneNodeId),
                 RegionDestination.Colony(AntRegionIds.Colony, stoneLocation),
-                StoneNodeId, 1, true, "extraction", "extraction",
+                StoneNodeId, stoneQuantity, true, "extraction", "extraction",
                 "material.stone", "generated:colony");
             nodes.RemoveAll(node => node.Location.Kind == RegionLocationKind.Colony &&
                 node.Location.ColonyCell.Equals(stoneLocation));
@@ -532,6 +547,42 @@ namespace AntColony.World
         { Vector2Int cell = ToColonyWorldCell(column, depth); return new ColonyCell(cell.x, cell.y); }
         private static string NodeId(long seed, string region, int x, int y, string definition) =>
             $"generated.{region}.{definition}.{x}.{y}.{unchecked((ulong)seed):X16}";
+
+        /// <summary>
+        /// Derives quantity from immutable per-Node inputs. No shared random
+        /// stream is consumed, so generation order cannot reroll another Node.
+        /// </summary>
+        public static int DetermineColonyNodeQuantity(long seed,
+            WorldGenerationConfiguration config, int column, int depth,
+            string definitionId)
+        {
+            config ??= new WorldGenerationConfiguration();
+            int minimum;
+            int maximum;
+            if (string.Equals(definitionId, SoilNodeId, StringComparison.Ordinal))
+            {
+                minimum = config.ColonySoilMinimumQuantity;
+                maximum = config.ColonySoilMaximumQuantity;
+            }
+            else if (string.Equals(definitionId, StoneNodeId,
+                         StringComparison.Ordinal))
+            {
+                minimum = config.ColonyStoneMinimumQuantity;
+                maximum = config.ColonyStoneMaximumQuantity;
+            }
+            else
+            {
+                throw new ArgumentException(
+                    $"Unsupported Colony Node definition '{definitionId}'.",
+                    nameof(definitionId));
+            }
+
+            string domain = $"{config.ColonyNodeQuantityDomain}:" +
+                $"{config.ConfigurationId}:v{config.Version}:" +
+                $"{definitionId}:{column}:{depth}";
+            var random = new StableRandom(DeriveSeed(seed, domain));
+            return minimum + random.NextInt(maximum - minimum + 1);
+        }
 
         private static ulong DeriveSeed(long seed, string domain)
         {

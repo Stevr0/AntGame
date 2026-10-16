@@ -54,10 +54,11 @@ additional cells or remains a recoverable pending transaction. Natural
 Backgrounds own no colony function, and finite Water requires a
 liquid-compatible representation. See [Resource and Node System](resource-and-node-system.md).
 
-This is not current runtime ownership. WV-B3C.1 is complete after 17/17 manual
-acceptance, but its quantity-one registry remains inactive. Existing terrain,
-loose drops and functional Background systems continue as compatibility
-authorities until separately approved B3C.2/B3C.3 and WV-B3D gates.
+WV-B3C.3A now implements the Colony portion of this ownership: the established
+registry owns generated Soil/Stone quantity, while terrain retains guarded Solid
+occupancy. Canonical loose stacks and Hauling transfers are also active. The
+whole-node output coordinator, Surface resources and functional-Background
+migration remain later B3C.3B/WV-B3D gates.
 
 The target Placement boundary is specified in
 [`Documentation/ConstructionPlacementSpecification.md`](https://github.com/Stevr0/AntGame/blob/main/Documentation/ConstructionPlacementSpecification.md).
@@ -68,20 +69,20 @@ their capacity, contents and functional reservations. Legacy
 `SurvivalInteractionWorld`/`MaterialStorageWorld` state must be copied and
 validated before a cell-level cutover disables its functional Background.
 
-## Inactive Colony Resource Node registry
+## Colony Resource Node registry
 
-WV-B3C.1 adds a private `InactiveColonyResourceNodeRegistry` beside the existing
-terrain authority. Scenario construction scans resident Colony terrain once and
-creates deterministic, immutable quantity-one candidate records only for the
-registered Soil and Stone Solid IDs. Generated records retain configuration,
-version, seed and generated Node provenance; fixture records use a versioned
-fixture namespace, seed, Solid ID and typed cell.
+WV-B3C.1 introduced the scenario-local registry seam; WV-B3C.3A activates it as
+sole mutable Soil/Stone quantity authority. Scenario construction scans resident
+Colony terrain once and creates one record per registered Soil/Stone Solid.
+Generated records retain configuration/version/seed provenance and use Soil
+8–12 or Stone 5–15; fixture records use a versioned fixture namespace and
+quantity one. Reads expose immutable snapshots.
 
-The registry is diagnostic, not authoritative. `ChunkedWorldData` continues to
-own terrain and the effective quantity-one Solid state; existing Extraction and
-loose-output code remains the only mutation path. The registry subscribes to
-the existing terrain notification solely to mark its matching record stale or
-absent. It emits no competing cell event and never synchronises back. Scenario
+The registry owns quantity; `ChunkedWorldData` owns terrain/Solid occupancy and
+Background. Its mutation guard rejects bypass writes, while narrow one-use
+tokens support fixture debug operations and safe quantity-one Extraction.
+Committed registry mutations publish one Node change through the unified Colony
+adapter. Variable-node legacy Extraction remains deferred and unowned. Scenario
 replacement invalidates the old handle after the replacement setup succeeds;
 camera switching does not rebuild it. This does not expand WV-B3B read-model
 atomicity into whole-world atomicity.

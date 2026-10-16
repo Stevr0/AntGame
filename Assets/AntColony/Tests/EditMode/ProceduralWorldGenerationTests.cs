@@ -40,6 +40,82 @@ namespace AntColony.Tests.EditMode
         }
 
         [Test]
+        public void GeneratedColonyNodesUseApprovedVariableQuantityRanges()
+        {
+            var config = new WorldGenerationConfiguration();
+            Assert.That(ProceduralWorldGenerator.TryGenerate(2203, config,
+                out GeneratedWorldSnapshot world, out GeneratedWorldValidationReport report),
+                Is.True, report.Summary);
+
+            GeneratedResourceNodeRecord[] soil = world.Nodes.Where(node =>
+                node.Location.Kind == RegionLocationKind.Colony &&
+                node.DefinitionId == ProceduralWorldGenerator.SoilNodeId).ToArray();
+            GeneratedResourceNodeRecord[] stone = world.Nodes.Where(node =>
+                node.Location.Kind == RegionLocationKind.Colony &&
+                node.DefinitionId == ProceduralWorldGenerator.StoneNodeId).ToArray();
+
+            Assert.That(soil, Is.Not.Empty);
+            Assert.That(stone, Is.Not.Empty);
+            Assert.That(soil.All(node => node.InitialQuantity >= 8 &&
+                node.InitialQuantity <= 12), Is.True);
+            Assert.That(stone.All(node => node.InitialQuantity >= 5 &&
+                node.InitialQuantity <= 15), Is.True);
+            Assert.That(soil.Select(node => node.InitialQuantity).Distinct().Count(),
+                Is.GreaterThan(1));
+            Assert.That(stone.Select(node => node.InitialQuantity).Distinct().Count(),
+                Is.GreaterThan(1));
+        }
+
+        [Test]
+        public void ColonyNodeQuantityIsStablePerNodeAndVariesAcrossSeeds()
+        {
+            var config = new WorldGenerationConfiguration();
+            ProceduralWorldGenerator.TryGenerate(2203, config,
+                out GeneratedWorldSnapshot first, out _);
+            ProceduralWorldGenerator.TryGenerate(2203, config,
+                out GeneratedWorldSnapshot repeat, out _);
+            Dictionary<string, int> firstQuantities = first.Nodes
+                .Where(node => node.Location.Kind == RegionLocationKind.Colony)
+                .ToDictionary(node => node.Id, node => node.InitialQuantity);
+            Dictionary<string, int> repeatQuantities = repeat.Nodes
+                .Where(node => node.Location.Kind == RegionLocationKind.Colony)
+                .ToDictionary(node => node.Id, node => node.InitialQuantity);
+            Assert.That(repeatQuantities, Is.EquivalentTo(firstQuantities));
+
+            int different = 0;
+            for (int column = 0; column < 32; column++)
+            {
+                int firstQuantity = ProceduralWorldGenerator.DetermineColonyNodeQuantity(
+                    2203, config, column, 12, ProceduralWorldGenerator.SoilNodeId);
+                int secondQuantity = ProceduralWorldGenerator.DetermineColonyNodeQuantity(
+                    2204, config, column, 12, ProceduralWorldGenerator.SoilNodeId);
+                if (firstQuantity != secondQuantity) different++;
+            }
+            Assert.That(different, Is.GreaterThan(0));
+        }
+
+        [Test]
+        public void PerNodeQuantityDerivationIsIndependentOfEvaluationOrder()
+        {
+            var config = new WorldGenerationConfiguration();
+            (int column, int depth, string definition)[] nodes =
+            {
+                (3, 4, ProceduralWorldGenerator.SoilNodeId),
+                (41, 17, ProceduralWorldGenerator.StoneNodeId),
+                (92, 33, ProceduralWorldGenerator.SoilNodeId),
+                (15, 80, ProceduralWorldGenerator.StoneNodeId)
+            };
+            int[] forward = nodes.Select(node =>
+                ProceduralWorldGenerator.DetermineColonyNodeQuantity(2203, config,
+                    node.column, node.depth, node.definition)).ToArray();
+            System.Array.Reverse(nodes);
+            int[] reverse = nodes.Select(node =>
+                ProceduralWorldGenerator.DetermineColonyNodeQuantity(2203, config,
+                    node.column, node.depth, node.definition)).Reverse().ToArray();
+            Assert.That(reverse, Is.EqualTo(forward));
+        }
+
+        [Test]
         public void GenerationDoesNotReadOrMutateUnityGlobalRandom()
         {
             Random.InitState(7319);

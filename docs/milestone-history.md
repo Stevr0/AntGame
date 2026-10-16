@@ -1,5 +1,20 @@
 # Milestone History
 
+## 16 October 2026 — WV-B3C.3A Active Colony Resource Nodes
+
+**Implemented — Automated Tests Passed, Manual Acceptance Pending.** The
+scenario-local Colony registry is now sole mutable quantity owner for generated
+Soil 8–12 and Stone 5–15 Nodes; fixture Nodes remain quantity one. It publishes
+immutable quantity/revision/lifecycle state through unified cells, guards direct
+Solid mutation, retires old scenario identities and supplies designated-Node
+quantity badges and diagnostics. Variable Nodes remain safely deferred from the
+legacy one-unit Extraction path pending WV-B3C.3B.
+
+Unity evidence passes 11/11 focused Edit, 16/16 focused Play, 594/594 complete
+Edit and 81/81 complete Play with no failures, skips or inconclusive results.
+The 25-step manual checklist remains pending. Surface Nodes remain
+`GenerationOnly`; `WV-B3B-LIM-001` remains active.
+
 ## 16 October 2026 — WV-B3C.2B Partial Hauling — Complete
 
 **WV-B3C.2B — Complete.** The first
@@ -69,7 +84,8 @@ inconclusive results. The user confirmed the complete **17/17 manual Unity
 checklist passed** on 16 October 2026. This closure and the accompanying
 Resource and Node v1.0 alignment are documentation-only and did not rerun Unity.
 B3C.2A and B3C.2B later completed;
-B3C.3, WV-B3D and WV-C1 have not started; `WV-B3B-LIM-001` remains active.
+At that closure B3C.3, WV-B3D and WV-C1 had not started. B3C.3A is now
+implemented pending manual acceptance; `WV-B3B-LIM-001` remains active.
 
 The same documentation amendment approved Resource/Node v1.0 and the companion
 Construction/Placement definition contract. It audited current compatibility
