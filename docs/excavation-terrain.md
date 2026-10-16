@@ -1,5 +1,17 @@
 # Excavation and Terrain
 
+## WV-B3C.1 diagnostic Node records
+
+Each prepared Colony scenario now builds an inactive, read-only quantity-one
+Node record for every registered Soil/Stone Solid. The record exposes stable
+typed identity, captured quantity, extraction metadata, provenance, revision
+and lifecycle for diagnostics. Existing `ExcavationWorldTransaction` still
+preflights output, removes the authoritative Solid and commits the physical
+drop. That terrain removal marks the matching diagnostic record
+`DepletedOrAbsent`; it does not decrement registry quantity or route gameplay
+through the registry. B3C.2 canonical stacks and B3C.3 transaction cutover have
+not started.
+
 ## WV-B3B read projection
 
 Existing Soil/Stone Solids are now visible as compatibility Node snapshots and

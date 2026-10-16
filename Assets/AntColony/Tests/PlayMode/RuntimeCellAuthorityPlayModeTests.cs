@@ -26,6 +26,10 @@ namespace AntColony.Tests.PlayMode
             Assert.That(host.RuntimeCells.Current.Surface.RegionId,
                 Is.EqualTo(AntRegionIds.Surface));
             Assert.That(host.TwoViewWorld.SurfaceWorld, Is.SameAs(host.SurfaceWorld));
+            Assert.That(host.ColonyResourceNodes, Is.Not.Null);
+            InactiveColonyResourceNodeRegistry nodeRegistry =
+                host.ColonyResourceNodes;
+            long nodeRegistryRevision = nodeRegistry.Revision;
 
             long publication = host.RuntimeCells.PublicationRevision;
             long sequence = host.RuntimeCells.Current.Colony.Changes.CurrentSequence;
@@ -43,6 +47,8 @@ namespace AntColony.Tests.PlayMode
             Assert.That(host.RuntimeCells.TryGetCell(cellId, out var after),
                 Is.EqualTo(RuntimeCellReadResult.Success));
             Assert.That(after.CellRevision, Is.EqualTo(before.CellRevision));
+            Assert.That(host.ColonyResourceNodes, Is.SameAs(nodeRegistry));
+            Assert.That(nodeRegistry.Revision, Is.EqualTo(nodeRegistryRevision));
         }
 
         [UnityTest]
@@ -59,6 +65,11 @@ namespace AntColony.Tests.PlayMode
             yield return null;
             Assert.That(host.RuntimeCells.PublicationRevision,
                 Is.EqualTo(firstPublication + 1));
+            Assert.That(host.ColonyResourceNodes, Is.Not.Null);
+            Assert.That(host.ColonyResourceNodes.Diagnostics.SoilCount,
+                Is.GreaterThan(0));
+            Assert.That(host.ColonyResourceNodes.Diagnostics.StoneCount,
+                Is.GreaterThan(0));
 
             SurfaceCell nodeCell = default;
             bool found = false;
@@ -94,6 +105,43 @@ namespace AntColony.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator GeneratedExtractionUsesOldAuthorityAndInvalidatesCandidate()
+        {
+            yield return SceneManager.LoadSceneAsync("AntGameDevelopment",
+                LoadSceneMode.Single);
+            yield return null;
+            AntGameDevelopmentWorldHost host =
+                Object.FindFirstObjectByType<AntGameDevelopmentWorldHost>();
+            Assert.That(host.TryStartScenario(GeneratedWorldScenario.FoundingQueen,
+                2203L, out string message), Is.True, message);
+            yield return null;
+
+            ColonyCell typedCell = ProceduralWorldGenerator.FoundingStoneFace;
+            var worldCell = new Vector2Int(typedCell.X, typedCell.Y);
+            RegionCellId cellId = RegionCellId.Colony(
+                AntRegionIds.Colony, typedCell);
+            Assert.That(host.ColonyResourceNodes.TryGet(cellId, out var before),
+                Is.EqualTo(InactiveColonyNodeReadResult.Success));
+            Assert.That(host.WorldData.GetSolidMaterialId(worldCell,
+                out string solidId), Is.EqualTo(WorldCellQueryResult.Available));
+
+            Assert.That(host.ExcavationTransaction.TryCommit(
+                "test.wv-b3c1.generated-extraction", worldCell, solidId,
+                out WorldMaterialDrop output, out string error), Is.True, error);
+            Assert.That(output.Material, Is.EqualTo(ExcavatedMaterialType.Stone));
+            Assert.That(output.Quantity, Is.EqualTo(1));
+            Assert.That(host.MaterialDrops.GetQuantity(ExcavatedMaterialType.Stone),
+                Is.EqualTo(1));
+            Assert.That(host.ColonyResourceNodes.TryGet(cellId, out var after),
+                Is.EqualTo(InactiveColonyNodeReadResult.Success));
+            Assert.That(after.NodeId, Is.EqualTo(before.NodeId));
+            Assert.That(after.RemainingQuantity, Is.EqualTo(1),
+                "The inactive registry does not perform the gameplay quantity write.");
+            Assert.That(after.Lifecycle,
+                Is.EqualTo(InactiveColonyNodeLifecycle.DepletedOrAbsent));
+        }
+
+        [UnityTest]
         public IEnumerator FixtureRestorePublishesOnePairWithoutDuplicateAnts()
         {
             yield return SceneManager.LoadSceneAsync("AntGameDevelopment",
@@ -103,10 +151,16 @@ namespace AntColony.Tests.PlayMode
                 Object.FindFirstObjectByType<AntGameDevelopmentWorldHost>();
             RuntimeCellPublicationRegistry registry = host.RuntimeCells;
             long fixturePublication = registry.PublicationRevision;
+            InactiveColonyResourceNodeRegistry firstFixtureNodes =
+                host.ColonyResourceNodes;
 
             Assert.That(host.TryStartScenario(GeneratedWorldScenario.FoundingQueen,
                 2203L, out string generatedMessage), Is.True, generatedMessage);
             yield return null;
+            InactiveColonyResourceNodeRegistry generatedNodes =
+                host.ColonyResourceNodes;
+            Assert.That(firstFixtureNodes.Lifecycle,
+                Is.EqualTo(InactiveColonyNodeRegistryLifecycle.ContextInvalidated));
             Assert.That(host.TryStartScenario(GeneratedWorldScenario.DevelopmentFixture,
                 2203L, out string fixtureMessage), Is.True, fixtureMessage);
             yield return null;
@@ -123,6 +177,12 @@ namespace AntColony.Tests.PlayMode
                 Is.EqualTo(AntRegionIds.Colony));
             Assert.That(registry.Current.Surface.RegionId,
                 Is.EqualTo(AntRegionIds.Surface));
+            Assert.That(generatedNodes.Lifecycle,
+                Is.EqualTo(InactiveColonyNodeRegistryLifecycle.ContextInvalidated));
+            Assert.That(host.ColonyResourceNodes, Is.Not.SameAs(firstFixtureNodes));
+            Assert.That(host.ColonyResourceNodes, Is.Not.SameAs(generatedNodes));
+            Assert.That(host.ColonyResourceNodes.Lifecycle,
+                Is.EqualTo(InactiveColonyNodeRegistryLifecycle.ValidInactiveCandidate));
         }
     }
 }

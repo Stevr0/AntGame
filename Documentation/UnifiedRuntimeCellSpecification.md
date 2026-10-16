@@ -529,6 +529,23 @@ Completion requires exact conservation under success, replay, cancellation and
 failed placement; Background preservation; Surface and Colony typed identity;
 and proof that generated records no longer own mutable quantity.
 
+#### WV-B3C.1 implementation status — 16 October 2026
+
+**Implemented — Automated Tests Passed, Manual Acceptance Pending.** The
+Colony-only inactive registry foundation now builds deterministic quantity-one
+Soil/Stone candidate records from prepared terrain. It validates actual Solid
+definitions, typed cells, generated/fixture provenance, IDs, Backgrounds and
+duplicates; observes only relevant terrain Node changes to invalidate stale
+records; and invalidates the complete context on scenario replacement.
+
+This is intentionally not the active Node authority described in section 6.
+The WV-B3B Colony adapter still projects `ChunkedWorldData` Solids,
+`ChunkedWorldData` remains terrain/effective quantity-one authority, and the
+existing Extraction/output transaction remains unchanged. The registry emits
+no competing runtime-cell changes and Surface Nodes remain `GenerationOnly`.
+B3C.2 and B3C.3 are still required for canonical loose stacks and the atomic
+writer/read cutover.
+
 ### WV-B3D candidate — Construction / Placement Integration
 
 Scope: Placement slot and IDs; designation/site slot reservation; atomic

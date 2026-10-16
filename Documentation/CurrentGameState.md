@@ -1,5 +1,105 @@
 # Ant Colony Current Game State
 
+## WV-B3C.1 inactive Colony Resource Node registry — 16 October 2026
+
+**Implemented — Automated Tests Passed, Manual Acceptance Pending.** An
+`InactiveColonyResourceNodeRegistry` is constructed once for each prepared
+development-fixture or generated Colony scenario. It records every registered
+Soil/Stone Solid as a typed, quantity-one diagnostic Node with immutable stable
+ID, definition, extraction metadata, provenance, revision and lifecycle. The
+development inspector reports scenario identity, registry lifecycle/revision,
+total/Soil/Stone counts, unsupported Solids, duplicate count and the selected
+cell's inactive Node state.
+
+`ChunkedWorldData` remains the live terrain and effective quantity-one gameplay
+authority. Existing `ExcavationWorldTransaction`, `WorldMaterialDropRegistry`,
+Hauling, Construction, navigation, rendering and XP paths are unchanged. The
+inactive registry cannot remove terrain, reserve work, decrement quantity,
+produce output or publish a competing runtime-cell change. A Node-slot terrain
+change only marks the matching candidate record `StaleInvalidated` or
+`DepletedOrAbsent` and increments its diagnostic revision. Unrelated terrain
+changes and reads do not change it. A removed/re-added Solid cannot silently
+revive the old candidate.
+
+### Identity and scenario lifecycle
+
+Generated IDs are namespaced by Colony region, generation configuration,
+generation version and seed, then retain the deterministic generated Node ID.
+Fixture IDs use the Colony region, `development-fixture` namespace/version,
+fixture seed, actual registered Solid ID and typed cell coordinates. No Unity
+instance ID or runtime hash participates. Future runtime-created/respawning
+Nodes require a persisted scenario-scoped allocation or creation-operation ID;
+that policy is not implemented here.
+
+Candidate construction validates registered Soil/Stone extraction definitions,
+one Node per cell, unique IDs/cells, typed Colony ownership, generated metadata
+consistency and retained Backgrounds. Unsupported Solids are counted but do not
+become Nodes. A failed candidate is not installed and does not mutate terrain.
+Successful scenario replacement invalidates the old registry handle; camera
+switching never rebuilds it. The host still uses its existing in-place
+rebuild/restore path, so `WV-B3B-LIM-001` remains active.
+
+### Automated verification
+
+Unity `6000.3.8f1` produced XML-backed results on the WV-B3C.1 working tree:
+
+- focused Edit Mode: **8/8 passed**;
+- focused Play Mode: **4/4 passed**;
+- complete graphics-enabled Edit Mode: **565/565 passed**;
+- complete Play Mode: **78/78 passed**;
+- failures, skips and inconclusive results: **0**.
+
+Evidence is retained in `Logs/WV-B3C1-EditMode.xml`,
+`Logs/WV-B3C1-PlayMode.xml`, `Logs/WV-B3C1-Full-EditMode.xml` and
+`Logs/WV-B3C1-Full-PlayMode.xml`, with corresponding logs. The first attempted
+complete Edit run used a null graphics device and crashed in the pre-existing
+rendered-pixel test before producing XML; the required graphics-enabled rerun
+above is the valid complete result.
+
+### Five-stage gameplay boundary
+
+The approved sequence remains **Foraging → Extraction → Hauling → Refining →
+Construction**.
+
+Foraging remains future work. Colony Soil/Stone Extraction, physical loose
+output and Hauling remain implemented through their pre-WV-B3C.1 authorities.
+Refining remains future work. Construction remains implemented through existing
+site staging and compatibility Background conversion. Generated Surface Stone,
+Seed, Twig and Freshwater remain `GenerationOnly`; no Surface interaction was
+added.
+
+### Manual Unity acceptance — pending
+
+Development fixture:
+
+1. Load Mara/Pip/Tala.
+2. Confirm the existing terrain and three ants are present.
+3. Open Developer Only → Debug and inspect registry totals and lifecycle.
+4. Select a Soil or Stone Solid and record its Node ID/revision.
+5. Extract that Solid through the existing workflow.
+6. Confirm the existing physical Soil/Stone output appears unchanged.
+7. Confirm the selected inactive record becomes `DepletedOrAbsent` while its
+   captured remaining quantity stays 1 and its diagnostic revision advances.
+
+Generated scenario:
+
+8. Start generated seed `2203`.
+9. Confirm the founding queen, empty chamber and entrance passage are intact.
+10. Confirm the registry reports Soil and Stone records with a generated
+    scenario identity.
+11. Select and extract an accessible Soil Solid through the existing workflow.
+12. Confirm physical output is unchanged and the matching record invalidates.
+13. Switch Colony/Surface views several times.
+14. Confirm the registry instance/revision and unaffected Node IDs do not change.
+15. Make an entrance round trip and confirm residency/navigation still work.
+16. Restore the development fixture and confirm the generated registry handle is
+    invalidated and no duplicate Nodes or ants appear.
+17. Confirm the Console has no new errors or exceptions.
+
+WV-B3C.1 is not complete until the user confirms this checklist. WV-B3C.2
+canonical loose stacks, WV-B3C.3 authority/transaction cutover, WV-B3D and WV-C1
+remain unstarted.
+
 ## WV-B3B unified runtime cell authority foundation — 15 October 2026
 
 **WV-B3B — Complete.** Automated validation passed and the user explicitly

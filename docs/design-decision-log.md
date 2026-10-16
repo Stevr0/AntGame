@@ -1,5 +1,21 @@
 # Design Decision Log
 
+## 2026-10-16 — Add inactive Colony Node identity without moving writers
+
+**Decision:** Implement WV-B3C.1 as an inactive, scenario-scoped diagnostic
+registry for registered Colony Soil/Stone Solids. Generated IDs retain
+configuration/version/seed and generated provenance; fixture IDs use a
+versioned fixture namespace, seed, actual Solid ID and typed cell. Records are
+quantity one and revisioned, but cannot mutate gameplay.
+
+**Consequences:** `ChunkedWorldData` remains terrain/effective quantity-one
+authority and existing Extraction/output remains unchanged. Relevant Solid
+mutation invalidates the matching diagnostic record without bidirectional
+synchronisation or a competing cell event. Old scenario handles reject reads
+after replacement. Surface Nodes, canonical loose stacks and authority cutover
+remain deferred to later gates; `WV-B3B-LIM-001` remains accepted. Automated
+tests pass, while manual WV-B3C.1 acceptance is pending.
+
 ## 2026-10-15 — Close WV-B3B and retain whole-world atomicity limitation
 
 **Decision:** Close WV-B3B after automated validation passed and the user

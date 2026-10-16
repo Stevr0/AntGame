@@ -131,6 +131,11 @@ namespace AntColony.Development
         public ConstructionWorldTransaction ConstructionTransaction { get; private set; }
         public SurfaceWorldData SurfaceWorld { get; private set; }
         public RuntimeCellPublicationRegistry RuntimeCells { get; private set; }
+        public InactiveColonyResourceNodeRegistry ColonyResourceNodes
+        {
+            get;
+            private set;
+        }
         public IReadOnlyList<Vector2Int> SurvivalFixtureCells => survivalFixtureCells;
         public int GridStressGroupSize => gridStressGroupSize;
         public AntAutonomousMotor AutonomousAntPrefab => autonomousAntPrefab;
@@ -260,12 +265,21 @@ namespace AntColony.Development
                 WorldData, SurvivalInteractionWorld, MaterialStorage,
                 OnConstructionCommitted);
 
+            if (!TryBuildInactiveColonyResourceNodes(
+                    out InactiveColonyResourceNodeRegistry nodeCandidate,
+                    out string nodeRegistryError))
+            {
+                Debug.LogError(nodeRegistryError, this);
+                return false;
+            }
+
             SurfaceWorldData nextSurfaceWorld = proceduralWorld?
                 .CreateSurfaceNavigationWorld() ??
                 SurfaceWorldData.CreateDevelopmentFixture();
             if (!TryPublishRuntimeCells(nextSurfaceWorld,
                     out string publicationError))
             {
+                nodeCandidate.Dispose();
                 Debug.LogError(publicationError, this);
                 return false;
             }
@@ -285,6 +299,7 @@ namespace AntColony.Development
             if (startingScenario == GeneratedWorldScenario.DevelopmentFixture &&
                 !selectionController.ResetSyntheticJobFixtures(out string jobError))
             {
+                nodeCandidate.Dispose();
                 Debug.LogError(jobError, this);
                 return false;
             }
@@ -298,7 +313,32 @@ namespace AntColony.Development
                 SpawnOrResetSelectableGridAnts(out _);
             }
             BindPlayerHud();
+            // Swap only after the ordinary scenario setup has succeeded. The old
+            // handle then rejects reads instead of referring to obsolete terrain.
+            ColonyResourceNodes?.InvalidateContext();
+            ColonyResourceNodes = nodeCandidate;
             return true;
+        }
+
+        private bool TryBuildInactiveColonyResourceNodes(
+            out InactiveColonyResourceNodeRegistry candidate,
+            out string error)
+        {
+            ColonyResourceNodeScenarioIdentity identity = proceduralWorld != null
+                ? new ColonyResourceNodeScenarioIdentity(
+                    proceduralWorld.Metadata.ConfigurationId,
+                    proceduralWorld.Metadata.Version,
+                    proceduralWorld.Metadata.Seed)
+                : new ColonyResourceNodeScenarioIdentity(
+                    InactiveColonyResourceNodeRegistry.DevelopmentFixtureNamespace,
+                    InactiveColonyResourceNodeRegistry.DevelopmentFixtureVersion,
+                    worldSeed);
+            bool created = InactiveColonyResourceNodeRegistry.TryCreate(
+                WorldData, identity, soilSolid.StableMaterialId,
+                stoneSolid.StableMaterialId, proceduralWorld,
+                out candidate, out ColonyResourceNodeRegistryBuildReport report);
+            error = report.Summary;
+            return created;
         }
 
         /// <summary>
@@ -321,6 +361,7 @@ namespace AntColony.Development
 
         private void OnDestroy()
         {
+            ColonyResourceNodes?.Dispose();
             RuntimeCells?.Current?.Dispose();
         }
 

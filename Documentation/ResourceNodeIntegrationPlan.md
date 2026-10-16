@@ -1,7 +1,8 @@
 # WV-B3C Resource Node and Loose Resource Integration Plan
 
-**Status:** Implementation readiness plan only. WV-B3C is not implemented or
-authorised by this document.
+**Status:** B3C.1 is implemented with automated tests passed and manual Unity
+acceptance pending. B3C.2 and B3C.3 remain planning only and are not authorised
+by this document.
 
 **Prepared:** 15 October 2026
 
@@ -122,10 +123,13 @@ At publication validate a one-to-one relation:
 4. duplicate Node IDs or cells fail candidate publication;
 5. generated records are copied, not retained as writable aliases.
 
-For B3C.1, Colony Soil/Stone remain quantity-one and one successful Extraction
-depletes the Node. The coordinator removes the Solid only when remaining
-quantity reaches zero. This preserves current gameplay and leaves the schema
-ready for later multi-quantity Nodes without changing balance now.
+For B3C.1, Colony Soil/Stone remain quantity-one. The implemented inactive
+record keeps its captured remaining quantity at one and becomes
+`DepletedOrAbsent` when existing Extraction removes the authoritative Solid; it
+does not perform the depletion. At the future B3C.3 cutover, the coordinator
+will remove the Solid only when authoritative Node quantity reaches zero. This
+preserves current gameplay and leaves the schema ready for later multi-quantity
+Nodes without changing balance now.
 
 ### 3.3 Read-model integration
 
@@ -317,14 +321,22 @@ WV-B3C complete until all three are accepted.
 
 ### B3C.1 — Colony Node authority
 
+**Implementation update — 16 October 2026:** Implemented as the inactive,
+unpublished authority foundation recommended here. It creates immutable
+quantity-one candidate records, deterministic generated/fixture IDs, local
+stale/depleted invalidation, context invalidation and bounded inspector
+diagnostics. It does not switch the WV-B3B adapter or any gameplay writer.
+Focused tests pass 8/8 Edit and 4/4 Play; complete suites pass 565/565 Edit and
+78/78 Play. Manual acceptance remains pending.
+
 **Systems affected:** new Node definition/registry records; generated scenario
 construction; candidate-publication validation; narrow read-only inspection in
 development tooling. The live Colony adapter does not switch snapshot source in
 this slice.
 
 **Interfaces:** immutable Node snapshot/query; deterministic initialization;
-internal reservation/mutation surface reserved for B3C.3; `NodeChanged` with
-typed cell and revisions.
+build report; registry diagnostics; explicit context invalidation. No mutation,
+reservation or competing `NodeChanged` event was added in this slice.
 
 **Mutation ownership:** B3C.1 builds the future sole quantity owner but keeps it
 inactive and unpublished while existing excavation remains the live writer.
@@ -517,7 +529,7 @@ The following block implementation but do not invalidate this plan:
 
 1. final Node registry/coordinator names and assembly placement;
 2. versioned fixture Node-ID and canonical Stack-ID derivation;
-3. whether B3C.1 publishes a read-only Node authority before B3C.3 writer cutover;
+3. the exact B3C.3 atomic writer/read cutover and adapter integration;
 4. exact alternate-output radius, candidate cap, direction order constants,
    accessibility origin, hazard query and protected entrance cells;
 5. legacy same-cell capacity reconciliation and active-reservation handling;
@@ -540,19 +552,15 @@ persistence, region unloading or complex restoration.
 
 ## 12. Recommended smallest implementation prompt
 
-Authorise **B3C.1 only: Colony quantity-one Node authority foundation**. Add the
-private runtime Node definition/registry, deterministic generated/fixture
-initialization, one-to-one Solid parity validation and immutable candidate
-snapshots. Keep the registry inactive and unpublished, keep the WV-B3B Colony
-adapter on its current Solid projection, keep the mutation API internal and
-disabled, and keep existing `ExcavationWorldTransaction` and
-`WorldMaterialDropRegistry` as the active writers. Every Surface Node remains
-`GenerationOnly`. Add focused Edit/Play characterization tests and run the
-relevant/full regressions. Do not implement loose-stack canonicalization,
-alternate placement, transaction coordination, Surface gameplay, Placements or
-WV-B3D in that prompt.
+The B3C.1 prompt above has been implemented and awaits manual acceptance. After
+acceptance, the next smallest candidate is a separately authorised **B3C.2
+only** prompt for canonical one-stack ground-resource internals while preserving
+existing pickup, Hauling, Construction recovery and developer-drop callers. It
+must settle canonical Stack ID, legacy same-cell reconciliation and reservation
+migration before code changes. It must not implement Node transaction cutover,
+Surface gameplay, Placements or WV-B3D.
 
-This first prompt creates a reversible authority seam and proves identity and
-projection without changing accepted gameplay. B3C.2 and B3C.3 should follow
-only after their unresolved decisions are approved and the preceding slice is
+The implemented first slice creates a reversible authority seam and proves
+identity without changing accepted gameplay. B3C.2 and B3C.3 should follow only
+after their unresolved decisions are approved and the preceding slice is
 accepted.

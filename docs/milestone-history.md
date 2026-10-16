@@ -1,5 +1,21 @@
 # Milestone History
 
+## 16 October 2026 — WV-B3C.1 Inactive Colony Resource Nodes
+
+**Implemented — Automated Tests Passed, Manual Acceptance Pending.** A private
+inactive registry now validates and exposes deterministic typed quantity-one
+Soil/Stone candidate records for the development fixture and generated Colony.
+Terrain Node changes invalidate only matching records; scenario replacement
+invalidates old handles; bounded development diagnostics expose counts,
+identity, revision and lifecycle. Existing terrain, Extraction/output, Hauling,
+Construction, navigation and Surface behavior remain authoritative and
+unchanged.
+
+Unity `6000.3.8f1` passes 8/8 focused Edit, 4/4 focused Play, 565/565 complete
+graphics-enabled Edit and 78/78 complete Play with zero failures, skips or
+inconclusive results. The 17-step manual checklist remains pending. B3C.2,
+B3C.3, WV-B3D and WV-C1 have not started; `WV-B3B-LIM-001` remains active.
+
 ## 15 October 2026 — WV-B3B Unified Runtime Cell Foundation
 
 **WV-B3B Complete.** Typed `RegionCellId`, immutable cell/occupant snapshots,

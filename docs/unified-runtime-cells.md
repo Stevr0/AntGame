@@ -1,13 +1,30 @@
 # Unified Runtime Cells
 
+## WV-B3C.1 inactive Node foundation
+
+WV-B3C.1 is **implemented with automated tests passed and manual acceptance
+pending**. Each prepared Colony scenario now gets an inactive diagnostic
+registry containing deterministic, typed, quantity-one records for registered
+Soil and Stone Solids. Relevant terrain mutation invalidates only the matching
+record; scenario replacement invalidates the old registry handle; reads and
+camera switches do not advance revisions. Developer Only → Debug exposes
+bounded registry and selected-Node diagnostics.
+
+This is not an authority cutover. `ChunkedWorldData`, the existing Extraction
+transaction and `WorldMaterialDropRegistry` remain authoritative. The registry
+cannot change quantity, terrain, jobs, output, navigation or cell change feeds.
+Surface Stone, Seed, Twig and Freshwater remain `GenerationOnly`. Automated
+results pass 8/8 focused Edit, 4/4 focused Play, 565/565 complete Edit and 78/78
+complete Play. B3C.2/B3C.3 are unstarted and `WV-B3B-LIM-001` remains active.
+
 ## Status
 
 WV-B3B is **complete**. Automated validation passed and the user confirmed
 **16/16 manual Unity acceptance checks passed**. Typed read contracts, immutable
 snapshots, revisions/change feeds,
 pure compatibility checks and atomic read-model publication now exist. Current
-gameplay authorities remain unchanged. WV-B3C, WV-B3D and WV-C1 require separate
-approval. The authoritative detail is
+gameplay authorities remain unchanged. The later WV-B3C authority/loose-resource
+cutover, WV-B3D and WV-C1 require separate approval. The authoritative detail is
 [`Documentation/UnifiedRuntimeCellSpecification.md`](https://github.com/Stevr0/AntGame/blob/main/Documentation/UnifiedRuntimeCellSpecification.md).
 
 ## Cell model
@@ -98,9 +115,12 @@ unloading or complex scenario restoration.
    revisions, central compatibility, atomic read-model publication and
    read-only adapters. Automated evidence: 6/6 focused Edit, 3/3 focused Play,
    557/557 complete Edit and 77/77 complete Play; manual acceptance 16/16.
-2. **WV-B3C — Nodes and loose resources:** mutable Nodes, one-stack occupancy,
-   failed-output recovery and narrow transaction adapters.
-3. **WV-B3D — Placements:** site/Placement occupancy and one-function-at-a-time
+2. **WV-B3C.1 — inactive Colony Nodes (implemented; manual pending):** stable
+   quantity-one candidate records and invalidation without moving writers.
+3. **WV-B3C.2/B3C.3 — Nodes and loose resources (unstarted):** canonical
+   one-stack occupancy, mutable authority, failed-output recovery and narrow
+   transaction adapters.
+4. **WV-B3D — Placements:** site/Placement occupancy and one-function-at-a-time
    migration of functional Backgrounds, beginning with Material Storage.
 
 These are candidate scopes, not implementation authorisation. Each slice keeps

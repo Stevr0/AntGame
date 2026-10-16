@@ -1,5 +1,26 @@
 # Ant Colony Development Roadmap
 
+## WV-B3C.1 — Implemented; manual acceptance pending (16 October 2026)
+
+The first controlled Node slice adds an inactive Colony-only registry over
+existing registered Soil/Stone Solids. Deterministic typed quantity-one records,
+extraction metadata, provenance, revisions, local invalidation, scenario-handle
+invalidation and bounded development diagnostics are implemented. Generated
+scenarios retain versioned generated identity; fixtures use a versioned fixture
+namespace, seed, actual Solid ID and cell.
+
+This is not an authority cutover. `ChunkedWorldData`, existing Extraction and
+physical output remain authoritative; the registry cannot mutate gameplay or
+publish competing cell changes. Surface Nodes remain `GenerationOnly`.
+Automated evidence passes **8/8 focused Edit**, **4/4 focused Play**, **565/565
+complete graphics-enabled Edit** and **78/78 complete Play**, with zero
+failures, skips or inconclusive results. Manual Unity acceptance remains
+pending, so WV-B3C.1 is not complete.
+
+Next after acceptance is a separately authorised decision on B3C.2 canonical
+loose-resource integration. B3C.2, B3C.3, WV-B3D and WV-C1 have not started.
+`WV-B3B-LIM-001` remains active.
+
 ## WV-B3B — Complete (15 October 2026)
 
 The approved authority-foundation slice is implemented. `RegionCellId` retains
@@ -43,8 +64,10 @@ Seed/Twig/Freshwater, loose-resource, reservation and revision owners. It
 recommends three separately authorised and accepted implementation slices:
 B3C.1 Colony quantity-one Node authority, B3C.2 canonical one-stack ground
 resources, and B3C.3 exact-once Node-to-output transaction coordination. The
-recommended next prompt is **B3C.1 only**; WV-B3C remains not started. Generated
-Surface Nodes remain `GenerationOnly`, and Placement migration remains WV-B3D.
+recommended first prompt was **B3C.1 only**. That slice is now implemented with
+manual acceptance pending; the broader WV-B3C authority migration remains
+incomplete. Generated Surface Nodes remain `GenerationOnly`, and Placement
+migration remains WV-B3D.
 
 The plan preserves `WV-B3B-LIM-001`. Its in-memory operation coordination does
 not provide persistence, region-unload recovery or whole-world transaction

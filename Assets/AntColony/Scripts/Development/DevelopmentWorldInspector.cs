@@ -268,6 +268,7 @@ namespace AntColony.Development
             textBuilder.Append("Rendered Background cell: ")
                 .Append(tilemapCell)
                 .AppendLine();
+            AppendInactiveNodeRegistryDiagnostics(textBuilder);
             AppendAutonomousAntDiagnostics(textBuilder);
             AppendGridAntDiagnostics(textBuilder);
 
@@ -328,6 +329,56 @@ namespace AntColony.Development
             textBuilder.Append("Voluntary directions: ")
                 .Append(FormatDirections(capability));
             return textBuilder.ToString();
+        }
+
+        private void AppendInactiveNodeRegistryDiagnostics(StringBuilder builder)
+        {
+            InactiveColonyResourceNodeRegistry registry =
+                worldHost?.ColonyResourceNodes;
+            if (registry == null)
+            {
+                builder.AppendLine("Inactive Node registry: unavailable");
+                return;
+            }
+
+            ColonyResourceNodeRegistryDiagnostics diagnostics =
+                registry.Diagnostics;
+            builder.Append("Inactive Node registry: ")
+                .Append(diagnostics.Lifecycle)
+                .Append("   revision ")
+                .Append(diagnostics.Revision)
+                .AppendLine();
+            builder.Append("Node scenario: ")
+                .Append(diagnostics.Scenario)
+                .AppendLine();
+            builder.Append("Nodes total / Soil / Stone: ")
+                .Append(diagnostics.NodeCount).Append(" / ")
+                .Append(diagnostics.SoilCount).Append(" / ")
+                .Append(diagnostics.StoneCount)
+                .AppendLine();
+            builder.Append("Invalid or stale / unsupported / duplicates: ")
+                .Append(diagnostics.InvalidOrStaleCount).Append(" / ")
+                .Append(diagnostics.UnsupportedSolidCount).Append(" / ")
+                .Append(diagnostics.DuplicateNodeCount)
+                .AppendLine();
+
+            RegionCellId selected = RegionCellId.Colony(AntRegionIds.Colony,
+                new ColonyCell(selectedCell.x, selectedCell.y));
+            InactiveColonyNodeReadResult result = registry.TryGet(
+                selected, out InactiveColonyResourceNodeSnapshot node);
+            builder.Append("Selected inactive Node: ").Append(result);
+            if (result == InactiveColonyNodeReadResult.Success)
+            {
+                builder.Append("   ").Append(node.DefinitionId)
+                    .Append("   ").Append(node.Lifecycle)
+                    .Append("   revision ").Append(node.Revision)
+                    .AppendLine();
+                builder.Append("Node ID: ").Append(node.NodeId).AppendLine();
+            }
+            else
+            {
+                builder.AppendLine();
+            }
         }
 
         private void ToggleForeground()

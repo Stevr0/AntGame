@@ -1,5 +1,23 @@
 # Technical Architecture
 
+## Inactive Colony Resource Node registry
+
+WV-B3C.1 adds a private `InactiveColonyResourceNodeRegistry` beside the existing
+terrain authority. Scenario construction scans resident Colony terrain once and
+creates deterministic, immutable quantity-one candidate records only for the
+registered Soil and Stone Solid IDs. Generated records retain configuration,
+version, seed and generated Node provenance; fixture records use a versioned
+fixture namespace, seed, Solid ID and typed cell.
+
+The registry is diagnostic, not authoritative. `ChunkedWorldData` continues to
+own terrain and the effective quantity-one Solid state; existing Extraction and
+loose-output code remains the only mutation path. The registry subscribes to
+the existing terrain notification solely to mark its matching record stale or
+absent. It emits no competing cell event and never synchronises back. Scenario
+replacement invalidates the old handle after the replacement setup succeeds;
+camera switching does not rebuild it. This does not expand WV-B3B read-model
+atomicity into whole-world atomicity.
+
 ## WV-B3B runtime-cell read foundation
 
 `AntGameDevelopmentWorldHost` publishes one validated

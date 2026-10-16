@@ -1,5 +1,16 @@
 # Development Roadmap
 
+## WV-B3C.1 — implemented; manual acceptance pending
+
+The inactive Colony Node registry now provides deterministic typed
+quantity-one Soil/Stone candidate records, validation, local invalidation,
+scenario-handle lifecycle and bounded diagnostics without moving gameplay
+authority. Focused tests pass 8/8 Edit and 4/4 Play; complete suites pass
+565/565 Edit and 78/78 Play with no failures, skips or inconclusive results.
+Manual Unity acceptance is pending. `ChunkedWorldData`, Extraction/output,
+Hauling and Construction remain unchanged; Surface Nodes remain
+`GenerationOnly`. B3C.2/B3C.3, WV-B3D and WV-C1 are unstarted.
+
 ## WV-B3B — complete
 
 The unified read foundation now provides typed region/cell identity, immutable
@@ -24,8 +35,10 @@ The documentation-only
 [`ResourceNodeIntegrationPlan`](https://github.com/Stevr0/AntGame/blob/main/Documentation/ResourceNodeIntegrationPlan.md)
 maps current ownership and recommends separately gated B3C.1 Node authority,
 B3C.2 canonical loose stacks and B3C.3 transaction coordination. The next
-recommended implementation prompt is B3C.1 only. WV-B3C remains not started;
-Surface Nodes remain `GenerationOnly`, and `WV-B3B-LIM-001` still applies.
+recommended first implementation prompt was B3C.1 only. It is now implemented
+with manual acceptance pending; the broader WV-B3C migration remains
+incomplete. Surface Nodes remain `GenerationOnly`, and `WV-B3B-LIM-001` still
+applies.
 
 ## WV-B3A — documentation complete
 
