@@ -1,5 +1,15 @@
 # Milestone History
 
+## 16 October 2026 — WV-B3C.2B implementation-readiness plan
+
+**Documentation complete; runtime unstarted.** The authoritative partial
+Hauling plan maps current physical owners and specifies transfer-owned exclusive
+reservations, replay-safe pickup/delivery phases, in-flight inventory allocation,
+successive one-trip jobs, recovery, merge/capacity rules and seed-`2203`
+acceptance using a Developer Only large-stack fixture. No gameplay, test, scene,
+prefab, asset or project-setting change was made. B3C.2B requires separate
+implementation approval; B3C.3 did not begin and `WV-B3B-LIM-001` remains active.
+
 ## 16 October 2026 — WV-B3C.2A Canonical Ground Stack Foundation
 
 **WV-B3C.2A — Complete.** The

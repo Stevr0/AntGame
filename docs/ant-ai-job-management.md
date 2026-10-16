@@ -1,5 +1,20 @@
 # Ant AI and Job Management
 
+## WV-B3C.2B planned transfer lifecycle
+
+The implementation-ready B3C.2B plan keeps the existing shared job registry,
+priority-before-path-cost ordering, bounded fair scan, retry/backoff and
+exclusive competition. One dynamic Hauling job represents one exact trip. A
+remaining canonical stack keeps its identity and receives a later job rather
+than leaving one permanently blocked whole-stack job.
+
+The proposed scenario-local transfer ID owns source/destination reservations and
+records replay-safe pickup/delivery phases. After pickup, quantity remains in the
+carrier's authoritative inventory; cancellation, inactivity or destination loss
+uses an owner-only recovery transfer. No runtime behavior changed at this
+planning gate. See the
+[`Partial Hauling Integration Plan`](https://github.com/Stevr0/AntGame/blob/main/Documentation/PartialHaulingIntegrationPlan.md).
+
 ## WV-B3C.2A source identity and reservation visibility
 
 Loose-resource jobs now carry the canonical scenario-local Stack ID returned by

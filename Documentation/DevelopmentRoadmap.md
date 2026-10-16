@@ -1,5 +1,28 @@
 # Ant Colony Development Roadmap
 
+## WV-B3C.2B — implementation-ready plan; runtime unstarted (16 October 2026)
+
+The documentation-only
+[Partial Hauling and Canonical Stack Transaction Plan](PartialHaulingIntegrationPlan.md)
+maps current loose, carried, Storage and staged quantity ownership. It recommends
+one scenario-local transfer identity and replay ledger coordinating the existing
+authorities, with transfer-owned exclusive reservations, exact partial pickup
+and delivery, carrier allocation, owner-only recovery and explicit successive
+one-trip jobs from a remaining canonical stack.
+
+The smallest safe implementation preserves `ColonyJobRegistry`, work priorities,
+fair bounded selection, current destination ordering, fully staged Construction,
+Storage filters/capacity and all accepted B3C.2A identity/badge behavior. A
+test-only canonical 7-unit Soil stack will exercise repeated trips without
+changing production quantity-one Node yields. Deterministic prepared ground
+placement is included for conserving inventory recovery and tests; variable Node
+output stays in B3C.3.
+
+No runtime code, Unity content or tests changed at this gate. WV-B3C.2B remains
+unimplemented and needs separate approval, focused/full automation and seed
+`2203` manual acceptance. B3C.3, WV-B3D and WV-C1 remain unstarted; Surface Nodes
+remain `GenerationOnly`, and `WV-B3B-LIM-001` remains active.
+
 ## WV-B3C.2A — Complete (16 October 2026)
 
 The existing `WorldMaterialDropRegistry` now owns canonical Soil/Stone ground
@@ -21,11 +44,13 @@ zero failures, skips or inconclusive results. Manual Unity acceptance is
 confirmed at **23/23 passed**. WV-B3C.2A is complete. No Unity tests were rerun
 for this documentation-only closure.
 
-The next candidate milestone is **WV-B3C.2B** deterministic multi-cell overflow
-and recoverable pending output. It has not started or been authorised. Variable
-Node quantities/Extraction cutover remain WV-B3C.3; Placement migration remains
-WV-B3D; Surface resource gameplay and WV-C1 remain deferred. Generated Surface
-Nodes stay `GenerationOnly`, and `WV-B3B-LIM-001` remains active.
+The next candidate milestone is **WV-B3C.2B** partial Hauling and canonical stack
+transactions, including deterministic prepared overflow placement for conserving
+recovery. Its implementation-ready plan is complete, but runtime work has not
+started or been authorised. Variable Node quantities/Extraction cutover remain
+WV-B3C.3; Placement migration remains WV-B3D; Surface resource gameplay and
+WV-C1 remain deferred. Generated Surface Nodes stay `GenerationOnly`, and
+`WV-B3B-LIM-001` remains active.
 
 ## WV-B3C.1 — Complete (16 October 2026)
 

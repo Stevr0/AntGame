@@ -150,8 +150,11 @@ unloading or complex scenario restoration.
    quantity-one candidate records and invalidation without moving writers.
 3. **WV-B3C.2A — canonical stacks (complete):** Resource Definitions, stable
    stack identity, one stack/type per cell, capacity, reservations and revisions.
-4. **WV-B3C.2B — overflow recovery (unstarted):** deterministic multi-cell
-   overflow and recoverable pending output.
+4. **WV-B3C.2B — partial Hauling/stack transactions (implementation-ready plan;
+   runtime unstarted):** replay-safe exact transfers, successive partial trips,
+   carrier recovery and deterministic prepared multi-cell placement. See the
+   authoritative
+   [`Partial Hauling Integration Plan`](https://github.com/Stevr0/AntGame/blob/main/Documentation/PartialHaulingIntegrationPlan.md).
 5. **WV-B3C.3A/B — active Nodes and Extraction (unstarted):** variable Colony
    quantity authority followed by whole-node transaction cutover.
 6. **WV-B3D — Placements:** site/Placement occupancy and one-function-at-a-time

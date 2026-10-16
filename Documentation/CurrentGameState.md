@@ -1,5 +1,28 @@
 # Ant Colony Current Game State
 
+## WV-B3C.2B partial Hauling planning — 16 October 2026
+
+**Implementation-ready planning complete; runtime implementation has not
+started.** The
+[Partial Hauling and Canonical Stack Transaction Plan](PartialHaulingIntegrationPlan.md)
+maps every current quantity owner and defines a proposed scenario-local,
+replay-safe transfer record for exact partial pickup and delivery. The proposed
+slice retains the existing `ColonyJobRegistry`, priorities, bounded fair
+scheduler, exclusive source/destination competition, explicit Construction
+staging and Material Storage destinations. One job represents one trip; a
+positive source remainder keeps its `GroundStackId` and becomes eligible for a
+later trip.
+
+Current runtime behavior is unchanged. It already computes a bounded partial
+trip and conserves ordinary pickup/delivery through callbacks, but reservations
+are owned by ant ID and there is no transfer replay ledger or in-flight inventory
+allocation. The plan proposes transfer-owned reservations, exact-once phase
+records, owner-only cargo recovery and deterministic prepared ground placement.
+Production Node yields remain quantity-one, Surface Nodes remain
+`GenerationOnly`, and the accepted B3C.2A quantity-badge rules are unchanged.
+`WV-B3B-LIM-001` remains active. WV-B3C.2B requires separate implementation,
+automated validation and manual Unity acceptance before it can be complete.
+
 ## WV-B3C.2A canonical ground stacks — 16 October 2026
 
 **WV-B3C.2A — Complete.** Automated validation passed and the user explicitly

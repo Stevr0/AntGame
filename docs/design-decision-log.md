@@ -1,5 +1,23 @@
 # Design Decision Log
 
+## 2026-10-16 — Prepare partial Hauling around one exact transfer identity
+
+- Keep physical quantity in the current ground, ant inventory, Material Storage
+  or Construction staging authority; a transaction coordinator records phases
+  and replay outcomes without becoming a resource wallet.
+- Use an identity separate from Stack, job, ant and producer-operation identity.
+  Make one trip carry one exact quantity bounded by source, carrier and reserved
+  destination capacity.
+- Preserve exclusive first-slice reservations and the existing shared fair job
+  scheduler. A positive stack remainder keeps its identity and creates a later
+  trip rather than one permanently blocked whole-stack job.
+- Keep cancellation/invalidation cargo in authoritative carrier inventory and
+  recover it through an explicit owner-only transfer. Badges continue to show
+  committed quantities, not reservations.
+- This records an implementation-ready recommendation, not runtime approval or
+  completion. Variable Nodes, Surface resources, Placement migration,
+  persistence and `WV-B3B-LIM-001` remain outside the slice.
+
 ## 2026-10-16 — Keep high-density Node quantities contextual
 
 - Show a Colony Resource Node quantity only after that Node is selected or

@@ -1,5 +1,19 @@
 # Resource and Node System
 
+## WV-B3C.2B planning status
+
+Implementation-ready documentation now defines partial Hauling as an exact,
+replay-safe transaction coordinated across the existing physical owners. One
+trip is bounded by unreserved source quantity, compatible carrier capacity and
+reserved Construction-staging or Material-Storage capacity. A positive ground
+remainder retains its Stack ID and is moved by later trips.
+
+The plan preserves exclusive first-slice reservations, current-owner retention
+when capacity is unavailable, fully staged Construction and committed-only
+quantity badges. It does not change production Node yields or implement runtime
+behavior. See the authoritative
+[`Partial Hauling Integration Plan`](https://github.com/Stevr0/AntGame/blob/main/Documentation/PartialHaulingIntegrationPlan.md).
+
 ## WV-B3C.2A acceptance status
 
 **Complete.** Automated validation passed and the user confirmed all **23/23

@@ -256,6 +256,24 @@ The user confirmed all **23/23 authoritative manual checks passed** after the
 recorded automated suites passed. WV-B3C.2A is complete; this documentation-only
 closure did not rerun Unity tests.
 
+### WV-B3C.2B — implementation-ready planning; runtime unstarted
+
+The approved physical rules above are elaborated by the documentation-only
+[Partial Hauling and Canonical Stack Transaction Plan](PartialHaulingIntegrationPlan.md).
+It proposes a scenario-local transfer identity distinct from Stack, job, ant and
+producer-operation identity. One exact transfer quantity is bounded by available
+source, compatible ant capacity and reserved destination capacity; the source
+keeps its Stack ID while positive. Pickup and delivery become replay-safe phase
+commits while physical quantity remains in the current ground, inventory,
+Storage or Construction-staging authority.
+
+The proposed first implementation retains exclusive source/destination
+reservations and performs multiple large-stack moves as successive one-trip
+jobs. Same-type merges, capacity rejection and current-owner retention on no-fit
+remain authoritative. Prepared deterministic multi-cell placement supports
+conserving recovery/tests without enabling variable Node output. Runtime code is
+unchanged, and B3C.2B is not complete or authorised by this plan.
+
 ### Quantity-badge presentation contract
 
 Visible loose stacks show their current quantity continuously and disappear at
