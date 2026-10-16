@@ -99,7 +99,9 @@ namespace AntColony.World
     {
         public RuntimeLooseStackSnapshot(RuntimeOccupantProjectionState projectionState,
             string stableId, string resourceTypeId, int? quantity, int? capacity,
-            bool representsMultipleLegacyRecords)
+            bool representsMultipleLegacyRecords, int? reservedQuantity = null,
+            int? availableQuantity = null, long? stackRevision = null,
+            RegionCellId? cellId = null)
         {
             ProjectionState = projectionState;
             StableId = stableId ?? string.Empty;
@@ -107,6 +109,10 @@ namespace AntColony.World
             Quantity = quantity;
             Capacity = capacity;
             RepresentsMultipleLegacyRecords = representsMultipleLegacyRecords;
+            ReservedQuantity = reservedQuantity;
+            AvailableQuantity = availableQuantity;
+            StackRevision = stackRevision;
+            CellId = cellId;
         }
 
         public RuntimeOccupantProjectionState ProjectionState { get; }
@@ -115,6 +121,10 @@ namespace AntColony.World
         public int? Quantity { get; }
         public int? Capacity { get; }
         public bool RepresentsMultipleLegacyRecords { get; }
+        public int? ReservedQuantity { get; }
+        public int? AvailableQuantity { get; }
+        public long? StackRevision { get; }
+        public RegionCellId? CellId { get; }
     }
 
     /// <summary>

@@ -54,8 +54,8 @@ the shared clock or procedural seed determinism.
 | Colony natural terrain and Solid occupancy | `ChunkedWorldData` | One Background material and optional Solid material per resident cell. A Solid has no stored instance ID or quantity. Per-cell terrain revision and `CellChanged` are authoritative for terrain writes. |
 | Surface bounds and obstruction | `SurfaceWorldData` | Immutable-sized obstacle set used by `SurfacePathfinder` and presentation. It has no Node identity, quantity, revision or mutation API. |
 | Generated identity and initial quantities | `GeneratedWorldSnapshot` / `GeneratedResourceNodeRecord` | Deterministic generation provenance. `RemainingQuantity` has no runtime mutation path. Generated Colony identity/quantity is discarded when projected into terrain; generated Surface data is read-only metadata. It must not become a second mutable runtime authority. |
-| Loose Colony material | `WorldMaterialDropRegistry` | Owns Soil/Stone records, quantities, per-record pickup reservations and committed output keys. It emits `GroundCellChanged` but owns no per-cell revision. It permits several same-type records at one cell and keys records by producing operation, not by a canonical stack ID. |
-| Unified read model | `ColonyRuntimeCellRegionAdapter` and `SurfaceRuntimeCellRegionAdapter` | Read-only projection. The Colony adapter derives revisions from terrain/drop events and aggregates legacy same-cell drops. The Surface adapter exposes generated Nodes as `GenerationOnly`. Neither adapter owns gameplay mutation. |
+| Loose Colony material | `WorldMaterialDropRegistry` | WV-B3C.2A canonical authority. Owns one typed Soil/Stone stack per cell, scenario-local Stack IDs, quantity, provisional capacity, exclusive pickup reservation, stack revision, provenance/lifecycle and committed operation keys. Runtime instances validate resident terrain conservatively. |
+| Unified read model | `ColonyRuntimeCellRegionAdapter` and `SurfaceRuntimeCellRegionAdapter` | Read-only projection. The Colony adapter exposes canonical Stack ID/cell/resource/quantity/reservation/capacity/revision directly and derives cell revisions from committed registry events. The Surface adapter exposes generated Nodes as `GenerationOnly`. Neither adapter owns gameplay mutation. |
 | Extraction work | `ExcavationDesignationRegistry`, `ExcavationJobOrder`, `ExcavationWorldTransaction` | The designation/job owns work, exclusivity and progress. At completion the transaction preflights output, removes the whole Solid and commits one loose output under the job ID. Failure leaves progress and terrain recoverable. |
 | Pickup and transport | `MaterialPickupOrder`, `MaterialHaulingOrder` | The drop is reserved before pickup. Inventory acceptance occurs before source reduction. Hauling separately reserves its explicit Construction Site or Storage destination and preserves carried material after interruption. |
 | Construction material | `ConstructionSite` | Owns requirements, incoming reservations and staged quantities. It is not loose-ground ownership and is outside WV-B3C migration. |
@@ -383,6 +383,30 @@ B3C.3 makes the atomic writer/read cutover.
 
 ### B3C.2 — Canonical loose-resource authority
 
+**B3C.2A implementation update — 16 October 2026:** implemented with automated
+validation passed and manual acceptance pending. `GroundStackId` uses a fresh
+controlled scenario context plus monotonic local creation sequence; operation
+keys remain separate exact-once replay guards. The registry now enforces one
+stack/type per cell, stable identity across merges and partial pickup,
+resource-defined provisional Soil/Stone capacity 10, reservation/availability
+visibility, revisions, provenance and lifecycle. Empty removal terminates the
+identity, a reused cell receives a new ID, and replacement scenarios cannot
+resolve old identities or reservations.
+
+The runtime host binds terrain compatibility: missing cells, obstructing
+Solids/Nodes, completed functional Placements and unknown details fail before
+source consumption. Extraction retains a narrow preflight exception for its
+exact source Solid. The explicit inventory-drop command also retains its
+validated current-anchor behavior on legacy functional Backgrounds until WV-B3D;
+ordinary producers cannot use that compatibility exception. The unified read adapter exposes authoritative immutable
+stack details. Existing pickup/Hauling/Storage/Construction callers use the
+returned canonical ID; no parallel registry or legacy alias authority exists.
+Generated Surface Nodes remain `GenerationOnly`.
+
+This implements B3C.2A only. B3C.2B deterministic multi-cell overflow,
+prepared capacity reservation and recoverable pending output remains future.
+Variable Node quantities and Extraction cutover remain B3C.3.
+
 For safer v1.0 delivery, approve this as two gates: **B3C.2A** introduces
 Resource Definitions, stable canonical Stack IDs, one-stack/type/capacity rules,
 revisions and legacy migration; **B3C.2B** adds deterministic multi-cell output
@@ -402,8 +426,9 @@ overloads for current callers.
 quantity owner. Inventory, Construction Site staging and Storage keep their
 separate ownership.
 
-**Compatibility adapter:** legacy operation/drop keys resolve to one canonical
-stack during the scenario; existing pickup and Hauling APIs retain behavior.
+**Compatibility adapter:** current creation callers retain operation keys for
+replay prevention and receive the canonical Stack ID used by pickup and
+Hauling. Existing transport behavior is retained without a second identity map.
 
 **Automated tests:** one record/type per cell; same-type merge; capacity and
 mixed-type rejection; legacy coalescing/failure cases; competing reservations;
@@ -419,10 +444,11 @@ quantity.
 callers until canonical migration passes. A failed candidate build must preserve
 the previous world under the current rebuild/restore behavior.
 
-**Unresolved before implementation:** canonical Stack ID derivation; exact
-capacity reconciliation for legacy records; handling of an already-reserved
-legacy record during rebuild; whether current development scenarios can ever
-contain over-capacity same-cell totals.
+**Resolved by B3C.2A:** scenario-local controlled-sequence IDs; clean scenario
+construction rather than silent legacy coalescing; provisional definition
+capacity 10 for both active resource types; scenario replacement discards old
+reservations. Multi-cell overflow recovery remains deliberately unresolved for
+B3C.2B.
 
 ### B3C.3 — Exact-once Node-to-output transaction
 

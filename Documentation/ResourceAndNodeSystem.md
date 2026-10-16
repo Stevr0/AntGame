@@ -232,14 +232,52 @@ work or produce output. Surface Nodes remain `GenerationOnly`.
 The quantity-one registry is a transitional foundation, not the final v1.0
 Resource Node model.
 
-### Recommended smaller future gates
+### WV-B3C.2A — implemented; manual acceptance pending
+
+The existing `WorldMaterialDropRegistry` is now the canonical physical
+Soil/Stone ground-stack authority. It owns one stack and one resource type per
+Colony cell, stable scenario-local Stack ID, quantity, provisional
+resource-defined capacity 10, exclusive reservation and available quantity,
+revision, provenance and lifecycle. Same-resource commits merge under the
+existing identity. Mixed types, overflow and invalid/unknown ordinary runtime
+placement are rejected without consuming the incoming source. The existing
+explicit inventory-drop command keeps its validated current-anchor legacy
+functional-Background behavior until Placement migration; this narrow
+compatibility path is not available to ordinary producers. Empty removal terminates
+the ID; cell reuse creates a new ID; scenario replacement creates a new context.
+
+The unified-cell snapshot reads this registry directly. Ant inventory,
+Construction staging and Material Storage remain distinct capacities and
+authorities. Current quantity-one Node Extraction, partial pickup/Hauling and
+Construction behavior are preserved. B3C.2B multi-cell overflow recovery and
+B3C.3 variable Node authority/transaction cutover remain unimplemented.
+
+### Quantity-badge presentation contract
+
+Visible loose stacks show their current quantity continuously and disappear at
+zero. Visible completed Material Storage compatibility cells show actual stored
+quantity continuously, with zero hidden. Node quantities are intentionally
+contextual for scalability: display only after selection or Extraction
+designation. WV-B3C.2A supports designated quantity-one Colony Solids; a general
+Node-selection authority does not yet exist. Generation-only Surface Nodes and
+unknown quantities never appear as live interactive quantities. Badge reads do
+not mutate quantities or revisions, and Colony presentation is gated off in
+World View.
+
+Selected Construction Site staging (`Resource delivered/required`) is approved
+but deferred because there is no current site-selection authority. Future Fog
+of War must suppress undiscovered Node quantities. Placement migration must
+retain one Storage badge per Placement identity rather than per footprint cell.
+
+### Remaining smaller future gates
 
 WV-B3C.2 and WV-B3C.3 are too broad if each attempts Resource Definitions,
 variable Node authority, stack canonicalisation, multi-cell overflow and the
 Extraction cutover together. Split future approval into independently testable
 gates:
 
-1. **B3C.2A — Resource Definitions and canonical stack authority:** introduce
+1. **B3C.2A — Resource Definitions and canonical stack authority (implemented;
+   manual pending):** introduce
    Soil/Stone definitions, stable Stack IDs, one-stack/type/capacity validation,
    revisions and legacy-drop migration without changing Extraction yields.
 2. **B3C.2B — deterministic placement and pending-output recovery:** add bounded

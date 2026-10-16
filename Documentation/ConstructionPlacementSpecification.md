@@ -11,6 +11,17 @@ improvements, Construction Sites and completed Placement instances. Existing
 functional Background behavior remains compatibility implementation until an
 explicit WV-B3D cutover is implemented and accepted.
 
+### Quantity display compatibility amendment
+
+Until WV-B3D, each visible legacy Material Storage Background cell represents
+one physical slot and displays one compact badge for its actual stored quantity;
+zero is hidden. Ground stacks and Construction staging are not counted as
+Storage contents. Future multi-cell Storage shows one badge per Placement
+identity, not one per footprint cell. When a Construction Site selection model
+exists, the selected site displays each staged requirement independently (for
+example `Soil 2/5`); WV-B3C.2A does not invent that selection authority or
+migrate Backgrounds into Placements.
+
 ## 1. Audited current inventory
 
 ### Background definitions

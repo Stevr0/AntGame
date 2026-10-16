@@ -77,7 +77,7 @@ complete whole-world transaction atomicity.
 | Colony natural Background and Solid occupancy | `ChunkedWorldData` / `WorldChunk` | Tilemap, collision and grid-navigation projections | No node ID, quantity, placement slot, loose slot or mutation version |
 | Generated initial cells and nodes | `GeneratedWorldSnapshot` | `CreateColonyWorld`, `CreateSurfaceNavigationWorld`, generated visuals | Records contain mutable-looking remaining quantity but must become immutable initial data after publication |
 | Surface obstacles | `SurfaceWorldData` | `SurfacePathfinder`, `SurfaceNavigationMotor`, temporary visuals | Obstacle set is a navigation authority, not a complete mutable cell authority |
-| Colony loose Soil/Stone | `WorldMaterialDropRegistry` | HUD and world presentation | Keyed records can represent multiple same-cell stacks; locations are untyped Colony `Vector2Int` |
+| Colony loose Soil/Stone | `WorldMaterialDropRegistry` | HUD and unified read adapter | WV-B3C.2A owns one canonical typed stack per cell with scenario-local ID, quantity, reservation, capacity and revision; legacy `Vector2Int` remains only at compatibility caller seams |
 | Material Storage | `MaterialStorageWorld` | Functional Background plus HUD | Slot/content authority is separate from placement occupancy |
 | Construction | `ConstructionDesignationRegistry` and cell-owned `ConstructionSite` | Background-conversion recipe and `ConstructionWorldTransaction` | Completion replaces natural Background instead of creating a Placement |
 | Survival functions | `SurvivalInteractionWorld` | Functional Background definitions | Function and natural Background are coupled |
@@ -552,6 +552,26 @@ Focused Edit `8/8`, focused Play `4/4`, complete Edit `565/565` and complete
 Play `78/78` passed with zero failures, skips or inconclusive results. The user
 confirmed all **17/17** manual Unity checks passed. This documentation-only
 closure did not rerun Unity.
+
+#### WV-B3C.2A implementation status — 16 October 2026
+
+**Implemented — Automated Tests Passed, Manual Acceptance Pending.** The
+existing `WorldMaterialDropRegistry` remains sole mutable authority and now
+stores one canonical Soil/Stone stack per resident Colony cell. Controlled
+scenario-local `GroundStackId` allocation is separate from exact-once operation
+keys. Immutable snapshots expose typed cell/resource identity, quantity,
+reserved/available quantity, provisional definition capacity 10, revision,
+provenance and lifecycle. Compatible merges preserve identity; mixed type,
+overflow, stale identity and invalid or unknown placement fail without a
+quantity commit.
+
+The Colony adapter reports this occupant as `Authoritative` and publishes one
+loose-resource cell change for each committed creation, merge, reservation,
+release, pickup or removal. Reads, failures and camera switches publish none.
+Scenario replacement constructs a new context with no old reservations. This
+does not implement B3C.2B overflow/pending-output recovery, B3C.3 variable Node
+authority or whole-node transaction cutover. Surface Nodes remain
+`GenerationOnly`; `WV-B3B-LIM-001` is unchanged.
 
 Resource and Node v1.0 further requires variable quantities and complete
 whole-node output, including several deterministic stacks or recoverable pending

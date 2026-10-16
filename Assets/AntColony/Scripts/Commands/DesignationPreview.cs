@@ -4,6 +4,24 @@ using UnityEngine;
 namespace AntColony.Commands
 {
     /// <summary>
+    /// Pure visibility rules keep quantity presentation from inventing data or
+    /// depending on a particular rendering implementation.
+    /// </summary>
+    public static class ResourceQuantityBadgeRules
+    {
+        public static bool ShouldShowNode(bool regionVisible, bool selected,
+            bool designated, bool hasAuthoritativeQuantity, bool generationOnly,
+            int quantity) => regionVisible && (selected || designated) &&
+            hasAuthoritativeQuantity && !generationOnly && quantity > 0;
+
+        public static bool ShouldShowLooseStack(bool regionVisible, int quantity) =>
+            regionVisible && quantity > 0;
+
+        public static bool ShouldShowStorage(bool regionVisible, int quantity) =>
+            regionVisible && quantity > 0;
+    }
+
+    /// <summary>
     /// Shared screen-space geometry for transient previews and persistent
     /// designation borders. Keeping this calculation in one place prevents a
     /// hover outline from drifting away from its committed marker.

@@ -1,5 +1,22 @@
 # Development Roadmap
 
+## WV-B3C.2A — implemented; manual acceptance pending
+
+`WorldMaterialDropRegistry` now provides the canonical Soil/Stone ground-stack
+authority: scenario-local IDs, one stack/type per cell, provisional
+resource-defined capacity 10, reservation/availability visibility, revisions,
+provenance and lifecycle. It rejects mixed types, overflow and unsafe or unknown
+runtime placement without consuming the source. Unified Colony snapshots read
+the registry directly. Existing Extraction, Hauling, Storage, staged
+Construction and quantity-one Nodes remain otherwise unchanged.
+
+XML-backed suites pass 16/16 focused Edit, 21/21 focused Play, 575/575 complete
+graphics-enabled Edit and 79/79 complete Play. The 23-step pending manual checklist is in
+the authoritative [Current Game State](https://github.com/Stevr0/AntGame/blob/main/Documentation/CurrentGameState.md).
+B3C.2B, B3C.3, WV-B3D and WV-C1
+have not begun; Surface Nodes remain `GenerationOnly` and `WV-B3B-LIM-001`
+still applies.
+
 ## WV-B3C.1 — complete
 
 The inactive Colony Node registry now provides deterministic typed

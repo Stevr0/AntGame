@@ -31,6 +31,16 @@ WV-B3C.1 is **Complete** after its automated suites and user-confirmed manual
 Unity acceptance. It remains only an inactive quantity-one Soil/Stone registry;
 no active quantity authority or Surface interaction was added.
 
+WV-B3C.2A implements canonical physical Soil/Stone stacks and the supported
+quantity-badge compatibility slice. Visible loose stacks and non-empty Material
+Storage show their physical quantities continuously. Resource Node quantities
+are contextual: show them only after the Node is selected or designated, never
+across every Node in the region. Current designated Colony Solids show the
+accepted quantity-one value; generation-only Surface Nodes are not presented as
+interactive targets. Selection-driven Node badges, selected-site staging lines,
+future Placement identity and Fog-of-War discovery integration remain deferred
+until their owning systems exist.
+
 ### Construction and Placement definition contract
 
 [`ConstructionPlacementSpecification.md`](ConstructionPlacementSpecification.md)

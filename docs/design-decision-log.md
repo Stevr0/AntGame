@@ -1,5 +1,30 @@
 # Design Decision Log
 
+## 2026-10-16 — Keep high-density Node quantities contextual
+
+- Show a Colony Resource Node quantity only after that Node is selected or
+  designated; the current runtime supports the designation half without
+  inventing a new Node-selection authority.
+- Show visible loose-stack and non-empty Material Storage quantities
+  continuously because those mutable holdings need immediate operational
+  readability.
+- Keep badges display-only and Colony-view-gated. Generated Surface Nodes remain
+  `GenerationOnly`; future discovery and Placement identity rules stay deferred.
+
+## 2026-10-16 — Canonicalise physical ground stacks in the existing authority
+
+- Keep `WorldMaterialDropRegistry` as the sole mutable loose-resource owner and
+  enforce one typed stack per occupied Colony cell.
+- Separate controlled scenario-local `GroundStackId` from exact-once producer
+  operation keys; preserve identity through merge and partial pickup, terminate
+  it at zero, and allocate a new ID after cell reuse or scenario replacement.
+- Retain provisional Soil/Stone ground capacity 10 in Resource Definitions;
+  reject mixed type, overflow and invalid or unknown runtime compatibility
+  before consuming the incoming source.
+- Publish immutable ID/cell/resource/quantity/reservation/capacity/revision data
+  through the unified adapter. Keep inventory, Storage and Construction staging
+  separate, and defer B3C.2B overflow recovery plus B3C.3 Node cutover.
+
 ## 2026-10-16 — Define Construction and Placement metadata and migration
 
 **Decision:** Natural Backgrounds remain present and own no colony function.

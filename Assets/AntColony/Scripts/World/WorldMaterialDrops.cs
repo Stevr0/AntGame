@@ -1,71 +1,281 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using UnityEngine;
 
 namespace AntColony.World
 {
+    /// <summary>Ground-stack rules belonging to one supported resource.</summary>
+    public readonly struct MaterialResourceDefinition
+    {
+        public MaterialResourceDefinition(string stableId,
+            ExcavatedMaterialType material, int groundStackCapacity,
+            bool capacityIsProvisional)
+        {
+            StableId = stableId;
+            Material = material;
+            GroundStackCapacity = groundStackCapacity;
+            CapacityIsProvisional = capacityIsProvisional;
+        }
+
+        public string StableId { get; }
+        public ExcavatedMaterialType Material { get; }
+        public int GroundStackCapacity { get; }
+        public bool CapacityIsProvisional { get; }
+    }
+
     public static class MaterialResourceCatalog
     {
         public const int ProvisionalMaximumStack = 10;
-        public static string GetStableId(ExcavatedMaterialType material) => material switch
+        private static readonly MaterialResourceDefinition Soil = new(
+            "material.soil", ExcavatedMaterialType.Soil, ProvisionalMaximumStack, true);
+        private static readonly MaterialResourceDefinition Stone = new(
+            "material.stone", ExcavatedMaterialType.Stone, ProvisionalMaximumStack, true);
+
+        public static string GetStableId(ExcavatedMaterialType material) =>
+            TryGetDefinition(material, out MaterialResourceDefinition definition)
+                ? definition.StableId : string.Empty;
+
+        public static bool TryGetMaterial(string stableId,
+            out ExcavatedMaterialType material)
         {
-            ExcavatedMaterialType.Soil => "material.soil",
-            ExcavatedMaterialType.Stone => "material.stone",
-            _ => string.Empty
-        };
-        public static bool TryGetMaterial(string stableId, out ExcavatedMaterialType material)
-        {
-            material = stableId switch
+            if (TryGetDefinition(stableId, out MaterialResourceDefinition definition))
             {
-                "material.soil" => ExcavatedMaterialType.Soil,
-                "material.stone" => ExcavatedMaterialType.Stone,
-                _ => ExcavatedMaterialType.None
+                material = definition.Material;
+                return true;
+            }
+            material = ExcavatedMaterialType.None;
+            return false;
+        }
+
+        public static bool TryGetDefinition(ExcavatedMaterialType material,
+            out MaterialResourceDefinition definition)
+        {
+            definition = material switch
+            {
+                ExcavatedMaterialType.Soil => Soil,
+                ExcavatedMaterialType.Stone => Stone,
+                _ => default
             };
-            return material != ExcavatedMaterialType.None;
+            return !string.IsNullOrEmpty(definition.StableId);
+        }
+
+        public static bool TryGetDefinition(string stableId,
+            out MaterialResourceDefinition definition)
+        {
+            definition = stableId switch
+            {
+                "material.soil" => Soil,
+                "material.stone" => Stone,
+                _ => default
+            };
+            return !string.IsNullOrEmpty(definition.StableId);
         }
     }
 
+    /// <summary>Stable identity for one physical stack in one scenario.</summary>
+    public readonly struct GroundStackId : IEquatable<GroundStackId>
+    {
+        public GroundStackId(string value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                throw new ArgumentException("A ground stack ID cannot be empty.",
+                    nameof(value));
+            Value = value.Trim();
+        }
+
+        public string Value { get; }
+        public bool Equals(GroundStackId other) =>
+            StringComparer.Ordinal.Equals(Value, other.Value);
+        public override bool Equals(object obj) =>
+            obj is GroundStackId other && Equals(other);
+        public override int GetHashCode() => Value == null ? 0 :
+            StringComparer.Ordinal.GetHashCode(Value);
+        public override string ToString() => Value ?? string.Empty;
+        public static bool operator ==(GroundStackId left, GroundStackId right) =>
+            left.Equals(right);
+        public static bool operator !=(GroundStackId left, GroundStackId right) =>
+            !left.Equals(right);
+    }
+
+    public enum GroundStackLifecycle { Active, Removed }
+    public enum GroundStackPlacementCompatibility { Valid, Invalid, Unknown }
+
+    public readonly struct GroundStackPlacementValidation
+    {
+        public GroundStackPlacementValidation(
+            GroundStackPlacementCompatibility compatibility, string reason)
+        {
+            Compatibility = compatibility;
+            Reason = reason ?? string.Empty;
+        }
+
+        public GroundStackPlacementCompatibility Compatibility { get; }
+        public string Reason { get; }
+        public static GroundStackPlacementValidation Valid() =>
+            new(GroundStackPlacementCompatibility.Valid, string.Empty);
+        public static GroundStackPlacementValidation Invalid(string reason) =>
+            new(GroundStackPlacementCompatibility.Invalid, reason);
+        public static GroundStackPlacementValidation Unknown(string reason) =>
+            new(GroundStackPlacementCompatibility.Unknown, reason);
+    }
+
+    /// <summary>Immutable point-in-time view of one authoritative ground stack.</summary>
     public readonly struct WorldMaterialDrop
     {
-        public WorldMaterialDrop(string ownershipKey, ExcavatedMaterialType material,
-            int quantity, Vector2Int worldCell,
-            int maximumStack = MaterialResourceCatalog.ProvisionalMaximumStack)
+        internal WorldMaterialDrop(GroundStackId stackId,
+            ExcavatedMaterialType material, int quantity, int reservedQuantity,
+            Vector2Int worldCell, int maximumStack, long revision,
+            string provenance, GroundStackLifecycle lifecycle)
         {
-            OwnershipKey = ownershipKey; Material = material; Quantity = quantity;
-            WorldCell = worldCell; MaximumStack = maximumStack;
+            StackId = stackId;
+            Material = material;
+            Quantity = quantity;
+            ReservedQuantity = reservedQuantity;
+            WorldCell = worldCell;
+            CellId = RegionCellId.Colony(AntRegionIds.Colony,
+                new ColonyCell(worldCell.x, worldCell.y));
+            MaximumStack = maximumStack;
+            Revision = revision;
+            Provenance = provenance ?? string.Empty;
+            Lifecycle = lifecycle;
         }
-        public string OwnershipKey { get; }
+
+        public GroundStackId StackId { get; }
+        // Compatibility name retained for existing hauling and job APIs.
+        public string OwnershipKey => StackId.Value ?? string.Empty;
         public ExcavatedMaterialType Material { get; }
+        public string ResourceTypeId => MaterialResourceCatalog.GetStableId(Material);
         public int Quantity { get; }
+        public int ReservedQuantity { get; }
+        public int AvailableQuantity => Quantity - ReservedQuantity;
         public Vector2Int WorldCell { get; }
+        public RegionCellId CellId { get; }
         public int MaximumStack { get; }
+        public long Revision { get; }
+        public string Provenance { get; }
+        public GroundStackLifecycle Lifecycle { get; }
     }
 
-    /// <summary>Authoritative loose-material data with bounded stack merging.</summary>
+    public readonly struct GroundStackRegistryDiagnostics
+    {
+        public GroundStackRegistryDiagnostics(string scenarioContextId, int stackCount,
+            int occupiedCellCount, int soilQuantity, int stoneQuantity,
+            int incompatiblePlacementAttempts, int capacityExceededAttempts,
+            int invalidCellAttempts, int staleIdentityAttempts,
+            int unsupportedResourceAttempts)
+        {
+            ScenarioContextId = scenarioContextId;
+            StackCount = stackCount;
+            OccupiedCellCount = occupiedCellCount;
+            SoilQuantity = soilQuantity;
+            StoneQuantity = stoneQuantity;
+            IncompatiblePlacementAttempts = incompatiblePlacementAttempts;
+            CapacityExceededAttempts = capacityExceededAttempts;
+            InvalidCellAttempts = invalidCellAttempts;
+            StaleIdentityAttempts = staleIdentityAttempts;
+            UnsupportedResourceAttempts = unsupportedResourceAttempts;
+        }
+
+        public string ScenarioContextId { get; }
+        public int StackCount { get; }
+        public int OccupiedCellCount { get; }
+        public int SoilQuantity { get; }
+        public int StoneQuantity { get; }
+        public int IncompatiblePlacementAttempts { get; }
+        public int CapacityExceededAttempts { get; }
+        public int InvalidCellAttempts { get; }
+        public int StaleIdentityAttempts { get; }
+        public int UnsupportedResourceAttempts { get; }
+    }
+
+    /// <summary>
+    /// Sole mutable authority for supported physical ground resources. One
+    /// canonical record is indexed by both stable identity and occupied cell.
+    /// </summary>
     public sealed class WorldMaterialDropRegistry
     {
-        private readonly Dictionary<string, WorldMaterialDrop> drops =
+        private static long nextScenarioContext;
+        private readonly Dictionary<GroundStackId, GroundStackRecord> stacks = new();
+        private readonly Dictionary<Vector2Int, GroundStackId> stackByCell = new();
+        private readonly HashSet<string> committedOutputKeys =
             new(StringComparer.Ordinal);
-        private readonly HashSet<string> committedOutputKeys = new(StringComparer.Ordinal);
-        private readonly Dictionary<string, DropReservation> reservations =
-            new(StringComparer.Ordinal);
+        private readonly Dictionary<GroundStackId, DropReservation> reservations = new();
+        private readonly ChunkedWorldData world;
+        private readonly Func<Vector2Int, GroundStackPlacementValidation>
+            customPlacementValidator;
+        private long nextStackSequence;
+        private int incompatiblePlacementAttempts;
+        private int capacityExceededAttempts;
+        private int invalidCellAttempts;
+        private int staleIdentityAttempts;
+        private int unsupportedResourceAttempts;
 
-        public IEnumerable<WorldMaterialDrop> Drops => drops.Values;
-        public int Count => drops.Count;
+        /// <summary>
+        /// Scene-independent compatibility constructor used by focused registry
+        /// tests. Runtime scenarios pass ChunkedWorldData for terrain validation.
+        /// </summary>
+        public WorldMaterialDropRegistry() { InitializeScenarioContext(); }
+
+        public WorldMaterialDropRegistry(ChunkedWorldData world)
+        {
+            this.world = world ?? throw new ArgumentNullException(nameof(world));
+            InitializeScenarioContext();
+        }
+
+        public WorldMaterialDropRegistry(
+            Func<Vector2Int, GroundStackPlacementValidation> placementValidator)
+        {
+            customPlacementValidator = placementValidator ??
+                throw new ArgumentNullException(nameof(placementValidator));
+            InitializeScenarioContext();
+        }
+
+        public IEnumerable<WorldMaterialDrop> Drops
+        {
+            get
+            {
+                foreach (GroundStackRecord record in stacks.Values)
+                    yield return CreateSnapshot(record);
+            }
+        }
+
+        public int Count => stacks.Count;
+        public string ScenarioContextId { get; private set; }
+        public bool HasAuthoritativePlacementValidation => world != null ||
+            customPlacementValidator != null;
         public bool RejectNextCreationForTesting { get; set; }
         public event Action<Vector2Int> GroundCellChanged;
 
         internal bool CanCommitOutput(string key, ExcavatedMaterialType material,
             int quantity, Vector2Int cell, int maximumStack, bool needsDrop,
-            out string error)
+            out string error) => CanCommitOutput(key, material, quantity, cell,
+                maximumStack, needsDrop, false, false, out error);
+
+        internal bool CanCommitOutput(string key, ExcavatedMaterialType material,
+            int quantity, Vector2Int cell, int maximumStack, bool needsDrop,
+            bool allowExcavationSourceSolid,
+            bool allowLegacyFunctionalBackground, out string error)
         {
-            if (string.IsNullOrWhiteSpace(key) || material == ExcavatedMaterialType.None ||
-                quantity < 0 || maximumStack <= 0)
+            if (string.IsNullOrWhiteSpace(key) || quantity < 0)
             {
-                error = "Material output requires a stable key, material and valid quantity.";
+                error = "Material output requires a stable operation key and valid quantity.";
                 return false;
             }
-            if (committedOutputKeys.Contains(key) || drops.ContainsKey(key))
+            if (!MaterialResourceCatalog.TryGetDefinition(material,
+                    out MaterialResourceDefinition definition))
+            {
+                unsupportedResourceAttempts++;
+                error = "The resource definition is unsupported.";
+                return false;
+            }
+            if (maximumStack != definition.GroundStackCapacity)
+            {
+                unsupportedResourceAttempts++;
+                error = "Ground capacity must match the resource definition.";
+                return false;
+            }
+            if (committedOutputKeys.Contains(key))
             {
                 error = "This material output was already committed.";
                 return false;
@@ -76,21 +286,37 @@ namespace AntColony.World
                 error = "Development failure injection rejected material output.";
                 return false;
             }
-            int mergeCapacity = 0;
-            foreach (WorldMaterialDrop existing in drops.Values)
+            GroundStackPlacementValidation placement = ValidatePlacement(
+                cell, allowExcavationSourceSolid,
+                allowLegacyFunctionalBackground);
+            if (placement.Compatibility != GroundStackPlacementCompatibility.Valid)
             {
-                if (existing.WorldCell != cell) continue;
+                invalidCellAttempts++;
+                error = placement.Compatibility == GroundStackPlacementCompatibility.Unknown
+                    ? $"Ground-stack compatibility is unknown: {placement.Reason}"
+                    : placement.Reason;
+                return false;
+            }
+            if (stackByCell.TryGetValue(cell, out GroundStackId existingId))
+            {
+                GroundStackRecord existing = stacks[existingId];
                 if (existing.Material != material)
                 {
+                    incompatiblePlacementAttempts++;
                     error = "A loose-ground cell cannot contain different resource types.";
                     return false;
                 }
-                if (existing.MaximumStack == maximumStack)
-                    mergeCapacity += existing.MaximumStack - existing.Quantity;
+                if (existing.Quantity + quantity > existing.Capacity)
+                {
+                    capacityExceededAttempts++;
+                    error = "The compatible ground stack would exceed its resource capacity.";
+                    return false;
+                }
             }
-            if (needsDrop && quantity - mergeCapacity > maximumStack)
+            else if (needsDrop && quantity > definition.GroundStackCapacity)
             {
-                error = "The requested output cannot be represented by bounded stacks.";
+                capacityExceededAttempts++;
+                error = "The requested output exceeds its resource ground-stack capacity.";
                 return false;
             }
             error = string.Empty;
@@ -101,30 +327,25 @@ namespace AntColony.World
             ExcavatedMaterialType material, int quantity, Vector2Int cell,
             int maximumStack)
         {
-            WorldMaterialDrop last = default;
-            int remaining = quantity;
-            var keys = new List<string>(drops.Keys);
-            foreach (string existingKey in keys)
+            GroundStackRecord record;
+            if (stackByCell.TryGetValue(cell, out GroundStackId existingId))
             {
-                WorldMaterialDrop existing = drops[existingKey];
-                if (existing.WorldCell != cell || existing.Material != material ||
-                    existing.MaximumStack != maximumStack ||
-                    existing.Quantity >= maximumStack) continue;
-                int moved = Math.Min(remaining, maximumStack - existing.Quantity);
-                last = new WorldMaterialDrop(existing.OwnershipKey, material,
-                    existing.Quantity + moved, cell, maximumStack);
-                drops[existingKey] = last;
-                remaining -= moved;
-                if (remaining == 0) break;
+                record = stacks[existingId];
+                record.Quantity += quantity;
+                record.Revision++;
             }
-            if (remaining > 0)
+            else
             {
-                last = new WorldMaterialDrop(key, material, remaining, cell, maximumStack);
-                drops.Add(key, last);
+                GroundStackId id = new($"ground-stack.{ScenarioContextId}." +
+                    $"{++nextStackSequence:D8}");
+                record = new GroundStackRecord(id, material, quantity, cell,
+                    maximumStack, key);
+                stacks.Add(id, record);
+                stackByCell.Add(cell, id);
             }
             committedOutputKeys.Add(key);
             GroundCellChanged?.Invoke(cell);
-            return last;
+            return CreateSnapshot(record);
         }
 
         public bool TryAdd(string key, ExcavatedMaterialType material, int quantity,
@@ -134,7 +355,12 @@ namespace AntColony.World
             result = default;
             error = string.Empty;
             if (quantity <= 0 || !CanCommitOutput(key, material, quantity, cell,
-                    maximumStack, true, out error)) return false;
+                    maximumStack, true, out error))
+            {
+                if (string.IsNullOrEmpty(error))
+                    error = "Material output requires a positive quantity.";
+                return false;
+            }
             result = CommitOutput(key, material, quantity, cell, maximumStack);
             error = string.Empty;
             return true;
@@ -161,7 +387,12 @@ namespace AntColony.World
             result = default;
             error = string.Empty;
             if (quantity <= 0 || !CanCommitOutput(key, material, quantity, cell,
-                    maximumStack, true, out error)) return false;
+                    maximumStack, true, false, true, out error))
+            {
+                if (string.IsNullOrEmpty(error))
+                    error = "Material output requires a positive quantity.";
+                return false;
+            }
             if (commitSource == null || !commitSource())
             {
                 error = "The source inventory rejected the prepared transfer.";
@@ -172,14 +403,28 @@ namespace AntColony.World
             return true;
         }
 
-        public bool TryGet(string ownershipKey, out WorldMaterialDrop drop) =>
-            drops.TryGetValue(ownershipKey, out drop);
+        public GroundStackPlacementValidation ValidatePlacement(Vector2Int cell) =>
+            ValidatePlacement(cell, false, false);
+
+        public bool TryGet(string ownershipKey, out WorldMaterialDrop drop)
+        {
+            if (TryGetRecord(ownershipKey, out GroundStackRecord record))
+            {
+                drop = CreateSnapshot(record);
+                return true;
+            }
+            drop = default;
+            return false;
+        }
 
         public bool TryFindAtCell(Vector2Int cell, out WorldMaterialDrop drop)
         {
-            foreach (WorldMaterialDrop candidate in drops.Values)
-                if (candidate.WorldCell == cell && candidate.Quantity > 0)
-                { drop = candidate; return true; }
+            if (stackByCell.TryGetValue(cell, out GroundStackId id) &&
+                stacks.TryGetValue(id, out GroundStackRecord record))
+            {
+                drop = CreateSnapshot(record);
+                return true;
+            }
             drop = default;
             return false;
         }
@@ -189,28 +434,37 @@ namespace AntColony.World
         {
             reservedQuantity = 0;
             if (string.IsNullOrWhiteSpace(ownerId) || requestedQuantity <= 0 ||
-                !drops.TryGetValue(key, out WorldMaterialDrop drop))
+                !TryGetRecord(key, out GroundStackRecord record))
             {
-                error = "Pickup reservation requires an existing drop, owner and quantity.";
+                staleIdentityAttempts++;
+                error = "Pickup reservation requires an active stack, owner and quantity.";
                 return false;
             }
-            if (reservations.TryGetValue(key, out DropReservation reservation))
+            if (reservations.TryGetValue(record.Id, out DropReservation reservation))
             {
                 error = reservation.OwnerId == ownerId
-                    ? "This ant already reserved the drop."
-                    : "The drop is reserved by another ant.";
+                    ? "This ant already reserved the stack."
+                    : "The stack is reserved by another ant.";
                 return false;
             }
-            reservedQuantity = Math.Min(requestedQuantity, drop.Quantity);
-            reservations.Add(key, new DropReservation(ownerId, reservedQuantity));
+            reservedQuantity = Math.Min(requestedQuantity, record.Quantity);
+            reservations.Add(record.Id, new DropReservation(ownerId, reservedQuantity));
+            record.Revision++;
+            GroundCellChanged?.Invoke(record.Cell);
             error = string.Empty;
             return true;
         }
 
         public void ReleaseReservation(string key, string ownerId)
         {
-            if (reservations.TryGetValue(key, out DropReservation reservation) &&
-                reservation.OwnerId == ownerId) reservations.Remove(key);
+            if (!TryGetRecord(key, out GroundStackRecord record)) return;
+            if (reservations.TryGetValue(record.Id, out DropReservation reservation) &&
+                reservation.OwnerId == ownerId)
+            {
+                reservations.Remove(record.Id);
+                record.Revision++;
+                GroundCellChanged?.Invoke(record.Cell);
+            }
         }
 
         public bool TryCommitReservedPickup(string key, string ownerId, int quantity,
@@ -218,11 +472,12 @@ namespace AntColony.World
             out string error)
         {
             remaining = default;
-            if (!drops.TryGetValue(key, out WorldMaterialDrop drop) ||
-                !reservations.TryGetValue(key, out DropReservation reservation) ||
+            if (!TryGetRecord(key, out GroundStackRecord record) ||
+                !reservations.TryGetValue(record.Id, out DropReservation reservation) ||
                 reservation.OwnerId != ownerId || quantity <= 0 ||
-                quantity > reservation.Quantity || quantity > drop.Quantity)
+                quantity > reservation.Quantity || quantity > record.Quantity)
             {
+                staleIdentityAttempts++;
                 error = "The reserved pickup is no longer valid.";
                 return false;
             }
@@ -231,40 +486,128 @@ namespace AntColony.World
                 error = "The destination inventory rejected the prepared pickup.";
                 return false;
             }
-            int left = drop.Quantity - quantity;
-            reservations.Remove(key);
-            if (left == 0) drops.Remove(key);
-            else
+            reservations.Remove(record.Id);
+            record.Quantity -= quantity;
+            record.Revision++;
+            if (record.Quantity == 0)
             {
-                remaining = new WorldMaterialDrop(key, drop.Material, left,
-                    drop.WorldCell, drop.MaximumStack);
-                drops[key] = remaining;
+                record.Lifecycle = GroundStackLifecycle.Removed;
+                stacks.Remove(record.Id);
+                stackByCell.Remove(record.Cell);
             }
-            GroundCellChanged?.Invoke(drop.WorldCell);
+            else remaining = CreateSnapshot(record);
+            GroundCellChanged?.Invoke(record.Cell);
             error = string.Empty;
             return true;
         }
 
         public int GetReservedQuantity(string key) =>
-            reservations.TryGetValue(key, out DropReservation reservation)
+            TryGetRecord(key, out GroundStackRecord record) &&
+            reservations.TryGetValue(record.Id, out DropReservation reservation)
                 ? reservation.Quantity : 0;
 
         public int GetQuantity(ExcavatedMaterialType material)
         {
             int total = 0;
-            foreach (WorldMaterialDrop drop in drops.Values)
-                if (drop.Material == material) total += drop.Quantity;
+            foreach (GroundStackRecord record in stacks.Values)
+                if (record.Material == material) total += record.Quantity;
             return total;
         }
 
+        public GroundStackRegistryDiagnostics GetDiagnostics() => new(
+            ScenarioContextId, Count, stackByCell.Count,
+            GetQuantity(ExcavatedMaterialType.Soil),
+            GetQuantity(ExcavatedMaterialType.Stone),
+            incompatiblePlacementAttempts, capacityExceededAttempts,
+            invalidCellAttempts, staleIdentityAttempts,
+            unsupportedResourceAttempts);
+
         public void Clear()
         {
-            var affectedCells = new HashSet<Vector2Int>();
-            foreach (WorldMaterialDrop drop in drops.Values)
-                affectedCells.Add(drop.WorldCell);
-            drops.Clear(); reservations.Clear(); committedOutputKeys.Clear();
+            var affectedCells = new List<Vector2Int>(stackByCell.Keys);
+            stacks.Clear();
+            stackByCell.Clear();
+            reservations.Clear();
+            committedOutputKeys.Clear();
             foreach (Vector2Int cell in affectedCells)
                 GroundCellChanged?.Invoke(cell);
+        }
+
+        private void InitializeScenarioContext()
+        {
+            long sequence = Interlocked.Increment(ref nextScenarioContext);
+            ScenarioContextId = $"scenario-{sequence:D8}";
+        }
+
+        private GroundStackPlacementValidation ValidatePlacement(Vector2Int cell,
+            bool allowExcavationSourceSolid,
+            bool allowLegacyFunctionalBackground)
+        {
+            if (customPlacementValidator != null)
+                return customPlacementValidator(cell);
+            if (world == null)
+                return GroundStackPlacementValidation.Valid();
+            if (world.GetCell(cell, out WorldTileCellData cellData) !=
+                    WorldCellQueryResult.Available)
+                return GroundStackPlacementValidation.Invalid(
+                    "The ground-stack cell is not resident.");
+            if (string.IsNullOrWhiteSpace(cellData.BackgroundMaterialId))
+                return GroundStackPlacementValidation.Unknown(
+                    "The resident cell has no reliable Background.");
+            if (!world.TryGetBackgroundMaterialDefinition(cellData.BackgroundMaterialId,
+                    out BackgroundTileMaterialDefinition background))
+                return GroundStackPlacementValidation.Unknown(
+                    "The Background definition is unavailable.");
+            if (background.Function != BackgroundFunction.None &&
+                !allowLegacyFunctionalBackground)
+                return GroundStackPlacementValidation.Invalid(
+                    "A completed functional Placement owns this cell.");
+            if (cellData.HasSolidTile && !allowExcavationSourceSolid)
+                return GroundStackPlacementValidation.Invalid(
+                    "An obstructing Resource Node occupies this cell.");
+            return GroundStackPlacementValidation.Valid();
+        }
+
+        private bool TryGetRecord(string key, out GroundStackRecord record)
+        {
+            record = null;
+            if (string.IsNullOrWhiteSpace(key)) return false;
+            return stacks.TryGetValue(new GroundStackId(key), out record);
+        }
+
+        private WorldMaterialDrop CreateSnapshot(GroundStackRecord record)
+        {
+            int reserved = reservations.TryGetValue(record.Id,
+                out DropReservation reservation) ? reservation.Quantity : 0;
+            return new WorldMaterialDrop(record.Id, record.Material,
+                record.Quantity, reserved, record.Cell, record.Capacity,
+                record.Revision, record.Provenance, record.Lifecycle);
+        }
+
+        private sealed class GroundStackRecord
+        {
+            public GroundStackRecord(GroundStackId id,
+                ExcavatedMaterialType material, int quantity, Vector2Int cell,
+                int capacity, string provenance)
+            {
+                Id = id;
+                Material = material;
+                Quantity = quantity;
+                Cell = cell;
+                Capacity = capacity;
+                Provenance = provenance;
+                Revision = 1L;
+                Lifecycle = GroundStackLifecycle.Active;
+            }
+
+            public GroundStackId Id { get; }
+            public ExcavatedMaterialType Material { get; }
+            public int Quantity { get; set; }
+            public Vector2Int Cell { get; }
+            public int Capacity { get; }
+            public string Provenance { get; }
+            public long Revision { get; set; }
+            public GroundStackLifecycle Lifecycle { get; set; }
         }
 
         private readonly struct DropReservation
@@ -277,8 +620,8 @@ namespace AntColony.World
     }
 
     /// <summary>
-    /// Atomic excavation output boundary. Every fallible loose-drop check is
-    /// completed before foreground removal, then the prepared output is committed.
+    /// Atomic excavation output boundary. All fallible loose-drop checks are
+    /// completed before foreground removal, then prepared output is committed.
     /// </summary>
     public sealed class ExcavationWorldTransaction
     {
@@ -311,17 +654,22 @@ namespace AntColony.World
                 error = "The designated foreground Solid is no longer excavatable.";
                 return false;
             }
-            int maximumStack = MaterialResourceCatalog.ProvisionalMaximumStack;
+            if (!MaterialResourceCatalog.TryGetDefinition(definition.ExcavatedMaterial,
+                    out MaterialResourceDefinition resource))
+            {
+                error = "The excavated resource definition is unsupported.";
+                return false;
+            }
+            int maximumStack = resource.GroundStackCapacity;
             if (!drops.CanCommitOutput(ownershipKey, definition.ExcavatedMaterial,
-                    definition.ExcavationYield, cell, maximumStack, true,
+                    definition.ExcavationYield, cell, maximumStack, true, true, false,
                     out error)) return false;
             if (world.RemoveSolidMaterial(cell) != WorldCellMutationResult.Success)
             {
                 error = "The foreground Solid could not be removed.";
                 return false;
             }
-            // Extraction always leaves physical material in the world. Pickup and
-            // transport remain explicit hauling responsibilities after this commit.
+            // Extraction leaves physical material for later explicit hauling.
             drop = drops.CommitOutput(ownershipKey, definition.ExcavatedMaterial,
                 definition.ExcavationYield, cell, maximumStack);
             terrainCommitted?.Invoke(cell);

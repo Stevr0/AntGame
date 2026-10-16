@@ -1,5 +1,16 @@
 # Resource and Node System
 
+## Quantity badges
+
+WV-B3C.2A continuously shows quantity for visible loose stacks and non-empty
+legacy Material Storage, using each existing authority directly. Node badges are
+contextual for scale: current quantity-one Colony Solids show `1` after
+Extraction designation, while undesignated Nodes stay uncluttered.
+Generation-only Surface Nodes and unknown quantities are never shown as live
+interactive resources. General Node selection, selected-site staging details,
+Fog-of-War discovery and one-badge-per-future-Placement integration remain
+deferred to the milestones that create those authorities.
+
 The approved v1.0 design makes every Solid terrain cell a finite Resource Node.
 Each Node has stable identity, typed location, a Resource Definition, its own
 positive generated quantity, independent Extraction work, revision, provenance

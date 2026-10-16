@@ -2138,6 +2138,12 @@ namespace AntColony.Commands
                         new Color(border.r, border.g, border.b, 0.10f),
                         designation.State == ExcavationDesignationState.Active
                             ? "A" : "X");
+                    // Current Colony Solids are quantity-one compatibility
+                    // Nodes. Show their amount contextually after designation,
+                    // not across every underground wall cell.
+                    if (ResourceQuantityBadgeRules.ShouldShowNode(true, false,
+                            true, true, false, 1))
+                        DrawQuantityBadge(designation.Cell, "1", border);
                 }
             }
             if (constructionDesignations != null)
@@ -2159,11 +2165,21 @@ namespace AntColony.Commands
             {
                 foreach (WorldMaterialDrop drop in materialDrops.Drops)
                 {
-                    Vector3 screen = worldCamera.WorldToScreenPoint(
-                        new Vector3(drop.WorldCell.x + 0.5f, drop.WorldCell.y + 0.5f, 0f));
-                    if (screen.z >= 0f)
-                        GUI.Box(new Rect(screen.x - 24f, Screen.height - screen.y - 12f,
-                            48f, 24f), $"{drop.Material} {drop.Quantity}");
+                    if (ResourceQuantityBadgeRules.ShouldShowLooseStack(
+                            true, drop.Quantity))
+                        DrawQuantityBadge(drop.WorldCell,
+                            drop.Quantity.ToString(),
+                            new Color(0.95f, 0.78f, 0.22f, 1f));
+                }
+            }
+            if (materialStorage != null)
+            {
+                foreach (MaterialStorageSlot slot in materialStorage.Slots)
+                {
+                    if (ResourceQuantityBadgeRules.ShouldShowStorage(
+                            true, slot.Quantity))
+                        DrawQuantityBadge(slot.Cell, slot.Quantity.ToString(),
+                            new Color(0.2f, 0.9f, 0.95f, 1f));
                 }
             }
 
@@ -2221,6 +2237,21 @@ namespace AntColony.Commands
                 Mathf.Min(rectangle.width, rectangle.height));
             GUI.Box(new Rect(rectangle.xMax - markerSize, rectangle.yMin,
                 markerSize, markerSize), symbol);
+            GUI.color = previous;
+        }
+
+        private void DrawQuantityBadge(Vector2Int cell, string quantity, Color tint)
+        {
+            if (!DesignationOverlayGeometry.TryGetCellGuiRect(worldCamera, cell,
+                    Screen.height, out Rect cellRectangle)) return;
+            const float badgeSize = 22f;
+            Color previous = GUI.color;
+            GUI.color = tint;
+            // GUI.Box is display-only, so this world marker cannot intercept
+            // selection, designation or camera pointer input.
+            GUI.Box(new Rect(cellRectangle.xMax - badgeSize * 0.7f,
+                cellRectangle.yMin - badgeSize * 0.3f,
+                badgeSize, badgeSize), quantity);
             GUI.color = previous;
         }
 
@@ -2499,7 +2530,9 @@ namespace AntColony.Commands
             }
             foreach (WorldMaterialDrop drop in materialDrops.Drops)
                 GUILayout.Label(
-                    $"Drop {drop.OwnershipKey}: {drop.Quantity} {drop.Material} at {drop.WorldCell}");
+                    $"Stack {drop.StackId}: {drop.Quantity}/{drop.MaximumStack} " +
+                    $"{drop.Material}, reserved {drop.ReservedQuantity}, " +
+                    $"revision {drop.Revision} at {drop.WorldCell}");
         }
 
         private void DrawMaterialHaulingDiagnostics()

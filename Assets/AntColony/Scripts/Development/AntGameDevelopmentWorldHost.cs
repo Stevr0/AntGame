@@ -232,7 +232,9 @@ namespace AntColony.Development
                 }
             }
             ColonyJobRegistry = new ColonyJobRegistry();
-            MaterialDrops = new WorldMaterialDropRegistry();
+            // A rebuild receives a fresh stack context and validates physical
+            // placement against this scenario's authoritative terrain.
+            MaterialDrops = new WorldMaterialDropRegistry(WorldData);
             if (startingScenario == GeneratedWorldScenario.DevelopmentFixture &&
                 !BuildMaterialDropFixtures(out string fixtureError))
             {

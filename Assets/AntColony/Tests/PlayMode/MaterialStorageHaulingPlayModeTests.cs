@@ -27,6 +27,36 @@ namespace AntColony.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator CanonicalStackSurvivesViewSwitchAndResetInvalidatesIt()
+        {
+            yield return LoadScene();
+            AntGameDevelopmentWorldHost host = FindHost();
+            Assert.That(host.MaterialDrops.TryFindAtCell(
+                AntGameDevelopmentWorldHost.SoilDropFixture,
+                out WorldMaterialDrop before), Is.True);
+            string oldContext = host.MaterialDrops.ScenarioContextId;
+
+            host.TwoViewWorld.SwitchView(DevelopmentWorldView.Surface);
+            Assert.That(host.SelectionController.ColonyWorldPresentationEnabled, Is.False);
+            host.TwoViewWorld.SwitchView(DevelopmentWorldView.Colony);
+            Assert.That(host.SelectionController.ColonyWorldPresentationEnabled, Is.True);
+            Assert.That(host.MaterialDrops.TryFindAtCell(
+                AntGameDevelopmentWorldHost.SoilDropFixture,
+                out WorldMaterialDrop afterSwitch), Is.True);
+            Assert.That(afterSwitch.StackId, Is.EqualTo(before.StackId));
+            Assert.That(afterSwitch.Quantity, Is.EqualTo(before.Quantity));
+            Assert.That(afterSwitch.Revision, Is.EqualTo(before.Revision));
+
+            Assert.That(host.RebuildWorld(), Is.True);
+            Assert.That(host.MaterialDrops.ScenarioContextId, Is.Not.EqualTo(oldContext));
+            Assert.That(host.MaterialDrops.TryGet(before.OwnershipKey, out _), Is.False);
+            Assert.That(host.MaterialDrops.TryFindAtCell(
+                AntGameDevelopmentWorldHost.SoilDropFixture,
+                out WorldMaterialDrop restored), Is.True);
+            Assert.That(restored.StackId, Is.Not.EqualTo(before.StackId));
+        }
+
+        [UnityTest]
         public IEnumerator AutonomousCarrierMovesLooseSoilIntoPhysicalStorage()
         {
             yield return LoadScene();

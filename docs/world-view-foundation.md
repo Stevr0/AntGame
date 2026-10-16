@@ -1,5 +1,15 @@
 # World View Foundation
 
+## Resource badge isolation
+
+Quantity badges are region-specific world presentation. Colony loose stacks,
+non-empty legacy Material Storage and designated quantity-one Colony Nodes draw
+only while Colony presentation is enabled; switching to World View hides them
+without changing resource quantity or revision. Generated Surface Nodes remain
+`GenerationOnly` and are not labelled as interactable Extraction targets.
+Future discovery/Fog-of-War policy must gate Surface quantities before they are
+ever exposed.
+
 ## WV-B3A integration boundary
 
 World View will share the runtime cell occupancy/mutation contract while keeping

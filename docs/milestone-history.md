@@ -1,5 +1,24 @@
 # Milestone History
 
+## 16 October 2026 — WV-B3C.2A Canonical Ground Stack Foundation
+
+**Implemented — Automated Tests Passed, Manual Acceptance Pending.** The
+existing `WorldMaterialDropRegistry` remains sole quantity authority and now
+owns one typed, bounded, revisioned canonical stack per occupied Colony cell.
+Stable IDs are allocated from a fresh scenario context; same-resource output
+merges under the same identity, while mixed types, overflow and incompatible
+placement fail before source consumption. Immutable runtime-cell snapshots now
+expose identity, cell, resource, quantity, reservation/availability, capacity
+and revision directly from that registry.
+
+Soil/Stone retain provisional capacity 10. Quantity-one Extraction, existing
+partial pickup, Hauling, Storage and staged Construction are preserved.
+XML evidence passes 16/16 focused Edit, 21/21 focused Play, 575/575 complete
+graphics-enabled Edit and 79/79 complete Play, with zero failures, skips or
+inconclusive results. The 23 manual Unity checks remain pending.
+B3C.2B/B3C.3/WV-B3D/WV-C1 did not begin,
+Surface Nodes remain `GenerationOnly`, and `WV-B3B-LIM-001` remains active.
+
 ## 16 October 2026 — WV-B3C.1 Inactive Colony Resource Nodes
 
 **Complete — Automated and Manual Acceptance Passed.** A private

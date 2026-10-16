@@ -86,6 +86,12 @@ namespace AntColony.Tests.EditMode
             Assert.That(after.CellRevision, Is.EqualTo(before.CellRevision + 2));
             Assert.That(after.Node.DefinitionId, Is.EqualTo(SoilId));
             Assert.That(after.LooseStack.Quantity, Is.EqualTo(2));
+            Assert.That(after.LooseStack.ProjectionState,
+                Is.EqualTo(RuntimeOccupantProjectionState.Authoritative));
+            Assert.That(after.LooseStack.ReservedQuantity, Is.Zero);
+            Assert.That(after.LooseStack.AvailableQuantity, Is.EqualTo(2));
+            Assert.That(after.LooseStack.StackRevision, Is.EqualTo(1));
+            Assert.That(after.LooseStack.CellId, Is.EqualTo(origin));
             Assert.That(adapter.Changes.CurrentSequence, Is.EqualTo(2));
             Assert.That(adapter.Changes.ReadAfter(0, out var firstConsumer),
                 Is.EqualTo(RuntimeCellChangeReadResult.Success));
@@ -96,6 +102,33 @@ namespace AntColony.Tests.EditMode
                 Is.EqualTo(RuntimeCellChangeCategory.Node));
             Assert.That(firstConsumer[1].Changes[0].Category,
                 Is.EqualTo(RuntimeCellChangeCategory.LooseResource));
+            adapter.Dispose();
+        }
+
+        [Test]
+        public void ReservationChangesAdvanceOnlyTheAffectedStackAndCell()
+        {
+            ColonyRuntimeCellRegionAdapter adapter = CreateColonyAdapter(
+                out _, out WorldMaterialDropRegistry drops);
+            RegionCellId origin = RegionCellId.Colony(AntRegionIds.Colony,
+                new ColonyCell(0, 0));
+            drops.TryAdd("drop.reservation", ExcavatedMaterialType.Soil, 3,
+                Vector2Int.zero, out WorldMaterialDrop stack, out _);
+            adapter.TryGetCell(origin, out RuntimeCellSnapshot before);
+
+            Assert.That(drops.TryReserve(stack.OwnershipKey, "ant", 2,
+                out _, out string error), Is.True, error);
+            adapter.TryGetCell(origin, out RuntimeCellSnapshot held);
+            Assert.That(held.CellRevision, Is.EqualTo(before.CellRevision + 1));
+            Assert.That(held.LooseStack.StackRevision,
+                Is.EqualTo(before.LooseStack.StackRevision + 1));
+            Assert.That(held.LooseStack.ReservedQuantity, Is.EqualTo(2));
+            Assert.That(held.LooseStack.AvailableQuantity, Is.EqualTo(1));
+
+            drops.ReleaseReservation(stack.OwnershipKey, "ant");
+            adapter.TryGetCell(origin, out RuntimeCellSnapshot released);
+            Assert.That(released.CellRevision, Is.EqualTo(held.CellRevision + 1));
+            Assert.That(released.LooseStack.ReservedQuantity, Is.Zero);
             adapter.Dispose();
         }
 

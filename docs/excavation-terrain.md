@@ -1,5 +1,24 @@
 # Excavation and Terrain
 
+## WV-B3C.2A canonical physical output
+
+Soil/Stone physical output now occupies one canonical stack per Colony cell in
+the existing `WorldMaterialDropRegistry`. A same-resource output merges without
+changing Stack ID; a different type or total above the provisional
+resource-defined capacity 10 is rejected before the Solid or source inventory
+commits. The stack exposes total, reserved and available quantity plus revision,
+typed cell, provenance and lifecycle. Empty pickup terminates the identity.
+
+Extraction remains quantity one in live gameplay and retains its atomic
+preflight/remove/output ordering. It alone may prepare output at its exact
+currently obstructed source cell. Reservations now advance observable stack and
+runtime-cell revisions; reads and view switching do not. Partial pickup remains
+the accepted existing compatibility behavior, not a new B3C.2B splitting
+system. Multi-cell overflow, variable Node yields and Surface Extraction remain
+unimplemented. The existing explicit inventory-drop command retains its narrow
+validated current-anchor compatibility on legacy functional Backgrounds until
+Placement migration; ordinary producer placement remains conservative.
+
 ## Resource and Node v1.0 target
 
 Every target Solid is a finite variable-quantity Resource Node. Normal Solid
@@ -19,7 +38,8 @@ preflights output, removes the authoritative Solid and commits the physical
 drop. That terrain removal marks the matching diagnostic record
 `DepletedOrAbsent`; it does not decrement registry quantity or route gameplay
 through the registry. WV-B3C.1 is complete after 17/17 manual acceptance;
-B3C.2 canonical stacks and B3C.3 transaction cutover have not started. The
+B3C.2A canonical stack foundation is implemented with manual acceptance pending;
+B3C.2B overflow recovery and B3C.3 transaction cutover have not started. The
 inactive quantity-one records remain a transitional foundation.
 
 ## WV-B3B read projection
@@ -28,7 +48,7 @@ Existing Soil/Stone Solids are now visible as compatibility Node snapshots and
 committed `ChunkedWorldData` writes advance the affected runtime-cell revision.
 Extraction authority, output preflight, Background preservation, XP and
 navigation invalidation are unchanged. Successful physical drop commits also
-publish a loose-resource cell change; reservations alone do not. Quantity-less
+publish a loose-resource cell change; canonical reservation changes now do. Quantity-less
 legacy Solids remain explicit compatibility data rather than fabricated finite
 Nodes. Mutable Node migration belongs to WV-B3C.
 

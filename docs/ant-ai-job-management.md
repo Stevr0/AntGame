@@ -1,5 +1,16 @@
 # Ant AI and Job Management
 
+## WV-B3C.2A source identity and reservation visibility
+
+Loose-resource jobs now carry the canonical scenario-local Stack ID returned by
+`WorldMaterialDropRegistry`; producer operation keys remain replay guards and do
+not become a second resource owner. Exclusive pickup/Hauling reservations update
+the stack's reserved/available quantities and revision, while failed creation,
+reservation or destination commits preserve the source. Existing partial loads,
+destination-aware Construction staging and Material Storage delivery are
+unchanged. Rebuilding a scenario creates a new stack context, so old job source
+IDs and reservations cannot target restored resources.
+
 ## Resource and Node v1.0 job boundary
 
 Normal Solid Extraction is whole-node work: after complete output capacity is

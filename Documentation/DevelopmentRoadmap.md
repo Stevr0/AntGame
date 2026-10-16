@@ -1,5 +1,30 @@
 # Ant Colony Development Roadmap
 
+## WV-B3C.2A — Implemented; manual acceptance pending (16 October 2026)
+
+The existing `WorldMaterialDropRegistry` now owns canonical Soil/Stone ground
+stacks: stable scenario-local IDs, one stack and one resource type per cell,
+provisional resource-defined capacity 10, immutable quantity/reservation reads,
+stack revisions, provenance, lifecycle and bounded diagnostics. Same-resource
+output merges without replacing identity. Mixed types, overflow, invalid cells,
+obstructing Nodes, completed functional Placements and unknown compatibility are
+rejected before source consumption. Runtime-cell snapshots read this authority
+directly and publish affected-cell changes, including reservation visibility.
+
+Existing quantity-one Extraction, partial pickup behavior, destination-aware
+Hauling, Construction staging, Material Storage and Construction are preserved.
+Scenario rebuilds create a new identity context and cannot resolve old stack
+IDs or reservations. XML-backed validation passes **16/16 focused Edit**,
+**21/21 focused Play**, **575/575 complete graphics-enabled Edit** and **79/79
+complete Play**, with zero failures, skips or inconclusive results. Manual Unity
+acceptance is still required, so WV-B3C.2A is not complete.
+
+The next smallest milestone after acceptance is **WV-B3C.2B** deterministic
+multi-cell overflow and recoverable pending output. It has not started. Variable
+Node quantities/Extraction cutover remain WV-B3C.3; Placement migration remains
+WV-B3D; Surface resource gameplay and WV-C1 remain deferred. Generated Surface
+Nodes stay `GenerationOnly`, and `WV-B3B-LIM-001` remains active.
+
 ## WV-B3C.1 — Complete (16 October 2026)
 
 The first controlled Node slice adds an inactive Colony-only registry over

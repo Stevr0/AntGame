@@ -167,31 +167,13 @@ namespace AntColony.World
 
         private RuntimeLooseStackSnapshot CreateLooseStack(Vector2Int cell)
         {
-            int count = 0;
-            int quantity = 0;
-            int? capacity = null;
-            string stableId = string.Empty;
-            string resourceTypeId = string.Empty;
-            bool inconsistentType = false;
-            foreach (WorldMaterialDrop drop in drops.Drops)
-            {
-                if (drop.WorldCell != cell || drop.Quantity <= 0) continue;
-                string candidateType = MaterialResourceCatalog.GetStableId(drop.Material);
-                if (count > 0 && !string.Equals(resourceTypeId, candidateType,
-                        StringComparison.Ordinal)) inconsistentType = true;
-                count++;
-                quantity += drop.Quantity;
-                resourceTypeId = count == 1 ? candidateType : resourceTypeId;
-                stableId = count == 1 ? drop.OwnershipKey : string.Empty;
-                capacity = count == 1 ? drop.MaximumStack : null;
-            }
-            if (count == 0) return null;
+            if (!drops.TryFindAtCell(cell, out WorldMaterialDrop drop)) return null;
             return new RuntimeLooseStackSnapshot(
-                inconsistentType
-                    ? RuntimeOccupantProjectionState.DetailsUnavailable
-                    : RuntimeOccupantProjectionState.CompatibilityProjected,
-                stableId, inconsistentType ? string.Empty : resourceTypeId,
-                quantity, capacity, count > 1);
+                RuntimeOccupantProjectionState.Authoritative,
+                drop.StackId.Value, drop.ResourceTypeId,
+                drop.Quantity, drop.MaximumStack, false,
+                drop.ReservedQuantity, drop.AvailableQuantity,
+                drop.Revision, drop.CellId);
         }
 
         private bool TryGetGeneratedCell(Vector2Int cell,

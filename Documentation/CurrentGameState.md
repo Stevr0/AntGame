@@ -1,5 +1,118 @@
 # Ant Colony Current Game State
 
+## WV-B3C.2A canonical ground stacks — 16 October 2026
+
+**Status: Implemented — Automated Tests Passed, Manual Acceptance Pending.**
+`WorldMaterialDropRegistry` remains the sole mutable owner of supported loose
+ground resources and now stores one canonical stack per Colony cell. A stack has
+a scenario-local `GroundStackId`, typed `RegionCellId`, Soil/Stone Resource
+Definition ID, quantity, provisional resource capacity, exclusive reservation
+quantity, available quantity, revision, creation provenance and lifecycle.
+Compatible output merges into the existing identity; different resource types
+or capacity overflow are rejected before a source commits. Empty pickup removes
+the identity, and a later stack at that cell receives a new ID.
+
+Runtime scenarios bind the registry to `ChunkedWorldData`. Non-resident cells,
+obstructing Solids/Nodes, unavailable compatibility details and completed
+functional-Background Placements are rejected conservatively for ordinary
+creation. Extraction uses a narrow prepared-output exception for the exact
+Solid it removes before committing output. The existing explicit inventory-drop
+command retains its validated current-anchor functional-Background compatibility
+until Placement migration; it does not relax ordinary producer placement.
+Construction staging, Material Storage and ant inventories remain separate
+owners with separate capacities. The existing quantity-one
+Extraction, pickup, Hauling, staging, Storage and Construction workflows are
+preserved; partial Hauling behavior is unchanged rather than expanded.
+
+Soil and Stone definitions both retain the existing effective ground-stack
+capacity of **10**, explicitly marked provisional. Final balance is not approved.
+Operation keys remain exact-once replay guards but are no longer physical stack
+identity. Each newly constructed scenario registry receives a fresh controlled
+context and monotonically allocates stack IDs, so restoration cannot resolve an
+old ID or retain an old reservation. `Clear` terminates current stacks without
+reusing IDs inside that scenario.
+
+The Colony unified-cell adapter reads immutable canonical snapshots directly
+from the registry and reports ID, resource, cell, quantity, reserved/available
+quantity, capacity and stack revision as `Authoritative`. Creation, merge,
+reservation, release, partial pickup and removal each publish one committed
+loose-resource cell change and advance the affected stack revision where it
+still exists. Failed operations and reads advance neither. Bounded diagnostics
+report context, stack/cell totals, Soil/Stone quantities and rejection counts;
+the existing developer stack listing includes identity, revision, capacity and
+reservation state.
+
+### Quantity badges
+
+Colony world presentation now draws compact, display-only quantity badges from
+existing authorities. Every visible loose stack shows its current quantity;
+every visible non-empty Material Storage slot shows actual stored quantity and
+empty Storage hides the badge. Current quantity-one Colony Nodes show `1` only
+after an Extraction designation, keeping undesignated underground terrain
+uncluttered. Badges update by reading committed state each GUI pass, disappear
+with removed records/designations and are gated with Colony presentation so they
+cannot leak into World View or intercept pointer input.
+
+The project does not yet have general Node or Construction Site selection.
+Selection-driven Node badges and selected-site staged requirement lines are
+therefore documented future integration, not fabricated through hover state.
+Generated Surface Nodes remain `GenerationOnly` and receive no live quantity
+badge. Future Fog of War must hide undiscovered Node quantities; future WV-B3D
+Storage uses one badge per Placement identity.
+
+### Automated verification
+
+Unity `6000.3.8f1` XML evidence records **16/16 focused Edit Mode**, **21/21
+focused Play Mode**, **575/575 complete graphics-enabled Edit Mode** and **79/79
+complete Play Mode** passed with no failures, skips or inconclusive results. A
+separate **1/1** regression recheck confirms that player pickup followed by the
+existing explicit inventory-drop command still conserves material. Evidence is
+retained in `Logs/WV-B3C2A-Focused-EditMode.xml`,
+`Logs/WV-B3C2A-Focused-PlayMode.xml`, `Logs/WV-B3C2A-Full-EditMode.xml` and
+`Logs/WV-B3C2A-Full-PlayMode.xml`, with corresponding logs. An earlier
+null-graphics complete Edit attempt crashed in the retained URP rendered-pixel
+path before XML and is not a passing or failing test result.
+
+### Manual Unity acceptance — pending
+
+No Inspector setup is required. Manual acceptance remains pending until the user
+confirms all 23 checks:
+
+1. Load the Mara/Pip/Tala development fixture.
+2. Confirm existing Colony gameplay starts normally.
+3. Extract one Soil tile.
+4. Inspect its stable physical stack identity and quantity.
+5. Confirm only one canonical stack occupies the cell.
+6. Haul the resource to a valid destination.
+7. Confirm quantity decreases or the empty stack is removed.
+8. Confirm no resource duplication.
+9. Generate seed `2203`.
+10. Extract Soil and Stone.
+11. Confirm physical stacks appear.
+12. Inspect their IDs, revisions and provisional capacities.
+13. Confirm Hauling and Construction staging still work.
+14. Switch views repeatedly and confirm stack identity remains stable.
+15. Restore the fixture and confirm old generated stack IDs are invalid.
+16. Confirm job scheduling and simulation controls still operate.
+17. Exit Play Mode and confirm the Console contains no new errors.
+18. Before designating a Resource Node, confirm it has no quantity badge.
+19. Designate that Node for Extraction and confirm a compact upper-right `1`
+    badge appears without hiding the designation marker.
+20. Confirm every visible loose stack shows its quantity continuously, then
+    pick up or merge material and confirm the badge updates or disappears at zero.
+21. Confirm every visible non-empty Material Storage cell shows its actual
+    stored quantity continuously and an empty Storage cell has no badge.
+22. Switch to World View and confirm no Colony quantity badge leaks across;
+    switch back and confirm authoritative quantities are unchanged.
+23. Confirm badges do not intercept selection, designation or camera input.
+
+WV-B3C.2B multi-cell overflow/pending-output recovery, WV-B3C.3 variable Node
+authority/transaction cutover, WV-B3D Placement migration and WV-C1 remain
+unimplemented. Generated Surface Nodes remain `GenerationOnly`.
+`WV-B3B-LIM-001` remains active: only the unified read-model pair is published
+atomically; complete mutable scenario construction still uses the host's
+existing in-place rebuild/restore pathway.
+
 ## WV-B3C.1 inactive Colony Resource Node registry — 16 October 2026
 
 **WV-B3C.1 — Complete.** Automated validation passed and the user explicitly

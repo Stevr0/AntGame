@@ -1,5 +1,25 @@
 # Unified Runtime Cells
 
+## WV-B3C.2A canonical ground stacks
+
+The Colony loose occupant now reads one canonical `WorldMaterialDropRegistry`
+stack rather than aggregating operation-keyed records. Each active stack exposes
+its scenario-local ID, typed Colony cell, Soil/Stone resource ID, quantity,
+reserved and available quantities, provisional definition capacity 10,
+revision and provenance. Compatible commits merge under one identity; mixed
+types, overflow, obstructing Nodes, completed functional Placements and unknown
+runtime compatibility are rejected before source consumption by ordinary
+producers. The explicit inventory-drop command keeps its validated legacy
+functional-Background anchor behavior until Placement migration.
+
+Creation, merge, reservation, release, pickup and removal publish one affected
+cell change. Reads, failed transactions and view switching do not. A scenario
+rebuild creates a new ID context and drops old reservations. Existing
+quantity-one Extraction, Hauling, Storage and staged Construction remain their
+current authorities. B3C.2B overflow recovery and B3C.3 Node/transaction cutover
+remain future; Surface Nodes remain `GenerationOnly` and `WV-B3B-LIM-001`
+continues to apply.
+
 ## WV-B3C.1 inactive Node foundation
 
 WV-B3C.1 is **complete** after automated validation and user-confirmed **17/17

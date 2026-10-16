@@ -186,19 +186,21 @@ namespace AntColony.Tests.EditMode
         }
 
         [Test]
-        public void ExcavationMergesCompatibleDropThenCreatesOneBoundedStack()
+        public void ExcavationMergesCompatibleDropIntoOneCanonicalStack()
         {
-            WorldMaterialDropRegistry drops = CreateExcavationWorld(4,
+            WorldMaterialDropRegistry drops = CreateExcavationWorld(3,
                 out _, out ExcavationWorldTransaction transaction);
             Assert.That(drops.TryAdd("existing", ExcavatedMaterialType.Soil, 7,
-                Vector2Int.zero, out _, out string setupError), Is.True, setupError);
+                Vector2Int.zero, out WorldMaterialDrop existing,
+                out string setupError), Is.True, setupError);
 
             Assert.That(transaction.TryCommit("excavate.merge", Vector2Int.zero,
                 "solid.test", out WorldMaterialDrop result,
                 out string error), Is.True, error);
-            Assert.That(drops.Count, Is.EqualTo(2));
-            Assert.That(drops.GetQuantity(ExcavatedMaterialType.Soil), Is.EqualTo(11));
-            Assert.That(result.Quantity, Is.EqualTo(1));
+            Assert.That(drops.Count, Is.EqualTo(1));
+            Assert.That(drops.GetQuantity(ExcavatedMaterialType.Soil), Is.EqualTo(10));
+            Assert.That(result.Quantity, Is.EqualTo(10));
+            Assert.That(result.StackId, Is.EqualTo(existing.StackId));
             Assert.That(result.WorldCell, Is.EqualTo(Vector2Int.zero));
         }
 

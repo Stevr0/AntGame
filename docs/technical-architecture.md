@@ -1,5 +1,27 @@
 # Technical Architecture
 
+## WV-B3C.2A canonical ground-stack authority
+
+`WorldMaterialDropRegistry` is still the only mutable owner of supported loose
+ground resources. Its internal indices now enforce one canonical stack per
+Colony cell and one resource type per stack. `GroundStackId` is allocated from a
+fresh scenario context and local sequence, while producer operation keys remain
+separate replay guards. Registry records own quantity, the provisional
+resource-defined capacity, exclusive reservation, revision, provenance and
+lifecycle; callers receive immutable snapshots.
+
+Runtime registry instances validate against `ChunkedWorldData`. Extraction may
+preflight the exact obstructing source Solid it will remove; ordinary drops may
+not occupy missing cells, Solids/Nodes or completed functional Backgrounds, and
+unknown compatibility fails closed. The existing explicit inventory-drop
+command retains a narrow validated-current-anchor compatibility path on legacy
+functional Backgrounds until Placement migration; other producers cannot use
+that exception. The Colony runtime-cell adapter is a read-only authoritative
+projection and cell-change bridge, not another store.
+Inventory, Construction staging and Material Storage retain separate quantity
+and capacity ownership. Scenario rebuild constructs a fresh registry/context;
+whole-world construction is still not transactional under `WV-B3B-LIM-001`.
+
 ## Resource and Node System v1.0 target
 
 The approved target gives every Solid a finite variable-quantity Resource Node,
