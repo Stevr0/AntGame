@@ -1,9 +1,9 @@
 # WV-B3C Resource Node and Loose Resource Integration Plan
 
-**Status:** B3C.1, B3C.2A and B3C.2B are complete after recorded automated and
-user-confirmed manual acceptance. B3C.3A active variable-quantity Colony Node
-authority is implemented with green automated suites and awaits its 25-step
-manual Unity acceptance. B3C.3B whole-node Extraction remains unimplemented.
+**Status:** B3C.1, B3C.2A, B3C.2B and B3C.3A are complete after recorded
+automated validation and user-confirmed manual acceptance. B3C.3A active
+variable-quantity Colony Node authority passed **25/25** authoritative Unity
+manual checks. B3C.3B whole-node Extraction remains unimplemented.
 
 **Prepared:** 15 October 2026
 
@@ -486,13 +486,18 @@ Colony Node ownership followed by **B3C.3B** whole-node Extraction cutover. The
 first establishes and validates sole quantity ownership; the second coordinates
 Node depletion, Solid removal, multi-stack output and coherent publication.
 
-**B3C.3A implementation status — 16 October 2026:** Implemented with active
+**B3C.3A final status — 19 October 2026:** Complete with active
 quantity ownership, deterministic Soil 8–12/Stone 5–15 quantities, lifecycle and
 revision validation, direct-terrain guards, authoritative runtime snapshots and
 designated-Node badges. Quantity-one fixture Extraction remains compatible.
 Variable-node legacy Extraction rejects without consuming state or monopolising
 an ant. Automated results are 11/11 focused Edit, 16/16 focused Play, 594/594
-full Edit and 81/81 full Play. Manual acceptance remains pending.
+full Edit and 81/81 full Play, with zero failures, skips or inconclusive results.
+The user confirmed the authoritative manual checklist passed **25/25**; Codex
+did not independently perform it. XML evidence is retained under
+`Logs/WV-B3C3A-*` and came from the implementation working tree based on parent
+revision `1fab6541`, which is provenance rather than the final implementation
+commit.
 
 **B3C.3B status:** not implemented. The coordinator, whole-node depletion,
 complete physical output, overflow/pending-output recovery and coherent

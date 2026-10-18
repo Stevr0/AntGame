@@ -1,6 +1,6 @@
 # Development Roadmap
 
-## WV-B3C.3A — implemented; manual acceptance pending
+## WV-B3C.3A — complete
 
 The Colony Resource Node registry now actively owns generated Soil 8–12 and
 Stone 5–15 quantities with stable identity, revisions, lifecycle, reservation
@@ -11,8 +11,11 @@ variable Nodes are designatable but cannot be claimed or completed by legacy
 one-unit Extraction.
 
 Unity `6000.3.8f1` passes 11/11 focused Edit, 16/16 focused Play, 594/594 full
-Edit and 81/81 full Play. Manual acceptance remains 0/25 confirmed, so the
-milestone is not Complete. WV-B3C.3B whole-node output has not begun.
+Edit and 81/81 full Play with no failures, skips or inconclusive results. The
+user confirmed all **25/25** authoritative manual checks passed; Codex did not
+independently perform them. Tests ran against the implementation working tree
+based on parent revision `1fab6541`, which is provenance rather than the final
+implementation commit. WV-B3C.3B whole-node output has not begun.
 `WV-B3B-LIM-001` remains active.
 
 ## WV-B3C.2B — complete
@@ -47,8 +50,8 @@ was based on `6829b602` and was subsequently committed as `c6ae89b2`; the XML
 does not independently record a Git revision. Unity tests were not rerun for
 this documentation-only closure.
 
-WV-B3C.3A subsequently implemented active variable-quantity Colony Nodes and
-awaits manual acceptance. WV-B3C.3B remains a separate future gate.
+WV-B3C.3A subsequently completed after **25/25** user-confirmed manual
+acceptance. WV-B3C.3B remains a separate future gate.
 
 ## WV-B3C.2A — complete
 
@@ -106,10 +109,10 @@ pair is atomically replaced. Complete gameplay-scenario construction remains an
 in-place development-host workflow with existing rebuild/restore recovery. It
 must be reassessed before persistence, region unloading or complex restoration.
 
-B3C.2A and the approved narrower B3C.2B Hauling/transaction slice subsequently
-completed. The next recommended planning split is B3C.3A active variable Colony
-Nodes and B3C.3B whole-node Extraction cutover. These are not authorised
-implementation milestones. Placement migration remains a separate WV-B3D gate.
+B3C.2A, the narrower B3C.2B Hauling/transaction slice and B3C.3A active
+variable-quantity Colony Nodes subsequently completed. The next recommended
+planning gate is B3C.3B whole-node Extraction cutover; it is not authorised by
+this closure. Placement migration remains a separate WV-B3D gate.
 
 The documentation-only
 [`ResourceNodeIntegrationPlan`](https://github.com/Stevr0/AntGame/blob/main/Documentation/ResourceNodeIntegrationPlan.md)

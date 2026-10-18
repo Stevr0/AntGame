@@ -49,6 +49,11 @@ dependency reason. They remain pending and unowned, so the queen can select
 other eligible work and does not loop on impossible legacy Extraction. Fixture
 quantity-one jobs retain their existing execution and XP behavior.
 
+The user confirmed this scheduling boundary in Unity as part of the completed
+WV-B3C.3A **25/25** manual acceptance: while variable-quantity Extraction stayed
+deferred, the queen could undertake and progress other eligible work. Codex did
+not independently perform the manual check.
+
 ## WV-B3B authority preservation
 
 Runtime-cell snapshots and change feeds are read-only inputs for future job

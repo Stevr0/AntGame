@@ -32,14 +32,17 @@ Unity acceptance. It remains only an inactive quantity-one Soil/Stone registry;
 no active quantity authority or Surface interaction was added.
 
 WV-B3C.2A implements canonical physical Soil/Stone stacks and the supported
-quantity-badge compatibility slice. Visible loose stacks and non-empty Material
+quantity-badge compatibility slice. WV-B3C.3A subsequently completed active
+generated Colony Node authority with Soil 8–12 and Stone 5–15; the Mara/Pip/Tala
+fixture remains quantity one. Visible loose stacks and non-empty Material
 Storage show their physical quantities continuously. Resource Node quantities
 are contextual: show them only after the Node is selected or designated, never
-across every Node in the region. Current designated Colony Solids show the
-accepted quantity-one value; generation-only Surface Nodes are not presented as
-interactive targets. Selection-driven Node badges, selected-site staging lines,
-future Placement identity and Fog-of-War discovery integration remain deferred
-until their owning systems exist.
+across every Node in the region. Designated Colony Nodes now show their
+authoritative remaining quantity; generation-only Surface Nodes are not
+presented as interactive targets. General Node selection, selected-site staging
+lines, future Placement identity and Fog-of-War discovery integration remain
+deferred until their owning systems exist. Whole-node variable-quantity
+Extraction remains WV-B3C.3B.
 
 ### Construction and Placement definition contract
 

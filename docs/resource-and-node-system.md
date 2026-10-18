@@ -1,6 +1,6 @@
 # Resource and Node System
 
-## WV-B3C.3A — automated acceptance passed; manual pending
+## WV-B3C.3A — complete
 
 The existing Colony registry is now the active Soil/Stone Node quantity
 authority. Generated Soil contains 8–12 units and Stone 5–15, derived
@@ -12,7 +12,10 @@ Extraction is explicitly deferred to WV-B3C.3B and remains unowned.
 Runtime snapshots and designated badges read actual remaining quantity and Node
 revision/lifecycle directly from the authority. Surface Nodes remain
 `GenerationOnly`. Unity evidence passes 11/11 focused Edit, 16/16 focused Play,
-594/594 full Edit and 81/81 full Play. The 25-step manual checklist is pending.
+594/594 full Edit and 81/81 full Play with no failures, skips or inconclusive
+results. The user confirmed **25/25** authoritative manual Unity checks passed;
+Codex did not independently perform them. Evidence under `Logs/WV-B3C3A-*`
+came from the implementation working tree based on parent revision `1fab6541`.
 
 ## WV-B3C.2B — complete
 

@@ -42,8 +42,8 @@ Surface Stone, Seed, Twig and Freshwater remain `GenerationOnly`. Automated
 results pass 8/8 focused Edit, 4/4 focused Play, 565/565 complete Edit and 78/78
 complete Play. This documentation-only closure did not rerun Unity tests. B3C.2A later
 completed and B3C.2B later completed with **30/30** manual acceptance. B3C.3A
-subsequently activated Colony quantity authority and awaits manual acceptance;
-B3C.3B remains unstarted and `WV-B3B-LIM-001` remains active.
+subsequently activated Colony quantity authority and completed **25/25** manual
+acceptance; B3C.3B remains unstarted and `WV-B3B-LIM-001` remains active.
 
 ## WV-B3C.3A active Colony Node authority
 
@@ -57,7 +57,10 @@ reads, failures, replay and view switching produce none.
 Quantity-one fixture Nodes remain interactive. Variable Nodes are designatable
 but legacy one-unit execution is deferred and stays unowned until WV-B3C.3B.
 Automated suites pass 11/11 focused Edit, 16/16 focused Play, 594/594 full Edit
-and 81/81 full Play; the 25-step manual checklist is pending.
+and 81/81 full Play, with no failures, skips or inconclusive results. The user
+confirmed **25/25** authoritative manual Unity checks passed; Codex did not
+independently perform them. The XML evidence under `Logs/WV-B3C3A-*` came from
+the implementation working tree based on parent revision `1fab6541`.
 
 ## Status
 
@@ -174,7 +177,7 @@ unloading or complex scenario restoration.
    placement remains deferred. See the
    authoritative
    [`Partial Hauling Integration Plan`](https://github.com/Stevr0/AntGame/blob/main/Documentation/PartialHaulingIntegrationPlan.md).
-5. **WV-B3C.3A — active Nodes (implemented; manual pending):** variable Colony
+5. **WV-B3C.3A — active Nodes (complete):** variable Colony
    quantity authority with guarded legacy Extraction.
 6. **WV-B3C.3B — whole-node Extraction (unstarted):** coordinated depletion,
    Solid removal and complete recoverable output.

@@ -57,6 +57,11 @@ may be designated, but the legacy transaction reports
 `Variable-quantity Node awaiting whole-node Extraction support (WV-B3C.3B)` and
 changes no Node, terrain, output or completion XP. The job remains unowned.
 
+WV-B3C.3A is complete after **25/25** user-confirmed authoritative Unity manual
+checks. This includes confirmation that deferred variable-quantity Extraction
+does not starve other eligible work and that exiting Play Mode adds no Console
+errors or exceptions. Codex did not independently perform the manual checks.
+
 WV-B3C.3B still must coordinate complete remaining quantity, Solid depletion
 and recoverable output; partial harvesting was not added.
 
@@ -74,9 +79,9 @@ Nodes. Mutable Node migration belongs to WV-B3C.
 
 The approved runtime target represents Soil, Stone, Seed, Twig and future
 natural resources as finite Nodes over an unchanged natural Background.
-Current Colony Solids remain quantity-one compatibility Nodes until later
-WV-B3C gates are separately approved. Extraction must prepare complete
-compatible ground output before exact-once Node reduction; failed placement retains a
+Generated Colony Solids are active variable-quantity Nodes; the Mara/Pip/Tala
+fixture retains quantity-one compatibility. WV-B3C.3B Extraction must prepare
+complete compatible ground output before exact-once Node reduction; failed placement retains a
 recoverable pending transaction and never fills inventory. See [Unified Runtime
 Cells](unified-runtime-cells.md).
 

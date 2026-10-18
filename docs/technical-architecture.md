@@ -60,6 +60,11 @@ occupancy. Canonical loose stacks and Hauling transfers are also active. The
 whole-node output coordinator, Surface resources and functional-Background
 migration remain later B3C.3B/WV-B3D gates.
 
+WV-B3C.3A is complete after green focused/full Unity suites and **25/25**
+user-confirmed manual checks. This acceptance closes the active Node authority
+slice only; it does not add the whole-node output coordinator or expand atomic
+publication beyond the Colony/Surface read-model pair under `WV-B3B-LIM-001`.
+
 The target Placement boundary is specified in
 [`Documentation/ConstructionPlacementSpecification.md`](https://github.com/Stevr0/AntGame/blob/main/Documentation/ConstructionPlacementSpecification.md).
 Construction Sites own footprint reservation, staging and progress but expose no

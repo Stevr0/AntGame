@@ -1,5 +1,21 @@
 # Design Decision Log
 
+## 2026-10-19 — Close WV-B3C.3A active Colony Nodes
+
+- Accept WV-B3C.3A as **Complete** after 11/11 focused Edit, 16/16 focused Play,
+  594/594 complete Edit and 81/81 complete Play passed with no failures, skips or
+  inconclusive results, followed by **25/25** user-confirmed Unity manual checks.
+- Record the manual result as user-reported, not independently performed by
+  Codex. The final confirmations include other eligible work progressing while
+  variable-quantity Extraction is deferred and no new Console errors or
+  exceptions after leaving Play Mode.
+- Preserve XML/log evidence under `Logs/WV-B3C3A-*`. The tested implementation
+  working tree was based on parent revision `1fab6541`; that revision is
+  provenance, not the final implementation commit.
+- Keep whole-node Extraction, exact-once complete loose output, multi-stack and
+  pending-output recovery in WV-B3C.3B. Preserve `WV-B3B-LIM-001` and all other
+  separately deferred resource, Placement, Surface and simulation work.
+
 ## 2026-10-16 — Activate Colony Node quantity before whole-node output
 
 - Make the established scenario-local Colony registry the sole mutable

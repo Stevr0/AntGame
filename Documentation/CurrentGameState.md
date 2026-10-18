@@ -1,6 +1,6 @@
 # Ant Colony Current Game State
 
-## WV-B3C.3A active variable-quantity Colony Nodes — Implemented, Automated Tests Passed, Manual Acceptance Pending (16 October 2026)
+## WV-B3C.3A active variable-quantity Colony Nodes — Complete (19 October 2026)
 
 The existing Colony Resource Node registry is now the sole mutable quantity
 authority for supported underground Soil and Stone Nodes. `ChunkedWorldData`
@@ -62,10 +62,15 @@ coverage. Evidence is retained in `Logs/WV-B3C3A-FocusedEdit.xml`,
 uncommitted WV-B3C.3A working tree based on parent revision `1fab6541`; that
 parent is provenance, not a claim that it contains this implementation.
 
-### Manual Unity acceptance — pending (0/25 confirmed)
+### Manual Unity acceptance — complete (25/25 user-confirmed)
 
-Codex has not performed or claimed this visual/manual acceptance. Repeat in
-Unity Play Mode and report the result:
+The user confirmed all **25/25 authoritative Unity Play Mode checks passed**.
+This was reported in two stages: all 17 previously supplied summary checks,
+followed by explicit confirmation of checks 13 and 25. In particular, the queen
+could progress other eligible work while variable-quantity Extraction remained
+deferred, and exiting Play Mode produced no new Console errors or exceptions.
+This is user-reported manual acceptance; Codex did not independently perform the
+manual checks. The accepted checklist was:
 
 1. Start generated founding-colony scenario with seed `2203`.
 2. Confirm Surface and Colony regions generate correctly.
@@ -172,11 +177,11 @@ presented as moved material.
 
 At WV-B3C.2B closure, production Node yields remained quantity-one. WV-B3C.3A
 subsequently activated generated Colony variable quantities. Surface Nodes remain
-`GenerationOnly`, and partial Node Extraction, variable Node yields, general
-multi-cell overflow distribution and Placement migration remain unimplemented.
-`WV-B3B-LIM-001` remains active. Multi-destination routes, Storage
-reorganisation, variable Node yields, Surface Extraction, Placement migration
-and automatic deceased-ant cargo recovery remain deferred. Exact-once
+`GenerationOnly`, and partial Node Extraction, general multi-cell overflow
+distribution and Placement migration remain unimplemented. `WV-B3B-LIM-001`
+remains active. Multi-destination routes, Storage reorganisation, Surface
+Extraction, Placement migration and automatic deceased-ant cargo recovery
+remain deferred. Exact-once
 whole-node Extraction of variable yields, general multi-cell output
 distribution, Surface resource interactions, Foraging/Fog of War, Refining,
 persistence and unloaded-region simulation are also unimplemented. These
@@ -295,8 +300,8 @@ reservation state.
 Colony world presentation now draws compact, display-only quantity badges from
 existing authorities. Every visible loose stack shows its current quantity;
 every visible non-empty Material Storage slot shows actual stored quantity and
-empty Storage hides the badge. Current quantity-one Colony Nodes show `1` only
-after an Extraction designation, keeping undesignated underground terrain
+empty Storage hides the badge. Colony Nodes show their authoritative remaining
+quantity only after an Extraction designation, keeping undesignated underground terrain
 uncluttered. Badges update by reading committed state each GUI pass, disappear
 with removed records/designations and are gated with Colony presentation so they
 cannot leak into World View or intercept pointer input.

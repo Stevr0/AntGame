@@ -291,7 +291,7 @@ The authoritative Hauling bands are 0–19 = 2 slots × 2 units, 20–39 = 3×2,
 progression and decay rules are unchanged. Capacity loss retains all cargo,
 marks it over-capacity, blocks pickup and permits delivery/recovery.
 
-### WV-B3C.3A — implemented; manual acceptance pending
+### WV-B3C.3A — complete
 
 The existing Colony registry is now the only mutable Soil/Stone Node quantity
 owner. Generated quantities use stable per-Node derivation from seed,
@@ -309,7 +309,11 @@ output or completion XP changes on rejection. Whole-node output and any required
 multi-stack distribution remain WV-B3C.3B.
 
 Automated evidence passes 11/11 focused Edit, 16/16 focused Play, 594/594 full
-Edit and 81/81 full Play. The 25-step manual Unity checklist is pending.
+Edit and 81/81 full Play, with no failures, skips or inconclusive results. The
+user confirmed **25/25** authoritative manual Unity checks passed; Codex did not
+independently perform them. XML evidence remains under `Logs/WV-B3C3A-*` and was
+produced from the implementation working tree based on parent revision
+`1fab6541`, not from a claim that the parent contains the implementation.
 
 ### Quantity-badge presentation contract
 
@@ -342,8 +346,8 @@ gates:
    transfer identity/replay, partial pickup/delivery, carrier
    allocation, recovery and successive trips while retaining quantity-one Nodes.
    General bounded multi-cell output placement remains future work.
-3. **B3C.3A — active variable-quantity Colony Nodes (implemented; manual
-   acceptance pending):** the registry is the sole Soil/Stone quantity owner and
+3. **B3C.3A — active variable-quantity Colony Nodes (complete):** the registry
+   is the sole Soil/Stone quantity owner and
    projects existing Solid occupancy without changing Surface resources.
 4. **B3C.3B — whole-node Extraction cutover:** coordinate Node, terrain and
    canonical stack changes atomically, then retire the quantity-one compatibility

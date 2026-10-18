@@ -1,6 +1,6 @@
 # Ant Colony Development Roadmap
 
-## WV-B3C.3A — Implemented; automated tests passed; manual acceptance pending (16 October 2026)
+## WV-B3C.3A — Complete (19 October 2026)
 
 The established Colony Resource Node registry now actively owns all supported
 Soil/Stone Node quantities while `ChunkedWorldData` retains terrain/Solid
@@ -19,8 +19,13 @@ and reject legacy one-unit completion with
 
 Unity `6000.3.8f1` passes **11/11 focused Edit**, **16/16 focused Play**,
 **594/594 complete Edit** and **81/81 complete Play**, all with zero failures,
-skips or inconclusive results. The authoritative 25-step Unity manual checklist
-is pending, so the milestone is not Complete. The next implementation gate is
+skips or inconclusive results. The user confirmed the authoritative Unity manual
+checklist passed **25/25**, including other eligible work progressing while
+variable-quantity Extraction remained deferred and a clean Console after Play
+Mode. Codex did not independently perform those manual checks. Tests ran against
+the implementation working tree based on parent revision `1fab6541`; the parent
+revision is provenance and is not the final implementation commit. WV-B3C.3A is
+**Complete**. The next recommended implementation gate is
 **WV-B3C.3B whole-node Extraction and complete physical output**, but it is not
 started or authorised by this milestone. Surface interactions, Placement
 migration, persistence and unloaded simulation remain deferred.
@@ -70,8 +75,8 @@ unloaded-region simulation also remain excluded. B3C.3, WV-B3D and WV-C1
 remain unstarted; Surface Nodes remain `GenerationOnly`, and
 `WV-B3B-LIM-001` remains active.
 
-WV-B3C.3A subsequently implemented active variable-quantity Colony Nodes and is
-awaiting its 25-step manual acceptance. WV-B3C.3B has not begun.
+WV-B3C.3A subsequently completed after **25/25** user-confirmed manual
+acceptance. WV-B3C.3B has not begun.
 
 Unity `6000.3.8f1` recovery evidence passes **28/28 focused Edit**, **6/6
 focused Play**, **588/588 complete graphics-enabled Edit** and **80/80 complete
@@ -132,14 +137,14 @@ The approved [Resource and Node System v1.0](ResourceAndNodeSystem.md) now makes
 variable quantities, whole-node Solid Extraction, complete physical output,
 finite Water and natural-only Backgrounds the target. B3C.1 remains a
 quantity-one inactive compatibility foundation, not that final mutable model.
-B3C.2A and B3C.2B have since completed;
-At WV-B3C.1 closure, B3C.3, WV-B3D and WV-C1 had not started. B3C.3A is now
-implemented pending manual acceptance; `WV-B3B-LIM-001` remains active.
+B3C.2A and B3C.2B have since completed. At WV-B3C.1 closure, B3C.3, WV-B3D
+and WV-C1 had not started. B3C.3A has now completed; `WV-B3B-LIM-001` remains
+active.
 
-B3C.2A and the approved narrower B3C.2B Hauling/transaction slice subsequently
-completed. The next recommended planning gates are B3C.3A active variable
-Colony Nodes and B3C.3B whole-node transaction cutover. These recommendations
-require separate approval.
+B3C.2A, the narrower B3C.2B Hauling/transaction slice and B3C.3A active
+variable-quantity Colony Nodes subsequently completed. The next recommended
+planning gate is B3C.3B whole-node transaction cutover; it requires separate
+approval.
 
 The companion
 [Construction and Placement Specification](ConstructionPlacementSpecification.md)

@@ -30,7 +30,9 @@ layout stream, so evaluation order and view switching cannot reroll another
 Node. The generated record is copied into the active registry at scenario
 construction; the registry then owns remaining quantity for the Node lifetime.
 The Mara/Pip/Tala fixture remains quantity one. Automated generation and full
-regression suites pass; the 25-step manual Unity checklist remains pending.
+regression suites pass, and the user confirmed the complete authoritative Unity
+manual checklist passed **25/25**. Codex did not independently perform those
+manual checks. This closes WV-B3C.3A without implementing WV-B3C.3B.
 
 ## WV-B3B runtime publication clarification — 15 October 2026
 

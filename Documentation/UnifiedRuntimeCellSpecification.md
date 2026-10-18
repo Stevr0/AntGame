@@ -292,12 +292,12 @@ remaining quantity and revision. Soil, Stone, Seed, Twig and future natural
 resources use the authoritative Extraction skill. Direct eating/drinking is a
 separate source-consumption transaction and must not masquerade as Extraction.
 
-Current Colony Solids adapt as deterministic quantity-one Nodes. Their stable
-IDs derive from generation IDs when available, otherwise from scenario/version,
-region and cell. The Solid material definition continues supplying collision,
-excavatability and current yield while the adapter is active. Generated Surface
-node records initialise real mutable Nodes at publication; afterward their
-`RemainingQuantity` cannot be the runtime authority.
+Active generated Colony Solids map to deterministic variable-quantity Nodes;
+the Mara/Pip/Tala fixture retains quantity-one compatibility. Stable IDs derive
+from generation IDs when available, otherwise from scenario/version, region and
+cell. The Solid material definition continues supplying collision and
+excavatability while the Node registry owns quantity. Generated Surface node
+records remain `GenerationOnly` and do not initialise a mutable runtime Node.
 
 Extraction reserves an available quantity, performs work, prepares recoverable
 loose output, then atomically reduces Node quantity and creates/merges output.
@@ -532,9 +532,9 @@ Completion requires exact conservation under success, replay, cancellation and
 failed placement; Background preservation; Surface and Colony typed identity;
 and proof that generated records no longer own mutable quantity.
 
-#### WV-B3C.3A implementation status — 16 October 2026
+#### WV-B3C.3A final status — 19 October 2026
 
-**Implemented — Automated Tests Passed, Manual Acceptance Pending.** The Colony
+**Complete — Automated and Manual Acceptance Passed.** The Colony
 adapter now reads its Node projection from the active scenario-local registry,
 including Node/resource identity, initial and remaining quantity, Node revision,
 lifecycle and Extraction status. Soil 8–12 and Stone 5–15 quantities are derived
@@ -550,7 +550,11 @@ terrain, quantity, output or completion XP changes. Surface records remain
 `GenerationOnly`.
 
 Focused Unity evidence passes 11/11 Edit and 16/16 Play; complete suites pass
-594/594 Edit and 81/81 Play. Manual acceptance is pending. WV-B3C.3B must still
+594/594 Edit and 81/81 Play, with no failures, skips or inconclusive results.
+The user confirmed all **25/25** authoritative manual Unity checks passed;
+Codex did not independently perform them. Evidence under `Logs/WV-B3C3A-*` was
+captured from the implementation working tree based on parent revision
+`1fab6541`, not from the parent commit itself. WV-B3C.3B must still
 coordinate whole-node depletion and complete physical output; B3C.3A does not
 provide that transaction.
 
@@ -599,7 +603,7 @@ Storage-to-Construction withdrawal, carrier allocation and recovery outcomes
 without moving any runtime-cell write authority. Ground and Storage change feeds
 still publish only their owners' committed quantity changes. General multi-cell overflow/pending
 output and B3C.3B whole-node transaction cutover remain unimplemented. B3C.3A
-active variable Node authority is implemented. Surface Nodes remain
+active variable Node authority is complete. Surface Nodes remain
 `GenerationOnly`; `WV-B3B-LIM-001` is
 unchanged. WV-B3C.2B is complete after user-confirmed **30/30** authoritative
 manual Unity acceptance and the recorded green automated suites.
@@ -607,10 +611,10 @@ manual Unity acceptance and the recorded green automated suites.
 Resource and Node v1.0 further requires variable quantities and complete
 whole-node output, including several deterministic stacks or recoverable pending
 output when one stack cannot hold the yield. The recommended implementation
-split completed B3C.2A definitions/canonical stacks and implemented B3C.2B
-partial Hauling/transfer recovery. B3C.3A active variable Colony Nodes are now
-implemented; general output splitting and B3C.3B whole-node transaction cutover
-remain future work.
+split completed B3C.2A definitions/canonical stacks and B3C.2B partial
+Hauling/transfer recovery. B3C.3A active variable Colony Nodes are complete;
+general output splitting and B3C.3B whole-node transaction cutover remain future
+work.
 
 ### WV-B3D candidate — Construction / Placement Integration
 
