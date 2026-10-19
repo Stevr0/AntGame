@@ -15,9 +15,9 @@ MonoBehaviour:
   backgrounds:
   - gameplayDefinitionId: background.surface.grass
     sprite: {fileID: 21300000, guid: 7b59b86b12a07774cab52d0450faec11, type: 3}
-    colour: {r: 0.21568629, g: 0.21568629, b: 0.21568629, a: 1}
+    colour: {r: 0, g: 0.4245283, b: 0.038090203, a: 1}
   - gameplayDefinitionId: background.surface.water
     sprite: {fileID: 21300000, guid: e64baece36bc9d94e9a9b0dfb814d944, type: 3}
-    colour: {r: 1, g: 1, b: 1, a: 1}
+    colour: {r: 0.42352945, g: 0.7568628, b: 0.98823535, a: 1}
   fallbackSprite: {fileID: 21300000, guid: 7b74e8902eb53c2418ccb8da667cebf9, type: 3}
   fallbackColour: {r: 1, g: 0, b: 0.8627451, a: 1}
