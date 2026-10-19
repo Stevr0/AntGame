@@ -1,6 +1,6 @@
 # Ant Colony Development Roadmap
 
-## WV-B3C.3B — Implemented, Automated Tests Passed, Manual Acceptance Pending (19 October 2026)
+## WV-B3C.3B — Complete (19 October 2026)
 
 Whole-node Colony Soil/Stone Extraction is implemented through the existing Node,
 terrain, ground-stack, job, navigation and runtime-cell authorities. Complete
@@ -8,8 +8,12 @@ quantity is split across deterministic capacity-10 stacks, output capacity is
 reserved before commit, and replay cannot duplicate output or XP. Insufficient
 capacity safely blocks before depletion; no post-depletion pending-output system
 was required. Focused Edit/Play passed **43/43** and **22/22**; full Edit/Play
-passed **597/597** and **81/81**. Manual seed-2203 and fixture acceptance is
-pending. Do not begin WV-B3D or WV-C1 without approval.
+passed **597/597** and **81/81**, all with zero failures, skips or inconclusive
+results. The user confirmed all **8/8 authoritative manual acceptance groups**,
+including blocked-capacity recovery, complete F12 transaction diagnostics and a
+clean Console; Codex did not independently perform those checks. WV-B3C.3B is
+**Complete**. The next recommended milestone is WV-B3D Placement migration, but
+do not begin WV-B3D or WV-C1 without explicit approval.
 
 ## WV-B3C.3A — Complete (19 October 2026)
 
@@ -154,9 +158,9 @@ and WV-C1 had not started. B3C.3A has now completed; `WV-B3B-LIM-001` remains
 active.
 
 B3C.2A, the narrower B3C.2B Hauling/transaction slice and B3C.3A active
-variable-quantity Colony Nodes subsequently completed. The next recommended
-planning gate is B3C.3B whole-node transaction cutover; it requires separate
-approval.
+variable-quantity Colony Nodes subsequently completed. At this historical
+B3C.1 closure point, B3C.3B was the next recommended planning gate; it has now
+completed as recorded at the top of this roadmap.
 
 The companion
 [Construction and Placement Specification](ConstructionPlacementSpecification.md)

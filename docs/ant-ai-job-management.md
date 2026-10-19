@@ -36,18 +36,20 @@ IDs and reservations cannot target restored resources.
 Normal Solid Extraction is whole-node work: after complete output capacity is
 prepared, it depletes the Node and commits every remaining unit. Hauling alone
 moves physical output to Construction staging, Storage or future Refining.
-Construction never self-supplies. Variable quantities, overflow stacks and
-pending-output recovery are approved design. WV-B3C.3A implements variable
-Colony quantity ownership but not whole-node output, overflow or recovery.
+Construction never self-supplies. WV-B3C.3A implemented variable Colony quantity
+ownership; WV-B3C.3B now implements whole-node output and deterministic overflow
+stacks with safe pre-commit blockage rather than a post-depletion pending-output
+ledger.
 See [Resource and Node System](resource-and-node-system.md).
 
 ## WV-B3C.3A deferred Extraction eligibility
 
-Generated variable-quantity Colony Nodes can be designated and inspected, but
-the shared selector rejects them before reservation with the explicit WV-B3C.3B
-dependency reason. They remain pending and unowned, so the queen can select
-other eligible work and does not loop on impossible legacy Extraction. Fixture
-quantity-one jobs retain their existing execution and XP behavior.
+At B3C.3A closure, generated variable-quantity Colony Nodes could be designated
+and inspected, but the shared selector rejected them before reservation with the
+explicit WV-B3C.3B dependency reason. They remained pending and unowned, so the
+queen could select other eligible work and did not loop on impossible legacy
+Extraction. WV-B3C.3B now supersedes that temporary gate with whole-node
+eligibility while retaining quantity-one fixture behavior.
 
 The user confirmed this scheduling boundary in Unity as part of the completed
 WV-B3C.3A **25/25** manual acceptance: while variable-quantity Extraction stayed

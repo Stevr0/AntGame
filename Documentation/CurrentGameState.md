@@ -1,6 +1,6 @@
 # Ant Colony Current Game State
 
-## WV-B3C.3B whole-node Extraction — Implemented, Automated Tests Passed, Manual Acceptance Pending (19 October 2026)
+## WV-B3C.3B whole-node Extraction — Complete (19 October 2026)
 
 Generated Colony Soil and Stone Nodes are now interactive whole-node Extraction
 targets. A completed job converts the full authoritative remaining quantity into
@@ -24,18 +24,28 @@ Background, job progress and physical stacks remain unchanged. The scheduler
 probes this plan before assigning an ant, so blocked output does not monopolise
 one. No durable pending-output record or save/load system was added.
 
-Validation at the changed revision: Unity/Bee compilation passed; focused Edit
-Mode **43/43**, focused Play Mode **22/22**, full graphics-enabled Edit Mode
-**597/597**, and full Play Mode **81/81** passed with zero failures or skips.
+Validation at the changed revision on Unity `6000.3.8f1`: Unity/Bee compilation
+passed; focused Edit Mode **43/43**, focused Play Mode **22/22**, full
+graphics-enabled Edit Mode **597/597**, and full Play Mode **81/81** passed with
+zero failures, skips or inconclusive results.
 The first headless full-Edit attempt crashed in Unity's native URP
 `TilemapRenderer` path during an unrelated rendered-pixel test; the required
 graphics-enabled D3D11 rerun passed 597/597. XML and logs are retained under
 `Logs/WV-B3C3B-*`. They were produced from the WV-B3C.3B working tree based on
-revision `ce541408845455cfead82bc5c5ae87cff5343256`; the working-tree changes
-themselves were not yet committed. Manual Unity acceptance remains pending, so
-this milestone is not reported as fully accepted.
+revision `ce541408845455cfead82bc5c5ae87cff5343256`; that parent revision is
+provenance rather than the final implementation commit.
 
-### WV-B3C.3B manual acceptance checklist
+**WV-B3C.3B — Authoritative manual acceptance complete (8/8 groups).** The user
+confirmed the Unity Play Mode checklist in full; Codex did not independently
+perform those manual checks and did not rerun Unity for this documentation-only
+closure. The earlier practical acceptance summary recorded all 17 checks as
+confirmed; this final reconciliation closes the eight authoritative grouped
+checks. The final confirmations include a capacity-blocked Extraction becoming
+eligible and completing after capacity was cleared, plus F12 diagnostics
+showing the operation ID, phase, plan, reserved and pending quantities, replay
+and blocked state with a clean Console.
+
+### WV-B3C.3B accepted manual checklist
 
 1. In `AntGameDevelopment`, select the Founding Queen scenario, set seed `2203`
    and rebuild; confirm the queen, chamber, three-cell passage and entrance.
@@ -153,9 +163,11 @@ manual checks. The accepted checklist was:
 24. Confirm simulation Pause/1×/2×/3× remains functional.
 25. Exit Play Mode and confirm no new Unity Console errors or exceptions.
 
-WV-B3C.3B whole-node output, multi-stack output distribution and partial Node
-harvesting remain unimplemented. Hauling, Storage capacities, construction
-recipes, Surface interactions and Placement authority were not changed.
+At WV-B3C.3A closure, WV-B3C.3B whole-node output and multi-stack distribution
+were still unimplemented; the completed WV-B3C.3B milestone recorded above now
+supersedes that temporary gate. Partial Node harvesting remains unimplemented.
+Hauling, Storage capacities, construction recipes, Surface interactions and
+Placement authority were not changed.
 `WV-B3B-LIM-001` remains active: only the unified read-model pair publishes
 atomically; complete mutable scenario construction/restoration is not one
 whole-world transaction.

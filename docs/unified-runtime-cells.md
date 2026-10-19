@@ -2,6 +2,10 @@
 
 ## WV-B3C.3B committed changes
 
+**Complete.** Automated validation passed and the user confirmed all **8/8
+authoritative manual acceptance groups**. Codex did not independently perform
+those checks or rerun Unity for this documentation-only closure.
+
 Whole-node Extraction now drives the existing Colony terrain, Node and loose
 stack events. The runtime-cell adapter observes those authorities and publishes
 their cell changes; it owns no gameplay quantity. Prepared output is invisible,
@@ -189,7 +193,7 @@ unloading or complex scenario restoration.
    [`Partial Hauling Integration Plan`](https://github.com/Stevr0/AntGame/blob/main/Documentation/PartialHaulingIntegrationPlan.md).
 5. **WV-B3C.3A — active Nodes (complete):** variable Colony
    quantity authority with guarded legacy Extraction.
-6. **WV-B3C.3B — whole-node Extraction (implemented; manual pending):** coordinated depletion,
+6. **WV-B3C.3B — whole-node Extraction (complete):** coordinated depletion,
    Solid removal and complete recoverable output.
 7. **WV-B3D — Placements:** site/Placement occupancy and one-function-at-a-time
    migration of functional Backgrounds, beginning with Material Storage.

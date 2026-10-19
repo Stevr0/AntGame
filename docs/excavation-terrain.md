@@ -7,7 +7,9 @@ reserves the full deterministic stack plan, removes the Solid, preserves natural
 Background, depletes the Node and commits physical output totaling the original
 remaining quantity. Capacity-10 overflow uses additional reachable cells.
 Insufficient capacity blocks before commit and releases the ant; no quantity is
-lost or moved into inventory. Automated suites pass; manual acceptance is pending.
+lost or moved into inventory. WV-B3C.3B is **Complete** after passing automated
+suites and user-confirmed **8/8 authoritative manual acceptance groups**. Codex
+did not independently perform those manual checks.
 
 ## WV-B3C.2A canonical physical output
 
@@ -89,10 +91,10 @@ Nodes. Mutable Node migration belongs to WV-B3C.
 The approved runtime target represents Soil, Stone, Seed, Twig and future
 natural resources as finite Nodes over an unchanged natural Background.
 Generated Colony Solids are active variable-quantity Nodes; the Mara/Pip/Tala
-fixture retains quantity-one compatibility. WV-B3C.3B Extraction must prepare
-complete compatible ground output before exact-once Node reduction; failed placement retains a
-recoverable pending transaction and never fills inventory. See [Unified Runtime
-Cells](unified-runtime-cells.md).
+fixture retains quantity-one compatibility. WV-B3C.3B Extraction prepares
+complete compatible ground output before exact-once Node reduction; failed
+placement safely blocks before depletion and never fills inventory or creates a
+post-depletion pending-output record. See [Unified Runtime Cells](unified-runtime-cells.md).
 
 > **Compatibility title.** Extraction is the official skill, activity and
 > player-facing term. Existing `Excavation*` types and this page slug remain to

@@ -1,5 +1,19 @@
 # Design Decision Log
 
+## 2026-10-19 — Close WV-B3C.3B after authoritative acceptance
+
+- Mark WV-B3C.3B **Complete** after focused Edit/Play 43/43 and 22/22, complete
+  Edit/Play 597/597 and 81/81, and user-confirmed **8/8** manual acceptance
+  groups. Codex did not independently perform the manual checks.
+- Accept pre-commit output-capacity validation and safe blockage as the recovery
+  policy. Clearing capacity makes the blocked job eligible again; do not add a
+  post-depletion pending-output ledger.
+- Record complete F12 operation/phase/plan/reservation/pending/replay/blocked
+  diagnostics and a clean Console in the user-reported acceptance evidence.
+- Retain `WV-B3B-LIM-001`, Surface resource deferrals, Placement migration and
+  all later milestones. WV-B3D remains the next recommendation, not authorised
+  work.
+
 ## 2026-10-19 — Use safe pre-commit blockage for WV-B3C.3B output
 
 - Implement whole-node Colony Soil/Stone Extraction through existing Node,

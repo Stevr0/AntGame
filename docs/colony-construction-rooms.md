@@ -6,6 +6,8 @@ WV-B3C.3B does not change Construction authority. Whole-node Extraction creates
 canonical loose Soil/Stone stacks only; separate Hauling may deliver them to the
 site. Construction remains ineligible until every requirement is staged, and an
 active Construction designation is not an Extraction overflow destination.
+This integration is accepted as part of completed WV-B3C.3B; Construction
+ownership and staging behavior did not change.
 
 ## Natural Background rule
 

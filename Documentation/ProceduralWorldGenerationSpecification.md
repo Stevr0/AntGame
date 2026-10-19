@@ -2,6 +2,11 @@
 
 ## WV-B3C.3B generated-world integration — 19 October 2026
 
+**Status: Complete.** The user confirmed all **8/8 authoritative manual
+acceptance groups**, including the seed-`2203` generated scenario. Codex did not
+independently perform those checks or rerun Unity for this documentation-only
+closure.
+
 Generated Colony Soil 8–12 and Stone 5–15 Nodes are now live whole-node
 Extraction targets. Seed `2203`, generation weights, version-2 identities,
 starting chamber, passage, queen spawn and entrance were not changed. Extraction

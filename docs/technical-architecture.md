@@ -2,6 +2,11 @@
 
 ## WV-B3C.3B Extraction transaction
 
+**Complete.** Focused Edit/Play passed 43/43 and 22/22; complete Edit/Play passed
+597/597 and 81/81 with no failures, skips or inconclusive results. The user
+confirmed all **8/8 authoritative manual acceptance groups**; Codex did not
+independently perform them.
+
 `ExcavationWorldTransaction` now coordinates, rather than replaces, the Node,
 terrain and ground-stack authorities. It uses the job ID as scenario-local
 operation identity, prepares exclusive merge/new-cell capacity, reserves and
@@ -59,21 +64,22 @@ whole-world construction is still not transactional under `WV-B3B-LIM-001`.
 The approved target gives every Solid a finite variable-quantity Resource Node,
 uses whole-node Extraction, and commits complete recoverable physical output.
 Resource Definitions own material metadata; Node instances own actual quantity;
-canonical Stack records own loose quantity. Overflow reserves deterministic
-additional cells or remains a recoverable pending transaction. Natural
+canonical Stack records own loose quantity. Extraction overflow reserves
+deterministic additional cells or safely blocks before commit. Natural
 Backgrounds own no colony function, and finite Water requires a
 liquid-compatible representation. See [Resource and Node System](resource-and-node-system.md).
 
 WV-B3C.3A now implements the Colony portion of this ownership: the established
 registry owns generated Soil/Stone quantity, while terrain retains guarded Solid
 occupancy. Canonical loose stacks and Hauling transfers are also active. The
-whole-node output coordinator, Surface resources and functional-Background
-migration remain later B3C.3B/WV-B3D gates.
+WV-B3C.3B whole-node output coordinator is now complete; Surface resources and
+functional-Background migration remain later gates.
 
 WV-B3C.3A is complete after green focused/full Unity suites and **25/25**
-user-confirmed manual checks. This acceptance closes the active Node authority
-slice only; it does not add the whole-node output coordinator or expand atomic
-publication beyond the Colony/Surface read-model pair under `WV-B3B-LIM-001`.
+user-confirmed manual checks. That acceptance closed the active Node authority
+slice only; WV-B3C.3B subsequently added the whole-node coordinator without
+expanding atomic publication beyond the Colony/Surface read-model pair under
+`WV-B3B-LIM-001`.
 
 The target Placement boundary is specified in
 [`Documentation/ConstructionPlacementSpecification.md`](https://github.com/Stevr0/AntGame/blob/main/Documentation/ConstructionPlacementSpecification.md).

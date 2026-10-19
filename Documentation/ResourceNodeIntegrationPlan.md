@@ -1,6 +1,6 @@
 # WV-B3C Resource Node and Loose Resource Integration Plan
 
-## WV-B3C.3B implementation closure — 19 October 2026
+## WV-B3C.3B closure — 19 October 2026
 
 The planned whole-node cutover is implemented for active Colony Soil and Stone.
 The compatibility-named `ExcavationWorldTransaction` coordinates stable job
@@ -13,13 +13,17 @@ must fit before terrain or quantity changes; failed planning releases capacity,
 preserves work progress and leaves the Node intact. The scheduler performs the
 same bounded probe before assignment. No durable pending-output record is needed
 for this in-memory milestone. Focused/full Unity results are 43/43 and 597/597
-Edit plus 22/22 and 81/81 Play; manual acceptance remains pending.
+Edit plus 22/22 and 81/81 Play. The user confirmed all **8/8 authoritative
+manual acceptance groups**, including recovery after clearing blocked output
+capacity and complete F12 transaction diagnostics with a clean Console. Codex
+did not independently perform the manual checks or rerun Unity for this
+documentation-only closure.
 
 **Status:** B3C.1, B3C.2A, B3C.2B and B3C.3A are complete after recorded
 automated validation and user-confirmed manual acceptance. B3C.3A active
 variable-quantity Colony Node authority passed **25/25** authoritative Unity
-manual checks. B3C.3B is implemented with passing automated suites and awaits
-manual acceptance.
+manual checks. B3C.3B is **Complete** after passing automated suites and
+user-confirmed manual acceptance.
 
 **Prepared:** 15 October 2026
 
@@ -48,10 +52,11 @@ The transfer ID is distinct from Stack, job, ant and producer operation IDs;
 pickup operation IDs are distinct children; exclusive reservations become
 transfer-owned; committed carrier quantity stays in `AntInventory`; replay and
 recovery are explicit. Evaluation is bounded and route-cost-aware, and Storage
-never supplies Storage. Deterministic prepared
-general multi-cell placement remains deferred until a separately approved gate;
-B3C.3B has not activated variable whole-node output. The approved 0–100 Hauling
-capacity bands and existing shared skill-decay contract apply to carrier space.
+never supplies Storage. At B3C.2B closure, deterministic prepared multi-cell
+producer placement and variable whole-node output remained deferred. B3C.3B now
+implements that Extraction-specific output distribution as recorded above. The
+approved 0–100 Hauling capacity bands and existing shared skill-decay contract
+continue to apply to carrier space.
 
 **B3C.3A implementation amendment — 16 October 2026:** The established Colony
 registry is now the sole mutable Soil/Stone Node quantity owner. Generated Soil
@@ -515,10 +520,12 @@ did not independently perform it. XML evidence is retained under
 revision `1fab6541`, which is provenance rather than the final implementation
 commit.
 
-**B3C.3B status:** implemented; automated validation passed and manual acceptance
-is pending. The coordinator, whole-node depletion,
-complete physical output, overflow/pending-output recovery and coherent
-Node/terrain/stack commit described below remain future requirements.
+**B3C.3B status:** **Complete.** Automated validation passed and the user
+confirmed all 8/8 authoritative manual groups. The coordinator, whole-node
+depletion, complete physical output, deterministic multi-stack overflow,
+safe pre-commit blockage and coherent Node/terrain/stack commit described below
+are implemented for active Colony Soil/Stone Nodes. A post-depletion pending
+output ledger is deliberately not part of this milestone.
 
 **Systems affected:** `ExcavationWorldTransaction`, `ExcavationJobOrder`, Node
 registry, loose registry, authorised terrain mutation seam, runtime-cell change

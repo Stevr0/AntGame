@@ -2,6 +2,11 @@
 
 ## WV-B3C.3B committed mutation integration — 19 October 2026
 
+**Status: Complete.** The user confirmed all **8/8 authoritative manual
+acceptance groups** after the passing automated suites. Codex did not
+independently perform those checks or rerun Unity for this documentation-only
+closure.
+
 Whole-node Colony Extraction now publishes through the existing authority
 events: guarded Solid removal advances terrain/navigation state, explicit Node
 depletion advances Node and registry revisions, and each created or merged
@@ -30,8 +35,9 @@ this document controls the WV-B3 migration. WV-B3B implements the read-only
 foundation, WV-B3C.1 established the Node seam, WV-B3C.2 completed canonical
 stacks/Hauling transactions, and WV-B3C.3A now activates variable Colony Node
 quantity ownership. The resource-specific end-state is governed by
-[`ResourceAndNodeSystem.md`](ResourceAndNodeSystem.md). Whole-node Extraction,
-WV-B3D, WV-C1 and their later gameplay migrations remain unimplemented.
+[`ResourceAndNodeSystem.md`](ResourceAndNodeSystem.md). Whole-node Colony
+Soil/Stone Extraction is complete through WV-B3C.3B. WV-B3D, WV-C1 and their
+later gameplay migrations remain unimplemented.
 
 The migration must preserve the working resource chain:
 
@@ -568,9 +574,9 @@ Focused Unity evidence passes 11/11 Edit and 16/16 Play; complete suites pass
 The user confirmed all **25/25** authoritative manual Unity checks passed;
 Codex did not independently perform them. Evidence under `Logs/WV-B3C3A-*` was
 captured from the implementation working tree based on parent revision
-`1fab6541`, not from the parent commit itself. WV-B3C.3B must still
-coordinate whole-node depletion and complete physical output; B3C.3A does not
-provide that transaction.
+`1fab6541`, not from the parent commit itself. At that B3C.3A closure point,
+WV-B3C.3B still had to coordinate whole-node depletion and complete physical
+output; the completed integration is recorded at the top of this document.
 
 #### WV-B3C.1 implementation status — 16 October 2026
 
@@ -623,13 +629,13 @@ active variable Node authority is complete. Surface Nodes remain
 unchanged. WV-B3C.2B is complete after user-confirmed **30/30** authoritative
 manual Unity acceptance and the recorded green automated suites.
 
-Resource and Node v1.0 further requires variable quantities and complete
-whole-node output, including several deterministic stacks or recoverable pending
-output when one stack cannot hold the yield. The recommended implementation
-split completed B3C.2A definitions/canonical stacks and B3C.2B partial
-Hauling/transfer recovery. B3C.3A active variable Colony Nodes are complete;
-general output splitting and B3C.3B whole-node transaction cutover remain future
-work.
+Resource and Node v1.0 further required variable quantities and complete
+whole-node output, including several deterministic stacks when one stack could
+not hold the yield. The implementation split completed B3C.2A
+definitions/canonical stacks, B3C.2B partial Hauling/transfer recovery, B3C.3A
+active variable Colony Nodes and B3C.3B whole-node output. B3C.3B uses safe
+pre-commit blockage when the complete output cannot fit; it does not use a
+recoverable post-depletion pending-output record.
 
 ### WV-B3D candidate — Construction / Placement Integration
 

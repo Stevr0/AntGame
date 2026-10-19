@@ -2,6 +2,10 @@
 
 ## WV-B3C.3B runtime amendment — 19 October 2026
 
+**Status: Complete.** Automated validation passed and the user confirmed all
+**8/8 authoritative manual acceptance groups**. Codex did not independently
+perform the manual checks or rerun Unity for this documentation-only closure.
+
 The active Colony implementation now matches the whole-node rule for Soil and
 Stone. `ColonyResourceNodeRegistry` remains the only quantity/lifecycle owner;
 `ChunkedWorldData` owns Solid and Background; and
@@ -16,9 +20,8 @@ does not exist, the operation releases its reservations and leaves the Node and
 Solid intact. This safe-blocking policy is the implemented recovery guarantee;
 there is no post-depletion pending quantity in WV-B3C.3B.
 
-**Status:** Approved design; Colony whole-node Soil/Stone Extraction is
-implemented through WV-B3C.3B. Broader Surface and Placement migration remains
-incomplete.
+**Status:** Approved design; Colony whole-node Soil/Stone Extraction is complete
+through WV-B3C.3B. Broader Surface and Placement migration remains incomplete.
 
 **Approved:** 16 October 2026
 
@@ -266,11 +269,12 @@ the ID; cell reuse creates a new ID; scenario replacement creates a new context.
 
 The unified-cell snapshot reads this registry directly. Ant inventory,
 Construction staging and Material Storage remain distinct capacities and
-authorities. Current quantity-one Node Extraction and Construction behavior are
-preserved. B3C.2B partial Hauling and replay-safe canonical stack transactions
-are implemented. B3C.3A subsequently activated variable Node quantity authority;
-general multi-cell overflow/pending-output distribution and the B3C.3B
-transaction cutover remain unimplemented.
+authorities. Current quantity-one Node Extraction and Construction behavior were
+preserved at B3C.2A. B3C.2B subsequently completed partial Hauling and
+replay-safe canonical stack transactions. B3C.3A then activated variable Node
+quantity authority, and B3C.3B completed deterministic multi-cell output
+distribution through safe pre-commit capacity validation. No post-depletion
+pending-output ledger was introduced.
 
 The user confirmed all **23/23 authoritative manual checks passed** after the
 recorded automated suites passed. WV-B3C.2A is complete; this documentation-only
@@ -306,7 +310,10 @@ the full checklist during closure.
 The authoritative Hauling bands are 0–19 = 2 slots × 2 units, 20–39 = 3×2,
 40–59 = 3×3, 60–74 = 4×4, 75–89 = 5×5 and 90–100 = 6×6. The shared 0–100
 progression and decay rules are unchanged. Capacity loss retains all cargo,
-marks it over-capacity, blocks pickup and permits delivery/recovery.
+marks it over-capacity, blocks pickup and permits delivery/recovery. At B3C.2B
+closure, general deterministic multi-cell producer placement and variable Node
+output were still deferred; B3C.3B now implements that Extraction-specific
+distribution without changing Hauling ownership.
 
 ### WV-B3C.3A — complete
 
@@ -322,8 +329,9 @@ lifecycle. Direct Solid replacement/removal is guarded so it cannot discard
 quantity. Quantity-one fixture Extraction uses a narrow one-use compatibility
 token. Generated variable Nodes may be designated and inspected, but cannot be
 claimed or completed by the old one-unit transaction; no terrain, quantity,
-output or completion XP changes on rejection. Whole-node output and any required
-multi-stack distribution remain WV-B3C.3B.
+output or completion XP changes on rejection. That was the B3C.3A safety gate;
+WV-B3C.3B now supersedes it with the completed whole-node and multi-stack
+transaction recorded above.
 
 Automated evidence passes 11/11 focused Edit, 16/16 focused Play, 594/594 full
 Edit and 81/81 full Play, with no failures, skips or inconclusive results. The

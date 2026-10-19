@@ -1,12 +1,17 @@
 # Resource and Node System
 
-## WV-B3C.3B — implemented, manual acceptance pending
+## WV-B3C.3B — complete
 
 Colony Soil 8–12 and Stone 5–15 Nodes are interactive. Whole-node Extraction
 conserves the complete quantity into canonical stacks of at most 10, using
 exclusive prepared capacity and exact-once operation identity. If every unit
 cannot be placed, the Node and Solid remain intact. Surface resources and Water
 interaction remain deferred.
+
+Focused Edit/Play passed 43/43 and 22/22; complete Edit/Play passed 597/597 and
+81/81 with no failures, skips or inconclusive results. The user confirmed all
+**8/8 authoritative manual acceptance groups**; Codex did not independently
+perform those checks or rerun Unity for this documentation-only closure.
 
 ## WV-B3C.3A — complete
 
