@@ -1,15 +1,32 @@
 # Ant Colony Current Game State
 
+## ISO-WV-1 — Implemented; manual acceptance pending (19 October 2026)
+
+The live World View now has a temporary, opt-in 8 x 8 isometric terrain preview
+backed by one Unity Isometric Grid/Tilemap and the existing authoritative
+`SurfaceRuntimeCellRegionAdapter`. It renders actual cells `(29,29)` through
+`(36,36)` while the full 64 x 64 Surface, generation, navigation, movement,
+resources, jobs and Colony View remain unchanged. Legacy square rendering is
+still the default. Grass maps to `tile_101`, water maps to `tile_095`, and
+unsupported Backgrounds use a bright-magenta fallback. Resource Nodes remain
+separate. Until ISO-WV-2 projects ants, Surface ant renderers are hidden only
+while the isometric preview is selected; authoritative roots still simulate.
+
+Focused isometric and World View Edit regression passes **22/22** and the World
+View Play regression passes **6/6**. Direct visual/Console acceptance is still
+required, so the milestone is not complete. See
+`Documentation/IsometricWorldViewRuntimeSlice.md`.
+
 ## ISO-WV-0 — Implemented; manual acceptance pending (19 October 2026)
 
 An isolated 8 x 8 isometric calibration scene now verifies a 32 x 16 pixel
 logical footprint, 32 PPU full-canvas artwork, a shared (16,8)-pixel ground
 pivot, signed Surface projection/inverse conversion, representative flat,
 raised, water, rock and vegetation art, and deterministic static depth order.
-It does not participate in Bootstrap, gameplay scene flow or live World View
-rendering. Focused projection/import/scene tests pass 8/8 and the existing World
-View foundation regression passes 9/9. Unity visual inspection and a clean
-Console remain pending; ISO-WV-1 has not started. See
+The calibration scene still does not participate in Bootstrap or gameplay scene
+flow. Its contract is now consumed by the separately gated ISO-WV-1 renderer.
+Focused projection/import/scene tests pass 8/8 and the existing World View
+foundation regression passes 9/9. Its own visual inspection remains pending. See
 `Documentation/IsometricWorldViewCalibration.md`.
 
 ## WV-B3D.3B Material Storage Construction Completion Cutover — Implemented (19 October 2026)

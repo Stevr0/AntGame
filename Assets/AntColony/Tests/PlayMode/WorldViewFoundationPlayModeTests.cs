@@ -5,6 +5,7 @@ using AntColony.Development;
 using AntColony.Navigation;
 using AntColony.PlayerUI;
 using AntColony.World;
+using AntColony.WorldPresentation;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -131,6 +132,54 @@ namespace AntColony.Tests.PlayMode
             Assert.That(host.MaterialDrops.Count, Is.EqualTo(dropCount));
             Assert.That(views.Residencies.Count, Is.EqualTo(residentCount));
             Assert.That(host.SimulationClock.IsRunning, Is.False);
+        }
+
+        [UnityTest]
+        public IEnumerator IsometricTerrainTogglePreservesAuthorityAndViewIsolation()
+        {
+            yield return SceneManager.LoadSceneAsync("AntGameDevelopment",
+                LoadSceneMode.Single);
+            yield return null;
+            AntGameDevelopmentWorldHost host =
+                Object.FindFirstObjectByType<AntGameDevelopmentWorldHost>();
+            TwoViewWorldCoordinator views = host.TwoViewWorld;
+            SurfaceWorldData authority = host.SurfaceWorld;
+            long publication = host.RuntimeCells.PublicationRevision;
+            int residents = views.Residencies.Count;
+            int surfaceMask = 1 << TwoViewWorldCoordinator.SurfacePresentationLayer;
+
+            Assert.That(views.SurfaceTerrainMode,
+                Is.EqualTo(SurfaceTerrainRenderMode.LegacySquare));
+            Assert.That(views.LegacySurfacePresentation.activeSelf, Is.True);
+            Assert.That(views.IsometricSurfacePresentation.activeSelf, Is.False);
+
+            Assert.That(views.SetSurfaceTerrainRenderMode(
+                SurfaceTerrainRenderMode.IsometricPreview), Is.True);
+            Assert.That(views.LegacySurfacePresentation.activeSelf, Is.False);
+            Assert.That(views.IsometricSurfacePresentation.activeSelf, Is.True);
+            Assert.That(views.SurfaceIsometricRenderer.RenderedCellCount,
+                Is.EqualTo(64));
+            Assert.That(views.SurfaceCamera.orthographic, Is.True);
+            Assert.That(views.SurfaceCamera.orthographicSize, Is.EqualTo(4.5f));
+            Assert.That(views.SurfaceCamera.cullingMask, Is.EqualTo(surfaceMask));
+            Assert.That(views.ColonyCamera.cullingMask & surfaceMask, Is.Zero);
+
+            views.SwitchView(DevelopmentWorldView.Surface);
+            yield return null;
+            views.SwitchView(DevelopmentWorldView.Colony);
+
+            Assert.That(host.SurfaceWorld, Is.SameAs(authority));
+            Assert.That(views.SurfaceWorld, Is.SameAs(authority));
+            Assert.That(host.RuntimeCells.PublicationRevision, Is.EqualTo(publication));
+            Assert.That(views.Residencies.Count, Is.EqualTo(residents));
+            Assert.That(views.SurfaceTerrainMode,
+                Is.EqualTo(SurfaceTerrainRenderMode.IsometricPreview));
+
+            Assert.That(views.SetSurfaceTerrainRenderMode(
+                SurfaceTerrainRenderMode.LegacySquare), Is.True);
+            Assert.That(views.LegacySurfacePresentation.activeSelf, Is.True);
+            Assert.That(views.IsometricSurfacePresentation.activeSelf, Is.False);
+            Assert.That(views.SurfaceCamera.orthographicSize, Is.EqualTo(36f));
         }
 
         [UnityTest]

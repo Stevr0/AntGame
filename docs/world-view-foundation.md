@@ -1,5 +1,15 @@
 # World View Foundation
 
+## ISO-WV-1 presentation slice
+
+The World View coordinator now owns an optional presentation-only 8 x 8
+isometric background Tilemap while Legacy square rendering remains the default.
+Both modes read the same 64 x 64 Surface authority. The preview maps only Grass
+and Water, uses a magenta unsupported-ID fallback, keeps Resource Nodes out of
+terrain, and preserves layer-9 Surface/Colony culling. Surface ant renderers are
+temporarily hidden because isometric ant projection is deferred. See
+[Isometric Runtime Terrain Slice](isometric-world-view-runtime-slice.md).
+
 ## Resource badge isolation
 
 Quantity badges are region-specific world presentation. Colony loose stacks,

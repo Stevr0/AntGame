@@ -4,12 +4,14 @@ using AntColony.Commands;
 using AntColony.Navigation;
 using AntColony.PlayerUI;
 using AntColony.World;
+using AntColony.WorldPresentation;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
 namespace AntColony.Development
 {
     public enum DevelopmentWorldView { Colony, Surface }
+    public enum SurfaceTerrainRenderMode { LegacySquare, IsometricPreview }
 
     /// <summary>
     /// WV-B1 composition root. Both regions and all ant records stay loaded; this
@@ -40,8 +42,14 @@ namespace AntColony.Development
             surfaceMotors = new();
         private readonly Dictionary<SelectableGridAnt, Dictionary<GameObject, int>>
             originalAntPresentationLayers = new();
+        private readonly Dictionary<Renderer, bool> originalAntRendererEnabled = new();
         private EntranceTransition activeTransition;
         private Transform surfacePresentationRoot;
+        private GameObject legacySurfacePresentation;
+        private GameObject isometricSurfacePresentation;
+        private SurfaceIsometricRenderer surfaceIsometricRenderer;
+        [SerializeField] private SurfaceTerrainRenderMode surfaceTerrainRenderMode =
+            SurfaceTerrainRenderMode.LegacySquare;
         private Sprite temporarySprite;
         private string status = "WV-B1 two-view foundation loading.";
         private string seedText = "2203";
@@ -63,6 +71,12 @@ namespace AntColony.Development
         public Camera ColonyCamera => colonyCamera;
         public Camera SurfaceCamera => surfaceCamera;
         public Transform SurfacePresentationRoot => surfacePresentationRoot;
+        public GameObject LegacySurfacePresentation => legacySurfacePresentation;
+        public GameObject IsometricSurfacePresentation => isometricSurfacePresentation;
+        public SurfaceIsometricRenderer SurfaceIsometricRenderer =>
+            surfaceIsometricRenderer;
+        public SurfaceTerrainRenderMode SurfaceTerrainMode =>
+            surfaceTerrainRenderMode;
         public string Status => status;
 
         private void Start()
@@ -73,6 +87,7 @@ namespace AntColony.Development
             { enabled = false; return; }
             BuildSurfaceWorld();
             BuildCameras();
+            ApplySurfaceTerrainRenderMode();
             InitializeAntResidencies();
             SwitchView(DevelopmentWorldView.Colony);
             status = "Colony View active. Surface remains loaded and simulated.";
@@ -83,12 +98,15 @@ namespace AntColony.Development
         public void RebuildScenario()
         {
             activeTransition = null;
+            RestoreOriginalAntPresentation();
             surfaceMotors.Clear();
             originalAntPresentationLayers.Clear();
+            originalAntRendererEnabled.Clear();
             if (surfacePresentationRoot != null) Destroy(surfacePresentationRoot.gameObject);
             if (surfaceCamera != null) Destroy(surfaceCamera.gameObject);
             BuildSurfaceWorld();
             BuildCameras();
+            ApplySurfaceTerrainRenderMode();
             InitializeAntResidencies();
             SwitchView(DevelopmentWorldView.Colony);
             seedText = host.WorldSeed.ToString();
@@ -129,6 +147,40 @@ namespace AntColony.Development
             status = colonyActive
                 ? "Colony View active."
                 : "World View active: left-click an ant; right-click open terrain to move.";
+        }
+
+        /// <summary>
+        /// Switches presentation only. The 64x64 Surface authority, navigation,
+        /// ant transforms and simulation remain unchanged in both modes.
+        /// </summary>
+        public bool SetSurfaceTerrainRenderMode(SurfaceTerrainRenderMode mode)
+        {
+            if (legacySurfacePresentation == null ||
+                isometricSurfacePresentation == null) return false;
+            surfaceTerrainRenderMode = mode;
+            ApplySurfaceTerrainRenderMode();
+            status = mode == SurfaceTerrainRenderMode.LegacySquare
+                ? "Legacy square Surface terrain active."
+                : "ISO-WV-1 8x8 authoritative terrain preview active; ant visuals hidden.";
+            return true;
+        }
+
+        private void ApplySurfaceTerrainRenderMode()
+        {
+            bool isometric = surfaceTerrainRenderMode ==
+                SurfaceTerrainRenderMode.IsometricPreview;
+            legacySurfacePresentation?.SetActive(!isometric);
+            isometricSurfacePresentation?.SetActive(isometric);
+
+            if (surfaceCamera != null)
+            {
+                surfaceCamera.transform.position = new Vector3(
+                    SurfaceWorldOrigin.x + 32f,
+                    SurfaceWorldOrigin.y + 32f, -10f);
+                surfaceCamera.orthographicSize = isometric ? 4.5f : 36f;
+            }
+
+            RefreshSurfaceAntVisibility();
         }
 
         public bool TryUseEntrance(SelectableGridAnt ant)
@@ -369,10 +421,39 @@ namespace AntColony.Development
                 GameObject visual = renderer.gameObject;
                 if (!originalLayers.ContainsKey(visual))
                     originalLayers.Add(visual, visual.layer);
+                if (!originalAntRendererEnabled.ContainsKey(renderer))
+                    originalAntRendererEnabled.Add(renderer, renderer.enabled);
                 visual.layer = surface
                     ? SurfacePresentationLayer
                     : originalLayers[visual];
+                renderer.enabled = surface && surfaceTerrainRenderMode ==
+                    SurfaceTerrainRenderMode.IsometricPreview
+                        ? false
+                        : originalAntRendererEnabled[renderer];
             }
+        }
+
+        private void RefreshSurfaceAntVisibility()
+        {
+            if (residencies == null || host?.SelectionController == null) return;
+            foreach (SelectableGridAnt ant in host.SelectionController.SelectableAnts)
+            {
+                if (ant?.Record == null) continue;
+                bool surface = residencies.IsInRegion(
+                    ant.Record.Id, AntRegionIds.Surface);
+                SetAntPresentationRegion(ant, surface);
+            }
+        }
+
+        private void RestoreOriginalAntPresentation()
+        {
+            foreach (KeyValuePair<Renderer, bool> pair in originalAntRendererEnabled)
+                if (pair.Key != null) pair.Key.enabled = pair.Value;
+
+            foreach (KeyValuePair<SelectableGridAnt, Dictionary<GameObject, int>> ant
+                     in originalAntPresentationLayers)
+                foreach (KeyValuePair<GameObject, int> visual in ant.Value)
+                    if (visual.Key != null) visual.Key.layer = visual.Value;
         }
 
         private SelectableGridAnt FindAnt(AntColony.Ants.AntId antId)
@@ -431,14 +512,67 @@ namespace AntColony.Development
             root.layer = SurfacePresentationLayer;
             root.transform.SetParent(transform, false);
             surfacePresentationRoot = root.transform;
+
+            legacySurfacePresentation = new GameObject("Legacy Square Presentation");
+            legacySurfacePresentation.layer = SurfacePresentationLayer;
+            legacySurfacePresentation.transform.SetParent(root.transform, false);
             temporarySprite = CreateTemporarySprite();
-            CreateVisual(root.transform, "Surface Terrain",
+            BuildLegacySurfacePresentation(legacySurfacePresentation.transform);
+
+            isometricSurfacePresentation = new GameObject(
+                "ISO-WV-1 Isometric 8x8 Presentation",
+                typeof(SurfaceIsometricProjection),
+                typeof(SurfaceIsometricRenderer));
+            isometricSurfacePresentation.layer = SurfacePresentationLayer;
+            isometricSurfacePresentation.transform.SetParent(root.transform, false);
+            SurfaceIsometricProjection projection =
+                isometricSurfacePresentation.GetComponent<SurfaceIsometricProjection>();
+            var windowMinimum = new SurfaceCell(29, 29);
+            float centreCoordinate = SurfaceIsometricRenderer.PreviewSize * 0.5f - 0.5f;
+            float centreX = windowMinimum.X + centreCoordinate;
+            float centreY = windowMinimum.Y + centreCoordinate;
+            Vector2 centreOffset = new(
+                (centreX - centreY) * 0.5f,
+                -(centreX + centreY) * 0.25f);
+            Vector2 previewCentre = SurfaceWorldOrigin + new Vector2(32f, 32f);
+            projection.Configure(
+                previewCentre - centreOffset,
+                SurfaceIsometricProjection.DefaultTileWidthPixels,
+                SurfaceIsometricProjection.DefaultTileHeightPixels,
+                SurfaceIsometricProjection.DefaultPixelsPerUnit);
+
+            surfaceIsometricRenderer =
+                isometricSurfacePresentation.GetComponent<SurfaceIsometricRenderer>();
+            SurfaceIsometricVisualCatalog visualCatalog =
+                Resources.Load<SurfaceIsometricVisualCatalog>(
+                    "SurfaceIsometricVisualCatalog");
+            surfaceIsometricRenderer.Configure(
+                host.RuntimeCells?.Current?.Surface,
+                projection,
+                visualCatalog,
+                SurfacePresentationLayer);
+            SurfaceIsometricRenderResult isometricResult =
+                surfaceIsometricRenderer.RenderWindow(windowMinimum);
+            if (!isometricResult.Succeeded)
+                Debug.LogError(
+                    $"ISO-WV-1 preview could not render: {isometricResult.Status} " +
+                    $"at {isometricResult.ProblemCell}.", this);
+
+            legacySurfacePresentation.SetActive(surfaceTerrainRenderMode ==
+                SurfaceTerrainRenderMode.LegacySquare);
+            isometricSurfacePresentation.SetActive(surfaceTerrainRenderMode ==
+                SurfaceTerrainRenderMode.IsometricPreview);
+        }
+
+        private void BuildLegacySurfacePresentation(Transform root)
+        {
+            CreateVisual(root, "Surface Terrain",
                 SurfaceWorldOrigin + new Vector2(32f, 32f), new Vector2(64f, 64f),
                 new Color32(108, 151, 91, 255), -20);
             if (host.ProceduralWorld == null)
             {
                 foreach (SurfaceCell obstacle in surfaceWorld.Obstacles)
-                    CreateVisual(root.transform, $"Obstacle {obstacle}",
+                    CreateVisual(root, $"Obstacle {obstacle}",
                         SurfaceWorldOrigin + new Vector2(obstacle.X + 0.5f,
                             obstacle.Y + 0.5f), Vector2.one,
                         new Color32(80, 70, 61, 255), -10);
@@ -459,12 +593,12 @@ namespace AntColony.Development
                         colour = new Color32(126, 82, 46, 255);
                     else if (cell.Node == null) continue;
                     else colour = new Color32(67, 90, 54, 255);
-                    CreateVisual(root.transform, $"Generated {x},{y}",
+                    CreateVisual(root, $"Generated {x},{y}",
                         SurfaceWorldOrigin + new Vector2(x + 0.5f, y + 0.5f),
                         Vector2.one, colour, -10);
                 }
             }
-            CreateVisual(root.transform, "Founding Nest Entrance",
+            CreateVisual(root, "Founding Nest Entrance",
                 SurfaceWorldOrigin + new Vector2(ActiveSurfaceArrival.X + 0.5f,
                     ActiveSurfaceArrival.Y + 0.5f), new Vector2(2f, 2f),
                 new Color32(38, 26, 20, 255), -5);
@@ -496,7 +630,7 @@ namespace AntColony.Development
         {
             if (host == null) return;
             var controlsRect = new Rect(
-                Screen.width * 0.5f - 300f, 8f, 600f, 116f);
+                Screen.width * 0.5f - 300f, 8f, 600f, 144f);
             host.SelectionController.SetAdditionalUiBlocker(controlsRect);
             GUILayout.BeginArea(controlsRect,
                 GUI.skin.box);
@@ -520,6 +654,18 @@ namespace AntColony.Development
             if (GUILayout.Button("Restore Fixture", GUILayout.Height(24f)))
                 host.TryStartScenario(GeneratedWorldScenario.DevelopmentFixture,
                     host.WorldSeed, out status);
+            GUILayout.EndHorizontal();
+            GUILayout.BeginHorizontal();
+            GUI.enabled = surfaceTerrainRenderMode !=
+                SurfaceTerrainRenderMode.LegacySquare;
+            if (GUILayout.Button("Legacy Surface", GUILayout.Height(24f)))
+                SetSurfaceTerrainRenderMode(SurfaceTerrainRenderMode.LegacySquare);
+            GUI.enabled = surfaceTerrainRenderMode !=
+                SurfaceTerrainRenderMode.IsometricPreview;
+            if (GUILayout.Button("Isometric 8x8 Preview", GUILayout.Height(24f)))
+                SetSurfaceTerrainRenderMode(
+                    SurfaceTerrainRenderMode.IsometricPreview);
+            GUI.enabled = true;
             GUILayout.EndHorizontal();
             GUILayout.Label(status);
             GUILayout.EndArea();

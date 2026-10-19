@@ -127,5 +127,7 @@ Results are recorded under `Logs/ISO-WV-0-EditMode.xml` and
   later approved milestones.
 - Pixel sharpness still depends on final camera resolution and integer pixel
   scaling policy. ISO-WV-0 does not change the live camera.
-- ISO-WV-1 is not started or authorised by this implementation.
+- ISO-WV-0 itself did not authorise runtime integration. ISO-WV-1 was later
+  approved and now consumes this projection contract; see
+  [Isometric Runtime Terrain Slice](isometric-world-view-runtime-slice.md).
 
