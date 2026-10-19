@@ -1,5 +1,14 @@
 # Colony Construction and Rooms
 
+## WV-B3D.1 Placement migration specification
+
+**Documentation complete; runtime migration not started.** The
+[Placement Migration](placement-migration.md) specification defines one-cell
+Placement identity, footprint occupancy, exact-once Construction completion,
+function-by-function authority transfer, dismantling boundaries and legacy
+retirement proof. Existing functional Background gameplay remains authoritative
+until its named cutover is implemented and accepted.
+
 ## Extracted material flow
 
 WV-B3C.3B does not change Construction authority. Whole-node Extraction creates

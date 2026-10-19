@@ -1,5 +1,14 @@
 # Brood and Reproduction
 
+## WV-B3D.1 Nursery boundary
+
+Nursery currently has a functional Background definition, Construction recipe
+and declared capacity one, but no brood runtime. Its later Placement migration
+must preserve that data capacity without inventing eggs, larvae, feeding or
+reassignment. An unenclosed Nursery retains base use; future room quality may
+modify efficiency, never base capacity. See
+[Placement Migration](placement-migration.md).
+
 Brood and reproduction are approved design, not implemented gameplay.
 
 ## Founding sequence

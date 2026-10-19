@@ -1,5 +1,15 @@
 # Technical Architecture
 
+## WV-B3D.1 Placement authority plan
+
+The [Placement Migration](placement-migration.md) plan preserves current
+terrain, Node, ground-stack, inventory, staging, Hauling and navigation owners.
+A future Placement registry owns only completed identity, footprint, lifecycle
+and revision; focused function ledgers own contents/reservations by Placement
+ID. Central occupancy fails closed on obstructing Nodes, incompatible loose
+stacks, Placements, sites or unknown legacy detail. Legacy and replacement
+function may never be active together. `WV-B3B-LIM-001` remains active.
+
 ## WV-B3C.3B Extraction transaction
 
 **Complete.** Focused Edit/Play passed 43/43 and 22/22; complete Edit/Play passed

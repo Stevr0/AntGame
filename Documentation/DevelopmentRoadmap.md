@@ -1,5 +1,21 @@
 # Ant Colony Development Roadmap
 
+## WV-B3D.1 — Complete documentation gate (19 October 2026)
+
+The Construction/Placement migration now has an implementation-ready technical
+specification grounded in the existing Background, Construction, staging,
+Hauling, Storage, survival, runtime-cell and scenario owners. No Unity runtime
+code or asset was changed. Candidate implementation is split into a one-cell
+registry/read-only projection foundation, two Material Storage cutover slices,
+separate Food and Water slices, Sleeping, Nursery data capacity, Prepared
+Surface and final legacy retirement. Every slice requires separate approval.
+
+The next recommended milestone is **WV-B3D.2 Placement Registry Foundation**:
+definitions, scenario-local identity, one-cell footprint occupancy, revisions,
+immutable snapshots, central compatibility and read-only legacy projections.
+It must not move function ownership. Do not begin WV-B3D.2, WV-C1 or another
+runtime milestone without explicit approval.
+
 ## WV-B3C.3B — Complete (19 October 2026)
 
 Whole-node Colony Soil/Stone Extraction is implemented through the existing Node,
@@ -167,8 +183,10 @@ The companion
 maps every current functional Background and construction recipe to the target
 Placement model. It preserves the staged workflow and recommends Material
 Storage as the first WV-B3D migration, followed by survival functions and
-Nursery. Prepared Surface needs a representation decision; Doors and Refining
-Stations remain new future definitions. WV-B3D has not begun.
+Nursery. The WV-B3D.1 specification now recommends Prepared Surface as an
+exclusive non-obstructing Placement subject to explicit approval; Doors and
+Refining Stations remain new future definitions. WV-B3D runtime implementation
+has not begun.
 
 ## WV-B3B — Complete (15 October 2026)
 

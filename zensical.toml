@@ -24,6 +24,7 @@ nav = [
   { "Excavation and Terrain" = "excavation-terrain.md" },
   { "Art Foundation" = "art-foundation.md" },
   { "Colony Construction and Rooms" = "colony-construction-rooms.md" },
+  { "Placement Migration" = "placement-migration.md" },
   { "Food, Water and Survival" = "food-water-survival.md" },
   { "Brood and Reproduction" = "brood-reproduction.md" },
   { "Ant AI and Job Management" = "ant-ai-job-management.md" },

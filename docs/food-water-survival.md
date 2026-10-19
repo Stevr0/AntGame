@@ -1,5 +1,14 @@
 # Food, Water and Survival
 
+## WV-B3D.1 Placement boundary
+
+Food/Water quantities and reservations still belong to
+`SurvivalInteractionWorld`; Sleeping positions/reservations do too. WV-B3D.1
+specifies later Placement-owned ledgers without implementing them. Food and
+Sleeping follow Material Storage; Water waits for the Water Droplet/carrier and
+capacity contract. Natural rest remains separate from constructed Sleeping.
+See [Placement Migration](placement-migration.md).
+
 ## Finite Water Node amendment
 
 Water is a finite Resource Node, including when represented as a Solid. Solid

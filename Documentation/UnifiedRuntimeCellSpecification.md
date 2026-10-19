@@ -1,5 +1,17 @@
 # Unified Runtime Cell Architecture and Migration Specification
 
+## WV-B3D.1 Placement migration clarification — 19 October 2026
+
+The detailed implementation sequence and authority-transfer rules are in
+[`PlacementMigrationTechnicalSpecification.md`](PlacementMigrationTechnicalSpecification.md).
+WV-B3D.1 changes no runtime writer. A future scenario-local Placement registry
+will own completed Placement identity, footprint, lifecycle and revision while
+function ledgers remain single-owned by Placement ID. The Colony adapter will
+observe that registry; it must never keep a legacy functional Background and a
+replacement Placement active for the same function/cell. Initial implementation
+is one-cell only, but the anchor/footprint contract supports future multi-cell
+identities. `WV-B3B-LIM-001` remains active.
+
 ## WV-B3C.3B committed mutation integration — 19 October 2026
 
 **Status: Complete.** The user confirmed all **8/8 authoritative manual

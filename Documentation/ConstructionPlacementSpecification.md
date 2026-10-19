@@ -11,6 +11,14 @@ improvements, Construction Sites and completed Placement instances. Existing
 functional Background behavior remains compatibility implementation until an
 explicit WV-B3D cutover is implemented and accepted.
 
+**WV-B3D.1 technical amendment — 19 October 2026:**
+[`PlacementMigrationTechnicalSpecification.md`](PlacementMigrationTechnicalSpecification.md)
+provides the implementation-level registry, identity, footprint, completion,
+function-by-function cutover, recovery, testing and legacy-retirement contract.
+This approved documentation gate changes no runtime authority. Its smallest
+recommended implementation successor is WV-B3D.2 one-cell Placement Registry
+Foundation with read-only legacy projections only.
+
 ### Quantity display compatibility amendment
 
 Until WV-B3D, each visible legacy Material Storage Background cell represents
@@ -231,7 +239,8 @@ full regression proof.
 5. Prepared Surface only after its representation decision.
 6. New Doors and Refining Stations in separately approved feature milestones.
 
-This ordering is planning guidance only. WV-B3D has not begun.
+This ordering is planning guidance only. WV-B3D.1 documentation is complete;
+no runtime Placement implementation has begun.
 
 ## 9. Remaining approvals
 

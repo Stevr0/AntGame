@@ -1,5 +1,14 @@
 # Unified Runtime Cells
 
+## WV-B3D.1 Placement migration contract
+
+The [Placement Migration](placement-migration.md) documentation gate is
+complete. A future scenario-local registry will own Placement identity,
+footprint, lifecycle and revision; function ledgers will be keyed by Placement
+ID without duplicating Storage or reservation state. Initial implementation is
+one-cell only and read-only legacy projections come before any authority
+cutover. No Placement runtime was added by WV-B3D.1.
+
 ## WV-B3C.3B committed changes
 
 **Complete.** Automated validation passed and the user confirmed all **8/8

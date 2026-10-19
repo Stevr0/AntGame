@@ -1,5 +1,24 @@
 # Ant Colony Current Game State
 
+## WV-B3D.1 Construction and Placement foundation — Documentation Complete (19 October 2026)
+
+[`PlacementMigrationTechnicalSpecification.md`](PlacementMigrationTechnicalSpecification.md)
+records the read-only implementation audit and controlled migration contract.
+The current runtime still completes Construction by replacing a Background ID;
+`SurvivalInteractionWorld` owns Food/Water quantities and Sleeping reservations,
+`MaterialStorageWorld` owns material slots/contents/reservations, and runtime
+cells expose only compatibility-projected Placements. Nursery has declared
+one-unit data capacity but no brood runtime. Door, Refining, room scoring and
+dismantling are not implemented.
+
+The target keeps the natural Background and creates one stable completed
+Placement identity over it. Site staging remains separate, Hauling remains the
+only normal transport authority, and function ownership migrates one type at a
+time with dual-function protection. Existing six recipes remain unchanged: five
+cost 1 Soil, Water Storage costs 1 Stone, and all require four base simulation
+hours. No Unity tests were run for this documentation-only gate. WV-B3D.2 is the
+recommended next slice but is not started or authorised.
+
 ## WV-B3C.3B whole-node Extraction — Complete (19 October 2026)
 
 Generated Colony Soil and Stone Nodes are now interactive whole-node Extraction
@@ -242,17 +261,14 @@ rules are retained: loose stacks and non-empty Storage show committed quantity
 continuously; Nodes show quantity only when designated; reservations are never
 presented as moved material.
 
-At WV-B3C.2B closure, production Node yields remained quantity-one. WV-B3C.3A
-subsequently activated generated Colony variable quantities. Surface Nodes remain
-`GenerationOnly`, and partial Node Extraction, general multi-cell overflow
-distribution and Placement migration remain unimplemented. `WV-B3B-LIM-001`
-remains active. Multi-destination routes, Storage reorganisation, Surface
-Extraction, Placement migration and automatic deceased-ant cargo recovery
-remain deferred. Exact-once
-whole-node Extraction of variable yields, general multi-cell output
-distribution, Surface resource interactions, Foraging/Fog of War, Refining,
-persistence and unloaded-region simulation are also unimplemented. These
-exclusions do not block the accepted WV-B3C.2B milestone.
+At WV-B3C.2B closure, production Node yields remained quantity-one and general
+multi-cell output was unimplemented. WV-B3C.3A and B3C.3B subsequently completed
+generated Colony variable quantities and whole-node output distribution. Surface
+Nodes remain `GenerationOnly`; partial Node Extraction, Placement runtime
+migration, multi-destination routes, Storage reorganisation, Surface Extraction,
+automatic deceased-ant cargo recovery, Foraging/Fog of War, Refining,
+persistence and unloaded-region simulation remain deferred. `WV-B3B-LIM-001`
+remains active. These exclusions do not block the accepted WV-B3C.2B milestone.
 
 ### WV-B3C.2B automated verification
 

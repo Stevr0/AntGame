@@ -1,5 +1,14 @@
 # Development Roadmap
 
+## WV-B3D.1 — documentation complete
+
+The Construction/Placement migration has an implementation-ready authority,
+identity, footprint, completion, recovery, testing and legacy-retirement plan.
+No runtime code or Unity asset changed. The smallest recommended next slice is
+**WV-B3D.2 Placement Registry Foundation** with one-cell definitions, identity,
+revisions, compatibility and read-only legacy projections only. It is not
+started or authorised. See [Placement Migration](placement-migration.md).
+
 ## WV-B3C.3B — complete
 
 Whole-node Colony Soil/Stone Extraction and deterministic multi-stack physical

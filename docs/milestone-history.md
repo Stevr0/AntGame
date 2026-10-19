@@ -1,5 +1,15 @@
 # Milestone History
 
+## 19 October 2026 — WV-B3D.1 Placement Migration Specification
+
+**Documentation complete; runtime migration not started.** Read-only inspection
+confirmed the active functional-Background, Construction, Storage, survival,
+runtime-cell and scenario owners and the six existing 1-unit/4-hour recipes.
+The new technical specification defines Placement identity/footprints,
+occupancy, exact-once completion, per-function migration, recovery, tests and
+legacy retirement. The next recommendation is WV-B3D.2 registry/read-only
+foundation only, pending explicit approval.
+
 ## 19 October 2026 — WV-B3C.3B Whole-Node Extraction — Complete
 
 **WV-B3C.3B — Complete.** Generated

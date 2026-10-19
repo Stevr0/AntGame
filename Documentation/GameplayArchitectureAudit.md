@@ -1,5 +1,17 @@
 # Gameplay Architecture Audit
 
+## WV-B3D.1 placement follow-up — 19 October 2026
+
+The audit's functional-Background migration recommendation is now specified in
+[`PlacementMigrationTechnicalSpecification.md`](PlacementMigrationTechnicalSpecification.md).
+Read-only inspection reconfirmed that no legacy Placement-related class is safe
+to remove: functional Background assets are serialized in the development scene;
+Construction recipes and completion target Background definitions;
+`SurvivalInteractionWorld` and `MaterialStorageWorld` own live quantities and
+reservations; controller, HUD, autonomous work and extensive Edit/Play tests use
+those APIs. Removal requires a function-by-function accepted authority cutover,
+GUID/serialized-reference proof and a separate reversible WV-B3D.7 cleanup.
+
 **Audit date:** 15 October 2026
 
 **Repository revision:** `b280744c15a708e1afedcb64faea6d882d000d4f`
@@ -578,7 +590,7 @@ Missing high-value tests:
 | P0 | Complete the documented seed-2203 WV-B2B checklist and WV-B1 view/graphics checks. | Establishes whether the current generated bootstrap is acceptable. No code scope unless a defect appears. | Interactive Unity; risk is observational only. | WV-B2B acceptance | Existing approval; user must perform/confirm manual acceptance. |
 | P0 | Preserve open defect/regression IDs until evidence is attached and reviewed. | Keeps status honest. | Obtain XML or rerun targeted/full suite only if needed. | WV-B2B closure | User approval needed to close. |
 | P1 | Replace first-32 pre-reachability truncation with bounded fair/pageable evaluation or a maintained eligible index. | Prevents deterministic job starvation without changing priority rules. | Characterization and >32 regression; scheduler risk medium. | Post-WV-B2B foundation | Yes, runtime change. |
-| P1 | Complete WV-B3C.3B whole-node Extraction after the implemented B3C.2 stack/Hauling and B3C.3A active Node authorities. | Enables exact Node depletion and complete physical output while preserving world/navigation. | Must retain generation IDs, guarded terrain writes, current authorities/tests and staged gates; risk high. | WV-B3C.3B | Separate approval required. |
+| Complete | WV-B3C.3B whole-node Colony Soil/Stone Extraction. | Exact Node depletion and complete physical output now preserve world/navigation ownership. | Retained generation IDs, guarded terrain writes, authorities and staged gates. | WV-B3C.3B | Automated and user manual acceptance complete. |
 | P1 | Introduce typed `RegionDestination` at the job/resource boundary before cross-region autonomy. | Prevents coordinate collision and duplicate schedulers. | WV-B1 residency/local navigators; risk medium. | Before WV-D | Yes. |
 | P1 | Migrate functional Backgrounds to placements, one function at a time, with contents/reservation rollback. | Aligns natural Background permanence and generated construction. | Node/occupancy validation and full construction/survival regressions; risk high. | Before generated-scenario Construction | Yes. |
 | P1 | Define reservation reconciliation for inactive/deceased ants and future load. | Prevents stranded jobs/resources. | Death/persistence decisions; risk medium. | Before death/save gameplay | Yes. |
@@ -598,19 +610,23 @@ Missing high-value tests:
    starvation regression before scheduler work.
 3. **Small scheduler correction:** make same-priority enumeration fair/complete
    without changing 1–4/Disabled or path-cost ordering.
-4. **WV-C1 data foundation:** introduce mutable typed finite source/node state and
-   persistent knowledge records; preserve both region adapters.
-5. **Bounded founding survival:** direct finite source interaction and natural
+4. **WV-B3D.2 Placement foundation:** add one-cell definitions, identity,
+   footprint occupancy, revisions and read-only legacy projections only.
+5. **Material Storage migration:** move its authority and then Construction
+   completion in separate slices, retaining exact contents/reservations.
+6. **Remaining Placement slices:** Food, Water after its liquid contract,
+   Sleeping, Nursery data capacity and Prepared Surface after representation
+   approval; retire each legacy path only after acceptance.
+7. **WV-C1 data foundation:** introduce mutable typed finite Surface source/node
+   state and persistent knowledge records; preserve both region adapters.
+8. **Bounded founding survival:** direct finite source interaction and natural
    rest, with explicit water ownership. Stop before broad Foraging AI.
-6. **Placement migration:** move one functional Background type at a time,
-   starting with Material Storage because it exercises contents and
-   reservations; keep compatibility reads during migration.
-7. **Foraging slices:** physical visibility, discovery, sensing, then trails.
-8. **Refining foundation:** haul destination abstraction, one workstation, one
+9. **Foraging slices:** physical visibility, discovery, sensing, then trails.
+10. **Refining foundation:** haul destination abstraction, one workstation, one
    recipe/bill, exact product output; then expand bill modes.
-9. **Persistence/death recovery:** reconcile every reservation and carried item
+11. **Persistence/death recovery:** reconcile every reservation and carried item
    before permanent death or save/load becomes player-facing.
-10. **Legacy retirement:** remove adapters only after runtime, tests, scenes,
+12. **Legacy retirement:** remove adapters only after runtime, tests, scenes,
     prefabs and manuals no longer depend on them.
 
 ## 17. Unresolved design decisions requiring approval

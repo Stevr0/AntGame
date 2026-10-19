@@ -1,6 +1,19 @@
 # ANT COLONY
 
-## WV-B3C.3B whole-node Extraction — implemented 19 October 2026
+## WV-B3D.1 Placement migration technical specification — 19 October 2026
+
+**Documentation complete; no runtime migration implemented.** The authoritative
+implementation plan is
+[`PlacementMigrationTechnicalSpecification.md`](PlacementMigrationTechnicalSpecification.md).
+It preserves one natural Background plus optional Node, Placement and loose
+stack; a completed Placement—not its Background—owns function and capacity.
+The first implementation recommendation is the one-cell Placement registry,
+identity, footprint/revision and read-only legacy-projection foundation only.
+Material Storage follows in separately approved authority and Construction
+cutover slices. Door, rooms, Refining, dismantling, brood gameplay, persistence
+and Surface Placements remain deferred.
+
+## WV-B3C.3B whole-node Extraction — complete 19 October 2026
 
 Active Colony Soil and Stone Nodes now use one whole-node transaction. Completion
 reserves a deterministic physical-output plan, removes the foreground Solid,
@@ -58,7 +71,8 @@ authoritative remaining quantity; generation-only Surface Nodes are not
 presented as interactive targets. General Node selection, selected-site staging
 lines, future Placement identity and Fog-of-War discovery integration remain
 deferred until their owning systems exist. Whole-node variable-quantity
-Extraction remains WV-B3C.3B.
+Extraction is complete for Colony Soil/Stone through WV-B3C.3B; Surface Nodes
+remain generation-only.
 
 ### Construction and Placement definition contract
 

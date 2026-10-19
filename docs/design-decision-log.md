@@ -1,5 +1,21 @@
 # Design Decision Log
 
+## 2026-10-19 — Specify Placement migration before moving function authority
+
+- Complete WV-B3D.1 as documentation only; no Placement registry or functional
+  cutover is implemented.
+- Preserve one natural Background plus optional Node, Placement and loose stack.
+  A site stages materials but provides no completed function.
+- Begin later implementation with a one-cell Placement registry and read-only
+  legacy projections. Migrate Material Storage first in separate authority and
+  Construction-completion slices.
+- Require explicit per-instance dual-function protection and exact transfer of
+  contents/reservations before disabling a legacy owner.
+- Recommend Prepared Surface as an exclusive non-obstructing Placement, subject
+  to explicit approval before its implementation slice.
+- Retain `WV-B3B-LIM-001`; defer Door, rooms, dismantling, Refining, brood
+  runtime, persistence and Surface Placements.
+
 ## 2026-10-19 — Close WV-B3C.3B after authoritative acceptance
 
 - Mark WV-B3C.3B **Complete** after focused Edit/Play 43/43 and 22/22, complete
