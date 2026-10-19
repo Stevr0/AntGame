@@ -2,6 +2,10 @@
 
 ## WV-B3D.3A delegated Storage snapshots
 
+**Complete after 29/29 user-confirmed Unity manual checks.** The retained
+automated suites passed with zero failures, skips or inconclusive results; Codex
+did not rerun Unity or independently perform the manual checks for closure.
+
 Promoted fixture cells expose authoritative Placement identity plus
 `DelegatedMaterialStorage` function authority. The same snapshot projects the
 single slot's revision, filter, resource, quantity, available capacity and

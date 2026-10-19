@@ -1,6 +1,11 @@
 # ANT COLONY
 
-## WV-B3D.3A Material Storage authority cutover — implemented 19 October 2026
+## WV-B3D.3A Material Storage authority cutover — complete 19 October 2026
+
+**Complete.** Automated validation passed and the user confirmed all 29/29
+authoritative Unity manual checks in two stages. This is user-reported Play Mode
+acceptance; Codex did not independently perform those checks or rerun Unity for
+the documentation-only closure.
 
 The five authored Material Storage fixtures are completed Placements. Their
 stable Placement identity and occupancy are authoritative, while the existing

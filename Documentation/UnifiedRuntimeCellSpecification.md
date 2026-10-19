@@ -2,6 +2,11 @@
 
 ## WV-B3D.3A delegated Material Storage state — 19 October 2026
 
+**Complete.** Retained automated evidence passed 15/15 and 28/28 focused Edit,
+3/3 and 6/6 focused Play, 612/612 complete Edit and 84/84 complete Play. The
+user confirmed the authoritative Unity checklist 29/29 in two stages; Codex did
+not independently execute it or rerun Unity for this documentation-only closure.
+
 Promoted fixture cells publish an authoritative Placement identity together
 with `DelegatedMaterialStorage` function authority. Their runtime snapshot
 contains the one underlying slot's revision, filter, resource, stored quantity,

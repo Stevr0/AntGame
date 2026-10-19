@@ -2,6 +2,11 @@
 
 ## WV-B3D.3A implemented boundary — 19 October 2026
 
+**Complete.** The user confirmed the authoritative Unity manual checklist
+29/29 after the recorded automated suites passed with no failures, skips or
+inconclusive results. This was user-reported acceptance; Codex did not perform
+or rerun those manual checks during documentation closure.
+
 Existing authored Material Storage is now an authoritative completed Placement
 whose mutable storage ledger is delegated to the pre-existing
 `MaterialStorageWorld`. One Placement handle maps to one unchanged slot; the
@@ -19,8 +24,8 @@ remains a future distinct Construction-skill job with validated targets,
 physical material hauling/staging, work, exact-once consumption, bounded HP
 restoration, interruption and cancellation; values and recipes remain unapproved.
 
-**Status:** Approved design contract; WV-B3D.2 registry foundation complete and
-WV-B3D.3A Material Storage fixture authority cutover implemented; broader
+**Status:** Approved design contract; WV-B3D.2 registry foundation and
+WV-B3D.3A Material Storage fixture authority cutover complete; broader
 functional authority migration remains deferred.
 
 **Approved:** 16 October 2026

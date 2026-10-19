@@ -2,14 +2,23 @@
 
 ## 19 October 2026 — WV-B3D.3A Material Storage Authority Cutover
 
-**Implemented — Automated Tests Passed, Manual Acceptance Pending.** Five
+**Complete.** Five
 authored fixture Storage projections promote to authoritative Placements while
 their unchanged `MaterialStorageWorld` slots remain the single mutable resource
 authority. Runtime snapshots/diagnostics expose delegation and slot state;
 migrated HP remains unknown. Generated/new Storage is deliberately still legacy
 until WV-B3D.3B. A shared category-specific visual-definition foundation was
 added without artwork or renderer changes. Focused Edit passed 15/15 and 28/28,
-focused Play 3/3 and 6/6, full Edit 612/612, and full Play 84/84.
+focused Play 3/3 and 6/6, full Edit 612/612, and full Play 84/84, with zero
+failures, skips or inconclusive results. The user confirmed all **29/29**
+authoritative Unity manual checks in two stages: the 16-check practical summary,
+then the six outstanding detailed verification groups. This is user-reported
+Play Mode acceptance; Codex inspected the retained XML but did not independently
+perform the manual checks or rerun Unity during this documentation-only closure.
+The test working tree was based on parent
+`69ebbf85bbd9e90780b59316e4f1e771ebff9888`; the resulting implementation
+commit is `1d7067f4d464c443ad650ef358c228aed50dbe1d`. WV-B3D.3B and
+`WV-B3B-LIM-001` remain open.
 
 ## 19 October 2026 — WV-B3D.2 Placement Registry Foundation
 

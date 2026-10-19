@@ -2,7 +2,10 @@
 
 ## WV-B3D.3A status
 
-**Implemented — Automated Tests Passed, Manual Acceptance Pending.** The five
+**Complete.** The user confirmed the authoritative Unity checklist **29/29** in
+two stages after all recorded automated suites passed. This is user-reported
+Play Mode acceptance; Codex inspected the XML but did not independently perform
+or rerun the manual checks during this documentation-only closure. The five
 authored Material Storage fixtures promote at quiescent scenario initialization
 to authoritative completed Placements while retaining stable IDs. Their
 existing `MaterialStorageWorld` slots are delegated, not copied, and remain the

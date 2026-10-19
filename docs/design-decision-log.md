@@ -1,5 +1,19 @@
 # Design Decision Log
 
+## 2026-10-19 — Close WV-B3D.3A after authoritative acceptance
+
+- Mark WV-B3D.3A **Complete** after 15/15 Placement Registry Edit, 28/28
+  Storage/Hauling Edit, 3/3 Placement Registry Play, 6/6 Storage/Hauling Play,
+  612/612 complete Edit and 84/84 complete Play passed with no failures, skips
+  or inconclusive results, followed by user-confirmed **29/29** manual checks.
+- Record the acceptance as user-reported Unity Play Mode verification in two
+  stages; Codex inspected retained XML but did not independently perform or
+  rerun the manual checks for this documentation-only closure.
+- Preserve the delegated one-ledger Storage model, unknown migrated HP, legacy
+  completion for new Storage, and open `WV-B3B-LIM-001`.
+- Keep WV-B3D.3B and all other functional migrations, damage, Repair,
+  destruction and broader deferred systems separately gated.
+
 ## 2026-10-19 — Cut over fixture Material Storage by delegation
 
 - Promote the complete authored Storage batch only at quiescent scenario setup,

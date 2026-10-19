@@ -2,6 +2,10 @@
 
 ## WV-B3D.3A Storage ownership
 
+**Complete.** The authoritative Unity checklist passed 29/29 by user report;
+the retained automated evidence passed with zero failures, skips or
+inconclusive results. No tests were rerun for this documentation-only closure.
+
 Authored Material Storage now has authoritative Placement identity, but the
 existing `MaterialStorageWorld` slot remains the single physical ledger for its
 filter, contents, capacity and reservations. No resource is copied or changes

@@ -2,6 +2,9 @@
 
 ## WV-B3D.3A Material Storage boundary
 
+**Complete — 29/29 user-confirmed Unity manual checks.** Codex did not
+independently perform or rerun those manual checks during documentation closure.
+
 Authored Material Storage fixtures now use authoritative Placement identity and
 occupancy with their unchanged mutable slots delegated from
 `MaterialStorageWorld`. This preserves recipes, work duration, hauling,

@@ -1,5 +1,15 @@
 # Ant AI and Job Management
 
+## WV-B3D.3A Storage authority closure
+
+WV-B3D.3A is complete after user-confirmed 29/29 Unity manual acceptance.
+Hauling and Material Transfer behavior remains unchanged: existing promoted
+Storage delegates its one physical slot to an authoritative Placement handle,
+while `MaterialStorageWorld` continues to own quantities and reservations.
+Partial/multi-source hauling and Storage-to-Construction withdrawals retain
+their exact-once behavior. Construction remains work-only after Hauling stages
+all requirements. Newly completed Storage remains legacy until WV-B3D.3B.
+
 ## WV-B3C.2B transfer lifecycle — complete
 
 The B3C.2B implementation keeps the existing shared job registry,

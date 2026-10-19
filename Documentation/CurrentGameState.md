@@ -1,8 +1,19 @@
 # Ant Colony Current Game State
 
-## WV-B3D.3A Material Storage Authority Cutover — Implemented (19 October 2026)
+## WV-B3D.3A Material Storage Authority Cutover — Complete (19 October 2026)
 
-**Status: Implemented — Automated Tests Passed, Manual Acceptance Pending.**
+**WV-B3D.3A — Manual acceptance complete (29/29).** The user confirmed Unity
+Play Mode acceptance in two stages: first all 16 practical checks covering
+Storage behavior, quantities/capacity, Hauling, withdrawals, Construction
+staging, badges, generated compatibility, Extraction, camera/scenario recovery,
+legacy preservation, simulation and entrance regressions; then all six
+outstanding detailed groups covering authority labels, one-cell footprint and
+provenance, exact-once incoming/outgoing reservation cancellation, independent
+Storage/Placement revisions, generated seed `2203`, and stable completed
+Placement identities. This is user-reported acceptance; Codex did not
+independently perform the manual checks or rerun Unity for this documentation-
+only closure.
+
 At the quiescent development-scenario initialization boundary, each of the five
 authored Material Storage fixtures is promoted from its deterministic legacy
 projection to an authoritative completed Placement. The existing Placement ID
@@ -18,15 +29,18 @@ no longer independently grants Material Storage function on promoted cells.
 Runtime-cell snapshots and diagnostics distinguish `AuthoritativePlacement`,
 `LegacyBackground`, and `DelegatedMaterialStorage`, expose the delegated slot
 revision and capacity state, and continue to report the obscured natural
-Background as unavailable. Existing Sleeping and other Background functions
-are unchanged. Generated seed `2203` still starts with zero Placements; its
+Background as unavailable. Food/Water Storage, Sleeping, Nursery, Prepared
+Grippable, Resource Nodes, ground stacks, ant inventory, Construction staging,
+Hauling/Material Transfers, skills and work priorities retain their existing
+authorities. Generated seed `2203` still starts with zero Placements; its
 first newly constructed Material Storage remains a legacy Background projection
 until WV-B3D.3B.
 
 The shared visual-definition code now provides a common identity/layout base
 with category-specific assets: Backgrounds expose only normal sprites, Resource
 Nodes normal/worked/depleted sprites, Placements construction/completed/damaged/
-destroyed sprites, and loose resources normal sprites. Placement state
+destroyed sprites, and loose resources normal sprites, with Colony and Surface
+perspectives where applicable. Placement state
 resolution is pure presentation logic and unknown HP resolves conservatively to
 Completed. No artwork, rendering binding, animation, seasonal/biome variant,
 damage, Repair, destruction, refund, or removal gameplay was added.
@@ -36,8 +50,11 @@ Automated evidence: Placement Registry Edit **15/15**, Storage/Hauling Edit
 complete graphics-enabled Edit **612/612**, and complete Play **84/84**, all
 with zero failures, skips or inconclusive results. The implementation working
 tree is based on `69ebbf85bbd9e90780b59316e4f1e771ebff9888`.
+The retained XML was inspected during closure. That parent revision records
+implementation-working-tree provenance; the resulting implementation commit is
+`1d7067f4d464c443ad650ef358c228aed50dbe1d`.
 
-### Authoritative 29-step manual acceptance checklist
+### Accepted authoritative 29-step manual checklist
 
 1. Open `Assets/AntColony/Scenes/AntGameDevelopment.unity` and enter Play Mode.
 2. Confirm the authored fixture loads without an exception or migration error.

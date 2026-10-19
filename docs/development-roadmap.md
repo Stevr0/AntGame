@@ -1,14 +1,17 @@
 # Development Roadmap
 
-## WV-B3D.3A — implemented; manual acceptance pending
+## WV-B3D.3A — complete
 
 The five authored Material Storage fixtures now promote to authoritative
 Placements while their existing slots remain the sole delegated mutable storage
 state. Generated/new Storage stays legacy until WV-B3D.3B. Focused suites passed
 15/15 and 28/28 Edit plus 3/3 and 6/6 Play; full suites passed 612/612 Edit and
-84/84 Play. The 29-step manual checklist remains pending. The shared
-category-specific visual-definition foundation is implemented without new art
-or renderer behavior. Stop after this slice; WV-B3D.3B is not started.
+84/84 Play with no failures, skips or inconclusive results. The user confirmed
+the authoritative Unity checklist **29/29** in two stages; Codex did not
+independently perform it or rerun Unity for this documentation-only closure.
+The shared category-specific visual-definition foundation is implemented
+without new art or renderer behavior. Stop after this slice; WV-B3D.3B is not
+started. `WV-B3B-LIM-001` remains accepted and open.
 
 ## WV-B3D.2 — complete
 

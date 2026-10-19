@@ -1,6 +1,6 @@
 # Ant Colony Development Roadmap
 
-## WV-B3D.3A — Implemented; manual acceptance pending (19 October 2026)
+## WV-B3D.3A — Complete (19 October 2026)
 
 The five authored Material Storage fixtures now promote at quiescent scenario
 initialization to authoritative completed Placements while retaining their
@@ -10,13 +10,26 @@ copied. Legacy HP remains unknown and all other functional Backgrounds remain
 unchanged. Generated seed `2203` and newly completed Material Storage remain on
 the legacy projection path until WV-B3D.3B. Focused Edit suites passed 15/15 and
 28/28, focused Play suites passed 3/3 and 6/6, and full suites passed 612/612
-Edit and 84/84 Play. The 29-step manual checklist in `CurrentGameState.md` is
-pending. Stop here: WV-B3D.3B, damage, Repair and destruction are not started.
+Edit and 84/84 Play, with zero failures, skips or inconclusive results. The user
+confirmed the authoritative Unity checklist **29/29** in two stages; Codex did
+not independently perform or rerun those manual checks during this
+documentation-only closure. The retained XML was inspected and came from the
+implementation working tree based on parent
+`69ebbf85bbd9e90780b59316e4f1e771ebff9888`, which is provenance rather than
+the final implementation commit. Stop here: WV-B3D.3B, damage, Repair and
+destruction are not started.
 
 The approved visual addendum is represented by a common visual-definition base
 and category-specific Background, Resource Node, Placement and loose-resource
 definitions. This is an unbound data/presentation foundation only; it adds no
 art, function, capacity or gameplay state.
+
+`WV-B3B-LIM-001` remains accepted and open. Deferred work includes WV-B3D.3B
+Construction completion, Food/Water Storage, Sleeping, Nursery and Prepared
+Surface migration; HP balance, damage, Repair, destruction, dismantling and
+physical refunds; Doors, Refining Stations, rooms/quality and multi-cell
+gameplay; Surface resource interactions, Foraging, Fog of War, persistence and
+unloaded-region simulation.
 
 ## WV-B3D.2 — Complete (19 October 2026)
 

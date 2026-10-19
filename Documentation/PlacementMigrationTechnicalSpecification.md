@@ -2,6 +2,15 @@
 
 ## WV-B3D.3A implementation record — 19 October 2026
 
+**Status: Complete.** Automated evidence passed 15/15 Placement Registry Edit,
+28/28 Storage/Hauling Edit, 3/3 Placement Registry Play, 6/6 Storage/Hauling
+Play, 612/612 complete Edit and 84/84 complete Play. The user confirmed all
+29/29 authoritative Unity manual checks in two stages. This acceptance is
+user-reported; Codex inspected the retained XML but did not rerun or independently
+perform the manual checks during this documentation-only closure. Test-working-
+tree parent `69ebbf85bbd9e90780b59316e4f1e771ebff9888` is provenance; the resulting
+implementation commit is `1d7067f4d464c443ad650ef358c228aed50dbe1d`.
+
 The authored Material Storage fixtures are promoted only during quiescent
 scenario construction. Promotion validates the complete batch before commit,
 retains each projected Placement ID, changes authority to

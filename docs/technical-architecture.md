@@ -2,6 +2,9 @@
 
 ## WV-B3D.3A Material Storage delegation
 
+**Complete after user-confirmed 29/29 Unity manual acceptance.** Codex did not
+independently execute the manual checks or rerun Unity during closure.
+
 At quiescent initialization the development host batch-promotes the authored
 Storage projections, then binds each unchanged `MaterialStorageSlot` to its
 Placement handle. `PlacementRegistry` owns identity and occupancy;
