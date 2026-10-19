@@ -1,6 +1,6 @@
 # ISO-WV-1 Runtime Isometric Terrain Slice
 
-**Status:** Implemented — automated tests passed; manual Unity acceptance pending  
+**Status:** ISO-WV-1 manually accepted; ISO-WV-1B spacing experiment pending manual acceptance
 **Date:** 19 October 2026
 
 ISO-WV-1 adds a presentation-only 8 x 8 isometric Tilemap to the live World
@@ -15,7 +15,16 @@ orders, resources, jobs and generation remain authoritative and unchanged.
 as `(-logicalY,-logicalX,0)`. With the accepted 1 x 0.5-unit Grid cell, 32 PPU
 sprites and `(0.5,0.25)` pivot, Unity's cell positions match
 `SurfaceIsometricProjection`: logical X goes down-right and logical Y goes
-down-left.
+down-left. The default remains the accepted 100% spacing.
+
+## ISO-WV-1B spacing controls
+
+The runtime `SurfaceIsometricRenderer` Inspector exposes **Horizontal Spacing
+Percent** and **Vertical Spacing Percent**, each ranged from 90% to 100% under
+**ISO-WV-1B Tile Spacing Experiment**. They adjust only the isometric Grid cell
+size and keep the preview centre anchored; the accepted projection and logical
+Surface do not change. The development panel provides uniform **100%**, **97%**,
+**95%**, **93%** and **90%** presets. Legacy Surface does not reset spacing.
 
 All 64 snapshots are read before the Tilemap changes. A missing/out-of-bounds
 cell rejects the complete update; rendering never writes runtime cell state.
@@ -37,9 +46,9 @@ state is restored in Legacy mode.
 
 | Runtime Background ID | Isometric sprite |
 | --- | --- |
-| `background.surface.grass` | `Terrain/tile_101.png` |
-| `background.surface.water` | `Terrain/tile_095.png` |
-| Unsupported ID | `tile_101` tinted bright magenta |
+| `background.surface.grass` | `Terrain/tile_040.png` |
+| `background.surface.water` | `Terrain/tile_104.png` |
+| Unsupported ID | `tile_009` tinted bright magenta |
 
 The presentation-only `SurfaceIsometricVisualCatalog` stores these authored
 references. No water, rock, vegetation or resource artwork is silently used for
@@ -47,7 +56,7 @@ an incompatible role.
 
 ## Validation and limitations
 
-Focused isometric and World View Edit Mode regression passes **22/22**. The full
+The ISO-WV-1B combined Edit Mode regression passes **29/29**. The full
 World View foundation Play Mode class passes **6/6**, including the new
 authority/toggle/culling check.
 
@@ -73,6 +82,9 @@ normal World View commands.
    renderer state return.
 10. Exit Play Mode and confirm a clean Console.
 
-ISO-WV-1 remains pending until the user confirms these checks. ISO-WV-2 should
-add separately sorted dynamic visuals and isometric input before expanding the
-rendered area; it must continue to preserve existing gameplay authorities.
+ISO-WV-1 is accepted. For ISO-WV-1B, compare every preset against 100%, checking
+raised grass gaps, water overlap and neighbour ordering. Independent X/Y values
+can be changed during Play Mode by selecting **ISO-WV-1 Isometric 8x8
+Presentation** and editing the two renderer fields. Reduced spacing remains
+experimental pending a clean Console and user approval. If no value fixes grass
+without harming water, investigate neighbour-aware terrain separately.

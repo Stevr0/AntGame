@@ -90,6 +90,63 @@ namespace AntColony.Tests.EditMode
             }
         }
 
+        [TestCase(100f)]
+        [TestCase(97f)]
+        [TestCase(95f)]
+        [TestCase(93f)]
+        [TestCase(90f)]
+        public void UniformSpacingPresetsScaleOnlyThePreviewGrid(float percent)
+        {
+            string fingerprint = generated.CreateFingerprint();
+            SurfaceIsometricRenderer renderer = CreateRenderer(region);
+            Assert.That(renderer.RenderWindow(new SurfaceCell(29, 29)).Succeeded,
+                Is.True);
+
+            renderer.SetTileSpacingPercent(percent, percent);
+
+            Assert.That(renderer.Grid.cellSize.x,
+                Is.EqualTo(percent / 100f).Within(0.00001f));
+            Assert.That(renderer.Grid.cellSize.y,
+                Is.EqualTo(0.5f * percent / 100f).Within(0.00001f));
+            Assert.That(renderer.Projection.TileWidthPixels, Is.EqualTo(32f));
+            Assert.That(renderer.Projection.TileHeightPixels, Is.EqualTo(16f));
+            Assert.That(renderer.Projection.PixelsPerUnit, Is.EqualTo(32f));
+            Assert.That(generated.CreateFingerprint(), Is.EqualTo(fingerprint));
+        }
+
+        [Test]
+        public void IndependentSpacingKeepsPreviewCentreOnAcceptedProjection()
+        {
+            SurfaceIsometricRenderer renderer = CreateRenderer(region);
+            Assert.That(renderer.RenderWindow(new SurfaceCell(29, 29)).Succeeded,
+                Is.True);
+            var anchor = new SurfaceCell(33, 33);
+            Vector2 acceptedAnchor = renderer.Projection.CellToWorld(anchor);
+
+            renderer.SetTileSpacingPercent(95f, 90f);
+
+            Vector3 displayedAnchor = renderer.Grid.CellToWorld(
+                SurfaceIsometricRenderer.LogicalToTilemapCell(anchor));
+            Assert.That(displayedAnchor.x,
+                Is.EqualTo(acceptedAnchor.x).Within(0.00001f));
+            Assert.That(displayedAnchor.y,
+                Is.EqualTo(acceptedAnchor.y).Within(0.00001f));
+            Assert.That(renderer.HorizontalSpacingPercent, Is.EqualTo(95f));
+            Assert.That(renderer.VerticalSpacingPercent, Is.EqualTo(90f));
+            Assert.That(renderer.BackgroundTilemap.GetUsedTilesCount(), Is.EqualTo(2));
+        }
+
+        [Test]
+        public void SpacingControlsClampToExperimentRange()
+        {
+            SurfaceIsometricRenderer renderer = CreateRenderer(region);
+
+            renderer.SetTileSpacingPercent(120f, 50f);
+
+            Assert.That(renderer.HorizontalSpacingPercent, Is.EqualTo(100f));
+            Assert.That(renderer.VerticalSpacingPercent, Is.EqualTo(90f));
+        }
+
         [Test]
         public void RenderingIsDeterministicAndDoesNotModifyAuthority()
         {

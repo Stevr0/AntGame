@@ -165,6 +165,15 @@ namespace AntColony.Development
             return true;
         }
 
+        public bool SetIsometricTileSpacingPercent(float percent)
+        {
+            if (surfaceIsometricRenderer == null) return false;
+            surfaceIsometricRenderer.SetTileSpacingPercent(percent, percent);
+            status = $"ISO-WV-1B isometric spacing: {percent:0}% X / " +
+                $"{percent:0}% Y. Presentation only.";
+            return true;
+        }
+
         private void ApplySurfaceTerrainRenderMode()
         {
             bool isometric = surfaceTerrainRenderMode ==
@@ -630,7 +639,7 @@ namespace AntColony.Development
         {
             if (host == null) return;
             var controlsRect = new Rect(
-                Screen.width * 0.5f - 300f, 8f, 600f, 144f);
+                Screen.width * 0.5f - 300f, 8f, 600f, 176f);
             host.SelectionController.SetAdditionalUiBlocker(controlsRect);
             GUILayout.BeginArea(controlsRect,
                 GUI.skin.box);
@@ -667,8 +676,28 @@ namespace AntColony.Development
                     SurfaceTerrainRenderMode.IsometricPreview);
             GUI.enabled = true;
             GUILayout.EndHorizontal();
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("ISO spacing", GUILayout.Width(76f));
+            DrawSpacingButton(100f);
+            DrawSpacingButton(97f);
+            DrawSpacingButton(95f);
+            DrawSpacingButton(93f);
+            DrawSpacingButton(90f);
+            GUILayout.EndHorizontal();
             GUILayout.Label(status);
             GUILayout.EndArea();
+        }
+
+        private void DrawSpacingButton(float percent)
+        {
+            GUI.enabled = surfaceIsometricRenderer != null &&
+                (!Mathf.Approximately(
+                    surfaceIsometricRenderer.HorizontalSpacingPercent, percent) ||
+                 !Mathf.Approximately(
+                    surfaceIsometricRenderer.VerticalSpacingPercent, percent));
+            if (GUILayout.Button($"{percent:0}%", GUILayout.Height(24f)))
+                SetIsometricTileSpacingPercent(percent);
+            GUI.enabled = true;
         }
     }
 }

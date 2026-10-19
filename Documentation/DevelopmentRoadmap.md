@@ -1,6 +1,17 @@
 # Ant Colony Development Roadmap
 
-## ISO-WV-1 — Implemented; manual acceptance pending (19 October 2026)
+## ISO-WV-1B — Implemented; manual acceptance pending (19 October 2026)
+
+An isolated experiment now scales the existing Isometric Grid spacing without
+changing the accepted projection or any gameplay coordinate. Runtime Inspector
+controls allow independent 90-100% X/Y values; the development panel provides
+100/97/95/93/90 uniform presets. Default remains 100%. Focused Edit passes
+**12/12** and focused Play passes **1/1**. Retain a reduced value only if manual
+checks show raised `tile_040` gaps close without unacceptable `tile_104` water
+overlap, broken visual ordering or Console errors. Otherwise retain 100% and
+scope neighbour-aware terrain separately. Do not begin autotiling or ISO-WV-2.
+
+## ISO-WV-1 — Complete; manually accepted (19 October 2026)
 
 The approved runtime slice presents authoritative cells `(29,29)` through
 `(36,36)` with one Unity Isometric Grid/Tilemap using the accepted ISO-WV-0
@@ -10,23 +21,23 @@ unsupported Backgrounds are conspicuous magenta, Resource Nodes remain
 separate, and old Surface ant renderers are hidden in preview mode instead of
 being drawn at incorrect positions. Edit regression passes **22/22** and World
 View Play regression passes **6/6**. Complete the checklist in
-`Documentation/IsometricWorldViewRuntimeSlice.md` before marking this milestone
-complete.
+`Documentation/IsometricWorldViewRuntimeSlice.md`; the user subsequently
+confirmed that checklist.
 
 The recommended next gated milestone is ISO-WV-2 dynamic object/ant
 presentation and isometric input. Do not begin it automatically and do not
 expand the terrain window, navigation or gameplay authority as part of
 ISO-WV-1 acceptance.
 
-## ISO-WV-0 — Implemented; manual acceptance pending (19 October 2026)
+## ISO-WV-0 — Complete; manually accepted (19 October 2026)
 
 The approved calibration slice adds only an isolated 8 x 8 preview, five
 explicitly calibrated imported sprites and a presentation-only
 `SurfaceIsometricProjection`. It preserves the live 64 x 64 logical Surface,
 all navigation/gameplay authorities, Colony View, generation and Bootstrap.
 Automated evidence passes 8/8 for ISO-WV-0 and 9/9 for the existing World View
-foundation. Complete the focused Unity visual/Console checklist in
-`Documentation/IsometricWorldViewCalibration.md`, then stop for approval.
+foundation. The user subsequently confirmed the Unity visual/Console checklist
+in `Documentation/IsometricWorldViewCalibration.md`.
 ISO-WV-1 was subsequently approved and implemented as recorded above.
 
 ## WV-B3D.3B — Implemented; manual acceptance pending (19 October 2026)

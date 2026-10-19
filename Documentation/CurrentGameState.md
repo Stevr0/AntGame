@@ -1,23 +1,35 @@
 # Ant Colony Current Game State
 
-## ISO-WV-1 — Implemented; manual acceptance pending (19 October 2026)
+## ISO-WV-1B — Implemented; manual acceptance pending (19 October 2026)
+
+The accepted 8 x 8 isometric preview now has presentation-only horizontal and
+vertical Grid-spacing controls from 90% to 100%, plus uniform 100/97/95/93/90
+development presets. The 100% default reproduces ISO-WV-1. The preview remains
+centre-anchored; `SurfaceIsometricProjection`, logical cells, navigation,
+simulation and Colony View are unchanged. Grass resolves to raised `tile_040`,
+water to `tile_104`, and fallback to `tile_009` tinted magenta. Focused Edit
+passes **12/12** and focused Play passes **1/1**. No production spacing is
+selected until grass-gap, water-overlap, ordering and Console checks pass.
+
+## ISO-WV-1 — Complete; manually accepted (19 October 2026)
 
 The live World View now has a temporary, opt-in 8 x 8 isometric terrain preview
 backed by one Unity Isometric Grid/Tilemap and the existing authoritative
 `SurfaceRuntimeCellRegionAdapter`. It renders actual cells `(29,29)` through
 `(36,36)` while the full 64 x 64 Surface, generation, navigation, movement,
 resources, jobs and Colony View remain unchanged. Legacy square rendering is
-still the default. Grass maps to `tile_101`, water maps to `tile_095`, and
-unsupported Backgrounds use a bright-magenta fallback. Resource Nodes remain
-separate. Until ISO-WV-2 projects ants, Surface ant renderers are hidden only
+still the default. The later accepted visual choices map Grass to `tile_040`
+and Water to `tile_104`; unsupported Backgrounds use `tile_009` with a
+bright-magenta tint. Resource Nodes remain separate. Until ISO-WV-2 projects
+ants, Surface ant renderers are hidden only
 while the isometric preview is selected; authoritative roots still simulate.
 
 Focused isometric and World View Edit regression passes **22/22** and the World
-View Play regression passes **6/6**. Direct visual/Console acceptance is still
-required, so the milestone is not complete. See
+View Play regression passes **6/6**. The user subsequently confirmed the manual
+visual and Console acceptance. See
 `Documentation/IsometricWorldViewRuntimeSlice.md`.
 
-## ISO-WV-0 — Implemented; manual acceptance pending (19 October 2026)
+## ISO-WV-0 — Complete; manually accepted (19 October 2026)
 
 An isolated 8 x 8 isometric calibration scene now verifies a 32 x 16 pixel
 logical footprint, 32 PPU full-canvas artwork, a shared (16,8)-pixel ground

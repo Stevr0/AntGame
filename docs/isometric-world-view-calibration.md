@@ -1,6 +1,6 @@
 # ISO-WV-0 Isometric Art and Projection Calibration
 
-**Status:** Implemented — automated tests passed; manual Unity acceptance pending  
+**Status:** Complete — automated tests and manual Unity acceptance passed
 **Date:** 19 October 2026  
 **Scope:** Isolated presentation calibration only. The live World View, Colony View,
 simulation, navigation, generation, resources, orders and authored gameplay content
