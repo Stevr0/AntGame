@@ -43,7 +43,7 @@ and are inclusive. Source pixels remain unchanged.
 | --- | --- | --- | --- | --- |
 | Flat ground | `Terrain/tile_101.png` | x 0-31, y 16-31 | 32 x 16 | One flat 32 x 16 diamond |
 | Raised ground | `Terrain/tile_022.png` | x 0-31, y 4-31 | 32 x 28 | Raised grass block with the same base footprint |
-| Water | `Terrain/tile_095.png` | x 0-31, y 16-31 | 32 x 16 | One flat water-pattern diamond |
+| Water | `Terrain/tile_104_flatWater.png` | x 0-31, y 12-29 | 32 x 18 | User-supplied shallow flat-water diamond |
 | Rock/resource | `Terrain/tile_060.png` | x 5-28, y 0-29 | 24 x 30 | Tall rock decoration/resource candidate |
 | Vegetation | `Terrain/tile_044.png` | x 5-26, y 6-27 | 22 x 22 | Flowering vegetation decoration |
 
@@ -63,6 +63,12 @@ wide importer rule was added.
 - raised terrain at (4,4);
 - a rock at (5,3); and
 - an orthographic calibration camera.
+
+ISO-WV-1D also adds a labelled gallery of five isolated 4 x 4 layouts below
+the original grid: continuous water, water surrounded by grass, a straight
+shoreline, an irregular shoreline and alternating grass/water cells. Each
+logical layout cell owns exactly one SpriteRenderer; the gallery never reads or
+changes live Surface data.
 
 Sorting order is derived from `cellX + cellY`; props receive a small offset
 above their host ground cell. This is preview-only calibration behavior, not a
@@ -84,7 +90,8 @@ five explicit sprite references.
 - [ ] Exactly 64 ground cells form a readable 8 x 8 diamond grid.
 - [ ] Adjacent flat diamonds meet without unintended gaps or seams.
 - [ ] The checkerboard makes every cell boundary unambiguous.
-- [ ] The water cell occupies the same logical footprint as flat ground.
+- [ ] The water cell uses the same full-canvas pivot contract as flat ground.
+- [ ] Every cell is visible in all five ISO-WV-1D water layouts.
 - [ ] Raised terrain remains anchored to its host cell and overlaps rear cells
       naturally.
 - [ ] Rock and vegetation bases read as attached to their intended cell centres.

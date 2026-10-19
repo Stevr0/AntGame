@@ -1,5 +1,20 @@
 # Ant Colony Current Game State
 
+## ISO-WV-1D — Implemented; manual acceptance pending (19 October 2026)
+
+The live 8 x 8 isometric preview now maps Water to the user-supplied flat
+`tile_104_flatWater` sprite. The previous `tile_104` has a 32 x 20 visible
+raised silhouette and was imported through a cropped 32 x 21 rect with a centre
+pivot; its side pixels and displaced anchor made present cells look oversized,
+overlapped or absent. The replacement uses a full 32 x 32 canvas, 32 PPU, Full
+Rect and pivot `(0.5,0.25)`. Original `tile_104` remains unchanged.
+
+The isolated calibration scene now demonstrates continuous 4 x 4 water, water
+surrounded by grass, straight and irregular shorelines, and alternating cells.
+No Tilemap sorting or projection change was required. Combined isometric/World
+View Edit regression passes **28/28** and World View Play regression passes
+**6/6**. Final visual and Console acceptance remains pending.
+
 ## ISO-WV-1C — Implemented; manual acceptance pending (19 October 2026)
 
 The 8 x 8 isometric preview is restored to the accepted fixed `(1,0.5,1)` Grid

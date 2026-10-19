@@ -1,5 +1,15 @@
 # Development Roadmap
 
+## ISO-WV-1D — implemented, manual acceptance pending
+
+The 8 x 8 runtime preview maps Water to user-supplied flat
+`tile_104_flatWater.png`. The raised/cropped original `tile_104.png` is
+preserved. Five isolated 4 x 4 layouts verify continuous water, grass borders,
+straight and irregular shorelines, and alternating cells without changing
+generated Surface data. Projection, fixed spacing, Tilemap sorting and gameplay
+authority remain unchanged. Focused combined Edit passes **28/28** and World
+View Play passes **6/6**. Do not begin ISO-WV-2.
+
 ## WV-B3D.3B — implemented, manual acceptance pending
 
 Material Storage Construction completion now cuts over directly to an

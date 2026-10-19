@@ -17,7 +17,7 @@ namespace AntColony.EditorTools
             "Assets/AntColony/Art/WorldView/Isometric/Terrain/";
         private const string FlatGroundPath = SpriteFolder + "tile_101.png";
         private const string RaisedGroundPath = SpriteFolder + "tile_022.png";
-        private const string WaterPath = SpriteFolder + "tile_095.png";
+        private const string WaterPath = SpriteFolder + "tile_104_flatWater.png";
         private const string RockPath = SpriteFolder + "tile_060.png";
         private const string VegetationPath = SpriteFolder + "tile_044.png";
 

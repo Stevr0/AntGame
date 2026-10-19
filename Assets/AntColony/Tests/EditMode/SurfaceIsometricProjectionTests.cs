@@ -19,7 +19,7 @@ namespace AntColony.Tests.EditMode
 
         private static readonly string[] SelectedSpriteNames =
         {
-            "tile_101", "tile_022", "tile_095", "tile_060", "tile_044"
+            "tile_101", "tile_022", "tile_104_flatWater", "tile_060", "tile_044"
         };
 
         private GameObject projectionObject;

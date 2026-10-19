@@ -1,5 +1,17 @@
 # Ant Colony Development Roadmap
 
+## ISO-WV-1D — Implemented; manual acceptance pending (19 October 2026)
+
+Water presentation now uses the user-supplied flat
+`tile_104_flatWater.png`, imported with the accepted full-canvas 32 PPU and
+`(0.5,0.25)` pivot contract. The raised/cropped `tile_104` remains preserved but
+is no longer the runtime Water interior. Five isolated 4 x 4 calibration
+patterns cover continuous water, surrounded water, straight and irregular
+shorelines, and alternating cells. The renderer projection, fixed Grid,
+Tilemap sorting and all gameplay authorities are unchanged. Combined Edit
+passes **28/28** and World View Play passes **6/6**. Complete the visual/Console
+checklist before marking ISO-WV-1D complete. Do not begin ISO-WV-2.
+
 ## ISO-WV-1C — Implemented; manual acceptance pending (19 October 2026)
 
 The runtime preview now uses only the accepted fixed `(1,0.5,1)` Isometric Grid

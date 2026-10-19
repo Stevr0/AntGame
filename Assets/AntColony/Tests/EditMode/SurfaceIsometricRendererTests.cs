@@ -117,7 +117,8 @@ namespace AntColony.Tests.EditMode
                 "Assets/AntColony/Art/WorldView/Isometric/Terrain/" +
                 "tile_040_GrassMain.png"));
             Assert.That(AssetDatabase.GetAssetPath(water.Sprite), Is.EqualTo(
-                "Assets/AntColony/Art/WorldView/Isometric/Terrain/tile_095.png"));
+                "Assets/AntColony/Art/WorldView/Isometric/Terrain/" +
+                "tile_104_flatWater.png"));
             Assert.That(AssetDatabase.GetAssetPath(catalog.FallbackSprite), Is.EqualTo(
                 "Assets/AntColony/Art/WorldView/Isometric/Terrain/tile_009.png"));
             Assert.That(AssetDatabase.LoadAssetAtPath<Sprite>(
@@ -169,7 +170,8 @@ namespace AntColony.Tests.EditMode
                     $"Logical cell {logicalCell} must have exactly one tile.");
                 var tile = tileBase as Tile;
                 Assert.That(tile, Is.Not.Null);
-                if (AssetDatabase.GetAssetPath(tile.sprite).EndsWith("tile_095.png"))
+                if (AssetDatabase.GetAssetPath(tile.sprite)
+                    .EndsWith("tile_104_flatWater.png"))
                     waterCount++;
             }
 

@@ -1,5 +1,16 @@
 # Milestone History
 
+## 19 October 2026 — ISO-WV-1D Water Terrain Alignment Correction
+
+**Implemented — Pending Manual Acceptance.** The raised 32 x 20 visual bounds,
+cropped 32 x 21 import rect and centre pivot of `tile_104.png` caused present
+water cells to look oversized, overlapping or missing. The runtime catalog now
+uses user-supplied `tile_104_flatWater.png` with the accepted full 32 x 32,
+32 PPU, Full Rect and `(0.5,0.25)` pivot contract. The original is preserved.
+Five isolated 4 x 4 patterns exercise water interiors and boundaries. Combined
+Edit passed **28/28** and World View Play passed **6/6**. No sorting,
+projection, gameplay, Colony View or ISO-WV-2 change was made.
+
 ## 19 October 2026 — WV-B3D.3B Material Storage Construction Completion Cutover
 
 **Implemented — Automated Tests Passed, Manual Acceptance Pending.** Newly

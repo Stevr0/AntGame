@@ -1,6 +1,6 @@
 # ISO-WV-1 Runtime Isometric Terrain Slice
 
-**Status:** ISO-WV-1C implemented - pending manual acceptance
+**Status:** ISO-WV-1D implemented - pending manual acceptance
 **Date:** 19 October 2026  
 **Scope:** Presentation-only 8 x 8 Surface terrain preview. The authoritative
 Surface remains 64 x 64 and all Colony, navigation, ant, job, resource,
@@ -64,12 +64,30 @@ world data or introduce another terrain definition authority.
 | Runtime Background ID | Sprite | Treatment |
 | --- | --- | --- |
 | `background.surface.grass` | `Terrain/tile_040_GrassMain.png` | User-edited flat grass interior |
-| `background.surface.water` | `Terrain/tile_104.png` | Accepted flat water interior |
+| `background.surface.water` | `Terrain/tile_104_flatWater.png` | User-supplied flat water interior |
 | Unsupported or missing mapping | `Terrain/tile_009.png` | Bright magenta tint |
 
 No rock, vegetation or Resource Node is silently substituted for terrain. The
 original raised `Terrain/tile_040.png` is preserved but is not selected by the
-runtime catalog.
+runtime catalog. Original raised water `Terrain/tile_104.png` is also preserved.
+
+## ISO-WV-1D water correction
+
+The old `tile_104.png` has visible bounds x 0-31, y 12-31: a 32 x 20 raised
+block including side pixels. Its imported Sprite rect was cropped to 32 x 21
+and used a centre pivot. In a repeating Tilemap those side pixels and the
+different anchor created the apparent uneven size, overlap and missing cells
+seen in manual testing. Renderer tests confirm that the logical cells were
+present; the defect was artwork/import presentation rather than generation or
+cell-to-tile mapping.
+
+The replacement `tile_104_flatWater.png` keeps the user's pixels unchanged and
+uses a full 32 x 32 Sprite rect, 32 PPU, Full Rect mesh and pivot `(0.5,0.25)`.
+Its visible shallow diamond has bounds x 0-31, y 12-29. The Grid, tile anchor,
+projection, renderer sorting order and cell mapping remain unchanged. The
+isolated calibration scene now includes five 4 x 4 layouts: continuous water,
+water surrounded by grass, straight shoreline, irregular shoreline and
+alternating grass/water.
 
 ## Known limitations
 
@@ -80,7 +98,7 @@ runtime catalog.
 - Isometric pointer-to-cell input is not implemented. Use the toggle for visual
   review only and return to Legacy mode for Surface commands.
 - Camera Home settings still describe the legacy full-Surface framing.
-- Final grass repetition, water alignment and visual suitability require direct
+- Final grass repetition, corrected water alignment and visual suitability require direct
   Unity inspection.
 
 These are ISO-WV-2 candidates and are not defects in the ISO-WV-1 authority
@@ -89,7 +107,7 @@ boundary.
 ## Automated evidence
 
 - ISO projection, renderer and World View foundation Edit Mode regression:
-  **23/23 passed**.
+  **28/28 passed**.
 - World View foundation Play Mode regression: **6/6 passed**.
 - The renderer suite includes exact final catalog paths, retained raised art,
   import calibration, fixed Grid size, fallback, determinism, boundaries and
@@ -107,7 +125,7 @@ boundary.
    crisp point-filtered pixels and edge-aligned 32 x 16 footprints.
 7. Confirm grass uses the flat `tile_040_GrassMain`, repeats without exposed
    dirt sides or gaps, and preserves crisp neighbour ordering.
-8. Confirm water uses `tile_104`, remains edge-aligned, and does not overlap
+8. Confirm water uses `tile_104_flatWater`, remains edge-aligned, and does not overlap
    adjacent water or grass tiles incorrectly.
 9. Confirm any unsupported Background is conspicuous magenta rather than a
    silent art substitution.
@@ -127,8 +145,13 @@ boundary.
     exceptions.
 
 ISO-WV-1 has since passed this checklist.
-ISO-WV-1C remains pending until the flat-grass, fixed-spacing and clean-Console
-checks above are completed in Unity.
+17. Open **Ant Colony > Isometric > Open Calibration Preview** and inspect the
+    five labelled ISO-WV-1D 4 x 4 layouts. Confirm every expected water cell is
+    present in continuous, surrounded, straight, irregular and alternating
+    patterns.
+
+ISO-WV-1D remains pending until the corrected-water and clean-Console checks
+above are completed in Unity.
 
 ## ISO-WV-2 boundary
 

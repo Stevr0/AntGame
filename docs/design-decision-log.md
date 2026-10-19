@@ -1,5 +1,16 @@
 # Design Decision Log
 
+## 2026-10-19 — Use a flat Water interior without changing projection
+
+- Preserve the accepted 1 x 0.5 Grid, 32 PPU, `(0.5,0.25)` pivot and logical
+  cell mapping.
+- Keep original raised `tile_104.png`; map live Water to user-supplied
+  `tile_104_flatWater.png` as a full-canvas Sprite.
+- Treat the reported missing cells as raised-art/import overlap, because focused
+  patterns confirm one rendered tile for every logical cell.
+- Keep Tilemap sorting unchanged and defer shoreline autotiling and all
+  ISO-WV-2 presentation work.
+
 ## 2026-10-19 — Cut over new Material Storage completion
 
 - Complete the existing 1 Soil, 4-hour recipe directly into a one-cell

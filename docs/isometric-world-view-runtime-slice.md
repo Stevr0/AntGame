@@ -1,6 +1,6 @@
 # ISO-WV-1 Runtime Isometric Terrain Slice
 
-**Status:** ISO-WV-1C implemented - pending manual acceptance
+**Status:** ISO-WV-1D implemented - pending manual acceptance
 **Date:** 19 October 2026
 
 ISO-WV-1 adds a presentation-only 8 x 8 isometric Tilemap to the live World
@@ -46,16 +46,24 @@ state is restored in Legacy mode.
 | Runtime Background ID | Isometric sprite |
 | --- | --- |
 | `background.surface.grass` | `Terrain/tile_040_GrassMain.png` |
-| `background.surface.water` | `Terrain/tile_104.png` |
+| `background.surface.water` | `Terrain/tile_104_flatWater.png` |
 | Unsupported ID | `tile_009` tinted bright magenta |
 
 The presentation-only `SurfaceIsometricVisualCatalog` stores these authored
 references. No water, rock, vegetation or resource artwork is silently used for
 an incompatible role.
 
+The former `tile_104.png` is a raised 32 x 20 silhouette that was imported with
+a cropped 32 x 21 Sprite rect and centre pivot. It made correctly rendered
+water cells appear oversized, overlapping or missing. ISO-WV-1D preserves that
+original and maps Water to the user-supplied flat derivative, imported Full Rect
+at 32 PPU with pivot `(0.5,0.25)`. No projection, Tilemap sorting or gameplay
+state changed. The isolated calibration scene includes five labelled 4 x 4
+water/grass layouts.
+
 ## Validation and limitations
 
-The ISO-WV-1C combined Edit Mode regression passes **23/23**. The full
+The ISO-WV-1D combined Edit Mode regression passes **28/28**. The full
 World View foundation Play Mode class passes **6/6**, including the new
 authority/toggle/culling check.
 
@@ -72,7 +80,7 @@ normal World View commands.
 4. Select **Isometric 8x8 Preview** and inspect one centred, crisp, edge-aligned
    8 x 8 patch using the fixed 1 x 0.5-unit Grid.
 5. Confirm flat `tile_040_GrassMain` repeats without dirt sides or gaps, and
-   `tile_104` water remains correctly aligned without overlap.
+   `tile_104_flatWater` remains correctly aligned without overlap.
 6. Confirm unsupported terrain is magenta and nodes/decorations are not
    substituted into the background.
 7. Confirm no spacing percentage controls remain in the panel or renderer.
@@ -82,6 +90,7 @@ normal World View commands.
    reset.
 11. Select **Legacy Surface** and confirm the original presentation and ant
    renderer state return.
-12. Exit Play Mode and confirm a clean Console.
+12. Open the isolated calibration preview and inspect all five labelled 4 x 4
+    water layouts, then exit Play Mode and confirm a clean Console.
 
-ISO-WV-1 is accepted. ISO-WV-1C remains pending the checks above.
+ISO-WV-1 is accepted. ISO-WV-1D remains pending the checks above.
