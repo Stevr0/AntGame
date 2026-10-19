@@ -1,5 +1,21 @@
 # Ant Colony Development Roadmap
 
+## WV-B3D.3B — Implemented; manual acceptance pending (19 October 2026)
+
+Newly completed Material Storage now commits directly as one authoritative
+Placement plus one delegated empty Storage slot while preserving the natural
+Background. Preparation fails closed and preserves Site/staging; dependent slot
+failure rolls back prepared Placement identity/occupancy; terminal replay is
+idempotent. Existing costs, work, XP and Hauling behavior are unchanged. Focused
+Edit passed 11/11 Construction, 17/17 Placement and 28/28 Storage/Hauling;
+focused Play passed 3/3 Placement and 6/6 Storage/Hauling; full suites passed
+615/615 Edit and 84/84 Play. The 43 player-facing checks in
+`CurrentGameState.md` remain pending; three fault/replay checks are automated.
+
+The next separately gated candidate is **WV-B3D.4A Food Storage migration**.
+Do not begin it without approval. `WV-B3B-LIM-001` and every non-Material-
+Storage migration remain open.
+
 ## WV-B3D.3A — Complete (19 October 2026)
 
 The five authored Material Storage fixtures now promote at quiescent scenario

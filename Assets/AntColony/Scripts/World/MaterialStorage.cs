@@ -104,6 +104,87 @@ namespace AntColony.World
                 cell, out handle);
 
         /// <summary>
+        /// Validates the delegated half of a direct Storage completion without
+        /// changing capacity or contents. The Placement transaction calls this
+        /// before it creates structural identity.
+        /// </summary>
+        public bool CanRegisterAuthoritativePlacementSlot(Vector2Int cell,
+            string definitionId, int maximumStack, out string error)
+        {
+            if (placementRegistry == null ||
+                placementRegistry.Lifecycle != PlacementRegistryLifecycle.Active ||
+                !string.Equals(placementDefinitionId, definitionId,
+                    StringComparison.Ordinal))
+            {
+                error = "Material Storage Placement authority is unavailable or mismatched.";
+                return false;
+            }
+            if (maximumStack <= 0 || slots.ContainsKey(cell) ||
+                authoritativePlacements.ContainsKey(cell))
+            {
+                error = "The target cannot register another Material Storage slot.";
+                return false;
+            }
+            if (world.GetCell(cell, out WorldTileCellData data) !=
+                    WorldCellQueryResult.Available || data.HasSolidTile ||
+                !world.TryGetBackgroundMaterialDefinition(data.BackgroundMaterialId,
+                    out BackgroundTileMaterialDefinition background) ||
+                background.Function != BackgroundFunction.None)
+            {
+                error = "Direct Material Storage completion requires an exposed natural Background.";
+                return false;
+            }
+            error = string.Empty;
+            return true;
+        }
+
+        /// <summary>
+        /// Creates one empty delegated slot for a prepared authoritative
+        /// Placement. Publication is supplied by the Placement commit, so no
+        /// intermediate Storage-only cell change is emitted.
+        /// </summary>
+        public bool TryCommitAuthoritativePlacementSlot(
+            PlacementSnapshot placement, MaterialStorageFilter filter,
+            int maximumStack, out string error)
+        {
+            if (placement == null || filter == MaterialStorageFilter.None ||
+                placement.AuthorityState !=
+                    PlacementAuthorityState.AuthoritativePlacement ||
+                placement.Lifecycle != PlacementLifecycle.Completed ||
+                placement.Anchor.Kind != RegionLocationKind.Colony ||
+                placement.Footprint.Count != 1 ||
+                placement.Footprint[0] != placement.Anchor)
+            {
+                error = "A completed one-cell Colony Placement is required for Storage delegation.";
+                return false;
+            }
+            var cell = new Vector2Int(placement.Anchor.ColonyCell.X,
+                placement.Anchor.ColonyCell.Y);
+            if (!CanRegisterAuthoritativePlacementSlot(cell,
+                    placement.DefinitionId, maximumStack, out error) ||
+                placementRegistry.TryGet(placement.Handle, out PlacementSnapshot current) !=
+                    PlacementReadResult.Success ||
+                current.PlacementId != placement.PlacementId)
+                return false;
+
+            slots.Add(cell, new MaterialStorageSlot(cell, filter,
+                string.Empty, 0, maximumStack));
+            try
+            {
+                authoritativePlacements.Add(cell, placement.Handle);
+            }
+            catch
+            {
+                // Keep this local commit all-or-nothing even if an unexpected
+                // dictionary failure occurs after the slot was inserted.
+                slots.Remove(cell);
+                throw;
+            }
+            error = string.Empty;
+            return true;
+        }
+
+        /// <summary>
         /// Performs the WV-B3D.3A cutover at scenario initialisation. All slots
         /// and projections are validated first; the registry then commits one
         /// batch promotion and these existing records become its delegated

@@ -541,7 +541,20 @@ namespace AntColony.Commands
         };
     }
 
-    /// <summary>Atomic validation and Background replacement boundary.</summary>
+    public enum ConstructionCompletionPhase
+    {
+        None,
+        Preparing,
+        Committing,
+        Completed,
+        Blocked,
+        ReplaySuppressed
+    }
+
+    /// <summary>
+    /// Validated construction completion boundary. Legacy functions still use
+    /// Background conversion; Material Storage uses the direct Placement path.
+    /// </summary>
     public sealed class ConstructionWorldTransaction
     {
         private readonly ChunkedWorldData world;
@@ -549,6 +562,8 @@ namespace AntColony.Commands
         private readonly MaterialStorageWorld materialStorage;
         private readonly Action<Vector2Int> committed;
         private readonly HashSet<string> committedJobs = new(StringComparer.Ordinal);
+        private PlacementRegistry placements;
+        private RuntimeCellPublicationRegistry runtimeCells;
 
         public ConstructionWorldTransaction(ChunkedWorldData world,
             SurvivalInteractionWorld survival, MaterialStorageWorld materialStorage,
@@ -560,13 +575,51 @@ namespace AntColony.Commands
             this.committed = committed;
         }
 
+        public string LastOperationId { get; private set; } = string.Empty;
+        public ConstructionCompletionPhase LastPhase { get; private set; }
+        public string LastResult { get; private set; } = string.Empty;
+        public string LastPlacementId { get; private set; } = string.Empty;
+        public long? LastExpectedCellRevision { get; private set; }
+        public long? LastActualCellRevision { get; private set; }
+
+        public void BindPlacementCompletion(PlacementRegistry placementRegistry,
+            RuntimeCellPublicationRegistry cells)
+        {
+            placements = placementRegistry ??
+                throw new ArgumentNullException(nameof(placementRegistry));
+            runtimeCells = cells ?? throw new ArgumentNullException(nameof(cells));
+        }
+
         public bool TryCommit(ConstructionDesignation designation, out string error)
         {
-            if (designation == null || committedJobs.Contains(designation.Job.Id.Value))
+            return TryCommit(designation, terminalWorkReached: false, out error);
+        }
+
+        internal bool TryCommit(ConstructionDesignation designation,
+            bool terminalWorkReached, out string error)
+        {
+            if (designation == null)
             {
-                error = "This construction completion was already committed.";
+                error = "Construction completion requires a designation.";
                 return false;
             }
+            LastOperationId = placements == null
+                ? designation.Job.Id.Value
+                : $"{placements.ScenarioContextId}:{designation.Job.Id.Value}";
+            LastPlacementId = string.Empty;
+            LastExpectedCellRevision = null;
+            LastActualCellRevision = null;
+            if (committedJobs.Contains(designation.Job.Id.Value))
+            {
+                LastPhase = ConstructionCompletionPhase.ReplaySuppressed;
+                LastResult = "Existing terminal completion returned; no state changed.";
+                bool storageReplay = designation.Recipe.Result.Function ==
+                    BackgroundFunction.MaterialStorage;
+                error = storageReplay ? string.Empty :
+                    "This construction completion was already committed.";
+                return storageReplay;
+            }
+            LastPhase = ConstructionCompletionPhase.Preparing;
             ConstructionRecipe recipe = designation.Recipe;
             if (world.GetCell(designation.Cell, out WorldTileCellData data) !=
                     WorldCellQueryResult.Available || data.HasSolidTile ||
@@ -587,9 +640,16 @@ namespace AntColony.Commands
             if (!designation.Site.CanConsumeAll())
             {
                 error = "The construction site has not received all required material.";
+                LastPhase = ConstructionCompletionPhase.Blocked;
+                LastResult = error;
                 return false;
             }
 
+            if (recipe.Result.Function == BackgroundFunction.MaterialStorage)
+                return TryCommitMaterialStorage(designation, terminalWorkReached,
+                    out error);
+
+            LastPhase = ConstructionCompletionPhase.Committing;
             survival?.RemoveEmptyFunction(designation.Cell);
             materialStorage?.Remove(designation.Cell);
             if (world.SetBackgroundMaterial(designation.Cell,
@@ -607,6 +667,8 @@ namespace AntColony.Commands
                     designation.SourceMaterialId);
                 RegisterCapacity(sourceDefinition.Function,
                     designation.Cell, out _);
+                LastPhase = ConstructionCompletionPhase.Blocked;
+                LastResult = error;
                 return false;
             }
 
@@ -614,24 +676,106 @@ namespace AntColony.Commands
             designation.Site.CloseForDeliveries();
             committedJobs.Add(designation.Job.Id.Value);
             committed?.Invoke(designation.Cell);
+            LastPhase = ConstructionCompletionPhase.Completed;
+            LastResult = "Legacy Background construction completed.";
             error = string.Empty;
             return true;
+        }
+
+        private bool TryCommitMaterialStorage(
+            ConstructionDesignation designation, bool terminalWorkReached,
+            out string error)
+        {
+            if (!terminalWorkReached || designation.Job.Status !=
+                    ColonyJobStatus.InProgress)
+                return Block("Material Storage completion requires terminal Construction work.",
+                    out error);
+            if (placements == null || runtimeCells == null ||
+                placements.Lifecycle != PlacementRegistryLifecycle.Active)
+                return Block("Authoritative Placement completion is unavailable.",
+                    out error);
+            if (!placements.TryGetDefinition(designation.Recipe.StableId,
+                    out PlacementDefinition definition) ||
+                definition.Category != PlacementCategory.Storage ||
+                !string.Equals(definition.ConstructionRecipeId,
+                    designation.Recipe.StableId, StringComparison.Ordinal) ||
+                definition.Footprint.CellCount != 1)
+                return Block("The Material Storage Placement Definition does not match this Construction Site.",
+                    out error);
+
+            RegionCellId cellId = RegionCellId.Colony(AntRegionIds.Colony,
+                new ColonyCell(designation.Cell.x, designation.Cell.y));
+            if (runtimeCells.TryGetCell(cellId, out RuntimeCellSnapshot snapshot) !=
+                    RuntimeCellReadResult.Success || snapshot == null)
+                return Block("The authoritative runtime cell is unavailable.",
+                    out error);
+            LastExpectedCellRevision = snapshot.CellRevision;
+            RuntimeOccupancyValidation compatibility =
+                PlacementCompatibilityValidator.Validate(definition, snapshot,
+                    hasConflictingConstructionSite: false);
+            if (compatibility.Result != RuntimeOccupancyCompatibility.Valid)
+                return Block(string.IsNullOrEmpty(compatibility.Reason)
+                    ? "Placement compatibility is unavailable."
+                    : compatibility.Reason, out error);
+            if (!materialStorage.CanRegisterAuthoritativePlacementSlot(
+                    designation.Cell, definition.StableId,
+                    MaterialResourceCatalog.ProvisionalMaximumStack, out error))
+                return Block(error, out error);
+
+            if (runtimeCells.TryGetCell(cellId, out RuntimeCellSnapshot current) !=
+                    RuntimeCellReadResult.Success || current == null ||
+                current.CellRevision != snapshot.CellRevision)
+            {
+                LastActualCellRevision = current?.CellRevision;
+                return Block("The target cell changed during completion preparation.",
+                    out error);
+            }
+            LastActualCellRevision = current.CellRevision;
+            LastPhase = ConstructionCompletionPhase.Committing;
+            PlacementMutationResult result = placements.TryRegisterCompletedStorage(
+                definition.StableId, cellId, PlacementOrientation.North,
+                (PlacementSnapshot placement, out string dependentError) =>
+                {
+                    if (!materialStorage.TryCommitAuthoritativePlacementSlot(
+                            placement,
+                            MaterialStorageFilter.AllBuildingMaterials,
+                            MaterialResourceCatalog.ProvisionalMaximumStack,
+                            out dependentError)) return false;
+
+                    // These remaining operations cannot fail. Keeping them in
+                    // the registry's dependent commit means no published read
+                    // can observe a completed Placement with unconsumed staging.
+                    designation.Site.CommitConsumption();
+                    designation.Site.CloseForDeliveries();
+                    committedJobs.Add(designation.Job.Id.Value);
+                    return true;
+                }, out PlacementSnapshot completedPlacement, out error);
+            if (result != PlacementMutationResult.Success)
+                return Block($"Material Storage Placement registration failed ({result}): {error}",
+                    out error);
+
+            LastPlacementId = completedPlacement.PlacementId.Value;
+            committed?.Invoke(designation.Cell);
+            LastPhase = ConstructionCompletionPhase.Completed;
+            LastResult = "Authoritative Material Storage Placement and delegated empty slot committed.";
+            error = string.Empty;
+            return true;
+        }
+
+        private bool Block(string reason, out string error)
+        {
+            LastPhase = ConstructionCompletionPhase.Blocked;
+            LastResult = error = reason ?? "Construction completion was blocked.";
+            return false;
         }
 
         private bool RegisterCapacity(BackgroundFunction function, Vector2Int cell,
             out string error)
         {
+            // Material Storage completes through TryCommitMaterialStorage and
+            // must never pass through the legacy functional Background branch.
             if (function == BackgroundFunction.MaterialStorage)
-            {
-                if (materialStorage == null)
-                {
-                    error = "Material Storage authority is unavailable.";
-                    return false;
-                }
-                return materialStorage.TryAdd(cell,
-                    MaterialStorageFilter.AllBuildingMaterials, string.Empty, 0,
-                    MaterialResourceCatalog.ProvisionalMaximumStack, out error);
-            }
+            { error = "Material Storage requires direct Placement completion."; return false; }
             if (survival == null)
             {
                 error = string.Empty;
@@ -1016,7 +1160,8 @@ namespace AntColony.Commands
                 ant.Needs.WorkSpeedMultiplier;
             double remaining = 1d - Job.Progress;
             if (requested >= remaining && !transaction.TryCommit(
-                    designation, out string commitError))
+                    designation, terminalWorkReached: true,
+                    out string commitError))
             {
                 Fail(commitError);
                 return;

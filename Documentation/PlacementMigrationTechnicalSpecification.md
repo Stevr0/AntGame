@@ -1,5 +1,27 @@
 # WV-B3D.1 Construction and Placement Foundation Technical Specification
 
+## WV-B3D.3B implementation record — 19 October 2026
+
+Material Storage Construction now uses the recipe-backed Placement Definition
+and centralized `PlacementCompatibilityValidator` against the unified runtime
+cell. The completing Site is the only narrowly scoped construction-occupancy
+exception; every other Placement, Node, Solid, loose stack, unsupported region,
+unknown provenance or incompatible natural Background fails closed.
+
+The scenario/job completion operation prepares all state before mutation.
+`PlacementRegistry.TryRegisterCompletedStorage` installs a provisional record
+and footprint without publication, executes the delegated empty-slot commit,
+rolls the record/footprint back if that dependency rejects, then advances the
+registry revision and publishes. Site staging is consumed and deliveries close
+inside the non-failing dependent commit. This provides coordinated in-memory
+completion, not whole-world atomicity; `WV-B3B-LIM-001` remains open.
+
+The API permits unknown durability only for this direct Storage compatibility
+path. Ordinary future authoritative registration still requires approved Max
+HP. Replays are terminal no-ops, and new completion never writes the legacy
+functional Background. WV-B3D.3B is **Implemented — Automated Tests Passed,
+Manual Acceptance Pending**.
+
 ## WV-B3D.3A implementation record — 19 October 2026
 
 **Status: Complete.** Automated evidence passed 15/15 Placement Registry Edit,

@@ -471,8 +471,24 @@ namespace AntColony.Tests.EditMode
             Assert.That(host.MaterialStorage.TryGet(first.Cell,
                 out MaterialStorageSlot completedStorage), Is.True);
             Assert.That(completedStorage.Quantity, Is.Zero);
-            Assert.That(host.ConstructionTransaction.TryCommit(first, out _), Is.False,
-                "Construction material must not be consumed twice.");
+            int placementCount = host.Placements.Count;
+            int storageCount = host.MaterialStorage.Count;
+            Assert.That(host.ConstructionTransaction.TryCommit(first,
+                out string replayError), Is.True, replayError);
+            Assert.That(host.Placements.Count, Is.EqualTo(placementCount));
+            Assert.That(host.MaterialStorage.Count, Is.EqualTo(storageCount));
+            Assert.That(first.Site.DeliveredQuantity, Is.Zero,
+                "A replay must recognise terminal success without consuming again.");
+            Assert.That(host.MaterialStorage.GetFunctionAuthority(first.Cell),
+                Is.EqualTo(MaterialStorageFunctionAuthority.AuthoritativePlacement));
+            Assert.That(host.Placements.TryGetByCell(RegionCellId.Colony(
+                    AntRegionIds.Colony,
+                    new ColonyCell(first.Cell.x, first.Cell.y)),
+                out PlacementSnapshot completedPlacement),
+                Is.EqualTo(PlacementReadResult.Success));
+            Assert.That(completedPlacement.AuthorityState,
+                Is.EqualTo(PlacementAuthorityState.AuthoritativePlacement));
+            Assert.That(completedPlacement.CurrentHitPoints, Is.Null);
 
             Assert.That(host.MaterialDrops.TryAdd("bootstrap.second-soil",
                 ExcavatedMaterialType.Soil, 1, new Vector2Int(-1, -7),

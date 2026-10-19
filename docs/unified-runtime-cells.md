@@ -1,5 +1,19 @@
 # Unified Runtime Cells
 
+## WV-B3D.3B direct-completion snapshots
+
+Newly completed Storage cells now resolve function from the authoritative
+Storage Placement plus its delegated slot, not from a functional Background.
+The snapshot exposes Placement identity/lifecycle/revision, delegated slot
+state, the Placement visual-definition ID and resolved visual state. Unknown HP
+selects the completed visual state; this is presentation metadata only and does
+not invent durability, capacity or gameplay authority. One committed completion
+publishes after the Placement, slot and closed Site state exist. Blocked or
+rolled-back attempts publish no partial Placement-cell mutation.
+
+Automated coverage passed **615/615 Edit** and **84/84 Play**. Manual
+acceptance remains pending.
+
 ## WV-B3D.3A delegated Storage snapshots
 
 **Complete after 29/29 user-confirmed Unity manual checks.** The retained

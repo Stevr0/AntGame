@@ -101,10 +101,19 @@ namespace AntColony.World
         DurabilityUnknown,
         LegacyProjectionReadOnly,
         InvalidAuthorityState,
+        DependentCommitFailed,
         RevisionMismatch,
         StaleScenario,
         ContextInvalidated
     }
+
+    /// <summary>
+    /// Commits state owned by another authority while a new Placement is
+    /// prepared but before it is published. Returning false rolls the prepared
+    /// Placement and its footprint back without exposing either one.
+    /// </summary>
+    public delegate bool PlacementDependentCommit(PlacementSnapshot placement,
+        out string error);
 
     public readonly struct PlacementConstructionRequirement
     {
@@ -686,6 +695,42 @@ namespace AntColony.World
             RegionCellId anchor, PlacementOrientation orientation,
             out PlacementSnapshot snapshot, out string error)
         {
+            return TryRegisterCompletedCore(definitionId, anchor, orientation,
+                allowUnknownStorageDurability: false, dependentCommit: null,
+                out snapshot, out error);
+        }
+
+        /// <summary>
+        /// WV-B3D.3B compatibility boundary for Material Storage only. Storage
+        /// balance has no approved Max HP yet, so direct completion may retain
+        /// unknown durability while no damage, Repair or destruction exists.
+        /// The dependent slot commit occurs before the Placement is published.
+        /// </summary>
+        public PlacementMutationResult TryRegisterCompletedStorage(
+            string definitionId, RegionCellId anchor,
+            PlacementOrientation orientation,
+            PlacementDependentCommit dependentCommit,
+            out PlacementSnapshot snapshot, out string error)
+        {
+            snapshot = null;
+            if (!definitions.TryGetValue(definitionId ?? string.Empty,
+                    out PlacementDefinition definition) ||
+                definition.Category != PlacementCategory.Storage ||
+                dependentCommit == null)
+                return Fail(PlacementMutationResult.InvalidDefinition,
+                    "Direct Storage completion requires its registered Storage definition and dependent slot commit.",
+                    out error);
+            return TryRegisterCompletedCore(definitionId, anchor, orientation,
+                allowUnknownStorageDurability: true, dependentCommit,
+                out snapshot, out error);
+        }
+
+        private PlacementMutationResult TryRegisterCompletedCore(
+            string definitionId, RegionCellId anchor,
+            PlacementOrientation orientation, bool allowUnknownStorageDurability,
+            PlacementDependentCommit dependentCommit,
+            out PlacementSnapshot snapshot, out string error)
+        {
             snapshot = null;
             if (lifecycle == PlacementRegistryLifecycle.ContextInvalidated)
                 return Fail(PlacementMutationResult.ContextInvalidated,
@@ -697,7 +742,9 @@ namespace AntColony.World
             if (!definition.Supports(anchor.Kind))
                 return Fail(PlacementMutationResult.InvalidCell,
                     "The Placement Definition does not support this region.", out error);
-            if (!definition.MaximumHitPoints.HasValue)
+            if (!definition.MaximumHitPoints.HasValue &&
+                !(allowUnknownStorageDurability &&
+                    definition.Category == PlacementCategory.Storage))
                 return Fail(PlacementMutationResult.DurabilityUnknown,
                     "Authoritative completion requires approved maximum HP.", out error);
 
@@ -726,8 +773,31 @@ namespace AntColony.World
                 definition.MaximumHitPoints, definition.MaximumHitPoints);
             records.Add(id, record);
             foreach (RegionCellId cell in footprint) occupiedCells.Add(cell, id);
-            Revision++;
             snapshot = new PlacementSnapshot(record, ScenarioContextId);
+            if (dependentCommit != null)
+            {
+                bool committed;
+                try
+                {
+                    committed = dependentCommit(snapshot, out error);
+                }
+                catch (Exception exception)
+                {
+                    committed = false;
+                    error = $"The dependent Placement commit failed: {exception.Message}";
+                }
+                if (!committed)
+                {
+                    foreach (RegionCellId cell in footprint)
+                        occupiedCells.Remove(cell);
+                    records.Remove(id);
+                    snapshot = null;
+                    if (string.IsNullOrWhiteSpace(error))
+                        error = "The dependent Placement commit was rejected.";
+                    return PlacementMutationResult.DependentCommitFailed;
+                }
+            }
+            Revision++;
             PlacementChanged?.Invoke(snapshot.Footprint);
             error = string.Empty;
             return PlacementMutationResult.Success;

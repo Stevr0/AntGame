@@ -1,5 +1,16 @@
 # Resource and Node System
 
+## WV-B3D.3B newly completed Storage
+
+**Implemented — Automated Tests Passed, Manual Acceptance Pending.** Terminal
+Construction now creates the authoritative Storage Placement and exactly one
+empty delegated slot together. The slot remains the sole owner of filter,
+quantity, capacity and reservations; Placement snapshots do not copy resource
+state. Ground-to-Storage deposits and Storage-to-Construction withdrawals work
+immediately after completion. Failed commits and terminal replays cannot create
+duplicate capacity or resource ownership. Natural Backgrounds and Resource
+Nodes remain separate and do not inherit Placement HP.
+
 ## WV-B3D.3A Storage ownership
 
 **Complete.** The authoritative Unity checklist passed 29/29 by user report;
@@ -10,8 +21,8 @@ Authored Material Storage now has authoritative Placement identity, but the
 existing `MaterialStorageWorld` slot remains the single physical ledger for its
 filter, contents, capacity and reservations. No resource is copied or changes
 owner during promotion. Nodes, loose stacks, ant inventory and Construction
-staging remain separate authorities. Generated/new Storage stays legacy until
-WV-B3D.3B.
+staging remain separate authorities. At WV-B3D.3A closure, generated/new
+Storage stayed legacy until WV-B3D.3B.
 
 ## WV-B3C.3B — complete
 

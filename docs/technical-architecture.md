@@ -1,5 +1,22 @@
 # Technical Architecture
 
+## WV-B3D.3B coordinated Storage completion
+
+`ConstructionWorldTransaction` now coordinates terminal Material Storage work
+with `PlacementRegistry`, `MaterialStorageWorld` and the Construction Site
+ledger. It validates the current runtime-cell revision, prepares an unpublished
+one-cell Placement, commits the dependent empty delegated slot and Site/staging
+closure, then publishes the Placement revision and completion notification.
+Dependent rejection or exception removes the unpublished Placement record and
+footprint. Operation IDs and terminal replay handling prevent duplicate
+identity, capacity, consumption or XP.
+
+The registry remains the structural authority and Storage remains the only
+resource ledger. This is coordinated in-memory commit/rollback, not a claim of
+whole-world atomic persistence; `WV-B3B-LIM-001` remains open. The slice is
+**Implemented — Automated Tests Passed, Manual Acceptance Pending** after
+**615/615 Edit** and **84/84 Play**.
+
 ## WV-B3D.3A Material Storage delegation
 
 **Complete after user-confirmed 29/29 Unity manual acceptance.** Codex did not

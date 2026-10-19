@@ -209,6 +209,8 @@ namespace AntColony.World
             if (placements != null && placements.TryGetByCell(cellId,
                     out PlacementSnapshot projected) == PlacementReadResult.Success)
             {
+                placements.TryGetDefinition(projected.DefinitionId,
+                    out PlacementDefinition placementDefinition);
                 string functionId = string.Empty;
                 if (world.TryGetBackgroundMaterialDefinition(
                         data.BackgroundMaterialId,
@@ -217,11 +219,12 @@ namespace AntColony.World
                         ? PlacementCategory.MovementImprovement.ToString()
                         : projectedBackground.Function.ToString();
                 MaterialStorageSlot slot = null;
-                bool hasStorage = projectedBackground != null &&
-                    projectedBackground.Function ==
-                        BackgroundFunction.MaterialStorage &&
+                bool hasStorage = placementDefinition?.Category ==
+                        PlacementCategory.Storage &&
                     materialStorage != null &&
                     materialStorage.TryGet(cell, out slot);
+                if (hasStorage)
+                    functionId = BackgroundFunction.MaterialStorage.ToString();
                 bool delegated = hasStorage &&
                     materialStorage.GetFunctionAuthority(cell) ==
                         MaterialStorageFunctionAuthority.AuthoritativePlacement &&
@@ -255,7 +258,11 @@ namespace AntColony.World
                     reservedIncomingQuantity: hasStorage
                         ? slot.ReservedIncomingQuantity : null,
                     reservedWithdrawalQuantity: hasStorage
-                        ? slot.ReservedWithdrawalQuantity : null);
+                        ? slot.ReservedWithdrawalQuantity : null,
+                    visualDefinitionId: placementDefinition?.VisualDefinitionId,
+                    visualState: PlacementVisualStateResolver.Resolve(false,
+                        projected.Lifecycle, projected.CurrentHitPoints,
+                        projected.MaximumHitPoints, 0.5f));
             }
             if (!world.TryGetBackgroundMaterialDefinition(data.BackgroundMaterialId,
                     out BackgroundTileMaterialDefinition definition) ||

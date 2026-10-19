@@ -1,5 +1,16 @@
 # Ant AI and Job Management
 
+## WV-B3D.3B completion and immediate hauling
+
+New Material Storage now enters hauling selection immediately after its direct
+authoritative Placement completion. The existing Hauling authority can deposit
+a compatible ground stack into the delegated slot and can later withdraw from
+that same slot to stage another Construction Site. Construction still performs
+work only after all materials are staged; it does not transport resources.
+Terminal completion replay does not award XP or consume staging twice, and a
+blocked completion retains the Site for retry. Automated suites passed; the
+manual acceptance checklist remains pending.
+
 ## WV-B3D.3A Storage authority closure
 
 WV-B3D.3A is complete after user-confirmed 29/29 Unity manual acceptance.

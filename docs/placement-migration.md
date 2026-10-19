@@ -1,5 +1,23 @@
 # Placement Migration
 
+## WV-B3D.3B status
+
+**Implemented — Automated Tests Passed, Manual Acceptance Pending.** A newly
+completed Material Storage now commits directly as one authoritative completed
+Placement. The coordinated completion publishes Placement identity/occupancy,
+one delegated empty `MaterialStorageWorld` slot, consumed staging and the
+closed Construction Site as one replay-safe outcome; it never creates a
+temporary functional Background. Failed dependent commits roll back unpublished
+Placement identity and occupancy, while blocked attempts retain the Site and
+staging for retry.
+
+This cutover is deliberately narrow. New Storage may report unknown HP under a
+compatibility policy until approved durability values exist; no damage, Repair,
+destruction, removal or broader function migration was added. Focused Edit
+suites passed **11/11**, **17/17** and **28/28**, focused Play passed **3/3**
+and **6/6**, and complete suites passed **615/615 Edit** and **84/84 Play**.
+Manual checks remain pending, so WV-B3D.4A has not started.
+
 ## WV-B3D.3A status
 
 **Complete.** The user confirmed the authoritative Unity checklist **29/29** in
@@ -10,7 +28,8 @@ authored Material Storage fixtures promote at quiescent scenario initialization
 to authoritative completed Placements while retaining stable IDs. Their
 existing `MaterialStorageWorld` slots are delegated, not copied, and remain the
 only filter/quantity/capacity/reservation authority. Migrated HP stays unknown.
-Generated/new Storage remains a legacy projection until WV-B3D.3B. Damage,
+At WV-B3D.3A closure, generated/new Storage remained a legacy projection until
+WV-B3D.3B. Damage,
 Repair, destruction and Placement removal were not implemented.
 
 ## WV-B3D.2 status

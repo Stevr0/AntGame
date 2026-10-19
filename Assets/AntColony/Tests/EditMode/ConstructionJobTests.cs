@@ -205,21 +205,120 @@ namespace AntColony.Tests.EditMode
         }
 
         [Test]
-        public void CompletedMaterialStorageRegistersEmptyCapacity()
+        public void CompletedMaterialStorageRegistersAuthoritativePlacementAndEmptyCapacityOnce()
+        {
+            AntGameDevelopmentWorldHost host = OpenHost();
+            host.WorldData.GetCell(Site, out WorldTileCellData before);
+            int placementCount = host.Placements.Count;
+            int storageCount = host.MaterialStorage.Count;
+            ConstructionDesignation designation = Designate(host, Site,
+                BackgroundFunction.MaterialStorage);
+            Assert.That(designation.Recipe.RequiredQuantity, Is.EqualTo(1));
+            Assert.That(designation.Recipe.BaseDurationHours, Is.EqualTo(4d));
+            StageFromTestInventory(designation, CreateRecord("storage-stager"));
+            AntRecord builder = CreateRecord("storage-builder");
+            ConstructionJobOrder order = CreateSuppliedOrder(host,
+                builder, designation);
+            order.TryArrive(order.SiteApproachCell, out _);
+            order.Advance(4d, 4d);
+
+            host.WorldData.GetCell(Site, out WorldTileCellData after);
+            Assert.That(after.BackgroundMaterialId,
+                Is.EqualTo(before.BackgroundMaterialId),
+                "Direct Placement completion preserves the natural Background.");
+            Assert.That(host.MaterialStorage.TryGet(Site,
+                out MaterialStorageSlot slot), Is.True);
+            Assert.That(slot.Quantity, Is.Zero);
+            Assert.That(slot.MaximumStack, Is.EqualTo(10));
+            Assert.That(slot.Filter,
+                Is.EqualTo(MaterialStorageFilter.AllBuildingMaterials));
+            Assert.That(host.MaterialStorage.Count, Is.EqualTo(storageCount + 1));
+            Assert.That(host.MaterialStorage.GetFunctionAuthority(Site),
+                Is.EqualTo(MaterialStorageFunctionAuthority.AuthoritativePlacement));
+            Assert.That(host.Placements.TryGetByCell(ColonyCell(Site),
+                out PlacementSnapshot placement), Is.EqualTo(PlacementReadResult.Success));
+            Assert.That(placement.AuthorityState,
+                Is.EqualTo(PlacementAuthorityState.AuthoritativePlacement));
+            Assert.That(placement.Lifecycle, Is.EqualTo(PlacementLifecycle.Completed));
+            Assert.That(placement.Footprint.Count, Is.EqualTo(1));
+            Assert.That(placement.CurrentHitPoints, Is.Null);
+            Assert.That(placement.MaximumHitPoints, Is.Null);
+            Assert.That(host.Placements.Count, Is.EqualTo(placementCount + 1));
+            Assert.That(designation.Site.DeliveredQuantity, Is.Zero);
+            Assert.That(builder.Skills.Get(AntSkillId.Construction).TotalExperience,
+                Is.EqualTo(20d).Within(0.001d));
+
+            PlacementId identity = placement.PlacementId;
+            long placementRevision = placement.Revision;
+            double constructionExperience = builder.Skills.Get(
+                AntSkillId.Construction).TotalExperience;
+            Assert.That(host.ConstructionTransaction.TryCommit(designation,
+                out string replayError), Is.True, replayError);
+            Assert.That(host.Placements.Count, Is.EqualTo(placementCount + 1));
+            Assert.That(host.MaterialStorage.Count, Is.EqualTo(storageCount + 1));
+            host.Placements.TryGetByCell(ColonyCell(Site), out placement);
+            Assert.That(placement.PlacementId, Is.EqualTo(identity));
+            Assert.That(placement.Revision, Is.EqualTo(placementRevision));
+            Assert.That(builder.Skills.Get(AntSkillId.Construction).TotalExperience,
+                Is.EqualTo(constructionExperience));
+            Assert.That(host.ConstructionTransaction.LastPhase,
+                Is.EqualTo(ConstructionCompletionPhase.ReplaySuppressed));
+
+            Assert.That(host.RuntimeCells.TryGetCell(ColonyCell(Site),
+                out RuntimeCellSnapshot runtimeBefore),
+                Is.EqualTo(RuntimeCellReadResult.Success));
+            Assert.That(host.MaterialStorage.TryReserveIncoming(Site,
+                "material.soil", 10, "test.deposit", 1,
+                out _, out replayError), Is.True, replayError);
+            Assert.That(host.MaterialStorage.TryCommitReservedDeposit(Site,
+                "material.soil", 10, "test.deposit", 1, () => true,
+                out replayError), Is.True, replayError);
+            Assert.That(host.RuntimeCells.TryGetCell(ColonyCell(Site),
+                out RuntimeCellSnapshot runtimeAfter),
+                Is.EqualTo(RuntimeCellReadResult.Success));
+            Assert.That(runtimeAfter.Placement.StableId,
+                Is.EqualTo(runtimeBefore.Placement.StableId));
+            Assert.That(runtimeAfter.Placement.PlacementRevision,
+                Is.EqualTo(runtimeBefore.Placement.PlacementRevision));
+            Assert.That(runtimeAfter.Placement.FunctionRevision,
+                Is.GreaterThan(runtimeBefore.Placement.FunctionRevision));
+            Assert.That(runtimeAfter.Placement.StoredQuantity, Is.EqualTo(1));
+            Assert.That(host.RebuildWorld(), Is.True);
+            Assert.That(host.ConstructionDesignations.Count, Is.Zero);
+        }
+
+        [Test]
+        public void BlockedMaterialStorageCompletionPreservesSiteAndCanRetry()
         {
             AntGameDevelopmentWorldHost host = OpenHost();
             ConstructionDesignation designation = Designate(host, Site,
                 BackgroundFunction.MaterialStorage);
-            StageFromTestInventory(designation, CreateRecord("storage-stager"));
-            ConstructionJobOrder order = CreateSuppliedOrder(host,
-                CreateRecord("storage-builder"), designation);
-            order.TryArrive(order.SiteApproachCell, out _);
-            order.Advance(4d, 4d);
-            Assert.That(host.MaterialStorage.TryGet(Site,
-                out MaterialStorageSlot slot), Is.True);
-            Assert.That(slot.Quantity, Is.Zero);
-            Assert.That(host.RebuildWorld(), Is.True);
-            Assert.That(host.ConstructionDesignations.Count, Is.Zero);
+            StageFromTestInventory(designation, CreateRecord("blocked-stager"));
+            Assert.That(host.MaterialDrops.TryAdd("test.storage-conflict",
+                ExcavatedMaterialType.Soil, 1, Site,
+                out _, out string error), Is.True, error);
+            ConstructionJobOrder blocked = CreateSuppliedOrder(host,
+                CreateRecord("blocked-builder"), designation);
+            blocked.TryArrive(blocked.SiteApproachCell, out _);
+            blocked.Advance(4d, 4d);
+
+            Assert.That(blocked.Phase, Is.EqualTo(ConstructionOrderPhase.Failed));
+            Assert.That(designation.Site.DeliveredQuantity, Is.EqualTo(1));
+            Assert.That(designation.Site.AcceptsDeliveries, Is.True);
+            Assert.That(host.MaterialStorage.TryGet(Site, out _), Is.False);
+            Assert.That(host.Placements.TryGetByCell(ColonyCell(Site), out _),
+                Is.EqualTo(PlacementReadResult.NotRegistered));
+            Assert.That(host.ConstructionTransaction.LastPhase,
+                Is.EqualTo(ConstructionCompletionPhase.Blocked));
+
+            host.MaterialDrops.Clear();
+            ConstructionJobOrder retry = CreateSuppliedOrder(host,
+                CreateRecord("retry-builder"), designation);
+            retry.TryArrive(retry.SiteApproachCell, out _);
+            retry.Advance(4d, 8d);
+            Assert.That(retry.Phase, Is.EqualTo(ConstructionOrderPhase.Completed));
+            Assert.That(host.MaterialStorage.TryGet(Site, out _), Is.True);
+            Assert.That(designation.Site.DeliveredQuantity, Is.Zero);
         }
 
         [Test]
@@ -304,6 +403,10 @@ namespace AntColony.Tests.EditMode
         private static AntRecord CreateRecord(string id) => new(
             new AntId(id), "Test Builder", new ColonyId("test-colony"),
             AntCaste.Worker, new AntAttributes(5, 5, 5));
+
+        private static RegionCellId ColonyCell(Vector2Int cell) =>
+            RegionCellId.Colony(AntRegionIds.Colony,
+                new ColonyCell(cell.x, cell.y));
 
         private static AntGameDevelopmentWorldHost OpenHost()
         {

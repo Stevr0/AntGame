@@ -1,5 +1,20 @@
 # Construction and Placement Specification
 
+## WV-B3D.3B direct Material Storage completion — 19 October 2026
+
+Material Storage alone now completes through the target Placement contract:
+one fully supplied terminal Site produces one authoritative completed Placement
+and one delegated empty Storage slot, consumes staged Soil once, closes the Site
+and records terminal replay state. The natural Background remains authoritative
+and unchanged. No temporary functional Background or promotion pass occurs.
+
+Compatibility, occupancy and slot readiness are prepared before mutation.
+Failure preserves Site, staging and progress; dependency rejection rolls back
+unpublished identity/occupancy. Cancellation remains pre-completion only and
+cannot dismantle a completed Placement. Unknown Material Storage HP is a narrow
+compatibility policy until balance is approved. Status is **Implemented —
+Automated Tests Passed, Manual Acceptance Pending**.
+
 ## WV-B3D.3A implemented boundary — 19 October 2026
 
 **Complete.** The user confirmed the authoritative Unity manual checklist

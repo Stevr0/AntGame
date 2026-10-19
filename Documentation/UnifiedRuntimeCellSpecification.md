@@ -1,5 +1,17 @@
 # Unified Runtime Cell Architecture and Migration Specification
 
+## WV-B3D.3B direct-completion publication — 19 October 2026
+
+A newly completed Material Storage cell publishes one authoritative Placement
+with delegated slot data while retaining its authoritative natural Background.
+Snapshots expose stable Placement/definition identity, Completed lifecycle,
+footprint, structural revision, unknown durability, visual-definition key and
+Completed visual state, plus the slot's independent revision, empty/stored
+resource, capacity and reservation totals. The Placement event is emitted only
+after both structural identity and the empty delegated slot exist. Reads and
+camera switches remain inert; slot mutations never replace identity or advance
+the structural revision. `WV-B3B-LIM-001` remains open.
+
 ## WV-B3D.3A delegated Material Storage state — 19 October 2026
 
 **Complete.** Retained automated evidence passed 15/15 and 28/28 focused Edit,

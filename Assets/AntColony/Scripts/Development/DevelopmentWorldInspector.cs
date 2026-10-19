@@ -465,6 +465,26 @@ namespace AntColony.Development
                 .Append(registry.GetCompletedCount(PlacementCategory.Nursery))
                 .AppendLine();
 
+            ConstructionWorldTransaction construction =
+                worldHost.ConstructionTransaction;
+            if (construction != null &&
+                !string.IsNullOrEmpty(construction.LastOperationId))
+            {
+                builder.Append("Last Construction completion: ")
+                    .Append(construction.LastOperationId).Append("   ")
+                    .Append(construction.LastPhase).AppendLine();
+                builder.Append("Completion result: ")
+                    .Append(construction.LastResult).AppendLine();
+                builder.Append("Expected / actual cell revision: ")
+                    .Append(construction.LastExpectedCellRevision?.ToString() ?? "N/A")
+                    .Append(" / ")
+                    .Append(construction.LastActualCellRevision?.ToString() ?? "N/A")
+                    .Append("   Placement ")
+                    .Append(string.IsNullOrEmpty(construction.LastPlacementId)
+                        ? "N/A" : construction.LastPlacementId)
+                    .AppendLine();
+            }
+
             RegionCellId cellId = RegionCellId.Colony(AntRegionIds.Colony,
                 new ColonyCell(selectedCell.x, selectedCell.y));
             if (worldHost.RuntimeCells == null ||
@@ -506,10 +526,16 @@ namespace AntColony.Development
             builder.Append("HP / condition: ")
                 .Append(placement.CurrentHitPoints.HasValue
                     ? $"{placement.CurrentHitPoints}/{placement.MaximumHitPoints}"
-                    : "Unknown (legacy projection)")
+                    : "Unknown (compatibility policy)")
                 .Append(placement.ConditionPercentage.HasValue
                     ? $" / {placement.ConditionPercentage:0.#}%"
                     : string.Empty)
+                .AppendLine();
+            builder.Append("Visual definition / state: ")
+                .Append(string.IsNullOrEmpty(placement.VisualDefinitionId)
+                    ? "Unbound" : placement.VisualDefinitionId)
+                .Append(" / ")
+                .Append(placement.VisualState)
                 .AppendLine();
             builder.Append("Function authority: ")
                 .Append(placement.FunctionAuthority)

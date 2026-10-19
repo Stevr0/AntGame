@@ -1,5 +1,14 @@
 # WV-B3C.2B Partial Hauling and Canonical Stack Transaction Plan
 
+## WV-B3D.3B new-Storage integration — 19 October 2026
+
+Directly completed Material Storage registers into the existing
+`MaterialStorageWorld` APIs as one empty authoritative delegated slot. Existing
+destination/source discovery, incoming/withdrawal reservation, partial and
+multi-source collection, transfer replay and cancellation paths are unchanged.
+The staged construction Soil is consumed by completion and is not deposited as
+Storage contents.
+
 ## WV-B3D.3A authority integration — 19 October 2026
 
 Hauling still reserves and commits through the same `MaterialStorageWorld`

@@ -1,5 +1,14 @@
 # Art Foundation
 
+## WV-B3D.3B Storage visual-state projection
+
+Authoritative newly completed Storage snapshots now expose their Placement
+visual-definition ID and resolve the existing category-specific visual state.
+The current completion path resolves to `Completed`; unknown HP does not imply a
+damaged state. This is a runtime/presentation contract only: WV-B3D.3B adds no
+sprites, renderer binding, animation, biome/season variants or gameplay
+authority. Automated tests passed; visual/manual acceptance remains pending.
+
 ## Shared visual definitions
 
 The runtime now provides one common visual-definition base with focused assets

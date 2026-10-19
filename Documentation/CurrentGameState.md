@@ -1,5 +1,96 @@
 # Ant Colony Current Game State
 
+## WV-B3D.3B Material Storage Construction Completion Cutover — Implemented (19 October 2026)
+
+**Status: Implemented — Automated Tests Passed, Manual Acceptance Pending.**
+Material Storage is now the first Construction result created directly as an
+authoritative completed Placement. Completion preserves the known natural
+Background, registers one scenario-scoped Placement identity/footprint, and
+delegates one empty capacity-10 Soil/Stone slot to `MaterialStorageWorld`. It
+does not write the legacy Material Storage Background or create a second
+quantity/reservation ledger. The existing one-Soil recipe, four-hour base work,
+Construction skill/XP, Rested multiplier, adjacent interaction, Hauling staging,
+interruption and cancellation rules are unchanged.
+
+The completion transaction validates terminal work, full staging, scenario and
+definition identity, the unified runtime-cell revision, centralized Placement
+compatibility, empty occupancy and delegated-slot readiness before mutation.
+The registry prepares identity and occupancy, invokes the all-or-nothing slot
+commit, consumes/closes the Site, and only then publishes the Placement. A
+dependent failure removes prepared identity/occupancy without advancing the
+registry revision. Preparation failure preserves the Site, staged material and
+progress. A successful operation is recorded by job/scenario identity; replay
+returns the terminal result without another Placement, slot, Soil consumption,
+XP award or logical completion.
+
+New Storage has `AuthoritativePlacement`/`Completed` state, a one-cell footprint,
+stable identity, `DelegatedMaterialStorage` function authority and unknown HP.
+Unknown HP is the explicit Material Storage compatibility exception until Max HP
+balance is approved; it selects the Completed visual state and enables no
+damage, Repair or destruction. Runtime snapshots expose the visual-definition
+key/state and preserve independent Placement and slot revisions. Existing five
+authored migrated Storage Placements remain unchanged. Food/Water Storage,
+Sleeping, Nursery and Prepared completion remain legacy.
+
+Automated evidence: Construction Edit **11/11**, Placement Registry Edit
+**17/17**, Storage/Hauling Edit **28/28**, Placement Play **3/3**,
+Storage/Hauling Play **6/6**, complete graphics-enabled Edit **615/615**, and
+complete Play **84/84**, all with zero failures, skips or inconclusive results.
+The implementation working tree is based on
+`73788fdefbe62f04bb0e16f65e72f4a5e6c0c27d`.
+
+### WV-B3D.3B authoritative manual acceptance checklist
+
+1. Open `Assets/AntColony/Scenes/AntGameDevelopment.unity` and enter Play Mode.
+2. Confirm Mara/Pip/Tala loads without errors.
+3. Select the five authored Material Storage cells.
+4. Confirm all five remain authoritative completed Placements.
+5. Confirm their contents, filters and capacities are unchanged.
+6. Confirm their Placement identities remain stable.
+7. Confirm their quantity badges remain correct.
+8. Designate a new Material Storage cell in the fixture.
+9. Confirm one Construction Site exists and no Storage capacity is active.
+10. Haul the required one Soil into staging.
+11. Confirm Construction starts only after full staging.
+12. Allow four base simulation hours of Construction work to complete.
+13. Confirm one new `AuthoritativePlacement` with `Completed` lifecycle.
+14. Confirm one `DelegatedMaterialStorage` slot.
+15. Confirm staged Soil was consumed exactly once.
+16. Confirm the original natural Background identity remains unchanged.
+17. Confirm no legacy Material Storage Background/function was created.
+18. Confirm the completed Storage begins empty with capacity 10.
+19. Haul additional Soil into the new Storage.
+20. Confirm quantity and its single badge increase once.
+21. Supply another Construction Site from that Storage.
+22. Confirm exactly-once withdrawal and staging.
+23. Select generated founding-queen scenario seed `2203` and rebuild.
+24. Confirm it starts with zero completed Placements.
+25. Extract a Soil Node and verify physical output.
+26. Designate Material Storage.
+27. Stage one Soil through Hauling.
+28. Complete Construction using the queen.
+29. Confirm the first Storage immediately becomes an authoritative Placement.
+30. Confirm it is not a legacy functional Background conversion.
+31. Confirm natural Background identity is preserved.
+32. Confirm the new Storage is immediately available to Hauling.
+33. Switch between Colony and World Views.
+34. Confirm Placement ID and structural revision remain stable.
+35. Restore the Mara/Pip/Tala fixture.
+36. Confirm old-scenario Placement handles are invalidated.
+37. Confirm Food/Water Storage, Sleeping and Nursery behave as before.
+38. Confirm Prepared movement remains `1.25x`.
+39. Confirm Extraction and multi-source Hauling remain functional.
+40. Confirm pause, `1x`/`2x`/`3x` speeds and entrance transitions.
+41. Confirm Construction then Completed visual state in diagnostics/placeholders.
+42. Confirm new Storage reports unknown durability, not fabricated HP.
+43. Confirm the Unity Console has no new errors or exceptions.
+44. Automated fault injection: compatibility failure preserves Site and staging.
+45. Automated fault injection: clearing the conflict allows one successful retry.
+46. Automated replay: no duplicate Storage, Soil consumption or XP occurs.
+
+Checks 44–46 are automated because no player-facing fault-injection control was
+added. Do not record manual acceptance until the user confirms checks 1–43.
+
 ## WV-B3D.3A Material Storage Authority Cutover — Complete (19 October 2026)
 
 **WV-B3D.3A — Manual acceptance complete (29/29).** The user confirmed Unity
@@ -32,9 +123,10 @@ revision and capacity state, and continue to report the obscured natural
 Background as unavailable. Food/Water Storage, Sleeping, Nursery, Prepared
 Grippable, Resource Nodes, ground stacks, ant inventory, Construction staging,
 Hauling/Material Transfers, skills and work priorities retain their existing
-authorities. Generated seed `2203` still starts with zero Placements; its
-first newly constructed Material Storage remains a legacy Background projection
-until WV-B3D.3B.
+authorities. At WV-B3D.3A closure, generated seed `2203` still started with zero
+Placements and its first newly constructed Material Storage remained a legacy
+Background projection pending WV-B3D.3B. The WV-B3D.3B section above records
+the subsequent completion cutover.
 
 The shared visual-definition code now provides a common identity/layout base
 with category-specific assets: Backgrounds expose only normal sprites, Resource

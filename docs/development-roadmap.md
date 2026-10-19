@@ -1,10 +1,27 @@
 # Development Roadmap
 
+## WV-B3D.3B — implemented, manual acceptance pending
+
+Material Storage Construction completion now cuts over directly to an
+authoritative completed Placement with one delegated empty slot. The 1 Soil,
+4-hour recipe, Hauling/staging workflow, natural Background and existing
+Storage ledger remain unchanged. Completion is replay-safe and failed dependent
+commits do not leak identity, occupancy, capacity or consumed material.
+
+Focused suites passed **11/11 Construction Edit**, **17/17 Placement Edit**,
+**28/28 Storage/Hauling Edit**, **3/3 Placement Play** and **6/6
+Storage/Hauling Play**. Complete suites passed **615/615 Edit** and **84/84
+Play**, with no failures, skips or inconclusive results. Manual checklist items
+1–43 remain pending; fault/replay items 44–46 are covered by automated tests
+because no player-facing fault-injection UI was added. Stop here: WV-B3D.4A is
+separately gated and has not started.
+
 ## WV-B3D.3A — complete
 
 The five authored Material Storage fixtures now promote to authoritative
 Placements while their existing slots remain the sole delegated mutable storage
-state. Generated/new Storage stays legacy until WV-B3D.3B. Focused suites passed
+state. At that milestone's closure, generated/new Storage stayed legacy until
+WV-B3D.3B. Focused suites passed
 15/15 and 28/28 Edit plus 3/3 and 6/6 Play; full suites passed 612/612 Edit and
 84/84 Play with no failures, skips or inconclusive results. The user confirmed
 the authoritative Unity checklist **29/29** in two stages; Codex did not

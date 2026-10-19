@@ -139,6 +139,7 @@ namespace AntColony.Tests.PlayMode
             ConstructionRecipe recipe = host.ConstructionRecipes.Recipes.Single(item =>
                 item.Result.Function == BackgroundFunction.MaterialStorage);
             Vector2Int siteCell = new(1, -8);
+            host.WorldData.GetCell(siteCell, out WorldTileCellData naturalBefore);
             Assert.That(host.ConstructionDesignations.TryDesignate(siteCell,
                 recipe.Result.StableMaterialId, out ConstructionDesignation site,
                 out error), Is.True, error);
@@ -179,16 +180,92 @@ namespace AntColony.Tests.PlayMode
                 out MaterialStorageSlot storage), Is.True);
             Assert.That(storage.Quantity, Is.Zero);
             Assert.That(host.MaterialStorage.GetFunctionAuthority(siteCell),
-                Is.EqualTo(MaterialStorageFunctionAuthority.LegacyBackground),
-                "New completion remains on the documented WV-B3D.3B bridge.");
+                Is.EqualTo(MaterialStorageFunctionAuthority.AuthoritativePlacement));
             RegionCellId runtimeCell = RegionCellId.Colony(AntRegionIds.Colony,
                 new ColonyCell(siteCell.x, siteCell.y));
             Assert.That(host.Placements.TryGetByCell(runtimeCell,
                 out PlacementSnapshot projection),
                 Is.EqualTo(PlacementReadResult.Success));
             Assert.That(projection.AuthorityState,
-                Is.EqualTo(PlacementAuthorityState.LegacyBackgroundProjection));
+                Is.EqualTo(PlacementAuthorityState.AuthoritativePlacement));
+            Assert.That(projection.Lifecycle,
+                Is.EqualTo(PlacementLifecycle.Completed));
+            Assert.That(projection.CurrentHitPoints, Is.Null);
+            Assert.That(projection.MaximumHitPoints, Is.Null);
+            host.WorldData.GetCell(siteCell, out WorldTileCellData naturalAfter);
+            Assert.That(naturalAfter.BackgroundMaterialId,
+                Is.EqualTo(naturalBefore.BackgroundMaterialId));
+            Assert.That(naturalAfter.BackgroundMaterialId,
+                Is.Not.EqualTo(recipe.Result.StableMaterialId));
+            Assert.That(host.RuntimeCells.TryGetCell(runtimeCell,
+                out RuntimeCellSnapshot runtime),
+                Is.EqualTo(RuntimeCellReadResult.Success));
+            Assert.That(runtime.Placement.FunctionAuthority,
+                Is.EqualTo(RuntimePlacementFunctionAuthority.DelegatedMaterialStorage));
+            Assert.That(runtime.Placement.StoredQuantity, Is.Zero);
+            Assert.That(runtime.Placement.AvailableCapacity, Is.EqualTo(10));
+            Assert.That(runtime.Placement.VisualState,
+                Is.EqualTo(PlacementVisualState.Completed));
+            Assert.That(runtime.NaturalBackgroundDefinitionId,
+                Is.EqualTo(naturalBefore.BackgroundMaterialId));
             Assert.That(queen.Record.Inventory.TotalQuantity, Is.Zero);
+
+            Assert.That(host.MaterialDrops.TryAdd("play.after-storage.soil",
+                ExcavatedMaterialType.Soil, 1, new Vector2Int(-1, -7),
+                out WorldMaterialDrop depositSource, out error), Is.True, error);
+            Assert.That(SurvivalInteractionOrder.TryMeasureApproach(
+                host.GridNavigationMap, siteApproach, depositSource.WorldCell,
+                out Vector2Int depositApproach, out _, out error), Is.True, error);
+            Assert.That(host.ColonyJobRegistry.TryAdd(
+                new ColonyJobId("play.deposit.new-storage"),
+                AntWorkCategory.Hauling, depositSource.WorldCell,
+                out ColonyJob depositJob, out error), Is.True, error);
+            var depositPlan = new MaterialHaulingPlan(depositJob,
+                MaterialHaulSourceKind.WorldDrop, "material.soil",
+                depositSource.OwnershipKey);
+            Assert.That(MaterialHaulingOrder.TryCreate(host.ColonyJobRegistry,
+                host.GridNavigationMap, host.MaterialDrops, host.MaterialTransfers,
+                host.MaterialStorage, host.ConstructionDesignations, queen.Record,
+                depositPlan, depositApproach, siteApproach,
+                out MaterialHaulingOrder deposit, out error), Is.True, error);
+            Assert.That(deposit.DestinationCell, Is.EqualTo(siteCell));
+            Assert.That(deposit.TryArrive(deposit.SourceApproachCell, 5d,
+                out Vector2Int storageApproach), Is.True, deposit.FailureReason);
+            Assert.That(deposit.TryArrive(storageApproach, 6d, out _),
+                Is.True, deposit.FailureReason);
+            Assert.That(host.MaterialStorage.TryGet(siteCell, out storage), Is.True);
+            Assert.That(storage.Quantity, Is.EqualTo(1));
+
+            ConstructionRecipe sleeping = host.ConstructionRecipes.Recipes.Single(
+                item => item.Result.Function == BackgroundFunction.Sleeping);
+            Vector2Int secondSiteCell = new(2, -8);
+            Assert.That(host.ConstructionDesignations.TryDesignate(secondSiteCell,
+                sleeping.Result.StableMaterialId,
+                out ConstructionDesignation secondSite, out error), Is.True, error);
+            Assert.That(SurvivalInteractionOrder.TryMeasureApproach(
+                host.GridNavigationMap, storageApproach, siteCell,
+                out Vector2Int withdrawalApproach, out _, out error), Is.True, error);
+            Assert.That(host.ColonyJobRegistry.TryAdd(
+                new ColonyJobId("play.withdraw.new-storage"),
+                AntWorkCategory.Hauling, siteCell,
+                out ColonyJob withdrawalJob, out error), Is.True, error);
+            var withdrawalPlan = new MaterialHaulingPlan(withdrawalJob,
+                MaterialHaulSourceKind.MaterialStorage, "material.soil",
+                sourceCell: siteCell);
+            Assert.That(MaterialHaulingOrder.TryCreate(host.ColonyJobRegistry,
+                host.GridNavigationMap, host.MaterialDrops, host.MaterialTransfers,
+                host.MaterialStorage, host.ConstructionDesignations, queen.Record,
+                withdrawalPlan, withdrawalApproach, storageApproach,
+                out MaterialHaulingOrder withdrawal, out error), Is.True, error);
+            Assert.That(withdrawal.DestinationCell, Is.EqualTo(secondSiteCell));
+            Assert.That(withdrawal.TryArrive(withdrawal.SourceApproachCell, 7d,
+                out Vector2Int secondSiteApproach), Is.True,
+                withdrawal.FailureReason);
+            Assert.That(withdrawal.TryArrive(secondSiteApproach, 8d, out _),
+                Is.True, withdrawal.FailureReason);
+            Assert.That(secondSite.Site.IsFullySupplied, Is.True);
+            Assert.That(host.MaterialStorage.TryGet(siteCell, out storage), Is.True);
+            Assert.That(storage.Quantity, Is.Zero);
         }
 
         [UnityTest]

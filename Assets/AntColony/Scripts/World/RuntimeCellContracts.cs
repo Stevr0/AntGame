@@ -112,7 +112,9 @@ namespace AntColony.World
             int? storedQuantity = null,
             int? availableCapacity = null,
             int? reservedIncomingQuantity = null,
-            int? reservedWithdrawalQuantity = null)
+            int? reservedWithdrawalQuantity = null,
+            string visualDefinitionId = "",
+            PlacementVisualState visualState = PlacementVisualState.Completed)
         {
             ProjectionState = projectionState;
             StableId = stableId ?? string.Empty;
@@ -138,6 +140,8 @@ namespace AntColony.World
             AvailableCapacity = availableCapacity;
             ReservedIncomingQuantity = reservedIncomingQuantity;
             ReservedWithdrawalQuantity = reservedWithdrawalQuantity;
+            VisualDefinitionId = visualDefinitionId ?? string.Empty;
+            VisualState = visualState;
         }
 
         public RuntimeOccupantProjectionState ProjectionState { get; }
@@ -162,6 +166,8 @@ namespace AntColony.World
         public int? AvailableCapacity { get; }
         public int? ReservedIncomingQuantity { get; }
         public int? ReservedWithdrawalQuantity { get; }
+        public string VisualDefinitionId { get; }
+        public PlacementVisualState VisualState { get; }
         public float? ConditionPercentage => CurrentHitPoints.HasValue &&
             MaximumHitPoints.HasValue
                 ? 100f * CurrentHitPoints.Value / MaximumHitPoints.Value

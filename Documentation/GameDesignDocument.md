@@ -1,5 +1,15 @@
 # ANT COLONY
 
+## WV-B3D.3B Material Storage completion — implemented 19 October 2026
+
+Construction of Material Storage now preserves the natural Background and
+directly creates a completed Placement with one delegated empty capacity-10
+slot. Hauling remains the material transport authority and Construction remains
+work-only after staging. Completion is replay-safe and failure-conserving.
+Unknown durability and unbound production sprites remain explicit compatibility
+states. Manual Unity acceptance is pending; other Placement migrations remain
+future work.
+
 ## WV-B3D.3A Material Storage authority cutover — complete 19 October 2026
 
 **Complete.** Automated validation passed and the user confirmed all 29/29

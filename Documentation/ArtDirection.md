@@ -1,5 +1,13 @@
 # Ant Colony Art Direction and Tileset Foundation
 
+## WV-B3D.3B Placement visual-state publication
+
+Runtime Placement snapshots now expose their visual-definition key and resolved
+state. Material Storage reports Construction before completion through the
+existing designation presentation and Completed afterward through diagnostics;
+unknown HP resolves to Completed. Production sprite assets and renderer binding
+remain deferred, so Damaged/Destroyed are definition-ready future states only.
+
 ## Shared visual-definition architecture — WV-B3D.3A addendum
 
 Visual metadata now has one common definition base for stable lookup, gameplay

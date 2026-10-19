@@ -309,6 +309,8 @@ namespace AntColony.Development
             }
             SurfaceWorld = nextSurfaceWorld;
             Placements = placementCandidate;
+            ConstructionTransaction.BindPlacementCompletion(Placements,
+                RuntimeCells);
 
             tilemapRenderer.BindWorldData(WorldData);
             collisionRenderer.BindWorldData(WorldData);

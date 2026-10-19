@@ -1,13 +1,30 @@
 # Milestone History
 
+## 19 October 2026 — WV-B3D.3B Material Storage Construction Completion Cutover
+
+**Implemented — Automated Tests Passed, Manual Acceptance Pending.** Newly
+completed Material Storage now becomes an authoritative completed Placement
+with one delegated empty capacity-10 slot, while the natural Background,
+recipe, work requirement and Storage resource ledger remain unchanged. The
+completion coordinator rejects stale/incompatible cells, rolls back unpublished
+Placement state when the dependent commit fails, and suppresses terminal
+replays. Runtime snapshots expose delegated Storage and Placement visual state;
+unknown HP remains an explicit narrow compatibility policy.
+
+Focused Edit passed **11/11**, **17/17** and **28/28**; focused Play passed
+**3/3** and **6/6**; complete suites passed **615/615 Edit** and **84/84 Play**
+with zero failures, skips or inconclusive results. Manual checklist items 1–43
+remain pending; automated fault/replay coverage satisfies items 44–46. No
+damage, Repair, destruction, renderer implementation or WV-B3D.4A work began.
+
 ## 19 October 2026 — WV-B3D.3A Material Storage Authority Cutover
 
 **Complete.** Five
 authored fixture Storage projections promote to authoritative Placements while
 their unchanged `MaterialStorageWorld` slots remain the single mutable resource
 authority. Runtime snapshots/diagnostics expose delegation and slot state;
-migrated HP remains unknown. Generated/new Storage is deliberately still legacy
-until WV-B3D.3B. A shared category-specific visual-definition foundation was
+migrated HP remains unknown. At WV-B3D.3A closure, generated/new Storage was
+deliberately still legacy until WV-B3D.3B. A shared category-specific visual-definition foundation was
 added without artwork or renderer changes. Focused Edit passed 15/15 and 28/28,
 focused Play 3/3 and 6/6, full Edit 612/612, and full Play 84/84, with zero
 failures, skips or inconclusive results. The user confirmed all **29/29**

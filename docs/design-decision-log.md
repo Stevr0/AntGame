@@ -1,5 +1,23 @@
 # Design Decision Log
 
+## 2026-10-19 — Cut over new Material Storage completion
+
+- Complete the existing 1 Soil, 4-hour recipe directly into a one-cell
+  authoritative Storage Placement; never create an interim functional
+  Background.
+- Coordinate Placement preparation, the delegated empty Storage slot and Site
+  closure so rejection rolls back unpublished identity/occupancy and replay
+  cannot duplicate capacity, material consumption or XP.
+- Preserve the natural Background and keep `MaterialStorageWorld` as the sole
+  filter/quantity/capacity/reservation ledger.
+- Permit unknown HP only for this compatibility path until approved Storage
+  durability values exist; do not infer damage, Repair or destruction rules.
+- Expose the existing Placement visual-definition/state selection in runtime
+  snapshots and diagnostics without adding renderer behavior or art assets.
+- Record **615/615 Edit** and **84/84 Play** passed; retain status as
+  **Implemented — Automated Tests Passed, Manual Acceptance Pending** and do
+  not begin WV-B3D.4A.
+
 ## 2026-10-19 — Close WV-B3D.3A after authoritative acceptance
 
 - Mark WV-B3D.3A **Complete** after 15/15 Placement Registry Edit, 28/28
@@ -21,7 +39,8 @@
 - Keep `MaterialStorageWorld` as the sole mutable ledger and bind existing slot
   objects to Placement handles; never copy quantities or reservations.
 - Treat the retained functional Background as presentation compatibility on
-  promoted cells, while new/generated Storage remains legacy until WV-B3D.3B.
+  promoted cells; at that point new/generated Storage remained legacy until
+  WV-B3D.3B.
 - Preserve unknown migrated HP and defer damage, Repair, destruction and
   contents recovery gameplay.
 - Use one visual-definition base with category-specific assets so Backgrounds

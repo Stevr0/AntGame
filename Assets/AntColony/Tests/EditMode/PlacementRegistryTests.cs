@@ -532,6 +532,63 @@ namespace AntColony.Tests.EditMode
             Assert.That(after.Revision, Is.EqualTo(placement.Revision));
         }
 
+        [Test]
+        public void DirectStorageCompletionAllowsUnknownHpAndCommitsDependentStateOnce()
+        {
+            PlacementDefinition definition = CreateLegacyDefinition(
+                "placement.storage", StorageId, PlacementCategory.Storage, 1);
+            var registry = new PlacementRegistry("scenario.storage-build.v1",
+                new[] { definition });
+            int dependentCommits = 0;
+
+            PlacementMutationResult result = registry.TryRegisterCompletedStorage(
+                definition.StableId, ColonyCell(0, 0), PlacementOrientation.North,
+                (PlacementSnapshot prepared, out string error) =>
+                {
+                    dependentCommits++;
+                    error = string.Empty;
+                    return true;
+                }, out PlacementSnapshot placement, out string completionError);
+
+            Assert.That(result, Is.EqualTo(PlacementMutationResult.Success),
+                completionError);
+            Assert.That(dependentCommits, Is.EqualTo(1));
+            Assert.That(placement.AuthorityState,
+                Is.EqualTo(PlacementAuthorityState.AuthoritativePlacement));
+            Assert.That(placement.CurrentHitPoints, Is.Null);
+            Assert.That(placement.MaximumHitPoints, Is.Null);
+            Assert.That(registry.TryGetByCell(ColonyCell(0, 0), out PlacementSnapshot read),
+                Is.EqualTo(PlacementReadResult.Success));
+            Assert.That(read.PlacementId, Is.EqualTo(placement.PlacementId));
+        }
+
+        [Test]
+        public void RejectedDependentStorageCommitRollsBackIdentityAndOccupancy()
+        {
+            PlacementDefinition definition = CreateLegacyDefinition(
+                "placement.storage", StorageId, PlacementCategory.Storage, 1);
+            var registry = new PlacementRegistry("scenario.storage-rollback.v1",
+                new[] { definition });
+            long revision = registry.Revision;
+
+            PlacementMutationResult result = registry.TryRegisterCompletedStorage(
+                definition.StableId, ColonyCell(0, 0), PlacementOrientation.North,
+                (PlacementSnapshot prepared, out string error) =>
+                {
+                    error = "Injected delegated-slot rejection.";
+                    return false;
+                }, out PlacementSnapshot placement, out string completionError);
+
+            Assert.That(result,
+                Is.EqualTo(PlacementMutationResult.DependentCommitFailed));
+            Assert.That(completionError, Does.Contain("Injected"));
+            Assert.That(placement, Is.Null);
+            Assert.That(registry.Revision, Is.EqualTo(revision));
+            Assert.That(registry.Count, Is.Zero);
+            Assert.That(registry.TryGetByCell(ColonyCell(0, 0), out _),
+                Is.EqualTo(PlacementReadResult.NotRegistered));
+        }
+
         private PlacementRegistry CreateRegistryWithDurablePlacement(
             out PlacementSnapshot snapshot)
         {

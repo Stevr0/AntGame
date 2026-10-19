@@ -1,5 +1,19 @@
 # Colony Construction and Rooms
 
+## WV-B3D.3B Material Storage completion
+
+**Implemented — Automated Tests Passed, Manual Acceptance Pending.** The
+existing 1 Soil, 4-hour Material Storage recipe now finishes directly into an
+authoritative completed Placement and its single delegated capacity-10 slot.
+The natural Background is preserved, and no legacy functional Storage
+Background is created. Completion remains work-only after Hauling has staged
+the requirement, awards Construction progress once, and treats a replay of the
+same terminal operation as a no-op success.
+
+Compatibility or dependent-commit failure keeps the Site and staging available
+for retry and publishes no partial Placement. Damage, Repair, destruction,
+dismantling and other Placement-function cutovers remain outside this slice.
+
 ## WV-B3D.3A Material Storage boundary
 
 **Complete — 29/29 user-confirmed Unity manual checks.** Codex did not
