@@ -1,6 +1,7 @@
 # Construction and Placement Specification
 
-**Status:** Approved design contract; legacy migration not implemented.
+**Status:** Approved design contract; WV-B3D.2 registry foundation complete;
+functional authority migration remains deferred.
 
 **Approved:** 16 October 2026
 
@@ -19,7 +20,10 @@ Background owners remain exclusive; projected capacity and contents are not
 activated or copied. Definition and instance contracts include structural HP,
 but legacy projections report it as unknown and no final HP values are set.
 Damage, Repair, destruction, removal and stored-content recovery are future
-transactions, not WV-B3D.2 gameplay.
+transactions, not WV-B3D.2 gameplay. Automated suites passed 11/11 focused
+Edit, 3/3 focused Play, 608/608 complete Edit and 84/84 complete Play. The user
+confirmed **7/7 authoritative manual acceptance groups**; Codex did not
+independently perform them or rerun Unity for this documentation-only closure.
 
 **WV-B3D.1 technical amendment — 19 October 2026:**
 [`PlacementMigrationTechnicalSpecification.md`](PlacementMigrationTechnicalSpecification.md)

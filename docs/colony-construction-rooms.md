@@ -8,6 +8,9 @@ does not replace site staging or `ConstructionWorldTransaction`, consume
 materials, award XP, or activate another function/capacity. Definitions carry
 nullable durability metadata; legacy projections have unknown HP. Damage,
 Repair, destruction, Doors, room scoring and dismantling remain unimplemented.
+WV-B3D.2 is complete after passing automated suites and user-confirmed **7/7
+authoritative manual acceptance groups**. Construction Sites, staged resources,
+Hauling and legacy Construction completion remain the exclusive active workflow.
 
 ## WV-B3D.1 Placement migration specification
 

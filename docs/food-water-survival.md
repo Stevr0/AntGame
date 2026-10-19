@@ -6,7 +6,9 @@ Food/Water Storage and Sleeping cells now have read-only Placement identities,
 but `SurvivalInteractionWorld` still exclusively owns quantities, reservations,
 rest capacity and recovery. Projection snapshots expose no additional capacity,
 contents or HP. Damage, Repair and destruction do not affect survival Storage in
-this milestone.
+this milestone. The user's completed 7/7 WV-B3D.2 acceptance confirms these
+legacy owners remained authoritative; Codex did not independently perform that
+Unity check.
 
 ## WV-B3D.1 Placement boundary
 

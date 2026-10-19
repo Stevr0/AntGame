@@ -6,6 +6,8 @@ Completed legacy Nursery Backgrounds now receive deterministic one-cell
 Placement projections. The registry does not activate or duplicate Nursery
 capacity, invent HP, or add brood state. Reproduction, laying, care, room
 quality, damage and Repair remain unimplemented.
+The user's completed 7/7 WV-B3D.2 acceptance confirms no duplicate Nursery
+capacity was activated; Codex did not independently perform that Unity check.
 
 ## WV-B3D.1 Nursery boundary
 

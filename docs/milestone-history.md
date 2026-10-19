@@ -2,7 +2,7 @@
 
 ## 19 October 2026 — WV-B3D.2 Placement Registry Foundation
 
-**Implemented — Automated Tests Passed, Manual Acceptance Pending.** Added six
+**WV-B3D.2 — Complete.** Added six
 recipe-backed immutable definitions, deterministic legacy projections,
 scenario/context-safe identity, one-cell/future-footprint occupancy,
 lifecycle/revisions, compatibility, runtime-cell integration, developer
@@ -10,7 +10,15 @@ diagnostics and HP-ready definition/instance snapshots. Legacy HP and hidden
 natural provenance remain explicit unknowns; no function/capacity moved.
 Focused Edit/Play passed **11/11** and **3/3**; complete graphics-enabled suites
 passed **608/608** and **84/84** with zero failures, skips or inconclusive tests.
-Damage, Repair, destruction and WV-B3D.3A were not started.
+The user confirmed all **7/7 authoritative manual acceptance groups** in two
+stages: the 16-check practical summary, then explicit confirmation of zero
+initial completed Placements in seed `2203` and no Placement-owned contents or
+functional capacity in legacy projections. Codex did not independently perform
+the manual checks or rerun Unity for this closure. Evidence under
+`Logs/WV-B3D2-*` came from the implementation working tree based on parent
+`75bc444118ac8f7edcf0aa7197a12de0a9e7a005`, not the final implementation
+commit `b04034fedd26877a103750d40e27d29b394f433c`. Damage, Repair, destruction and
+WV-B3D.3A were not started; `WV-B3B-LIM-001` remains active.
 
 ## 19 October 2026 — WV-B3D.1 Placement Migration Specification
 

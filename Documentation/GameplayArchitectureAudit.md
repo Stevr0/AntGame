@@ -11,7 +11,9 @@ completion remain unchanged and exclusive. Legacy projections expose no owned
 contents/capacity and unknown HP. No legacy class or serialized functional asset
 is removable yet. Focused Edit/Play passed **11/11** and **3/3**; complete
 graphics-enabled suites passed **608/608** and **84/84**. Manual acceptance is
-pending, and Material Storage cutover remains a separately approved milestone.
+complete for all **7/7 authoritative groups** based on the user's Unity report;
+Codex did not independently execute those checks. Material Storage cutover
+remains a separately approved milestone.
 
 ## WV-B3D.1 placement follow-up — 19 October 2026
 

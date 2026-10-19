@@ -1,7 +1,8 @@
 # WV-B3D.1 Construction and Placement Foundation Technical Specification
 
-**Status:** WV-B3D.1 specification complete; WV-B3D.2 registry/read-model
-foundation implemented with automated tests passing and manual acceptance pending.
+**Status:** WV-B3D.1 specification complete; **WV-B3D.2 Placement Registry
+Foundation complete** after automated validation and user-confirmed 7/7 manual
+acceptance groups.
 
 **Date:** 19 October 2026
 
@@ -21,6 +22,17 @@ projection, change publication, scenario retirement and developer diagnostics.
 The six definitions are derived from the existing six Construction recipes.
 Legacy projections remain read-only and do not own contents, reservations,
 capacity, movement effects or other gameplay function.
+
+The user confirmed all **7/7 authoritative Unity manual acceptance groups** in
+two stages, including zero initial completed Placements in generated seed
+`2203` and no Placement-owned contents or functional capacity in legacy
+projections. Codex did not independently perform those checks or rerun Unity
+during this documentation-only closure. Retained XML under `Logs/WV-B3D2-*`
+records 11/11 focused Edit, 3/3 focused Play, 608/608 complete Edit and 84/84
+complete Play on Unity `6000.3.8f1`, all with zero failures, skips or
+inconclusive results. It came from the working tree based on parent
+`75bc444118ac8f7edcf0aa7197a12de0a9e7a005`; the final implementation commit is
+`b04034fedd26877a103750d40e27d29b394f433c`.
 
 Durability contracts are implemented without inventing balance. Definitions
 contain nullable Max HP plus destructible/repairable/resistance metadata;
@@ -487,8 +499,8 @@ streaming and complete mutable-world rollback remain deferred under
 
 These slices require separate approval:
 
-1. **WV-B3D.2 — Placement Registry Foundation: implemented; manual acceptance
-   pending.** Definitions, identity, one-cell footprint index, revisions,
+1. **WV-B3D.2 — Placement Registry Foundation: complete.** Definitions,
+   identity, one-cell footprint index, revisions,
    snapshots, durability contracts, central compatibility and read-only legacy
    projections are present. No function cutover occurred.
 2. **WV-B3D.3A — Material Storage Authority Cutover:** migrate existing authored
@@ -554,7 +566,8 @@ authority is active and equivalent behavior is proven.
 
 WV-B3D.2 evidence: focused Edit/Play **11/11** and **3/3**; complete
 graphics-enabled Edit/Play **608/608** and **84/84**, with zero failures, skips
-or inconclusive results. Manual acceptance remains pending.
+or inconclusive results. The user confirmed all **7/7 authoritative manual
+acceptance groups**; Codex did not independently perform them.
 
 ## 19. Legacy retirement register
 

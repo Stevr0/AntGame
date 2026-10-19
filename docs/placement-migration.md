@@ -2,7 +2,7 @@
 
 ## WV-B3D.2 status
 
-**Implemented — Automated Tests Passed, Manual Acceptance Pending.** A
+**Complete.** A
 scenario-scoped registry now publishes the six existing recipe-backed
 definitions and deterministic one-cell legacy projections. It owns only
 identity, footprint occupancy, lifecycle, revision and HP-ready structural
@@ -15,7 +15,11 @@ instances require approved positive Max HP, start full and clamp mutations to
 `0..Max`; final HP values and all damage, Repair and destruction gameplay remain
 unapproved. Focused Edit/Play passed **11/11** and **3/3**; complete
 graphics-enabled suites passed **608/608** and **84/84**. Manual acceptance is
-pending.
+complete for all **7/7 authoritative groups** based on the user's Unity Play
+Mode report; Codex did not independently perform the checks or rerun Unity for
+this documentation-only closure. Evidence under `Logs/WV-B3D2-*` came from the
+working tree based on parent `75bc444118ac8f7edcf0aa7197a12de0a9e7a005`, not
+the final implementation commit `b04034fedd26877a103750d40e27d29b394f433c`.
 
 ## WV-B3D.1 status
 

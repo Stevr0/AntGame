@@ -1,8 +1,10 @@
 # ANT COLONY
 
-## WV-B3D.2 Placement Registry Foundation — implemented 19 October 2026
+## WV-B3D.2 Placement Registry Foundation — complete 19 October 2026
 
-**Implemented — Automated Tests Passed, Manual Acceptance Pending.** The game
+**Complete.** Automated validation passed and the user confirmed all **7/7
+authoritative manual acceptance groups** in Unity Play Mode; Codex did not
+independently perform those manual checks. The game
 now publishes a scenario-scoped Placement registry containing the six existing
 Construction definitions and deterministic, one-cell, read-only projections of
 Prepared Surface, Sleeping Spot, Food Storage, Water Storage, Material Storage

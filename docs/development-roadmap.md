@@ -1,6 +1,6 @@
 # Development Roadmap
 
-## WV-B3D.2 — implemented; manual acceptance pending
+## WV-B3D.2 — complete
 
 The Placement Registry Foundation implements immutable definitions, scenario
 identity, one-cell/future-footprint occupancy, lifecycle/revisions, conservative
@@ -8,7 +8,11 @@ compatibility, runtime-cell projection/change feeds, durability contracts and
 legacy scenario retirement. Existing functional owners remain unchanged.
 Focused Edit/Play passed **11/11** and **3/3**; full graphics-enabled Edit/Play
 passed **608/608** and **84/84**. The next candidate, not approved or started,
-is **WV-B3D.3A Material Storage Authority Cutover**.
+is **WV-B3D.3A Material Storage Authority Cutover**. The user confirmed all
+**7/7 authoritative manual acceptance groups**; Codex did not independently
+perform them or rerun Unity during this documentation-only closure. The retained
+XML came from the implementation working tree based on parent `75bc4441`, not
+the final implementation commit `b04034f`.
 
 ## WV-B3D.1 — documentation complete
 

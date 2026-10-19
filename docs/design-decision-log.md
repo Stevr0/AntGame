@@ -1,5 +1,20 @@
 # Design Decision Log
 
+## 2026-10-19 — Close WV-B3D.2 after authoritative acceptance
+
+- Mark WV-B3D.2 **Complete** after 11/11 focused Edit, 3/3 focused Play,
+  608/608 complete Edit and 84/84 complete Play passed with no failures, skips
+  or inconclusive results, followed by user-confirmed **7/7** manual groups.
+- Record the manual result as user-reported, not independently performed by
+  Codex. The final reconciliation confirms zero initial completed Placements in
+  generated seed `2203` and no Placement-owned contents or functional capacity
+  in legacy projections.
+- Preserve existing functional authorities and `WV-B3B-LIM-001`. Damage,
+  Repair, destruction, dismantling, multi-cell gameplay and all functional
+  authority cutovers remain separately gated.
+- Treat `75bc4441` as test-working-tree parent provenance, not the final
+  implementation commit `b04034f`.
+
 ## 2026-10-19 — Implement WV-B3D.2 as a non-functional Placement read model
 
 - Make `PlacementRegistry` the scenario-scoped owner of definitions, identity,

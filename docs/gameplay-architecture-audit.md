@@ -7,7 +7,9 @@ Background, Storage and survival owners remain exclusive; the registry adds no
 contents or capacity and reports legacy HP as unknown. No compatibility class
 or serialized asset is safe to remove. Automated evidence is 11/11 focused Edit,
 3/3 focused Play, 608/608 complete Edit and 84/84 complete Play; manual
-acceptance remains pending.
+acceptance is complete for all **7/7 authoritative groups** based on the user's
+Unity report. Codex did not independently perform those checks. Functional
+authority migration remains deferred and `WV-B3B-LIM-001` remains active.
 
 The authoritative read-only audit is
 [`Documentation/GameplayArchitectureAudit.md`](https://github.com/Stevr0/AntGame/blob/main/Documentation/GameplayArchitectureAudit.md).

@@ -1,6 +1,6 @@
 # Ant Colony Development Roadmap
 
-## WV-B3D.2 — Implemented, automated tests passed (19 October 2026)
+## WV-B3D.2 — Complete (19 October 2026)
 
 The scenario-scoped Placement Registry Foundation is implemented. It provides
 immutable definitions, stable instance/handle identity, one-cell occupancy with
@@ -12,8 +12,13 @@ commits advance revisions, while legacy projections honestly expose unknown HP.
 
 No function or capacity migrated. The focused suites passed **11/11 Edit** and
 **3/3 Play**; complete graphics-enabled suites passed **608/608 Edit** and
-**84/84 Play**, with no failures, skips or inconclusive results. Manual Unity
-acceptance remains pending. The next candidate is **WV-B3D.3A Material Storage
+**84/84 Play**, with no failures, skips or inconclusive results. The user
+confirmed all **7/7 authoritative manual acceptance groups** in two stages;
+Codex did not independently perform those checks or rerun Unity during closure.
+The XML evidence under `Logs/WV-B3D2-*` was independently inspected and came
+from the implementation working tree based on parent `75bc444118ac8f7edcf0aa7197a12de0a9e7a005`;
+that parent is provenance, not the final implementation commit
+`b04034fedd26877a103750d40e27d29b394f433c`. The next candidate is **WV-B3D.3A Material Storage
 Authority Cutover**, which is not approved or started. Damage, Repair,
 destruction and final HP values remain separate future design/implementation.
 

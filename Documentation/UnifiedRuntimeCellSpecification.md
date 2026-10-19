@@ -2,7 +2,10 @@
 
 ## WV-B3D.2 Placement registry integration — 19 October 2026
 
-**Implemented — Automated Tests Passed, Manual Acceptance Pending.** Colony
+**Complete.** Automated suites passed 11/11 focused Edit, 3/3 focused Play,
+608/608 complete Edit and 84/84 complete Play, and the user confirmed all **7/7
+authoritative manual acceptance groups**. Codex did not independently perform
+the manual checks or rerun Unity during this documentation-only closure. Colony
 runtime-cell reads now resolve completed legacy function cells through the
 scenario-scoped `PlacementRegistry`. `RuntimePlacementSnapshot` exposes scenario
 context, stable identity, definition, anchor, footprint, lifecycle, authority,

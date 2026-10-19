@@ -13,7 +13,10 @@ Legacy Background events refresh only the affected projection and emit one
 combined `Background | Placement` change. Reads and camera switches are inert.
 The registry does not copy contents, reservations, capacity or movement effects.
 Structural HP state exists only for future authoritative instances; legacy HP is
-unknown. `WV-B3B-LIM-001` remains active.
+unknown. WV-B3D.2 is complete after passing automated suites and user-confirmed
+**7/7 authoritative manual acceptance groups**; Codex did not independently
+perform those checks. `WV-B3B-LIM-001` remains active: only the Colony/Surface
+read-model pair is atomically published, not the complete mutable scenario.
 
 ## WV-B3D.1 Placement authority plan
 

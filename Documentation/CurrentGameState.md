@@ -1,8 +1,16 @@
 # Ant Colony Current Game State
 
-## WV-B3D.2 Placement Registry Foundation — Implemented, Automated Tests Passed (19 October 2026)
+## WV-B3D.2 Placement Registry Foundation — Complete (19 October 2026)
 
-**Manual acceptance remains pending.** `PlacementRegistry` is now the
+**WV-B3D.2 — Authoritative manual acceptance complete (7/7 groups).** The user
+confirmed the Unity Play Mode acceptance in two stages: all 16 checks in the
+practical summary, followed by explicit confirmation that generated seed `2203`
+began with zero completed Placements and that legacy projections owned neither
+contents nor functional capacity. This is user-reported acceptance; Codex did
+not independently execute the manual checks and did not rerun Unity for this
+documentation-only closure.
+
+`PlacementRegistry` is now the
 scenario-scoped owner of Placement definitions, stable projected identity,
 anchor/footprint occupancy, lifecycle, revision and structural HP contracts.
 The development host builds six definitions directly from the existing six
@@ -19,6 +27,15 @@ Construction completion/staging, Hauling, Extraction and all reservations remain
 their existing authorities. A completed legacy Construction causes the affected
 projection to refresh once through the Background authority event.
 
+WV-B3D.2 did not change ownership of Material Storage contents/reservations,
+Food or Water Storage, Sleeping capacity/reservations, Nursery functionality,
+Prepared Surface movement benefits, Construction Sites/staging, Extraction and
+Node transactions, Hauling/transfers, ant inventories, the simulation clock,
+ant residency or entrance transitions. The production flow remains **Resource
+Node → Extraction → Ground Stacks → Hauling → Construction Staging / Storage →
+Construction**. A future Material Storage cutover must transfer authority
+without duplicate capacity or independently mutable copies of stored contents.
+
 Immutable Placement Definitions include category, supported region, footprint,
 natural-Background compatibility, Node/loose-stack restrictions, existing
 recipe/cost/work references, skill metadata, traversal/interaction, capacity,
@@ -33,6 +50,14 @@ Developer diagnostics show scenario/context, registry lifecycle/revision,
 definition and category counts, selected identity/definition/anchor/footprint,
 authority/lifecycle/revision, HP/condition and conservative compatibility.
 
+Still deferred are Material, Food and Water Storage authority migration;
+Sleeping, Nursery and Prepared Surface migration; Door and Refining Station
+definitions; actual damage, Repair, destruction, dismantling and physical
+refunds; room enclosure/quality; multi-cell Placement gameplay; persistence;
+and unloaded-region simulation. `WV-B3B-LIM-001` remains open: only the unified
+Colony/Surface read-model pair is atomically published, not the complete mutable
+gameplay scenario.
+
 Automated evidence from this working tree:
 
 - compile: runtime, Edit Mode and Play Mode assemblies succeeded;
@@ -44,11 +69,15 @@ Automated evidence from this working tree:
 
 The XML and logs are retained under `Logs/WV-B3D2-*`. They were produced from
 the WV-B3D.2 implementation working tree based on parent revision
-`75bc444118ac8f7edcf0aa7197a12de0a9e7a005`. The first headless complete Edit
+`75bc444118ac8f7edcf0aa7197a12de0a9e7a005`, which is provenance rather than
+the final implementation commit. The implementation was committed as
+`b04034fedd26877a103750d40e27d29b394f433c`. The four retained XML files were
+independently inspected during closure and record the totals above on Unity
+`6000.3.8f1`. The first headless complete Edit
 attempt crashed in Unity's render-target path and produced no acceptance XML;
 the required graphics-enabled retry is the authoritative 608/608 result.
 
-Manual acceptance checklist:
+Accepted authoritative manual checklist (7/7 groups):
 
 1. Load Mara/Pip/Tala and confirm legacy Prepared, Sleeping, Food/Water Storage,
    Material Storage and Nursery behavior/capacity remain unchanged.
