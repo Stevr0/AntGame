@@ -1,13 +1,22 @@
 # Development Roadmap
 
+## WV-B3D.2 — implemented; manual acceptance pending
+
+The Placement Registry Foundation implements immutable definitions, scenario
+identity, one-cell/future-footprint occupancy, lifecycle/revisions, conservative
+compatibility, runtime-cell projection/change feeds, durability contracts and
+legacy scenario retirement. Existing functional owners remain unchanged.
+Focused Edit/Play passed **11/11** and **3/3**; full graphics-enabled Edit/Play
+passed **608/608** and **84/84**. The next candidate, not approved or started,
+is **WV-B3D.3A Material Storage Authority Cutover**.
+
 ## WV-B3D.1 — documentation complete
 
 The Construction/Placement migration has an implementation-ready authority,
 identity, footprint, completion, recovery, testing and legacy-retirement plan.
-No runtime code or Unity asset changed. The smallest recommended next slice is
-**WV-B3D.2 Placement Registry Foundation** with one-cell definitions, identity,
-revisions, compatibility and read-only legacy projections only. It is not
-started or authorised. See [Placement Migration](placement-migration.md).
+No runtime code or Unity asset changed in that documentation gate. WV-B3D.2 was
+later approved and implemented as recorded above. See
+[Placement Migration](placement-migration.md).
 
 ## WV-B3C.3B — complete
 

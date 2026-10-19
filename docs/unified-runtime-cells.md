@@ -1,5 +1,16 @@
 # Unified Runtime Cells
 
+## WV-B3D.2 Placement snapshots
+
+Colony snapshots now resolve Placement identity through the scenario registry
+and expose definition, context, anchor, footprint, authority/lifecycle,
+revision, nullable current/max HP and condition. Legacy projections expose no
+Placement-owned contents/capacity and report their obscured natural Background
+and HP as unknown. One Background conversion produces one combined
+`Background | Placement` change; reads and camera switches produce none.
+Scenario replacement retires old handles. Existing Node, stack, Construction
+Site and function owners remain authoritative.
+
 ## WV-B3D.1 Placement migration contract
 
 The [Placement Migration](placement-migration.md) documentation gate is
@@ -7,7 +18,8 @@ complete. A future scenario-local registry will own Placement identity,
 footprint, lifecycle and revision; function ledgers will be keyed by Placement
 ID without duplicating Storage or reservation state. Initial implementation is
 one-cell only and read-only legacy projections come before any authority
-cutover. No Placement runtime was added by WV-B3D.1.
+cutover. No Placement runtime was added by WV-B3D.1; the later WV-B3D.2 registry
+implements only the read-model foundation described above.
 
 ## WV-B3C.3B committed changes
 

@@ -1,11 +1,28 @@
 # Unified Runtime Cell Architecture and Migration Specification
 
+## WV-B3D.2 Placement registry integration — 19 October 2026
+
+**Implemented — Automated Tests Passed, Manual Acceptance Pending.** Colony
+runtime-cell reads now resolve completed legacy function cells through the
+scenario-scoped `PlacementRegistry`. `RuntimePlacementSnapshot` exposes scenario
+context, stable identity, definition, anchor, footprint, lifecycle, authority,
+revision and nullable HP/condition. Projected contents and active capacity remain
+unset, so the read model cannot become a second Storage/Sleeping/Nursery owner.
+
+Functional Backgrounds obscure their former natural material; snapshots retain
+the legacy Background ID and report natural provenance as
+`DetailsUnavailable`. A committed Background conversion refreshes the affected
+projection and publishes one combined `Background | Placement` cell change.
+Reads and camera switches publish nothing; scenario replacement invalidates the
+old registry context. Node, loose-stack, Construction Site and natural terrain
+authorities otherwise remain unchanged. `WV-B3B-LIM-001` is not resolved.
+
 ## WV-B3D.1 Placement migration clarification — 19 October 2026
 
 The detailed implementation sequence and authority-transfer rules are in
 [`PlacementMigrationTechnicalSpecification.md`](PlacementMigrationTechnicalSpecification.md).
-WV-B3D.1 changes no runtime writer. A future scenario-local Placement registry
-will own completed Placement identity, footprint, lifecycle and revision while
+WV-B3D.1 changed no runtime writer. The later WV-B3D.2 scenario-local Placement
+registry now owns completed projected identity, footprint, lifecycle and revision while
 function ledgers remain single-owned by Placement ID. The Colony adapter will
 observe that registry; it must never keep a legacy functional Background and a
 replacement Placement active for the same function/cell. Initial implementation

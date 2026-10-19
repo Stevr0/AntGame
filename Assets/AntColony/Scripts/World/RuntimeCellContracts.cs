@@ -86,13 +86,34 @@ namespace AntColony.World
     {
         public RuntimePlacementSnapshot(RuntimeOccupantProjectionState projectionState,
             string stableId, string definitionId, string functionId,
-            bool contentsArePlacementOwned)
+            bool contentsArePlacementOwned,
+            string scenarioContextId = "",
+            RegionCellId? anchor = null,
+            IEnumerable<RegionCellId> footprint = null,
+            PlacementLifecycle lifecycle = PlacementLifecycle.Completed,
+            PlacementAuthorityState authorityState =
+                PlacementAuthorityState.LegacyBackgroundProjection,
+            long placementRevision = 1L,
+            int? currentHitPoints = null,
+            int? maximumHitPoints = null,
+            int? functionalCapacity = null)
         {
             ProjectionState = projectionState;
             StableId = stableId ?? string.Empty;
             DefinitionId = definitionId ?? string.Empty;
             FunctionId = functionId ?? string.Empty;
             ContentsArePlacementOwned = contentsArePlacementOwned;
+            ScenarioContextId = scenarioContextId ?? string.Empty;
+            Anchor = anchor;
+            Footprint = footprint == null
+                ? Array.Empty<RegionCellId>()
+                : new List<RegionCellId>(footprint).AsReadOnly();
+            Lifecycle = lifecycle;
+            AuthorityState = authorityState;
+            PlacementRevision = Math.Max(1L, placementRevision);
+            CurrentHitPoints = currentHitPoints;
+            MaximumHitPoints = maximumHitPoints;
+            FunctionalCapacity = functionalCapacity;
         }
 
         public RuntimeOccupantProjectionState ProjectionState { get; }
@@ -100,6 +121,19 @@ namespace AntColony.World
         public string DefinitionId { get; }
         public string FunctionId { get; }
         public bool ContentsArePlacementOwned { get; }
+        public string ScenarioContextId { get; }
+        public RegionCellId? Anchor { get; }
+        public IReadOnlyList<RegionCellId> Footprint { get; }
+        public PlacementLifecycle Lifecycle { get; }
+        public PlacementAuthorityState AuthorityState { get; }
+        public long PlacementRevision { get; }
+        public int? CurrentHitPoints { get; }
+        public int? MaximumHitPoints { get; }
+        public int? FunctionalCapacity { get; }
+        public float? ConditionPercentage => CurrentHitPoints.HasValue &&
+            MaximumHitPoints.HasValue
+                ? 100f * CurrentHitPoints.Value / MaximumHitPoints.Value
+                : null;
     }
 
     /// <summary>
@@ -148,7 +182,11 @@ namespace AntColony.World
             long cellRevision, long regionPublication,
             RuntimeNodeSnapshot node = null,
             RuntimePlacementSnapshot placement = null,
-            RuntimeLooseStackSnapshot looseStack = null)
+            RuntimeLooseStackSnapshot looseStack = null,
+            string naturalBackgroundDefinitionId = null,
+            RuntimeOccupantProjectionState naturalBackgroundProjectionState =
+                RuntimeOccupantProjectionState.Authoritative,
+            string legacyFunctionalBackgroundDefinitionId = "")
         {
             CellId = cellId;
             BackgroundDefinitionId = backgroundDefinitionId ?? string.Empty;
@@ -157,6 +195,11 @@ namespace AntColony.World
             Node = node;
             Placement = placement;
             LooseStack = looseStack;
+            NaturalBackgroundDefinitionId = naturalBackgroundDefinitionId ??
+                BackgroundDefinitionId;
+            NaturalBackgroundProjectionState = naturalBackgroundProjectionState;
+            LegacyFunctionalBackgroundDefinitionId =
+                legacyFunctionalBackgroundDefinitionId ?? string.Empty;
         }
 
         public RegionCellId CellId { get; }
@@ -166,6 +209,17 @@ namespace AntColony.World
         public RuntimeNodeSnapshot Node { get; }
         public RuntimePlacementSnapshot Placement { get; }
         public RuntimeLooseStackSnapshot LooseStack { get; }
+        /// <summary>
+        /// Natural environmental provenance. Legacy functional Backgrounds did
+        /// not retain this value, so an empty value with DetailsUnavailable is
+        /// more honest than inventing Earth or Stone.
+        /// </summary>
+        public string NaturalBackgroundDefinitionId { get; }
+        public RuntimeOccupantProjectionState NaturalBackgroundProjectionState
+        {
+            get;
+        }
+        public string LegacyFunctionalBackgroundDefinitionId { get; }
     }
 
     public readonly struct RuntimeCellChange
@@ -323,6 +377,12 @@ namespace AntColony.World
                 return Unknown("Legacy loose occupancy has no reliable resource type.");
             if (snapshot.LooseStack?.RepresentsMultipleLegacyRecords == true)
                 return Unknown("Several legacy drop records share this cell.");
+            if (snapshot.Placement?.AuthorityState ==
+                    PlacementAuthorityState.LegacyBackgroundProjection &&
+                snapshot.NaturalBackgroundProjectionState ==
+                    RuntimeOccupantProjectionState.DetailsUnavailable)
+                return Unknown(
+                    "Legacy functional Background data obscures natural provenance.");
             if (snapshot.Node?.ProjectionState ==
                     RuntimeOccupantProjectionState.DetailsUnavailable &&
                 snapshot.Placement != null)

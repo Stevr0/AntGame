@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using AntColony.Ants;
@@ -132,6 +133,7 @@ namespace AntColony.Development
         public ConstructionWorldTransaction ConstructionTransaction { get; private set; }
         public SurfaceWorldData SurfaceWorld { get; private set; }
         public RuntimeCellPublicationRegistry RuntimeCells { get; private set; }
+        public PlacementRegistry Placements { get; private set; }
         public ColonyResourceNodeRegistry ColonyResourceNodes
         {
             get;
@@ -288,14 +290,25 @@ namespace AntColony.Development
             SurfaceWorldData nextSurfaceWorld = proceduralWorld?
                 .CreateSurfaceNavigationWorld() ??
                 SurfaceWorldData.CreateDevelopmentFixture();
+            if (!TryBuildPlacementRegistry(nodeCandidate,
+                    out PlacementRegistry placementCandidate,
+                    out string placementError))
+            {
+                nodeCandidate.Dispose();
+                Debug.LogError(placementError, this);
+                return false;
+            }
             if (!TryPublishRuntimeCells(nextSurfaceWorld, nodeCandidate,
+                    placementCandidate,
                     out string publicationError))
             {
+                placementCandidate.InvalidateContext();
                 nodeCandidate.Dispose();
                 Debug.LogError(publicationError, this);
                 return false;
             }
             SurfaceWorld = nextSurfaceWorld;
+            Placements = placementCandidate;
 
             tilemapRenderer.BindWorldData(WorldData);
             collisionRenderer.BindWorldData(WorldData);
@@ -359,10 +372,11 @@ namespace AntColony.Development
         /// </summary>
         private bool TryPublishRuntimeCells(SurfaceWorldData surfaceWorld,
             ColonyResourceNodeRegistry resourceNodes,
+            PlacementRegistry placements,
             out string error)
         {
             var colony = new ColonyRuntimeCellRegionAdapter(WorldData,
-                MaterialDrops, proceduralWorld, resourceNodes);
+                MaterialDrops, proceduralWorld, resourceNodes, placements);
             var surface = new SurfaceRuntimeCellRegionAdapter(surfaceWorld,
                 proceduralWorld);
             RuntimeCells ??= new RuntimeCellPublicationRegistry();
@@ -370,6 +384,86 @@ namespace AntColony.Development
             colony.Dispose();
             surface.Dispose();
             return false;
+        }
+
+        private bool TryBuildPlacementRegistry(
+            ColonyResourceNodeRegistry resourceNodes,
+            out PlacementRegistry registry, out string error)
+        {
+            registry = null;
+            if (resourceNodes == null || ConstructionRecipes == null)
+            {
+                error = "Placement projection requires scenario and Construction definitions.";
+                return false;
+            }
+
+            var definitions = new List<PlacementDefinition>();
+            var mappings = new Dictionary<string, string>(StringComparer.Ordinal);
+            foreach (ConstructionRecipe recipe in ConstructionRecipes.Recipes)
+            {
+                BackgroundTileMaterialDefinition result = recipe.Result;
+                PlacementCategory category = result == preparedBackground
+                    ? PlacementCategory.MovementImprovement
+                    : result.Function switch
+                    {
+                        BackgroundFunction.Sleeping => PlacementCategory.Rest,
+                        BackgroundFunction.FoodStorage => PlacementCategory.Storage,
+                        BackgroundFunction.WaterStorage => PlacementCategory.Storage,
+                        BackgroundFunction.MaterialStorage => PlacementCategory.Storage,
+                        BackgroundFunction.Nursery => PlacementCategory.Nursery,
+                        _ => PlacementCategory.Infrastructure
+                    };
+                int capacity = result == preparedBackground ? 0 :
+                    result.FunctionalCapacity;
+                var costs = new List<PlacementConstructionRequirement>();
+                foreach (ConstructionMaterialCost cost in recipe.MaterialRequirements)
+                    costs.Add(new PlacementConstructionRequirement(
+                        cost.ResourceTypeId, cost.Quantity));
+
+                // HP values and destruction/Repair rules are intentionally unknown
+                // until balance is approved. Legacy projections therefore expose
+                // null durability instead of inventing structural state.
+                var definition = new PlacementDefinition(
+                    recipe.StableId, result.DisplayName, category,
+                    PlacementRegionSupport.Colony,
+                    PlacementFootprintDefinition.OneCell,
+                    string.IsNullOrEmpty(recipe.RequiredSourceMaterialId)
+                        ? Array.Empty<string>()
+                        : new[] { recipe.RequiredSourceMaterialId },
+                    allowsObstructingNode: false,
+                    allowsLooseGroundStack: false,
+                    recipe.StableId, costs, recipe.BaseDurationHours,
+                    minimumConstructionSkill: 0,
+                    traversable: true,
+                    obstructsMovement: false,
+                    result == preparedBackground
+                        ? PlacementInteractionRule.None
+                        : PlacementInteractionRule.AdjacentCardinal,
+                    capacity, Array.Empty<string>(), result.StableMaterialId,
+                    allowsDismantling: false,
+                    maximumHitPoints: null,
+                    destructible: false,
+                    repairable: false);
+                definitions.Add(definition);
+                mappings.Add(result.StableMaterialId, definition.StableId);
+            }
+
+            try
+            {
+                registry = new PlacementRegistry(
+                    resourceNodes.Scenario.StableKey, definitions, mappings);
+                if (registry.TryBuildLegacyProjections(WorldData, out error))
+                    return true;
+                registry.InvalidateContext();
+                registry = null;
+                return false;
+            }
+            catch (Exception exception)
+            {
+                error = $"Placement registry could not be built: {exception.Message}";
+                registry = null;
+                return false;
+            }
         }
 
         private void OnDestroy()

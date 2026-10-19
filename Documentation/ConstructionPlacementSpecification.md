@@ -11,6 +11,16 @@ improvements, Construction Sites and completed Placement instances. Existing
 functional Background behavior remains compatibility implementation until an
 explicit WV-B3D cutover is implemented and accepted.
 
+**WV-B3D.2 runtime amendment — 19 October 2026:** The scenario-scoped
+`PlacementRegistry` now implements definition lookup, stable identity,
+one-cell/future-footprint occupancy, lifecycle/revisions, compatibility,
+read-only legacy projections and runtime-cell publication. Existing functional
+Background owners remain exclusive; projected capacity and contents are not
+activated or copied. Definition and instance contracts include structural HP,
+but legacy projections report it as unknown and no final HP values are set.
+Damage, Repair, destruction, removal and stored-content recovery are future
+transactions, not WV-B3D.2 gameplay.
+
 **WV-B3D.1 technical amendment — 19 October 2026:**
 [`PlacementMigrationTechnicalSpecification.md`](PlacementMigrationTechnicalSpecification.md)
 provides the implementation-level registry, identity, footprint, completion,
@@ -144,6 +154,15 @@ definition ID, typed anchored footprint, orientation, lifecycle, revision,
 functional contents/capacity reservations, users/occupants, damage/condition if
 later approved, and room association/bonus snapshot. Definition metadata never
 stores a particular Placement's contents, reservations or work progress.
+
+Durability metadata consists of nullable positive Max HP, destructibility,
+repairability and future resistance metadata. A future authoritative completed
+instance requires known Max HP and starts full; current HP is bounded to
+`0..Max`, condition is derived, and only a committed change advances its
+revision. Legacy projections expose unknown HP rather than fabricate it.
+Zero-HP destruction and Repair remain separately approved workflows. Destroyed
+Storage may not lose or duplicate contents, and Repair must use a distinct job,
+physical staging where approved, Construction skill and exact-once consumption.
 
 ## 4. Initial Placement catalogue
 

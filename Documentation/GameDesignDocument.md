@@ -1,5 +1,23 @@
 # ANT COLONY
 
+## WV-B3D.2 Placement Registry Foundation — implemented 19 October 2026
+
+**Implemented — Automated Tests Passed, Manual Acceptance Pending.** The game
+now publishes a scenario-scoped Placement registry containing the six existing
+Construction definitions and deterministic, one-cell, read-only projections of
+Prepared Surface, Sleeping Spot, Food Storage, Water Storage, Material Storage
+and Nursery Backgrounds. Definitions carry footprint, recipe, capacity,
+interaction, obstruction, presentation and durability metadata. Instances carry
+stable identity, anchor/footprint, authority/lifecycle, revision and nullable HP.
+
+This foundation does not move function ownership. Existing Background movement,
+`SurvivalInteractionWorld`, `MaterialStorageWorld`, Construction completion,
+Hauling and Extraction behave as before. Legacy projections report current/max
+HP and condition as unknown because no authoritative durability state or final
+HP values exist. The registry supports bounded full-HP authoritative instances
+for a future completion cutover, but combat damage, Repair, destruction,
+resource recovery and Placement removal are not implemented.
+
 ## WV-B3D.1 Placement migration technical specification — 19 October 2026
 
 **Documentation complete; no runtime migration implemented.** The authoritative

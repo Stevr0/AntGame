@@ -1,5 +1,12 @@
 # Brood and Reproduction
 
+## WV-B3D.2 Nursery projection
+
+Completed legacy Nursery Backgrounds now receive deterministic one-cell
+Placement projections. The registry does not activate or duplicate Nursery
+capacity, invent HP, or add brood state. Reproduction, laying, care, room
+quality, damage and Repair remain unimplemented.
+
 ## WV-B3D.1 Nursery boundary
 
 Nursery currently has a functional Background definition, Construction recipe

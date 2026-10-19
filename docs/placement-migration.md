@@ -1,8 +1,25 @@
 # Placement Migration
 
+## WV-B3D.2 status
+
+**Implemented — Automated Tests Passed, Manual Acceptance Pending.** A
+scenario-scoped registry now publishes the six existing recipe-backed
+definitions and deterministic one-cell legacy projections. It owns only
+identity, footprint occupancy, lifecycle, revision and HP-ready structural
+state. Existing movement, Storage, Sleeping, Nursery, Construction, Hauling and
+Extraction owners remain unchanged.
+
+Legacy projections report unknown current/max HP and condition, no
+Placement-owned contents and no active Placement capacity. Future authoritative
+instances require approved positive Max HP, start full and clamp mutations to
+`0..Max`; final HP values and all damage, Repair and destruction gameplay remain
+unapproved. Focused Edit/Play passed **11/11** and **3/3**; complete
+graphics-enabled suites passed **608/608** and **84/84**. Manual acceptance is
+pending.
+
 ## WV-B3D.1 status
 
-**Documentation complete; runtime migration not started.** The authoritative
+**Documentation complete.** The authoritative
 technical contract is
 [`Documentation/PlacementMigrationTechnicalSpecification.md`](https://github.com/Stevr0/AntGame/blob/main/Documentation/PlacementMigrationTechnicalSpecification.md).
 It extends the approved

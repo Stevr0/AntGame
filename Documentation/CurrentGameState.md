@@ -1,5 +1,72 @@
 # Ant Colony Current Game State
 
+## WV-B3D.2 Placement Registry Foundation — Implemented, Automated Tests Passed (19 October 2026)
+
+**Manual acceptance remains pending.** `PlacementRegistry` is now the
+scenario-scoped owner of Placement definitions, stable projected identity,
+anchor/footprint occupancy, lifecycle, revision and structural HP contracts.
+The development host builds six definitions directly from the existing six
+Construction recipes, projects completed legacy Prepared/Sleeping/Storage/
+Nursery Backgrounds, publishes them through runtime-cell snapshots, and retires
+the old context when a scenario is replaced. Camera switching performs no
+registry write or identity rebuild.
+
+Legacy projections are observational. They expose no Placement-owned contents,
+no active functional capacity and no fabricated HP; natural Background
+provenance hidden by a functional Background is explicitly `DetailsUnavailable`.
+`SurvivalInteractionWorld`, `MaterialStorageWorld`, Prepared movement,
+Construction completion/staging, Hauling, Extraction and all reservations remain
+their existing authorities. A completed legacy Construction causes the affected
+projection to refresh once through the Background authority event.
+
+Immutable Placement Definitions include category, supported region, footprint,
+natural-Background compatibility, Node/loose-stack restrictions, existing
+recipe/cost/work references, skill metadata, traversal/interaction, capacity,
+room/presentation/removal metadata and nullable durability metadata. The
+instance contract includes current/max HP and condition. Future authoritative
+instances require approved positive Max HP, initialise full, clamp HP to
+`0..Max`, and advance only on a committed change. Final HP values, resistance,
+damage, destruction, Repair recipes/work and refunds are not approved or
+implemented.
+
+Developer diagnostics show scenario/context, registry lifecycle/revision,
+definition and category counts, selected identity/definition/anchor/footprint,
+authority/lifecycle/revision, HP/condition and conservative compatibility.
+
+Automated evidence from this working tree:
+
+- compile: runtime, Edit Mode and Play Mode assemblies succeeded;
+- focused Edit Mode: **11/11 passed**;
+- focused Play Mode: **3/3 passed**;
+- complete graphics-enabled Edit Mode: **608/608 passed**;
+- complete graphics-enabled Play Mode: **84/84 passed**;
+- all reported zero failures, skips and inconclusive tests.
+
+The XML and logs are retained under `Logs/WV-B3D2-*`. They were produced from
+the WV-B3D.2 implementation working tree based on parent revision
+`75bc444118ac8f7edcf0aa7197a12de0a9e7a005`. The first headless complete Edit
+attempt crashed in Unity's render-target path and produced no acceptance XML;
+the required graphics-enabled retry is the authoritative 608/608 result.
+
+Manual acceptance checklist:
+
+1. Load Mara/Pip/Tala and confirm legacy Prepared, Sleeping, Food/Water Storage,
+   Material Storage and Nursery behavior/capacity remain unchanged.
+2. Inspect Developer Only diagnostics on each functional cell; confirm one
+   legacy projection, stable identity, one-cell footprint, unknown HP and no
+   Placement-owned contents/capacity.
+3. Complete one existing Hauled Construction and confirm one projection appears
+   without duplicated Storage/Sleeping function or changed quantities.
+4. Switch Colony/World views and confirm the selected Placement ID/revision is
+   unchanged.
+5. Start generated seed `2203`, verify zero initial completed Placements, build
+   first Material Storage through existing Hauling, and verify one projection
+   with unchanged Storage quantity/capacity.
+6. Confirm whole-node Extraction, full physical output, pause/speeds and both
+   Nest Entrance directions still work.
+7. Restore the fixture and confirm the old scenario context is retired and the
+   Console contains no new errors or exceptions.
+
 ## WV-B3D.1 Construction and Placement foundation — Documentation Complete (19 October 2026)
 
 [`PlacementMigrationTechnicalSpecification.md`](PlacementMigrationTechnicalSpecification.md)
@@ -16,8 +83,8 @@ Placement identity over it. Site staging remains separate, Hauling remains the
 only normal transport authority, and function ownership migrates one type at a
 time with dual-function protection. Existing six recipes remain unchanged: five
 cost 1 Soil, Water Storage costs 1 Stone, and all require four base simulation
-hours. No Unity tests were run for this documentation-only gate. WV-B3D.2 is the
-recommended next slice but is not started or authorised.
+hours. No Unity tests were run for this documentation-only gate. WV-B3D.2 was
+later approved and implemented as recorded above.
 
 ## WV-B3C.3B whole-node Extraction — Complete (19 October 2026)
 

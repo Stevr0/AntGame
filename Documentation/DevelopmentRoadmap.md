@@ -1,5 +1,22 @@
 # Ant Colony Development Roadmap
 
+## WV-B3D.2 — Implemented, automated tests passed (19 October 2026)
+
+The scenario-scoped Placement Registry Foundation is implemented. It provides
+immutable definitions, stable instance/handle identity, one-cell occupancy with
+future multi-cell footprints, lifecycle/revision state, conservative central
+compatibility, runtime-cell snapshots/change feeds, scenario retirement and
+read-only legacy Background projections. Definitions and instance snapshots are
+HP-ready; authoritative instances start at full approved HP and bounded HP
+commits advance revisions, while legacy projections honestly expose unknown HP.
+
+No function or capacity migrated. The focused suites passed **11/11 Edit** and
+**3/3 Play**; complete graphics-enabled suites passed **608/608 Edit** and
+**84/84 Play**, with no failures, skips or inconclusive results. Manual Unity
+acceptance remains pending. The next candidate is **WV-B3D.3A Material Storage
+Authority Cutover**, which is not approved or started. Damage, Repair,
+destruction and final HP values remain separate future design/implementation.
+
 ## WV-B3D.1 — Complete documentation gate (19 October 2026)
 
 The Construction/Placement migration now has an implementation-ready technical
@@ -10,11 +27,8 @@ registry/read-only projection foundation, two Material Storage cutover slices,
 separate Food and Water slices, Sleeping, Nursery data capacity, Prepared
 Surface and final legacy retirement. Every slice requires separate approval.
 
-The next recommended milestone is **WV-B3D.2 Placement Registry Foundation**:
-definitions, scenario-local identity, one-cell footprint occupancy, revisions,
-immutable snapshots, central compatibility and read-only legacy projections.
-It must not move function ownership. Do not begin WV-B3D.2, WV-C1 or another
-runtime milestone without explicit approval.
+The subsequently approved WV-B3D.2 registry foundation is now implemented as
+recorded above; this section remains the historical documentation-gate record.
 
 ## WV-B3C.3B — Complete (19 October 2026)
 

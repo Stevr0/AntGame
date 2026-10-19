@@ -268,6 +268,7 @@ namespace AntColony.Development
             textBuilder.Append("Rendered Background cell: ")
                 .Append(tilemapCell)
                 .AppendLine();
+            AppendPlacementRegistryDiagnostics(textBuilder);
             AppendNodeRegistryDiagnostics(textBuilder);
             AppendAutonomousAntDiagnostics(textBuilder);
             AppendGridAntDiagnostics(textBuilder);
@@ -423,6 +424,88 @@ namespace AntColony.Development
                         .Append(transaction.LastBlockedReason).Append(" / ")
                         .Append(transaction.LastOperationWasReplay).AppendLine();
             }
+        }
+
+        private void AppendPlacementRegistryDiagnostics(StringBuilder builder)
+        {
+            PlacementRegistry registry = worldHost?.Placements;
+            if (registry == null)
+            {
+                builder.AppendLine("Placement registry: unavailable");
+                return;
+            }
+
+            PlacementRegistryDiagnostics diagnostics = registry.Diagnostics;
+            builder.Append("Placement scenario: ")
+                .Append(diagnostics.ScenarioStableId)
+                .Append("   context ")
+                .Append(diagnostics.ScenarioContextId)
+                .AppendLine();
+            builder.Append("Placement registry: ")
+                .Append(diagnostics.Lifecycle)
+                .Append("   revision ")
+                .Append(diagnostics.Revision)
+                .AppendLine();
+            builder.Append("Definitions / completed projections: ")
+                .Append(diagnostics.DefinitionCount).Append(" / ")
+                .Append(diagnostics.LegacyProjectionCount)
+                .AppendLine();
+            builder.Append("Movement / Rest / Storage / Nursery: ")
+                .Append(registry.GetCompletedCount(
+                    PlacementCategory.MovementImprovement)).Append(" / ")
+                .Append(registry.GetCompletedCount(PlacementCategory.Rest))
+                .Append(" / ")
+                .Append(registry.GetCompletedCount(PlacementCategory.Storage))
+                .Append(" / ")
+                .Append(registry.GetCompletedCount(PlacementCategory.Nursery))
+                .AppendLine();
+
+            RegionCellId cellId = RegionCellId.Colony(AntRegionIds.Colony,
+                new ColonyCell(selectedCell.x, selectedCell.y));
+            if (worldHost.RuntimeCells == null ||
+                worldHost.RuntimeCells.TryGetCell(cellId,
+                    out RuntimeCellSnapshot cell) != RuntimeCellReadResult.Success)
+            {
+                builder.AppendLine("Selected Placement: cell unavailable");
+                return;
+            }
+            RuntimeOccupancyValidation compatibility =
+                RuntimeCellCompatibilityValidator.ValidateObserved(cell);
+            builder.Append("Selected-cell compatibility: ")
+                .Append(compatibility.Result);
+            if (!string.IsNullOrEmpty(compatibility.Reason))
+                builder.Append(" (").Append(compatibility.Reason).Append(')');
+            builder.AppendLine();
+            if (cell.Placement == null)
+            {
+                builder.AppendLine("Selected Placement: none");
+                return;
+            }
+
+            RuntimePlacementSnapshot placement = cell.Placement;
+            builder.Append("Selected Placement: ")
+                .Append(placement.StableId)
+                .Append("   definition ")
+                .Append(placement.DefinitionId)
+                .AppendLine();
+            builder.Append("Anchor / footprint: ")
+                .Append(placement.Anchor?.ToString() ?? "Unknown")
+                .Append(" / ")
+                .Append(placement.Footprint.Count)
+                .AppendLine();
+            builder.Append("Authority / lifecycle / revision: ")
+                .Append(placement.AuthorityState).Append(" / ")
+                .Append(placement.Lifecycle).Append(" / ")
+                .Append(placement.PlacementRevision)
+                .AppendLine();
+            builder.Append("HP / condition: ")
+                .Append(placement.CurrentHitPoints.HasValue
+                    ? $"{placement.CurrentHitPoints}/{placement.MaximumHitPoints}"
+                    : "Unknown (legacy projection)")
+                .Append(placement.ConditionPercentage.HasValue
+                    ? $" / {placement.ConditionPercentage:0.#}%"
+                    : string.Empty)
+                .AppendLine();
         }
 
         private void ToggleForeground()

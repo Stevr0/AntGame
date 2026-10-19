@@ -1,8 +1,17 @@
 # Colony Construction and Rooms
 
+## WV-B3D.2 registry boundary
+
+The implemented Placement registry observes completed legacy Construction as
+one deterministic projection and publishes its identity/footprint/revision. It
+does not replace site staging or `ConstructionWorldTransaction`, consume
+materials, award XP, or activate another function/capacity. Definitions carry
+nullable durability metadata; legacy projections have unknown HP. Damage,
+Repair, destruction, Doors, room scoring and dismantling remain unimplemented.
+
 ## WV-B3D.1 Placement migration specification
 
-**Documentation complete; runtime migration not started.** The
+**Documentation complete.** The
 [Placement Migration](placement-migration.md) specification defines one-cell
 Placement identity, footprint occupancy, exact-once Construction completion,
 function-by-function authority transfer, dismantling boundaries and legacy

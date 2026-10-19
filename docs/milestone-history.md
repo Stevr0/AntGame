@@ -1,14 +1,25 @@
 # Milestone History
 
+## 19 October 2026 — WV-B3D.2 Placement Registry Foundation
+
+**Implemented — Automated Tests Passed, Manual Acceptance Pending.** Added six
+recipe-backed immutable definitions, deterministic legacy projections,
+scenario/context-safe identity, one-cell/future-footprint occupancy,
+lifecycle/revisions, compatibility, runtime-cell integration, developer
+diagnostics and HP-ready definition/instance snapshots. Legacy HP and hidden
+natural provenance remain explicit unknowns; no function/capacity moved.
+Focused Edit/Play passed **11/11** and **3/3**; complete graphics-enabled suites
+passed **608/608** and **84/84** with zero failures, skips or inconclusive tests.
+Damage, Repair, destruction and WV-B3D.3A were not started.
+
 ## 19 October 2026 — WV-B3D.1 Placement Migration Specification
 
-**Documentation complete; runtime migration not started.** Read-only inspection
+**Documentation complete.** Read-only inspection
 confirmed the active functional-Background, Construction, Storage, survival,
 runtime-cell and scenario owners and the six existing 1-unit/4-hour recipes.
 The new technical specification defines Placement identity/footprints,
 occupancy, exact-once completion, per-function migration, recovery, tests and
-legacy retirement. The next recommendation is WV-B3D.2 registry/read-only
-foundation only, pending explicit approval.
+legacy retirement. WV-B3D.2 was later approved and implemented as recorded above.
 
 ## 19 October 2026 — WV-B3C.3B Whole-Node Extraction — Complete
 

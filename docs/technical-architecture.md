@@ -1,5 +1,20 @@
 # Technical Architecture
 
+## WV-B3D.2 Placement registry
+
+`PlacementRegistry` is now a scenario-scoped read-model/identity authority. The
+development host derives six immutable definitions from existing recipes,
+projects completed legacy Background functions, and supplies the registry to
+the Colony runtime-cell adapter. One anchor identity owns its footprint index;
+handles include a registry context so replacement scenarios reject stale HP or
+future mutations. The old context retires when the runtime-cell pair publishes.
+
+Legacy Background events refresh only the affected projection and emit one
+combined `Background | Placement` change. Reads and camera switches are inert.
+The registry does not copy contents, reservations, capacity or movement effects.
+Structural HP state exists only for future authoritative instances; legacy HP is
+unknown. `WV-B3B-LIM-001` remains active.
+
 ## WV-B3D.1 Placement authority plan
 
 The [Placement Migration](placement-migration.md) plan preserves current

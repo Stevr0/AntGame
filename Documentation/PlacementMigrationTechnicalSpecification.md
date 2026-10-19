@@ -1,6 +1,7 @@
 # WV-B3D.1 Construction and Placement Foundation Technical Specification
 
-**Status:** Complete documentation gate; no runtime Placement migration implemented.
+**Status:** WV-B3D.1 specification complete; WV-B3D.2 registry/read-model
+foundation implemented with automated tests passing and manual acceptance pending.
 
 **Date:** 19 October 2026
 
@@ -10,6 +11,24 @@
 [`ResourceAndNodeSystem.md`](ResourceAndNodeSystem.md). Those approved product
 contracts control if this document is read in isolation. Historical rules that
 make a Background provide colony function are compatibility descriptions only.
+
+### WV-B3D.2 implementation record — 19 October 2026
+
+The runtime now implements immutable Placement Definitions, scenario/context
+identity, deterministic legacy IDs, one-cell occupancy with future multi-cell
+footprints, lifecycle/revisions, conservative compatibility, runtime-cell
+projection, change publication, scenario retirement and developer diagnostics.
+The six definitions are derived from the existing six Construction recipes.
+Legacy projections remain read-only and do not own contents, reservations,
+capacity, movement effects or other gameplay function.
+
+Durability contracts are implemented without inventing balance. Definitions
+contain nullable Max HP plus destructible/repairable/resistance metadata;
+authoritative future instances require known positive Max HP, start full, clamp
+current HP to `0..Max` and revise only on a committed mutation. Legacy
+projections expose current HP, maximum HP and condition as unknown. Damage,
+Repair, zero-HP destruction, Placement removal, loot/refunds and stored-content
+recovery remain unimplemented future gameplay.
 
 ## 1. Scope and fixed outcome
 
@@ -127,7 +146,10 @@ A `PlacementDefinition` is immutable shared data. It contains:
 - room-quality eligibility and modifiers, without owning room state;
 - removal prerequisites, dismantling work and explicitly approved refunds;
 - renderer/presentation key, anchor/footprint visual policy and sorting data; and
-- persistence schema/version and definition-migration key.
+- persistence schema/version and definition-migration key; and
+- nullable maximum HP, destructibility, repairability and future resistance
+  metadata. Known maximum HP must be positive; no production HP values are
+  approved by WV-B3D.2.
 
 Definition data never stores instance quantity, reservations, users, progress,
 damage, room membership or a scenario-specific location. The existing proposed
@@ -148,6 +170,8 @@ A completed instance is mutable scenario state and contains:
 - lifecycle (`Active`, future `Dismantling`, `Removed`, `Invalidated` or
   `ScenarioRetired`);
 - monotonically increasing Placement revision;
+- current HP bounded to the Definition maximum and derived condition percentage;
+  legacy projections carry explicit unknown durability instead;
 - function-active flag derived from lifecycle and migration ownership;
 - function-specific state reference/ledger;
 - incoming, outgoing, use and dismantling reservations where supported;
@@ -388,6 +412,27 @@ No refund percentage, refund recipe, work duration or damage rule is approved.
 Until those values exist, definitions are not dismantlable. A blocked output
 plan leaves the Placement intact and reports a recoverable blocked reason.
 
+## 13A. Structural damage, destruction and Repair readiness
+
+WV-B3D.2 implements durability data and bounded revision semantics only. A later
+combat milestone may target a destructible completed Placement, resolve approved
+damage resistance, and commit HP loss through the registry's expected-revision
+boundary. Reaching zero must not itself perform partial cleanup: a future atomic
+destruction transaction must invalidate function/capacity and reservations,
+recover Storage contents without duplicate ownership, prepare any approved
+physical drops, remove the whole footprint identity, preserve natural
+Background, and publish navigation/rendering/runtime-cell changes. If output
+capacity is unavailable, contents may not be silently deleted.
+
+Repair is a distinct Construction-category job using Construction skill. A
+future Repair order must validate an active damaged repairable target and an
+interaction position, stage any approved physical materials through Hauling,
+perform approved work, consume staged materials exactly once, and commit bounded
+HP restoration against the expected Placement revision. Interruption preserves
+valid work/staging; cancellation recovers staged materials through the existing
+physical-resource rules. Final HP values, resistance formulas, Repair recipes,
+work durations, destruction outputs and refund percentages require approval.
+
 ## 14. Runtime-cell projection and change publication
 
 The completed registry extends `RuntimePlacementSnapshot` to expose Placement
@@ -442,9 +487,10 @@ streaming and complete mutable-world rollback remain deferred under
 
 These slices require separate approval:
 
-1. **WV-B3D.2 — Placement Registry Foundation:** freeze definition/instance IDs;
-   implement one-cell registry, footprint index, revisions, snapshots, central
-   compatibility and read-only legacy projections. No function cutover.
+1. **WV-B3D.2 — Placement Registry Foundation: implemented; manual acceptance
+   pending.** Definitions, identity, one-cell footprint index, revisions,
+   snapshots, durability contracts, central compatibility and read-only legacy
+   projections are present. No function cutover occurred.
 2. **WV-B3D.3A — Material Storage Authority Cutover:** migrate existing authored
    slots, contents, filters and reservations behind a narrow legacy/Placement
    routing adapter. Keep Construction completion legacy.
@@ -506,8 +552,9 @@ WV-B3C.2B Hauling, scheduler fairness, survival, construction, navigation and
 development-scene regressions. Do not weaken legacy assertions until a new
 authority is active and equivalent behavior is proven.
 
-WV-B3D.1 itself runs documentation validation only; it provides no Unity runtime
-evidence or manual acceptance for later slices.
+WV-B3D.2 evidence: focused Edit/Play **11/11** and **3/3**; complete
+graphics-enabled Edit/Play **608/608** and **84/84**, with zero failures, skips
+or inconclusive results. Manual acceptance remains pending.
 
 ## 19. Legacy retirement register
 
@@ -542,6 +589,8 @@ in a separate reversible WV-B3D.7 change.
 ## 20. Decisions still requiring approval
 
 - final Placement Definition IDs, schema version and persistence format;
+- production maximum HP values, resistance rules, damage formulas, destruction
+  outputs and Repair material/work requirements;
 - explicit acceptance of Prepared Surface as an exclusive non-obstructing
   Placement rather than a separate treatment slot;
 - final Background compatibility per definition;
@@ -553,8 +602,6 @@ in a separate reversible WV-B3D.7 change.
 - Refining bills, inputs, outputs, worker rules and blocked-output policy; and
 - death, unload and save/load reservation reconciliation.
 
-The smallest recommended implementation milestone is **WV-B3D.2 Placement
-Registry Foundation** only. It should stop after one-cell definitions, identity,
-footprint occupancy, revisions, immutable snapshots, compatibility validation
-and read-only legacy projections pass their gates. No functional authority moves
-until a later explicitly approved slice.
+The smallest recommended successor is **WV-B3D.3A Material Storage Authority
+Cutover**, subject to separate approval. WV-B3D.2 stops with the registry and
+read model; no functional authority moves in this milestone.

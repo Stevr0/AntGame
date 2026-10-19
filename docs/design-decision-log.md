@@ -1,9 +1,24 @@
 # Design Decision Log
 
+## 2026-10-19 — Implement WV-B3D.2 as a non-functional Placement read model
+
+- Make `PlacementRegistry` the scenario-scoped owner of definitions, identity,
+  footprint occupancy, lifecycle, revision and HP-ready instance state only.
+- Derive the six initial definitions from existing recipe data and project the
+  six legacy constructed Background types without moving function/capacity.
+- Use registry-context handles for stale-scenario rejection and deterministic
+  IDs for identical legacy fixture state.
+- Represent hidden natural Background provenance and legacy HP as explicit
+  unknowns; do not invent Earth/Stone or final durability values.
+- Permit future authoritative instances only with approved positive Max HP;
+  clamp HP and revise only on committed changes.
+- Defer damage, Repair, destruction, contents recovery and removal. Material
+  Storage authority cutover remains a separate candidate milestone.
+
 ## 2026-10-19 — Specify Placement migration before moving function authority
 
 - Complete WV-B3D.1 as documentation only; no Placement registry or functional
-  cutover is implemented.
+  cutover was implemented by that gate.
 - Preserve one natural Background plus optional Node, Placement and loose stack.
   A site stages materials but provides no completed function.
 - Begin later implementation with a one-cell Placement registry and read-only

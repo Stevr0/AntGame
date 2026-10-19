@@ -1,5 +1,18 @@
 # Gameplay Architecture Audit
 
+## WV-B3D.2 placement registry follow-up — 19 October 2026
+
+The registry/read-model recommendation is implemented without transferring
+function authority. `PlacementRegistry` owns definitions, projected identity,
+footprint occupancy, lifecycle/revision and HP-ready instance state;
+`ColonyRuntimeCellRegionAdapter` observes it. `MaterialStorageWorld`,
+`SurvivalInteractionWorld`, functional Background movement and Construction
+completion remain unchanged and exclusive. Legacy projections expose no owned
+contents/capacity and unknown HP. No legacy class or serialized functional asset
+is removable yet. Focused Edit/Play passed **11/11** and **3/3**; complete
+graphics-enabled suites passed **608/608** and **84/84**. Manual acceptance is
+pending, and Material Storage cutover remains a separately approved milestone.
+
 ## WV-B3D.1 placement follow-up — 19 October 2026
 
 The audit's functional-Background migration recommendation is now specified in

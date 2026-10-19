@@ -1,5 +1,14 @@
 # Gameplay Architecture Audit
 
+## WV-B3D.2 follow-up
+
+The Placement identity/read-model recommendation is implemented. Functional
+Background, Storage and survival owners remain exclusive; the registry adds no
+contents or capacity and reports legacy HP as unknown. No compatibility class
+or serialized asset is safe to remove. Automated evidence is 11/11 focused Edit,
+3/3 focused Play, 608/608 complete Edit and 84/84 complete Play; manual
+acceptance remains pending.
+
 The authoritative read-only audit is
 [`Documentation/GameplayArchitectureAudit.md`](https://github.com/Stevr0/AntGame/blob/main/Documentation/GameplayArchitectureAudit.md).
 It reviews revision `b280744c15a708e1afedcb64faea6d882d000d4f` and does not

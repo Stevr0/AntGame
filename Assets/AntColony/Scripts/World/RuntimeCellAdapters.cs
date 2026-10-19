@@ -82,19 +82,23 @@ namespace AntColony.World
         private readonly WorldMaterialDropRegistry drops;
         private readonly GeneratedWorldSnapshot generated;
         private readonly ColonyResourceNodeRegistry resourceNodes;
+        private readonly PlacementRegistry placements;
 
         public ColonyRuntimeCellRegionAdapter(ChunkedWorldData world,
             WorldMaterialDropRegistry drops, GeneratedWorldSnapshot generated = null,
-            ColonyResourceNodeRegistry resourceNodes = null)
+            ColonyResourceNodeRegistry resourceNodes = null,
+            PlacementRegistry placements = null)
             : base(AntRegionIds.Colony, RegionLocationKind.Colony)
         {
             this.world = world ?? throw new ArgumentNullException(nameof(world));
             this.drops = drops ?? throw new ArgumentNullException(nameof(drops));
             this.generated = generated;
             this.resourceNodes = resourceNodes;
+            this.placements = placements;
             world.CellChanged += OnTerrainChanged;
             drops.GroundCellChanged += OnGroundCellChanged;
             if (resourceNodes != null) resourceNodes.NodeChanged += OnNodeChanged;
+            if (placements != null) placements.PlacementChanged += OnPlacementChanged;
         }
 
         public override RuntimeCellReadResult TryGetCell(RegionCellId cellId,
@@ -113,10 +117,17 @@ namespace AntColony.World
             RuntimeNodeSnapshot node = CreateNode(cell, data);
             RuntimePlacementSnapshot placement = CreatePlacement(cell, data);
             RuntimeLooseStackSnapshot loose = CreateLooseStack(cell);
+            bool obscuresNaturalBackground = placement?.AuthorityState ==
+                PlacementAuthorityState.LegacyBackgroundProjection;
             snapshot = new RuntimeCellSnapshot(cellId, data.BackgroundMaterialId,
                 GetPublishedCellRevision(cellId, Math.Max(world.GetCellRevision(cell),
                     node?.NodeRevision ?? 0L)),
-                PublicationRevision, node, placement, loose);
+                PublicationRevision, node, placement, loose,
+                obscuresNaturalBackground ? string.Empty : data.BackgroundMaterialId,
+                obscuresNaturalBackground
+                    ? RuntimeOccupantProjectionState.DetailsUnavailable
+                    : RuntimeOccupantProjectionState.Authoritative,
+                obscuresNaturalBackground ? data.BackgroundMaterialId : string.Empty);
             return RuntimeCellReadResult.Success;
         }
 
@@ -138,6 +149,11 @@ namespace AntColony.World
             world.CellChanged -= OnTerrainChanged;
             drops.GroundCellChanged -= OnGroundCellChanged;
             if (resourceNodes != null) resourceNodes.NodeChanged -= OnNodeChanged;
+            if (placements != null)
+            {
+                placements.PlacementChanged -= OnPlacementChanged;
+                placements.InvalidateContext();
+            }
         }
 
         private RuntimeNodeSnapshot CreateNode(Vector2Int cell,
@@ -179,6 +195,31 @@ namespace AntColony.World
         private RuntimePlacementSnapshot CreatePlacement(Vector2Int cell,
             WorldTileCellData data)
         {
+            RegionCellId cellId = RegionCellId.Colony(RegionId,
+                new ColonyCell(cell.x, cell.y));
+            if (placements != null && placements.TryGetByCell(cellId,
+                    out PlacementSnapshot projected) == PlacementReadResult.Success)
+            {
+                string functionId = string.Empty;
+                if (world.TryGetBackgroundMaterialDefinition(
+                        data.BackgroundMaterialId,
+                        out BackgroundTileMaterialDefinition projectedBackground))
+                    functionId = projectedBackground.Function == BackgroundFunction.None
+                        ? PlacementCategory.MovementImprovement.ToString()
+                        : projectedBackground.Function.ToString();
+                return new RuntimePlacementSnapshot(
+                    projected.AuthorityState ==
+                        PlacementAuthorityState.LegacyBackgroundProjection
+                            ? RuntimeOccupantProjectionState.CompatibilityProjected
+                            : RuntimeOccupantProjectionState.Authoritative,
+                    projected.PlacementId.Value, projected.DefinitionId, functionId,
+                    contentsArePlacementOwned: false,
+                    projected.ScenarioContextId, projected.Anchor,
+                    projected.Footprint, projected.Lifecycle,
+                    projected.AuthorityState, projected.Revision,
+                    projected.CurrentHitPoints, projected.MaximumHitPoints,
+                    functionalCapacity: null);
+            }
             if (!world.TryGetBackgroundMaterialDefinition(data.BackgroundMaterialId,
                     out BackgroundTileMaterialDefinition definition) ||
                 definition.Function == BackgroundFunction.None)
@@ -218,7 +259,13 @@ namespace AntColony.World
         {
             RegionCellId id = RegionCellId.Colony(RegionId,
                 new ColonyCell(change.WorldCell.x, change.WorldCell.y));
-            PublishCellChange(id, change.Category, change.NewRevision);
+            RuntimeCellChangeCategory category = change.Category;
+            if (placements != null && world.GetCell(change.WorldCell,
+                    out WorldTileCellData cell) == WorldCellQueryResult.Available &&
+                placements.RefreshLegacyProjection(id,
+                    cell.BackgroundMaterialId))
+                category |= RuntimeCellChangeCategory.Placement;
+            PublishCellChange(id, category, change.NewRevision);
         }
 
         private void OnGroundCellChanged(Vector2Int cell)
@@ -231,6 +278,12 @@ namespace AntColony.World
         private void OnNodeChanged(RegionCellId cellId, long nodeRevision)
         {
             PublishCellChange(cellId, RuntimeCellChangeCategory.Node, nodeRevision);
+        }
+
+        private void OnPlacementChanged(IReadOnlyList<RegionCellId> cells)
+        {
+            foreach (RegionCellId cell in cells)
+                PublishCellChange(cell, RuntimeCellChangeCategory.Placement);
         }
     }
 

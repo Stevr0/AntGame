@@ -1,5 +1,20 @@
 # Gameplay Mechanics
 
+## Placement durability readiness
+
+WV-B3D.2 implements structural HP contracts, not combat against structures.
+Placement Definitions can describe Max HP, destructibility, repairability and
+future resistance metadata. Future authoritative instances start full, clamp HP
+to `0..Max` and revise only on committed HP changes. Legacy projected
+Placements report HP/condition as unknown because the Background systems never
+owned durability.
+
+Enemy damage, zero-HP destruction, occupancy/function removal, reservation
+cancellation, resource recovery, loot/refunds and rendering/navigation updates
+remain future work. Destroyed Storage may never silently lose contents. Repair
+will be a distinct Construction-skill job with approved physical staging, work
+and exact-once consumption; no final values or recipes are approved.
+
 ## Whole-node Colony Extraction
 
 One completed Soil or Stone Extraction job removes the entire Node and creates
