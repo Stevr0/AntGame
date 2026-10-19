@@ -1,5 +1,17 @@
 # Ant Colony Current Game State
 
+## ISO-WV-0 — Implemented; manual acceptance pending (19 October 2026)
+
+An isolated 8 x 8 isometric calibration scene now verifies a 32 x 16 pixel
+logical footprint, 32 PPU full-canvas artwork, a shared (16,8)-pixel ground
+pivot, signed Surface projection/inverse conversion, representative flat,
+raised, water, rock and vegetation art, and deterministic static depth order.
+It does not participate in Bootstrap, gameplay scene flow or live World View
+rendering. Focused projection/import/scene tests pass 8/8 and the existing World
+View foundation regression passes 9/9. Unity visual inspection and a clean
+Console remain pending; ISO-WV-1 has not started. See
+`Documentation/IsometricWorldViewCalibration.md`.
+
 ## WV-B3D.3B Material Storage Construction Completion Cutover — Implemented (19 October 2026)
 
 **Status: Implemented — Automated Tests Passed, Manual Acceptance Pending.**

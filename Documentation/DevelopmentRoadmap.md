@@ -1,5 +1,16 @@
 # Ant Colony Development Roadmap
 
+## ISO-WV-0 — Implemented; manual acceptance pending (19 October 2026)
+
+The approved calibration slice adds only an isolated 8 x 8 preview, five
+explicitly calibrated imported sprites and a presentation-only
+`SurfaceIsometricProjection`. It preserves the live 64 x 64 logical Surface,
+all navigation/gameplay authorities, Colony View, generation and Bootstrap.
+Automated evidence passes 8/8 for ISO-WV-0 and 9/9 for the existing World View
+foundation. Complete the focused Unity visual/Console checklist in
+`Documentation/IsometricWorldViewCalibration.md`, then stop for approval.
+Do not begin ISO-WV-1 automatically.
+
 ## WV-B3D.3B — Implemented; manual acceptance pending (19 October 2026)
 
 Newly completed Material Storage now commits directly as one authoritative

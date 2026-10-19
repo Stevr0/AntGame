@@ -18,6 +18,7 @@ nav = [
   { "Ants, Attributes and Skills" = "ants-attributes-skills.md" },
   { "Ant Movement and Navigation" = "ant-movement-navigation.md" },
   { "World View Foundation" = "world-view-foundation.md" },
+  { "Isometric World View Calibration" = "isometric-world-view-calibration.md" },
   { "Procedural World Generation" = "procedural-world-generation.md" },
   { "Resource and Node System" = "resource-and-node-system.md" },
   { "Unified Runtime Cells" = "unified-runtime-cells.md" },
