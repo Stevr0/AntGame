@@ -1,5 +1,14 @@
 # Milestone History
 
+## 19 October 2026 — WV-B3C.3B Whole-Node Extraction — Automated Complete
+
+**Implemented — Automated Tests Passed, Manual Acceptance Pending.** Generated
+Colony Soil/Stone Nodes now deplete wholly into conserved canonical stacks with
+deterministic overflow, exclusive prepared capacity, replay protection, guarded
+terrain mutation and scheduler-safe blockage. Focused Edit/Play passed 43/43 and
+22/22; full Edit/Play passed 597/597 and 81/81. Manual seed-2203 and fixture
+acceptance remains outstanding. WV-B3D and WV-C1 were not started.
+
 ## 19 October 2026 — WV-B3C.3A Active Colony Resource Nodes — Complete
 
 **WV-B3C.3A — Complete.** The
@@ -16,7 +25,8 @@ The user confirmed all **25/25** authoritative manual Unity checks passed in two
 stages; Codex did not independently perform them. Evidence under
 `Logs/WV-B3C3A-*` came from the implementation working tree based on parent
 revision `1fab6541`, not the parent commit itself. Surface Nodes remain
-`GenerationOnly`; WV-B3C.3B remains unstarted; `WV-B3B-LIM-001` remains active.
+`GenerationOnly`; WV-B3C.3B was unstarted at this historical checkpoint;
+`WV-B3B-LIM-001` remains active.
 
 ## 16 October 2026 — WV-B3C.2B Partial Hauling — Complete
 

@@ -1,9 +1,25 @@
 # WV-B3C Resource Node and Loose Resource Integration Plan
 
+## WV-B3C.3B implementation closure — 19 October 2026
+
+The planned whole-node cutover is implemented for active Colony Soil and Stone.
+The compatibility-named `ExcavationWorldTransaction` coordinates stable job
+operation identity, expected Node revision, exclusive Node ownership, bounded
+deterministic output reservations, guarded Solid removal, full Node depletion and
+canonical stack creation/merge. It does not copy Node or loose-resource quantity.
+
+The chosen recovery policy is pre-commit safe blockage. The entire output plan
+must fit before terrain or quantity changes; failed planning releases capacity,
+preserves work progress and leaves the Node intact. The scheduler performs the
+same bounded probe before assignment. No durable pending-output record is needed
+for this in-memory milestone. Focused/full Unity results are 43/43 and 597/597
+Edit plus 22/22 and 81/81 Play; manual acceptance remains pending.
+
 **Status:** B3C.1, B3C.2A, B3C.2B and B3C.3A are complete after recorded
 automated validation and user-confirmed manual acceptance. B3C.3A active
 variable-quantity Colony Node authority passed **25/25** authoritative Unity
-manual checks. B3C.3B whole-node Extraction remains unimplemented.
+manual checks. B3C.3B is implemented with passing automated suites and awaits
+manual acceptance.
 
 **Prepared:** 15 October 2026
 
@@ -43,9 +59,9 @@ uses deterministic per-Node quantities 8–12 and Stone 5–15; fixture Nodes re
 quantity one. Terrain retains Solid occupancy, but an authority guard rejects
 unapproved replacement/removal. Active revisions, reservations, prospective
 commit/replay contracts, scenario retirement, unified-cell projections,
-quantity badges and diagnostics are implemented. Variable Nodes can be
-designated but the legacy one-unit transaction is explicitly deferred and stays
-unowned. No whole-node output, output splitting or partial harvesting was added.
+quantity badges and diagnostics are implemented. This was the B3C.3A closure
+baseline; B3C.3B now makes variable Nodes interactive through complete
+whole-node output. Partial harvesting was not added.
 
 ## 1. Scope and decision labels
 
@@ -499,7 +515,8 @@ did not independently perform it. XML evidence is retained under
 revision `1fab6541`, which is provenance rather than the final implementation
 commit.
 
-**B3C.3B status:** not implemented. The coordinator, whole-node depletion,
+**B3C.3B status:** implemented; automated validation passed and manual acceptance
+is pending. The coordinator, whole-node depletion,
 complete physical output, overflow/pending-output recovery and coherent
 Node/terrain/stack commit described below remain future requirements.
 

@@ -258,8 +258,6 @@ namespace AntColony.Development
             }
             ExcavationDesignations = new ExcavationDesignationRegistry(
                 WorldData, ColonyJobRegistry, nodeCandidate);
-            ExcavationTransaction = new ExcavationWorldTransaction(
-                WorldData, MaterialDrops, OnExcavationCommitted, nodeCandidate);
             navigationWorldService ??= GetComponent<GridNavigationWorldService>();
             navigationWorldService?.BindSimulationClock(simulationClock);
             if (navigationWorldService == null ||
@@ -282,6 +280,10 @@ namespace AntColony.Development
             ConstructionTransaction = new ConstructionWorldTransaction(
                 WorldData, SurvivalInteractionWorld, MaterialStorage,
                 OnConstructionCommitted);
+            ExcavationTransaction = new ExcavationWorldTransaction(
+                WorldData, MaterialDrops, OnExcavationCommitted, nodeCandidate,
+                navigationWorldService.Map,
+                cell => ConstructionDesignations.HasActiveDesignation(cell));
 
             SurfaceWorldData nextSurfaceWorld = proceduralWorld?
                 .CreateSurfaceNavigationWorld() ??

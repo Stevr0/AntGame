@@ -121,8 +121,11 @@ namespace AntColony.Commands
             ColonyJobId id = new($"excavation.{cell.x}.{cell.y}");
             if (!jobs.TryAdd(id, AntWorkCategory.Extraction, cell,
                     out ColonyJob job, out error)) return false;
+            int outputQuantity = definition.ExcavationYield;
+            if (resourceNodes != null && TryGetResourceNode(cell, out var node))
+                outputQuantity = node.RemainingQuantity;
             designation = new ExcavationDesignation(cell, cellData.SolidMaterialId,
-                definition.ExcavatedMaterial, definition.ExcavationYield, job);
+                definition.ExcavatedMaterial, outputQuantity, job);
             byCell[cell] = designation;
             byJob[id] = designation;
             return true;
@@ -174,7 +177,7 @@ namespace AntColony.Commands
                 reason = string.Empty;
                 return true;
             }
-            return resourceNodes.CanUseLegacyExtraction(designation.Cell, out reason);
+            return resourceNodes.CanExtract(designation.Cell, out reason);
         }
 
         public bool TryGetResourceNode(Vector2Int cell,
@@ -321,7 +324,8 @@ namespace AntColony.Commands
             // and the resumable pre-completion progress.
             if (requested >= remaining &&
                 !transaction.TryCommit(Job.Id.Value, designation.Cell,
-                    designation.SolidMaterialId, out _, out string commitError))
+                    designation.SolidMaterialId, ApproachCell, out _,
+                    out string commitError))
             {
                 Fail(commitError);
                 return;

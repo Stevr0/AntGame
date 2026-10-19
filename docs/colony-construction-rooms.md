@@ -1,5 +1,12 @@
 # Colony Construction and Rooms
 
+## Extracted material flow
+
+WV-B3C.3B does not change Construction authority. Whole-node Extraction creates
+canonical loose Soil/Stone stacks only; separate Hauling may deliver them to the
+site. Construction remains ineligible until every requirement is staged, and an
+active Construction designation is not an Extraction overflow destination.
+
 ## Natural Background rule
 
 Natural Backgrounds are environmental only. Nursery, Sleeping, Food/Water/

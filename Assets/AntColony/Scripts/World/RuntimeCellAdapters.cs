@@ -150,8 +150,9 @@ namespace AntColony.World
                 resourceNodes.TryGet(cellId, out ColonyResourceNodeSnapshot active) ==
                     ColonyResourceNodeReadResult.Success)
             {
-                RuntimeNodeInteractionState interaction = active.ExtractionStatus ==
-                    ColonyResourceNodeExtractionStatus.LegacyQuantityOneCompatible
+                RuntimeNodeInteractionState interaction = active.ExtractionStatus is
+                    ColonyResourceNodeExtractionStatus.LegacyQuantityOneCompatible or
+                    ColonyResourceNodeExtractionStatus.Interactive
                         ? RuntimeNodeInteractionState.Interactive
                         : RuntimeNodeInteractionState.CompatibilityOnly;
                 return new RuntimeNodeSnapshot(

@@ -1,5 +1,17 @@
 # Design Decision Log
 
+## 2026-10-19 — Use safe pre-commit blockage for WV-B3C.3B output
+
+- Implement whole-node Colony Soil/Stone Extraction through existing Node,
+  terrain, ground-stack, job and runtime-cell authorities.
+- Prefer compatible existing stack capacity, then the extracted cell, then
+  reachable nearby empty cells in bounded deterministic order.
+- Reserve and revalidate the complete capacity plan before terrain or quantity
+  mutation. If it cannot fit, release reservations and retain the Node/Solid;
+  do not create a post-depletion pending-output record in this milestone.
+- Preserve capacity 10, separate Hauling, staged Construction, quantity-one
+  fixtures, `WV-B3B-LIM-001`, Surface deferrals and Placement migration scope.
+
 ## 2026-10-19 — Close WV-B3C.3A active Colony Nodes
 
 - Accept WV-B3C.3A as **Complete** after 11/11 focused Edit, 16/16 focused Play,

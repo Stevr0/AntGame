@@ -1,5 +1,14 @@
 # Procedural World Generation Specification
 
+## WV-B3C.3B generated-world integration — 19 October 2026
+
+Generated Colony Soil 8–12 and Stone 5–15 Nodes are now live whole-node
+Extraction targets. Seed `2203`, generation weights, version-2 identities,
+starting chamber, passage, queen spawn and entrance were not changed. Extraction
+uses the generated Node's stable identity and full remaining quantity, then
+creates deterministic capacity-10 physical stacks without regenerating terrain.
+Surface Seed, Twig and Water records remain generation-only and out of scope.
+
 ## Resource and Node System v1.0 amendment — 16 October 2026
 
 [`ResourceAndNodeSystem.md`](ResourceAndNodeSystem.md) now governs generated

@@ -192,7 +192,7 @@ namespace AntColony.Tests.EditMode
         }
 
         [Test]
-        public void GeneratedFoundingStoneCanBeDesignatedButLegacyCommitIsDeferred()
+        public void GeneratedFoundingStoneCommitsWholeQuantityToPhysicalStacks()
         {
             AntGameDevelopmentWorldHost host = OpenHost();
             Assert.That(host.TryStartScenario(
@@ -205,9 +205,7 @@ namespace AntColony.Tests.EditMode
             Assert.That(host.ExcavationDesignations.TryDesignate(cell,
                 out ExcavationDesignation designation, out error), Is.True, error);
             Assert.That(host.ExcavationDesignations.CanExecuteLegacyExtraction(
-                designation.Job.Id, out error), Is.False);
-            Assert.That(error, Is.EqualTo(
-                ColonyResourceNodeRegistry.VariableExtractionDeferredReason));
+                designation.Job.Id, out error), Is.True, error);
             var queen = new AntRecord(new AntId("generated-queen"), "Founding Queen",
                 new ColonyId("generated-colony"), AntCaste.Queen,
                 new AntAttributes(5, 5, 5));
@@ -220,25 +218,85 @@ namespace AntColony.Tests.EditMode
                     new ColonyCell(cell.x, cell.y)), out var nodeBefore),
                 Is.EqualTo(ColonyResourceNodeReadResult.Success));
 
+            Vector2Int start = new(host.ProceduralWorld.QueenSpawn.X,
+                host.ProceduralWorld.QueenSpawn.Y);
+            Assert.That(SurvivalInteractionOrder.TryMeasureApproach(
+                host.GridNavigationMap, start, cell, out Vector2Int approach,
+                out _, out error), Is.True, error);
             Assert.That(host.ExcavationTransaction.TryCommit(
-                designation.Job.Id.Value, cell, before.SolidMaterialId,
-                out _, out error), Is.False);
-            Assert.That(error, Is.EqualTo(
-                ColonyResourceNodeRegistry.VariableExtractionDeferredReason));
+                designation.Job.Id.Value, cell, before.SolidMaterialId, approach,
+                out _, out error), Is.True, error);
 
             host.WorldData.GetCell(cell, out WorldTileCellData after);
-            Assert.That(after.HasSolidTile, Is.True);
-            Assert.That(after.SolidMaterialId, Is.EqualTo(before.SolidMaterialId));
+            Assert.That(after.HasSolidTile, Is.False);
             Assert.That(after.BackgroundMaterialId, Is.EqualTo(before.BackgroundMaterialId));
-            Assert.That(host.MaterialDrops.Count, Is.EqualTo(dropsBefore));
+            Assert.That(host.MaterialDrops.GetQuantity(ExcavatedMaterialType.Stone),
+                Is.EqualTo(nodeBefore.RemainingQuantity));
+            Assert.That(host.MaterialDrops.Count, Is.GreaterThan(dropsBefore));
+            Assert.That(host.MaterialDrops.Drops.All(stack =>
+                stack.Quantity <= stack.MaximumStack), Is.True);
+            Assert.That(host.MaterialDrops.Drops.Sum(stack => stack.Quantity),
+                Is.EqualTo(nodeBefore.RemainingQuantity));
+            Assert.That(host.MaterialDrops.Drops.Count(), Is.EqualTo(
+                Mathf.CeilToInt(nodeBefore.RemainingQuantity / 10f)));
             Assert.That(queen.Skills.Get(AntSkillId.Extraction).TotalExperience,
                 Is.EqualTo(experienceBefore));
             Assert.That(designation.Job.ReservationOwner.IsValid, Is.False);
             Assert.That(host.ColonyResourceNodes.TryGet(nodeBefore.NodeId,
                 out var nodeAfter), Is.EqualTo(ColonyResourceNodeReadResult.Success));
-            Assert.That(nodeAfter.RemainingQuantity,
-                Is.EqualTo(nodeBefore.RemainingQuantity));
-            Assert.That(nodeAfter.Revision, Is.EqualTo(nodeBefore.Revision));
+            Assert.That(nodeAfter.RemainingQuantity, Is.Zero);
+            Assert.That(nodeAfter.Lifecycle,
+                Is.EqualTo(ColonyResourceNodeLifecycle.Depleted));
+            Assert.That(nodeAfter.Revision, Is.GreaterThan(nodeBefore.Revision));
+        }
+
+        [Test]
+        public void BlockedMultiStackOutputLeavesGeneratedNodeAndTerrainUnchanged()
+        {
+            AntGameDevelopmentWorldHost host = OpenHost();
+            Assert.That(host.TryStartScenario(
+                GeneratedWorldScenario.FoundingQueen, 2203, out string error),
+                Is.True, error);
+            Vector2Int start = new(host.ProceduralWorld.QueenSpawn.X,
+                host.ProceduralWorld.QueenSpawn.Y);
+            ColonyResourceNodeSnapshot node = null;
+            Vector2Int cell = default;
+            Vector2Int approach = default;
+            foreach (ColonyResourceNodeSnapshot candidate in
+                host.ColonyResourceNodes.Nodes.Where(item =>
+                    item.RemainingQuantity > 10))
+            {
+                Vector2Int candidateCell = new(candidate.CellId.ColonyCell.X,
+                    candidate.CellId.ColonyCell.Y);
+                if (!SurvivalInteractionOrder.TryMeasureApproach(
+                        host.GridNavigationMap, start, candidateCell,
+                        out Vector2Int candidateApproach, out _, out _)) continue;
+                node = candidate;
+                cell = candidateCell;
+                approach = candidateApproach;
+                break;
+            }
+            Assert.That(node, Is.Not.Null,
+                "Seed 2203 should expose a reachable Node requiring multiple stacks.");
+            host.WorldData.GetCell(cell, out WorldTileCellData before);
+            long terrainRevision = host.WorldData.GetCellRevision(cell);
+            var blockedTransaction = new ExcavationWorldTransaction(
+                host.WorldData, host.MaterialDrops, null,
+                host.ColonyResourceNodes, host.GridNavigationMap, _ => true);
+
+            Assert.That(blockedTransaction.TryCommit("blocked-output", cell,
+                before.SolidMaterialId, approach, out _, out error), Is.False);
+            Assert.That(error, Does.Contain("blocked"));
+            Assert.That(host.WorldData.GetCellRevision(cell), Is.EqualTo(terrainRevision));
+            host.WorldData.GetCell(cell, out WorldTileCellData afterTerrain);
+            Assert.That(afterTerrain.HasSolidTile, Is.True);
+            Assert.That(afterTerrain.BackgroundMaterialId,
+                Is.EqualTo(before.BackgroundMaterialId));
+            Assert.That(host.ColonyResourceNodes.TryGet(node.NodeId, out var afterNode),
+                Is.EqualTo(ColonyResourceNodeReadResult.Success));
+            Assert.That(afterNode.RemainingQuantity, Is.EqualTo(node.RemainingQuantity));
+            Assert.That(afterNode.Revision, Is.EqualTo(node.Revision));
+            Assert.That(host.MaterialDrops.Count, Is.Zero);
         }
 
         [Test]

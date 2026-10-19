@@ -101,6 +101,25 @@ namespace AntColony.World
     public enum GroundStackLifecycle { Active, Removed }
     public enum GroundStackPlacementCompatibility { Valid, Invalid, Unknown }
 
+    /// <summary>One reserved destination in a prepared Extraction output plan.</summary>
+    public readonly struct ExtractionOutputDestination
+    {
+        public ExtractionOutputDestination(Vector2Int cell, int quantity,
+            GroundStackId existingStackId, long expectedStackRevision)
+        {
+            Cell = cell;
+            Quantity = quantity;
+            ExistingStackId = existingStackId;
+            ExpectedStackRevision = expectedStackRevision;
+        }
+
+        public Vector2Int Cell { get; }
+        public int Quantity { get; }
+        public GroundStackId ExistingStackId { get; }
+        public long ExpectedStackRevision { get; }
+        public bool CreatesNewStack => string.IsNullOrEmpty(ExistingStackId.Value);
+    }
+
     public readonly struct GroundStackPlacementValidation
     {
         public GroundStackPlacementValidation(
@@ -201,6 +220,8 @@ namespace AntColony.World
         private readonly HashSet<string> committedOutputKeys =
             new(StringComparer.Ordinal);
         private readonly Dictionary<GroundStackId, DropReservation> reservations = new();
+        private readonly Dictionary<Vector2Int, OutputCapacityReservation>
+            outputReservations = new();
         private readonly ChunkedWorldData world;
         private readonly Func<Vector2Int, GroundStackPlacementValidation>
             customPlacementValidator;
@@ -246,6 +267,127 @@ namespace AntColony.World
             customPlacementValidator != null;
         public bool RejectNextCreationForTesting { get; set; }
         public event Action<Vector2Int> GroundCellChanged;
+
+        /// <summary>
+        /// Reserves one cell's exact merge or creation capacity without exposing
+        /// planned output as a physical stack.
+        /// </summary>
+        public bool TryReserveOutputCapacity(string operationId,
+            ExcavatedMaterialType material, int quantity, Vector2Int cell,
+            bool allowExcavationSourceSolid,
+            out ExtractionOutputDestination destination, out string error)
+        {
+            destination = default;
+            if (string.IsNullOrWhiteSpace(operationId) || quantity <= 0 ||
+                !MaterialResourceCatalog.TryGetDefinition(material, out var definition))
+            { error = "Output capacity requires an operation, resource and positive quantity."; return false; }
+            if (outputReservations.TryGetValue(cell, out var claimed))
+            {
+                error = claimed.OperationId == operationId
+                    ? "This operation already reserved the output cell."
+                    : "The output cell is reserved by another Extraction operation.";
+                return false;
+            }
+            GroundStackPlacementValidation placement = ValidatePlacement(cell,
+                allowExcavationSourceSolid, false);
+            if (placement.Compatibility != GroundStackPlacementCompatibility.Valid)
+            { error = placement.Reason; return false; }
+
+            GroundStackId stackId = default;
+            long stackRevision = 0L;
+            int available = definition.GroundStackCapacity;
+            if (stackByCell.TryGetValue(cell, out GroundStackId existingId))
+            {
+                GroundStackRecord existing = stacks[existingId];
+                if (existing.Material != material)
+                { error = "A loose-ground cell cannot contain different resource types."; return false; }
+                if (reservations.ContainsKey(existingId))
+                { error = "The compatible stack is reserved for Hauling."; return false; }
+                stackId = existingId;
+                stackRevision = existing.Revision;
+                available = existing.Capacity - existing.Quantity;
+            }
+            else if (RejectNextCreationForTesting)
+            {
+                RejectNextCreationForTesting = false;
+                error = "Development failure injection rejected material output.";
+                return false;
+            }
+            if (quantity > available)
+            { error = "The output exceeds the destination's available stack capacity."; return false; }
+
+            destination = new ExtractionOutputDestination(cell, quantity,
+                stackId, stackRevision);
+            outputReservations.Add(cell, new OutputCapacityReservation(
+                operationId.Trim(), material, destination));
+            error = string.Empty;
+            return true;
+        }
+
+        public void ReleaseOutputReservations(string operationId)
+        {
+            if (string.IsNullOrWhiteSpace(operationId)) return;
+            var cells = new List<Vector2Int>();
+            foreach (var pair in outputReservations)
+                if (pair.Value.OperationId == operationId) cells.Add(pair.Key);
+            foreach (Vector2Int cell in cells) outputReservations.Remove(cell);
+        }
+
+        /// <summary>
+        /// Revalidates every destination before applying any stack mutation.
+        /// After successful validation the mutations are non-fallible.
+        /// </summary>
+        public bool TryCommitReservedOutputs(string operationId,
+            IReadOnlyList<ExtractionOutputDestination> destinations,
+            out IReadOnlyList<WorldMaterialDrop> committed, out string error)
+        {
+            committed = Array.Empty<WorldMaterialDrop>();
+            if (!CanCommitReservedOutputs(operationId, destinations, out error))
+                return false;
+
+            var results = new List<WorldMaterialDrop>(destinations.Count);
+            for (int i = 0; i < destinations.Count; i++)
+            {
+                ExtractionOutputDestination destination = destinations[i];
+                string key = $"{operationId}.output.{i}";
+                results.Add(CommitOutput(key,
+                    outputReservations[destination.Cell].Material,
+                    destination.Quantity, destination.Cell,
+                    MaterialResourceCatalog.ProvisionalMaximumStack));
+                outputReservations.Remove(destination.Cell);
+            }
+            committed = results;
+            error = string.Empty;
+            return true;
+        }
+
+        internal bool CanCommitReservedOutputs(string operationId,
+            IReadOnlyList<ExtractionOutputDestination> destinations,
+            out string error)
+        {
+            if (destinations == null || destinations.Count == 0)
+            { error = "Extraction has no reserved physical output destinations."; return false; }
+            foreach (ExtractionOutputDestination destination in destinations)
+            {
+                if (!outputReservations.TryGetValue(destination.Cell, out var reservation) ||
+                    reservation.OperationId != operationId ||
+                    !reservation.Destination.Equals(destination))
+                { error = "An Extraction output reservation is missing or stale."; return false; }
+                if (destination.CreatesNewStack)
+                {
+                    if (stackByCell.ContainsKey(destination.Cell))
+                    { error = "A reserved empty output cell became occupied."; return false; }
+                }
+                else if (!stacks.TryGetValue(destination.ExistingStackId,
+                        out GroundStackRecord existing) ||
+                    existing.Revision != destination.ExpectedStackRevision ||
+                    existing.Material != reservation.Material ||
+                    existing.Quantity + destination.Quantity > existing.Capacity)
+                { error = "A reserved output stack changed before commit."; return false; }
+            }
+            error = string.Empty;
+            return true;
+        }
 
         internal bool CanCommitOutput(string key, ExcavatedMaterialType material,
             int quantity, Vector2Int cell, int maximumStack, bool needsDrop,
@@ -447,6 +589,11 @@ namespace AntColony.World
                     : "The stack is reserved by another ant.";
                 return false;
             }
+            if (outputReservations.ContainsKey(record.Cell))
+            {
+                error = "The stack is reserved for prepared Extraction output.";
+                return false;
+            }
             reservedQuantity = Math.Min(requestedQuantity, record.Quantity);
             reservations.Add(record.Id, new DropReservation(ownerId, reservedQuantity));
             record.Revision++;
@@ -528,6 +675,7 @@ namespace AntColony.World
             stacks.Clear();
             stackByCell.Clear();
             reservations.Clear();
+            outputReservations.Clear();
             committedOutputKeys.Clear();
             foreach (Vector2Int cell in affectedCells)
                 GroundCellChanged?.Invoke(cell);
@@ -617,6 +765,17 @@ namespace AntColony.World
             public string OwnerId { get; }
             public int Quantity { get; }
         }
+
+        private readonly struct OutputCapacityReservation
+        {
+            public OutputCapacityReservation(string operationId,
+                ExcavatedMaterialType material,
+                ExtractionOutputDestination destination)
+            { OperationId = operationId; Material = material; Destination = destination; }
+            public string OperationId { get; }
+            public ExcavatedMaterialType Material { get; }
+            public ExtractionOutputDestination Destination { get; }
+        }
     }
 
     /// <summary>
@@ -625,26 +784,108 @@ namespace AntColony.World
     /// </summary>
     public sealed class ExcavationWorldTransaction
     {
+        private const int MaximumOutputSearchRadius = 8;
         private readonly ChunkedWorldData world;
         private readonly WorldMaterialDropRegistry drops;
         private readonly ColonyResourceNodeRegistry resourceNodes;
         private readonly Action<Vector2Int> terrainCommitted;
+        private readonly GridNavigationMap navigationMap;
+        private readonly Func<Vector2Int, bool> outputCellBlocked;
+        private readonly HashSet<string> committedOperations = new(StringComparer.Ordinal);
+        private readonly List<ExtractionOutputDestination> lastPlannedDestinations = new();
+
+        public string LastOperationId { get; private set; } = string.Empty;
+        public string LastOperationPhase { get; private set; } = "None";
+        public int LastOutputQuantity { get; private set; }
+        public int LastReservedCapacity { get; private set; }
+        public int LastPendingOutputQuantity { get; private set; }
+        public string LastBlockedReason { get; private set; } = string.Empty;
+        public bool LastOperationWasReplay { get; private set; }
+        public IReadOnlyList<ExtractionOutputDestination> LastPlannedDestinations =>
+            lastPlannedDestinations;
 
         public ExcavationWorldTransaction(ChunkedWorldData world,
             WorldMaterialDropRegistry drops,
             Action<Vector2Int> terrainCommitted = null,
-            ColonyResourceNodeRegistry resourceNodes = null)
+            ColonyResourceNodeRegistry resourceNodes = null,
+            GridNavigationMap navigationMap = null,
+            Func<Vector2Int, bool> outputCellBlocked = null)
         {
             this.world = world ?? throw new ArgumentNullException(nameof(world));
             this.drops = drops ?? throw new ArgumentNullException(nameof(drops));
             this.terrainCommitted = terrainCommitted;
             this.resourceNodes = resourceNodes;
+            this.navigationMap = navigationMap;
+            this.outputCellBlocked = outputCellBlocked;
         }
 
         public bool TryCommit(string ownershipKey, Vector2Int cell,
             string expectedSolidMaterialId, out WorldMaterialDrop drop, out string error)
+            => TryCommit(ownershipKey, cell, expectedSolidMaterialId, cell,
+                out drop, out error);
+
+        /// <summary>
+        /// Performs the same bounded output-capacity preparation used at commit,
+        /// then releases it immediately. The scheduler uses this read-like probe
+        /// so a blocked job never needs to monopolise an ant.
+        /// </summary>
+        public bool CanPrepare(string operationId, Vector2Int cell,
+            string expectedSolidMaterialId, Vector2Int approachCell,
+            out string error)
+        {
+            if (world.GetCell(cell, out WorldTileCellData cellData) !=
+                    WorldCellQueryResult.Available || !cellData.HasSolidTile ||
+                !string.Equals(cellData.SolidMaterialId, expectedSolidMaterialId,
+                    StringComparison.Ordinal) ||
+                !world.TryGetSolidMaterialDefinition(expectedSolidMaterialId,
+                    out SolidTileMaterialDefinition definition) ||
+                !MaterialResourceCatalog.TryGetDefinition(
+                    definition.ExcavatedMaterial, out MaterialResourceDefinition resource))
+            { error = "The designated foreground Solid is no longer extractable."; return false; }
+            int quantity = definition.ExcavationYield;
+            if (resourceNodes != null)
+            {
+                RegionCellId cellId = RegionCellId.Colony(AntRegionIds.Colony,
+                    new ColonyCell(cell.x, cell.y));
+                if (resourceNodes.TryGet(cellId, out var node) !=
+                        ColonyResourceNodeReadResult.Success)
+                { error = "The designated Resource Node is not registered."; return false; }
+                if (!resourceNodes.CanExtract(cell, out error)) return false;
+                quantity = node.RemainingQuantity;
+            }
+            string probeId = $"{operationId}.output-probe";
+            bool prepared = TryPrepareOutputPlan(probeId,
+                definition.ExcavatedMaterial, quantity,
+                resource.GroundStackCapacity, cell, approachCell,
+                out _, out error);
+            drops.ReleaseOutputReservations(probeId);
+            return prepared;
+        }
+
+        public bool TryCommit(string ownershipKey, Vector2Int cell,
+            string expectedSolidMaterialId, Vector2Int approachCell,
+            out WorldMaterialDrop drop, out string error)
         {
             drop = default;
+            LastOperationId = ownershipKey?.Trim() ?? string.Empty;
+            LastOperationPhase = "Validating";
+            LastOutputQuantity = 0;
+            LastReservedCapacity = 0;
+            LastPendingOutputQuantity = 0;
+            LastBlockedReason = string.Empty;
+            LastOperationWasReplay = false;
+            lastPlannedDestinations.Clear();
+            if (string.IsNullOrWhiteSpace(ownershipKey))
+            { error = "Extraction requires a stable operation identity."; return false; }
+            ownershipKey = ownershipKey.Trim();
+            if (committedOperations.Contains(ownershipKey))
+            {
+                LastOperationPhase = "ReplayRejected";
+                LastOperationWasReplay = true;
+                error = "This Extraction operation was already committed.";
+                LastBlockedReason = error;
+                return false;
+            }
             if (world.GetCell(cell, out WorldTileCellData cellData) !=
                     WorldCellQueryResult.Available || !cellData.HasSolidTile ||
                 !string.Equals(cellData.SolidMaterialId, expectedSolidMaterialId,
@@ -666,32 +907,171 @@ namespace AntColony.World
             }
             int maximumStack = resource.GroundStackCapacity;
             string authorityToken = string.Empty;
-            // Check compatibility first so a variable Node always reports its
-            // deliberate WV-B3C.3B deferral instead of a downstream drop error.
-            if (resourceNodes != null &&
-                !resourceNodes.CanUseLegacyExtraction(cell, out error)) return false;
-            if (!drops.CanCommitOutput(ownershipKey, definition.ExcavatedMaterial,
-                    definition.ExcavationYield, cell, maximumStack, true, true, false,
-                    out error)) return false;
-            // Mint the one-use terrain token only after every other fallible
-            // preflight has succeeded, so failed attempts leave no authority.
-            if (resourceNodes != null &&
-                !resourceNodes.TryPrepareLegacyExtractionRemoval(cell, ownershipKey,
-                    out authorityToken, out error)) return false;
+            ColonyResourceNodeSnapshot node = null;
+            int outputQuantity = definition.ExcavationYield;
+            if (resourceNodes != null)
+            {
+                RegionCellId cellId = RegionCellId.Colony(AntRegionIds.Colony,
+                    new ColonyCell(cell.x, cell.y));
+                if (resourceNodes.TryGet(cellId, out node) !=
+                        ColonyResourceNodeReadResult.Success)
+                { error = "The designated Resource Node is not registered."; return false; }
+                if (!resourceNodes.CanExtract(cell, out error)) return false;
+                if (!string.Equals(node.DefinitionId, expectedSolidMaterialId,
+                        StringComparison.Ordinal) ||
+                    node.OutputMaterial != definition.ExcavatedMaterial)
+                { error = "The Resource Node and Solid definition disagree."; return false; }
+                outputQuantity = node.RemainingQuantity;
+            }
+
+            if (!TryPrepareOutputPlan(ownershipKey, definition.ExcavatedMaterial,
+                    outputQuantity, maximumStack, cell, approachCell,
+                    out List<ExtractionOutputDestination> plan, out error))
+            {
+                LastOperationPhase = "Blocked";
+                LastBlockedReason = error;
+                LastPendingOutputQuantity = outputQuantity;
+                return false;
+            }
+            LastOutputQuantity = outputQuantity;
+            LastReservedCapacity = outputQuantity;
+            lastPlannedDestinations.AddRange(plan);
+            LastOperationPhase = "OutputReserved";
+
+            if (resourceNodes != null)
+            {
+                if (!resourceNodes.TryReserve(node.NodeId, ownershipKey,
+                        node.Revision, out error) ||
+                    !resourceNodes.TryBeginPendingExtraction(node.NodeId,
+                        ownershipKey, node.Revision + 1L, out error) ||
+                    !resourceNodes.TryPrepareExtractionRemoval(node.NodeId,
+                        ownershipKey, ownershipKey, out authorityToken, out error))
+                {
+                    drops.ReleaseOutputReservations(ownershipKey);
+                    resourceNodes.TryReleaseReservation(node.NodeId, ownershipKey, out _);
+                    return false;
+                }
+            }
+            if (!drops.CanCommitReservedOutputs(ownershipKey, plan, out error))
+            {
+                drops.ReleaseOutputReservations(ownershipKey);
+                if (resourceNodes != null)
+                    resourceNodes.TryReleaseReservation(node.NodeId, ownershipKey, out _);
+                return false;
+            }
             if (world.RemoveSolidMaterial(cell, authorityToken) !=
                     WorldCellMutationResult.Success)
             {
                 error = string.IsNullOrWhiteSpace(world.LastSolidMutationRejection)
                     ? "The foreground Solid could not be removed."
                     : world.LastSolidMutationRejection;
+                drops.ReleaseOutputReservations(ownershipKey);
+                if (resourceNodes != null)
+                    resourceNodes.TryReleaseReservation(node.NodeId, ownershipKey, out _);
                 return false;
             }
-            // Extraction leaves physical material for later explicit hauling.
-            drop = drops.CommitOutput(ownershipKey, definition.ExcavatedMaterial,
-                definition.ExcavationYield, cell, maximumStack);
+            if (resourceNodes != null &&
+                !resourceNodes.TryCommitQuantityReduction(node.NodeId, ownershipKey,
+                    ownershipKey, outputQuantity, node.Revision + 2L,
+                    out _, out error))
+                return false;
+            if (!drops.TryCommitReservedOutputs(ownershipKey, plan,
+                    out IReadOnlyList<WorldMaterialDrop> outputs, out error))
+                return false;
+            drop = outputs[0];
+            committedOperations.Add(ownershipKey);
+            LastOperationPhase = "Committed";
             terrainCommitted?.Invoke(cell);
             error = string.Empty;
             return true;
         }
+
+        private bool TryPrepareOutputPlan(string operationId,
+            ExcavatedMaterialType material, int quantity, int maximumStack,
+            Vector2Int sourceCell, Vector2Int approachCell,
+            out List<ExtractionOutputDestination> plan, out string error)
+        {
+            plan = new List<ExtractionOutputDestination>();
+            int remaining = quantity;
+            var candidates = new List<(Vector2Int cell, int order, int distance)>();
+
+            // Compatible stacks are considered first so existing physical
+            // capacity is used before new stack identities are created.
+            foreach (WorldMaterialDrop existing in drops.Drops)
+                if (existing.Material == material &&
+                    existing.Quantity < existing.MaximumStack &&
+                    IsCandidateReachable(approachCell, existing.WorldCell))
+                    candidates.Add((existing.WorldCell, 0,
+                        Manhattan(sourceCell, existing.WorldCell)));
+            candidates.Add((sourceCell, 1, 0));
+            for (int radius = 1; radius <= MaximumOutputSearchRadius; radius++)
+            for (int y = -radius; y <= radius; y++)
+            for (int x = -radius; x <= radius; x++)
+            {
+                if (Math.Abs(x) + Math.Abs(y) != radius) continue;
+                Vector2Int candidate = sourceCell + new Vector2Int(x, y);
+                if ((outputCellBlocked?.Invoke(candidate) ?? false) ||
+                    !IsCandidateReachable(approachCell, candidate) ||
+                    drops.TryFindAtCell(candidate, out _)) continue;
+                candidates.Add((candidate, 2, radius));
+            }
+            candidates.Sort((a, b) =>
+            {
+                int compared = a.order.CompareTo(b.order);
+                if (compared != 0) return compared;
+                compared = a.distance.CompareTo(b.distance);
+                if (compared != 0) return compared;
+                compared = a.cell.y.CompareTo(b.cell.y);
+                return compared != 0 ? compared : a.cell.x.CompareTo(b.cell.x);
+            });
+
+            var seen = new HashSet<Vector2Int>();
+            foreach (var candidate in candidates)
+            {
+                if (remaining == 0) break;
+                if (!seen.Add(candidate.cell)) continue;
+                int available = maximumStack;
+                if (drops.TryFindAtCell(candidate.cell, out WorldMaterialDrop existing))
+                    available = existing.MaximumStack - existing.Quantity;
+                int assigned = Math.Min(remaining, available);
+                if (assigned <= 0) continue;
+                if (!drops.TryReserveOutputCapacity(operationId,
+                        material, assigned, candidate.cell,
+                        candidate.cell == sourceCell,
+                        out ExtractionOutputDestination destination,
+                        out string reserveError))
+                {
+                    if (reserveError.StartsWith("Development failure injection",
+                            StringComparison.Ordinal))
+                    {
+                        drops.ReleaseOutputReservations(operationId);
+                        plan.Clear();
+                        error = reserveError;
+                        return false;
+                    }
+                    continue;
+                }
+                plan.Add(destination);
+                remaining -= assigned;
+            }
+            if (remaining == 0)
+            { error = string.Empty; return true; }
+            drops.ReleaseOutputReservations(operationId);
+            plan.Clear();
+            error = $"Extraction output is blocked: no deterministic physical stack plan can place {remaining} remaining unit(s).";
+            return false;
+        }
+
+        private bool IsCandidateReachable(Vector2Int approachCell,
+            Vector2Int candidate)
+        {
+            if (navigationMap == null) return candidate == approachCell;
+            if (!navigationMap.TryGetAnchor(candidate, out _)) return false;
+            return new GridPathfinder(navigationMap).FindPath(
+                approachCell, candidate, 2048).Succeeded;
+        }
+
+        private static int Manhattan(Vector2Int a, Vector2Int b) =>
+            Math.Abs(a.x - b.x) + Math.Abs(a.y - b.y);
     }
 }

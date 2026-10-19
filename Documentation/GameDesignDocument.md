@@ -1,5 +1,21 @@
 # ANT COLONY
 
+## WV-B3C.3B whole-node Extraction — implemented 19 October 2026
+
+Active Colony Soil and Stone Nodes now use one whole-node transaction. Completion
+reserves a deterministic physical-output plan, removes the foreground Solid,
+depletes the authoritative Node quantity and creates or merges canonical ground
+stacks whose committed quantities exactly equal the removed quantity. Natural
+Background is preserved, ant inventory is never an Extraction destination, and
+Hauling remains the only normal transport into Storage or Construction staging.
+
+Soil and Stone ground stacks retain provisional capacity 10. Compatible existing
+stacks are preferred; otherwise the extracted cell and then reachable nearby
+cells are considered in bounded deterministic order. If the complete quantity
+cannot be reserved, Extraction stays blocked before commit with the Node and
+Solid intact. This milestone therefore needs no post-depletion pending-output
+record. Surface resources, Placement migration and WV-C1 remain out of scope.
+
 ## Resource and Node System v1.0 — 16 October 2026
 
 > **APPROVED DESIGN; RUNTIME MIGRATION INCOMPLETE.**

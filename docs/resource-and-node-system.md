@@ -1,13 +1,22 @@
 # Resource and Node System
 
+## WV-B3C.3B — implemented, manual acceptance pending
+
+Colony Soil 8–12 and Stone 5–15 Nodes are interactive. Whole-node Extraction
+conserves the complete quantity into canonical stacks of at most 10, using
+exclusive prepared capacity and exact-once operation identity. If every unit
+cannot be placed, the Node and Solid remain intact. Surface resources and Water
+interaction remain deferred.
+
 ## WV-B3C.3A — complete
 
 The existing Colony registry is now the active Soil/Stone Node quantity
 authority. Generated Soil contains 8–12 units and Stone 5–15, derived
 deterministically per Node; Mara/Pip/Tala remains quantity one. Terrain still
 owns Solid occupancy and Backgrounds, with guarded mutation preventing resource
-loss. Variable Nodes can be inspected and designated, but legacy one-unit
-Extraction is explicitly deferred to WV-B3C.3B and remains unowned.
+loss. At B3C.3A closure, variable Nodes could be inspected and designated but
+remained unowned by the legacy one-unit path. WV-B3C.3B now supersedes that
+temporary gate with the whole-node transaction described above.
 
 Runtime snapshots and designated badges read actual remaining quantity and Node
 revision/lifecycle directly from the authority. Surface Nodes remain

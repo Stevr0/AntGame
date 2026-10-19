@@ -1,5 +1,12 @@
 # Development Roadmap
 
+## WV-B3C.3B — implemented, automated tests passed, manual acceptance pending
+
+Whole-node Colony Soil/Stone Extraction and deterministic multi-stack physical
+output are implemented. Focused Edit/Play passed 43/43 and 22/22; full Edit/Play
+passed 597/597 and 81/81. Manual seed-2203, logistics, view/entrance and fixture
+acceptance remains pending. WV-B3D and WV-C1 have not begun.
+
 ## WV-B3C.3A — complete
 
 The Colony Resource Node registry now actively owns generated Soil 8–12 and
@@ -15,7 +22,8 @@ Edit and 81/81 full Play with no failures, skips or inconclusive results. The
 user confirmed all **25/25** authoritative manual checks passed; Codex did not
 independently perform them. Tests ran against the implementation working tree
 based on parent revision `1fab6541`, which is provenance rather than the final
-implementation commit. WV-B3C.3B whole-node output has not begun.
+implementation commit. This paragraph is the B3C.3A closure baseline;
+WV-B3C.3B is now implemented as recorded above.
 `WV-B3B-LIM-001` remains active.
 
 ## WV-B3C.2B — complete

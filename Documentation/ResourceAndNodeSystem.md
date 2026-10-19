@@ -1,7 +1,24 @@
 # Resource and Node System v1.0
 
-**Status:** Approved design; Colony quantity authority implemented through
-WV-B3C.3A, with whole-node output and broader migration still incomplete.
+## WV-B3C.3B runtime amendment — 19 October 2026
+
+The active Colony implementation now matches the whole-node rule for Soil and
+Stone. `ColonyResourceNodeRegistry` remains the only quantity/lifecycle owner;
+`ChunkedWorldData` owns Solid and Background; and
+`WorldMaterialDropRegistry` owns committed physical stacks plus temporary output
+capacity reservations. One Extraction completion consumes all remaining Node
+quantity and produces the same total across stacks of at most 10.
+
+Output planning prefers compatible existing stack capacity, then the source
+cell, then bounded reachable empty cells in deterministic order. Every planned
+cell is exclusively reserved and revalidated before mutation. If a complete plan
+does not exist, the operation releases its reservations and leaves the Node and
+Solid intact. This safe-blocking policy is the implemented recovery guarantee;
+there is no post-depletion pending quantity in WV-B3C.3B.
+
+**Status:** Approved design; Colony whole-node Soil/Stone Extraction is
+implemented through WV-B3C.3B. Broader Surface and Placement migration remains
+incomplete.
 
 **Approved:** 16 October 2026
 
@@ -61,7 +78,7 @@ implemented material unless a concrete food Resource Definition is approved.
 
 | Resource | Classification | Current evidence and approved role |
 | --- | --- | --- |
-| Soil | Active variable-quantity Colony Node | Generated Colony Nodes hold deterministic 8–12 quantities in the active registry. Fixture Nodes remain quantity-one compatible; variable-node Extraction is deferred to WV-B3C.3B. |
+| Soil | Active variable-quantity Colony Node | Generated Colony Nodes hold deterministic 8–12 quantities in the active registry. Fixture Nodes remain quantity-one compatible; WV-B3C.3B whole-node Extraction is active. |
 | Stone | Active variable-quantity Colony Node; generated Surface record | Generated Colony Nodes hold deterministic 5–15 quantities. Fixture Nodes remain quantity-one compatible; Surface Stone remains `GenerationOnly`. |
 | Seeds | Generated, non-interactive record; approved future resource | Deterministic Surface records use `resource.food.seed`; no runtime source mutation, loose parcel, hauling or consumption path exists. |
 | Twigs | Generated, non-interactive record; approved future resource | Deterministic Surface records use `resource.material.twig`; no runtime Extraction or loose-resource path exists. |

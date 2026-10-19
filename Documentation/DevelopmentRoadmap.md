@@ -1,5 +1,16 @@
 # Ant Colony Development Roadmap
 
+## WV-B3C.3B — Implemented, Automated Tests Passed, Manual Acceptance Pending (19 October 2026)
+
+Whole-node Colony Soil/Stone Extraction is implemented through the existing Node,
+terrain, ground-stack, job, navigation and runtime-cell authorities. Complete
+quantity is split across deterministic capacity-10 stacks, output capacity is
+reserved before commit, and replay cannot duplicate output or XP. Insufficient
+capacity safely blocks before depletion; no post-depletion pending-output system
+was required. Focused Edit/Play passed **43/43** and **22/22**; full Edit/Play
+passed **597/597** and **81/81**. Manual seed-2203 and fixture acceptance is
+pending. Do not begin WV-B3D or WV-C1 without approval.
+
 ## WV-B3C.3A — Complete (19 October 2026)
 
 The established Colony Resource Node registry now actively owns all supported
@@ -76,7 +87,8 @@ remain unstarted; Surface Nodes remain `GenerationOnly`, and
 `WV-B3B-LIM-001` remains active.
 
 WV-B3C.3A subsequently completed after **25/25** user-confirmed manual
-acceptance. WV-B3C.3B has not begun.
+acceptance. This B3C.3A closure note is superseded by the implemented B3C.3B
+status above.
 
 Unity `6000.3.8f1` recovery evidence passes **28/28 focused Edit**, **6/6
 focused Play**, **588/588 complete graphics-enabled Edit** and **80/80 complete

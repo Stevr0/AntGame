@@ -1,5 +1,13 @@
 # Gameplay Mechanics
 
+## Whole-node Colony Extraction
+
+One completed Soil or Stone Extraction job removes the entire Node and creates
+recoverable physical stacks totaling its remaining quantity. Stacks hold at most
+10; overflow uses deterministic nearby reachable cells. Extraction never fills
+inventory, Storage or site staging. Hauling moves the result, and Construction
+works only after delivery. A blocked full-output plan leaves the Node intact.
+
 ## Resource and Node System v1.0
 
 The approved target makes every Solid a finite variable-quantity Resource Node.

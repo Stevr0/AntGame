@@ -166,6 +166,54 @@ namespace AntColony.Tests.EditMode
         }
 
         [Test]
+        public void PreparedExtractionCapacityIsInvisibleExclusiveAndReplaySafe()
+        {
+            var drops = new WorldMaterialDropRegistry();
+            Vector2Int cell = new(4, 4);
+            Assert.That(drops.TryReserveOutputCapacity("extract.first",
+                ExcavatedMaterialType.Soil, 10, cell, false,
+                out ExtractionOutputDestination destination, out string error),
+                Is.True, error);
+            Assert.That(drops.Count, Is.Zero,
+                "Preparing output must not publish a physical stack.");
+            Assert.That(drops.TryReserveOutputCapacity("extract.second",
+                ExcavatedMaterialType.Soil, 1, cell, false,
+                out _, out error), Is.False);
+            Assert.That(error, Does.Contain("another Extraction"));
+
+            Assert.That(drops.TryCommitReservedOutputs("extract.first",
+                new[] { destination }, out var committed, out error), Is.True, error);
+            Assert.That(committed.Count, Is.EqualTo(1));
+            Assert.That(committed[0].Quantity, Is.EqualTo(10));
+            Assert.That(drops.TryCommitReservedOutputs("extract.first",
+                new[] { destination }, out _, out _), Is.False,
+                "A replay cannot publish the prepared output twice.");
+            Assert.That(drops.GetQuantity(ExcavatedMaterialType.Soil), Is.EqualTo(10));
+        }
+
+        [Test]
+        public void PreparedExtractionMergeBlocksHaulingUntilCommit()
+        {
+            var drops = new WorldMaterialDropRegistry();
+            Vector2Int cell = new(3, 2);
+            Assert.That(drops.TryAdd("existing", ExcavatedMaterialType.Stone, 7,
+                cell, out WorldMaterialDrop existing, out string error), Is.True, error);
+            Assert.That(drops.TryReserveOutputCapacity("extract.merge",
+                ExcavatedMaterialType.Stone, 3, cell, false,
+                out ExtractionOutputDestination destination, out error), Is.True, error);
+            Assert.That(destination.ExistingStackId, Is.EqualTo(existing.StackId));
+            Assert.That(drops.TryReserve(existing.OwnershipKey, "hauler", 1,
+                out _, out error), Is.False);
+            Assert.That(error, Does.Contain("Extraction output"));
+
+            Assert.That(drops.TryCommitReservedOutputs("extract.merge",
+                new[] { destination }, out var committed, out error), Is.True, error);
+            Assert.That(committed[0].StackId, Is.EqualTo(existing.StackId));
+            Assert.That(committed[0].Quantity, Is.EqualTo(10));
+            Assert.That(committed[0].Revision, Is.EqualTo(existing.Revision + 1));
+        }
+
+        [Test]
         public void QuantityBadgeRulesAreContextualRegionSafeAndReadOnly()
         {
             Assert.That(ResourceQuantityBadgeRules.ShouldShowNode(

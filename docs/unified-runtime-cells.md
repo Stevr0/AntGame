@@ -1,5 +1,12 @@
 # Unified Runtime Cells
 
+## WV-B3C.3B committed changes
+
+Whole-node Extraction now drives the existing Colony terrain, Node and loose
+stack events. The runtime-cell adapter observes those authorities and publishes
+their cell changes; it owns no gameplay quantity. Prepared output is invisible,
+failed plans publish no mutation, and Surface Nodes remain generation-only.
+
 ## WV-B3C.2A canonical ground stacks
 
 **Complete.** Automated validation passed and the user confirmed all **23/23
@@ -21,7 +28,8 @@ cell change. Reads, failed transactions and view switching do not. A scenario
 rebuild creates a new ID context and drops old reservations. Hauling, Storage
 and staged Construction retain their current authorities. B3C.2B coordinates partial transfer identity,
 allocation and recovery without becoming a cell writer. General overflow and
-B3C.3B whole-node transaction cutover remains future; Surface Nodes remain
+B3C.3B whole-node transaction cutover is implemented for Colony Soil/Stone;
+Surface Nodes remain
 `GenerationOnly` and `WV-B3B-LIM-001`
 continues to apply.
 
@@ -43,7 +51,8 @@ results pass 8/8 focused Edit, 4/4 focused Play, 565/565 complete Edit and 78/78
 complete Play. This documentation-only closure did not rerun Unity tests. B3C.2A later
 completed and B3C.2B later completed with **30/30** manual acceptance. B3C.3A
 subsequently activated Colony quantity authority and completed **25/25** manual
-acceptance; B3C.3B remains unstarted and `WV-B3B-LIM-001` remains active.
+acceptance; B3C.3B was unstarted at that closure point and is now implemented as
+recorded above. `WV-B3B-LIM-001` remains active.
 
 ## WV-B3C.3A active Colony Node authority
 
@@ -54,8 +63,9 @@ derivation. Guarded terrain writes prevent Solid removal from bypassing
 quantity. One committed authority mutation produces one Colony Node change;
 reads, failures, replay and view switching produce none.
 
-Quantity-one fixture Nodes remain interactive. Variable Nodes are designatable
-but legacy one-unit execution is deferred and stays unowned until WV-B3C.3B.
+Quantity-one fixture Nodes remain interactive. Variable Nodes were designatable
+but unowned at B3C.3A closure; B3C.3B now makes them interactive through
+full-quantity output.
 Automated suites pass 11/11 focused Edit, 16/16 focused Play, 594/594 full Edit
 and 81/81 full Play, with no failures, skips or inconclusive results. The user
 confirmed **25/25** authoritative manual Unity checks passed; Codex did not
@@ -179,7 +189,7 @@ unloading or complex scenario restoration.
    [`Partial Hauling Integration Plan`](https://github.com/Stevr0/AntGame/blob/main/Documentation/PartialHaulingIntegrationPlan.md).
 5. **WV-B3C.3A — active Nodes (complete):** variable Colony
    quantity authority with guarded legacy Extraction.
-6. **WV-B3C.3B — whole-node Extraction (unstarted):** coordinated depletion,
+6. **WV-B3C.3B — whole-node Extraction (implemented; manual pending):** coordinated depletion,
    Solid removal and complete recoverable output.
 7. **WV-B3D — Placements:** site/Placement occupancy and one-function-at-a-time
    migration of functional Backgrounds, beginning with Material Storage.

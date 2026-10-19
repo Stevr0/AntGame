@@ -56,11 +56,8 @@ namespace AntColony.Tests.PlayMode
                 ant => ant.Record.Inventory.TotalQuantity == 0), Is.True);
             Assert.That(host.MaterialDrops.GetQuantity(ExcavatedMaterialType.Soil),
                 Is.EqualTo(initialSoil + 1));
-            Assert.That(host.MaterialDrops.TryFindAtCell(
-                AntGameDevelopmentWorldHost.ExcavationSoilFixture,
-                out WorldMaterialDrop drop), Is.True);
-            Assert.That(drop.Material, Is.EqualTo(ExcavatedMaterialType.Soil));
-            Assert.That(drop.Quantity, Is.EqualTo(1));
+            Assert.That(host.MaterialDrops.Drops.Any(drop =>
+                drop.Material == ExcavatedMaterialType.Soil), Is.True);
             Assert.That(host.ExcavationDesignations.Designations.Single().State,
                 Is.EqualTo(ExcavationDesignationState.Completed));
         }
@@ -80,7 +77,7 @@ namespace AntColony.Tests.PlayMode
         }
 
         [UnityTest]
-        public IEnumerator GeneratedVariableNodeDesignationRemainsUnownedAndConserved()
+        public IEnumerator GeneratedVariableNodeDesignationBecomesEligibleWithoutEarlyMutation()
         {
             yield return LoadScene();
             AntGameDevelopmentWorldHost host = FindHost();
@@ -103,11 +100,11 @@ namespace AntColony.Tests.PlayMode
 
             controller.SetAutonomousColonyWorkEnabled(true);
             Assert.That(controller.EvaluateAutonomousColonyWorkNow(
-                controller.SelectableAnts[0], 1d), Is.False);
+                controller.SelectableAnts[0], 1d), Is.True);
             yield return null;
 
-            Assert.That(designation.Job.ReservationOwner.IsValid, Is.False);
-            Assert.That(controller.SelectableAnts[0].ExcavationOrder, Is.Null);
+            Assert.That(designation.Job.ReservationOwner.IsValid, Is.True);
+            Assert.That(controller.SelectableAnts[0].ExcavationOrder, Is.Not.Null);
             Assert.That(controller.SelectableAnts[0].Record.Skills
                 .Get(AntColony.Ants.AntSkillId.Extraction).TotalExperience,
                 Is.EqualTo(experienceBefore));

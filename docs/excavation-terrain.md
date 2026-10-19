@@ -1,5 +1,14 @@
 # Excavation and Terrain
 
+## WV-B3C.3B whole-node Extraction
+
+Active Colony Soil and Stone Nodes now complete in one Extraction job. The job
+reserves the full deterministic stack plan, removes the Solid, preserves natural
+Background, depletes the Node and commits physical output totaling the original
+remaining quantity. Capacity-10 overflow uses additional reachable cells.
+Insufficient capacity blocks before commit and releases the ant; no quantity is
+lost or moved into inventory. Automated suites pass; manual acceptance is pending.
+
 ## WV-B3C.2A canonical physical output
 
 Soil/Stone physical output now occupies one canonical stack per Colony cell in
@@ -9,7 +18,7 @@ resource-defined capacity 10 is rejected before the Solid or source inventory
 commits. The stack exposes total, reserved and available quantity plus revision,
 typed cell, provenance and lifecycle. Empty pickup terminates the identity.
 
-Extraction remains quantity one in live gameplay and retains its atomic
+This historical B3C.2A baseline used quantity-one live Extraction and retained its atomic
 preflight/remove/output ordering. It alone may prepare output at its exact
 currently obstructed source cell. Reservations now advance observable stack and
 runtime-cell revisions; reads and view switching do not. Partial pickup remains
@@ -62,8 +71,8 @@ checks. This includes confirmation that deferred variable-quantity Extraction
 does not starve other eligible work and that exiting Play Mode adds no Console
 errors or exceptions. Codex did not independently perform the manual checks.
 
-WV-B3C.3B still must coordinate complete remaining quantity, Solid depletion
-and recoverable output; partial harvesting was not added.
+WV-B3C.3B now coordinates complete remaining quantity, Solid depletion and
+recoverable output; partial harvesting was not added.
 
 ## WV-B3B read projection
 

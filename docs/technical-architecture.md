@@ -1,5 +1,15 @@
 # Technical Architecture
 
+## WV-B3C.3B Extraction transaction
+
+`ExcavationWorldTransaction` now coordinates, rather than replaces, the Node,
+terrain and ground-stack authorities. It uses the job ID as scenario-local
+operation identity, prepares exclusive merge/new-cell capacity, reserves and
+revalidates the Node revision, commits guarded Solid removal and full depletion,
+then publishes canonical stacks. Scheduler probes use the same bounded planner.
+Safe pre-commit blockage is the recovery policy; no pending-output or save system
+was introduced.
+
 ## WV-B3C.2B transaction coordinator — complete
 
 WV-B3C.2B implements one scenario-local coordination
@@ -87,7 +97,7 @@ The registry owns quantity; `ChunkedWorldData` owns terrain/Solid occupancy and
 Background. Its mutation guard rejects bypass writes, while narrow one-use
 tokens support fixture debug operations and safe quantity-one Extraction.
 Committed registry mutations publish one Node change through the unified Colony
-adapter. Variable-node legacy Extraction remains deferred and unowned. Scenario
+adapter. Variable-node Extraction now uses the WV-B3C.3B whole-node transaction. Scenario
 replacement invalidates the old handle after the replacement setup succeeds;
 camera switching does not rebuild it. This does not expand WV-B3B read-model
 atomicity into whole-world atomicity.

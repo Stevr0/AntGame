@@ -61,6 +61,7 @@ namespace AntColony.World
     {
         LegacyQuantityOneCompatible,
         DeferredUntilWholeNodeExtraction,
+        Interactive,
         Reserved,
         PendingCommit,
         Depleted,
@@ -113,7 +114,7 @@ namespace AntColony.World
             ColonyResourceNodeLifecycle.Invalidated => ColonyResourceNodeExtractionStatus.Invalid,
             ColonyResourceNodeLifecycle.ScenarioRetired => ColonyResourceNodeExtractionStatus.ScenarioRetired,
             _ when IsLegacyQuantityOneFixture => ColonyResourceNodeExtractionStatus.LegacyQuantityOneCompatible,
-            _ => ColonyResourceNodeExtractionStatus.DeferredUntilWholeNodeExtraction
+            _ => ColonyResourceNodeExtractionStatus.Interactive
         };
         public string ExtractionCompatibilityReason => ExtractionStatus ==
             ColonyResourceNodeExtractionStatus.DeferredUntilWholeNodeExtraction
@@ -348,27 +349,50 @@ namespace AntColony.World
             return ColonyResourceNodeReadResult.Success;
         }
 
-        public bool CanUseLegacyExtraction(Vector2Int cell, out string reason)
+        public bool CanExtract(Vector2Int cell, out string reason)
         {
             if (TryGet(ToCellId(cell), out ColonyResourceNodeSnapshot node) != ColonyResourceNodeReadResult.Success)
             { reason = "The designated Resource Node is not registered."; return false; }
             if (node.Lifecycle != ColonyResourceNodeLifecycle.Active)
             { reason = $"The Resource Node is {node.Lifecycle}."; return false; }
-            if (!node.IsLegacyQuantityOneFixture)
-            { reason = VariableExtractionDeferredReason; return false; }
             reason = string.Empty;
             return true;
         }
+
+        public bool CanUseLegacyExtraction(Vector2Int cell, out string reason) =>
+            CanExtract(cell, out reason);
 
         public bool TryPrepareLegacyExtractionRemoval(Vector2Int cell,
             string operationId, out string authorityToken, out string error)
         {
             authorityToken = string.Empty;
-            if (!CanUseLegacyExtraction(cell, out error)) return false;
+            if (!CanExtract(cell, out error)) return false;
             if (string.IsNullOrWhiteSpace(operationId))
             { error = "Extraction requires a stable operation identity."; return false; }
             authorityToken = $"node-extraction:{Scenario.StableKey}:{cell.x}:{cell.y}:{operationId.Trim()}";
             authorizedTerrainTokens.Add(authorityToken);
+            return true;
+        }
+
+        /// <summary>
+        /// Mints the one-use terrain token only for the operation that currently
+        /// owns a prepared whole-node commit.
+        /// </summary>
+        public bool TryPrepareExtractionRemoval(string nodeId, string ownerId,
+            string operationId, out string authorityToken, out string error)
+        {
+            authorityToken = string.Empty;
+            if (lifecycle == ColonyResourceNodeRegistryLifecycle.ContextInvalidated ||
+                string.IsNullOrWhiteSpace(nodeId) ||
+                !nodesById.TryGetValue(nodeId, out NodeRecord record))
+            { error = "The Resource Node identity is unavailable."; return false; }
+            if (record.Lifecycle != ColonyResourceNodeLifecycle.PendingExtractionCommit ||
+                !string.Equals(record.ReservationOwner, ownerId, StringComparison.Ordinal) ||
+                string.IsNullOrWhiteSpace(operationId))
+            { error = "The prepared Node extraction is no longer owned by this operation."; return false; }
+            authorityToken = $"node-extraction:{Scenario.StableKey}:{nodeId}:{operationId.Trim()}";
+            authorizedTerrainTokens.Add(authorityToken);
+            error = string.Empty;
             return true;
         }
 
@@ -486,6 +510,11 @@ namespace AntColony.World
             {
                 if (!cell.HasSolidTile)
                 {
+                    // A whole-node transaction removes terrain before its final,
+                    // non-fallible quantity commit. Keep the prepared quantity
+                    // intact during that very small commit window.
+                    if (record.Lifecycle == ColonyResourceNodeLifecycle.PendingExtractionCommit)
+                        return;
                     record.RemainingQuantity = 0; record.ReservationOwner = string.Empty;
                     record.Lifecycle = ColonyResourceNodeLifecycle.Depleted;
                     record.Revision++; registryRevision++; return;

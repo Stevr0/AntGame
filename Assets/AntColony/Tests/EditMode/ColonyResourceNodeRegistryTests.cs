@@ -214,7 +214,7 @@ namespace AntColony.Tests.EditMode
             Assert.That(before.Node.Lifecycle,
                 Is.EqualTo(ColonyResourceNodeLifecycle.Active));
             Assert.That(before.Node.ExtractionStatus, Is.EqualTo(
-                ColonyResourceNodeExtractionStatus.DeferredUntilWholeNodeExtraction));
+                ColonyResourceNodeExtractionStatus.Interactive));
 
             long sequence = adapter.Changes.CurrentSequence;
             Assert.That(registry.TryReserve(node.NodeId, "worker",

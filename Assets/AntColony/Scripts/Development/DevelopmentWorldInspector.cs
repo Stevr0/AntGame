@@ -402,6 +402,27 @@ namespace AntColony.Development
             {
                 builder.AppendLine();
             }
+            ExcavationWorldTransaction transaction = worldHost?.ExcavationTransaction;
+            if (transaction != null && !string.IsNullOrEmpty(transaction.LastOperationId))
+            {
+                builder.Append("Last Extraction operation: ")
+                    .Append(transaction.LastOperationId).Append("   ")
+                    .Append(transaction.LastOperationPhase).AppendLine();
+                builder.Append("Output / reserved / pending: ")
+                    .Append(transaction.LastOutputQuantity).Append(" / ")
+                    .Append(transaction.LastReservedCapacity).Append(" / ")
+                    .Append(transaction.LastPendingOutputQuantity).AppendLine();
+                builder.Append("Planned destinations: ");
+                foreach (ExtractionOutputDestination destination in
+                    transaction.LastPlannedDestinations)
+                    builder.Append(destination.Cell).Append('=')
+                        .Append(destination.Quantity).Append(' ');
+                builder.AppendLine();
+                if (!string.IsNullOrEmpty(transaction.LastBlockedReason))
+                    builder.Append("Blocked / replay: ")
+                        .Append(transaction.LastBlockedReason).Append(" / ")
+                        .Append(transaction.LastOperationWasReplay).AppendLine();
+            }
         }
 
         private void ToggleForeground()

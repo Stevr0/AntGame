@@ -1,5 +1,19 @@
 # Unified Runtime Cell Architecture and Migration Specification
 
+## WV-B3C.3B committed mutation integration — 19 October 2026
+
+Whole-node Colony Extraction now publishes through the existing authority
+events: guarded Solid removal advances terrain/navigation state, explicit Node
+depletion advances Node and registry revisions, and each created or merged
+ground stack advances loose-resource cell state. The Colony runtime adapter
+continues to own only its read-model revisions/change feed; no second regional
+change authority was added. Failed preparation and replay publish no mutation.
+
+Prepared stack destinations remain invisible until commit. The complete plan is
+reserved and revalidated before any terrain change. If capacity is unavailable,
+the Node remains interactive-but-blocked with its quantity and Solid intact.
+Surface cells remain generation-only and `WV-B3B-LIM-001` remains retained.
+
 **Milestone:** WV-B3A  
 **Date:** 15 October 2026  
 **Status:** WV-B3B and WV-B3C.1 complete; later mutable migrations unstarted
@@ -602,7 +616,8 @@ multi-source pickup operations, one exact single-destination delivery, completed
 Storage-to-Construction withdrawal, carrier allocation and recovery outcomes
 without moving any runtime-cell write authority. Ground and Storage change feeds
 still publish only their owners' committed quantity changes. General multi-cell overflow/pending
-output and B3C.3B whole-node transaction cutover remain unimplemented. B3C.3A
+output and B3C.3B whole-node transaction cutover were unimplemented at this
+B3C.3A closure point. B3C.3A
 active variable Node authority is complete. Surface Nodes remain
 `GenerationOnly`; `WV-B3B-LIM-001` is
 unchanged. WV-B3C.2B is complete after user-confirmed **30/30** authoritative

@@ -499,6 +499,11 @@ namespace AntColony.Commands
         public bool TryGet(ColonyJobId id, out ConstructionDesignation designation) =>
             byJob.TryGetValue(id, out designation);
 
+        public bool HasActiveDesignation(Vector2Int cell) =>
+            byCell.TryGetValue(cell, out ConstructionDesignation designation) &&
+            designation.State is not (ConstructionDesignationState.Cancelled or
+                ConstructionDesignationState.Completed);
+
         public bool IsOccupied(Vector2Int cell) =>
             survival?.IsFunctionOccupied(cell) == true ||
             materialStorage?.IsOccupied(cell) == true;

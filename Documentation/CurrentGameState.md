@@ -1,5 +1,60 @@
 # Ant Colony Current Game State
 
+## WV-B3C.3B whole-node Extraction — Implemented, Automated Tests Passed, Manual Acceptance Pending (19 October 2026)
+
+Generated Colony Soil and Stone Nodes are now interactive whole-node Extraction
+targets. A completed job converts the full authoritative remaining quantity into
+canonical physical ground stacks, removes only the Solid, preserves natural
+Background, depletes the Node and publishes terrain, Node, loose-stack and
+runtime-cell revisions. Quantity-one Mara/Pip/Tala fixture Nodes use the same
+transaction and remain compatible.
+
+The scenario-local operation uses the existing job ID as its stable identity.
+It validates Node/Solid identity and revisions, reserves the Node, prepares
+exclusive stack merge/new-cell capacity, revalidates all destinations, then
+commits terrain, Node quantity and physical output. Compatible existing stacks
+are preferred, followed by the source cell and reachable nearby cells in bounded
+Manhattan/y/x order. Stack capacity is 10. Prepared capacity is invisible and
+blocks competing Extraction output and Hauling reservations. Replay cannot
+repeat terrain mutation, output or XP.
+
+The recovery policy is **safe pre-commit blockage**: if the entire output cannot
+be placed, all output reservations are released and the Node quantity, Solid,
+Background, job progress and physical stacks remain unchanged. The scheduler
+probes this plan before assigning an ant, so blocked output does not monopolise
+one. No durable pending-output record or save/load system was added.
+
+Validation at the changed revision: Unity/Bee compilation passed; focused Edit
+Mode **43/43**, focused Play Mode **22/22**, full graphics-enabled Edit Mode
+**597/597**, and full Play Mode **81/81** passed with zero failures or skips.
+The first headless full-Edit attempt crashed in Unity's native URP
+`TilemapRenderer` path during an unrelated rendered-pixel test; the required
+graphics-enabled D3D11 rerun passed 597/597. XML and logs are retained under
+`Logs/WV-B3C3B-*`. They were produced from the WV-B3C.3B working tree based on
+revision `ce541408845455cfead82bc5c5ae87cff5343256`; the working-tree changes
+themselves were not yet committed. Manual Unity acceptance remains pending, so
+this milestone is not reported as fully accepted.
+
+### WV-B3C.3B manual acceptance checklist
+
+1. In `AntGameDevelopment`, select the Founding Queen scenario, set seed `2203`
+   and rebuild; confirm the queen, chamber, three-cell passage and entrance.
+2. Designate a visible Soil Node with quantity 8–12; let the queen complete it.
+   Confirm Solid removal, preserved Background, vanished Node badge and physical
+   Soil badges totaling the original quantity, with no stack above 10.
+3. Repeat for Stone 5–15, choosing a quantity above 10 when available; confirm
+   deterministic multi-stack output.
+4. Haul partial and multi-source output to Storage and Construction staging;
+   confirm Construction waits for full staging and totals remain conserved.
+5. Use occupied/full nearby cells to observe a clear blocked reason; confirm the
+   queen is released for other work, then clear capacity and confirm eligibility.
+6. Switch Colony/World cameras and traverse the entrance both ways; confirm no
+   terrain regeneration, quantity change or region leakage.
+7. Restore the Mara/Pip/Tala fixture; extract a quantity-one Node and use the
+   existing seven-Soil stack control. Confirm pause and 1x/2x/3x speeds.
+8. Keep Developer Only diagnostics open with `F12`; verify operation ID, phase,
+   plan, reserved/pending quantities, replay/blocked status and a clean Console.
+
 ## WV-B3C.3A active variable-quantity Colony Nodes — Complete (19 October 2026)
 
 The existing Colony Resource Node registry is now the sole mutable quantity

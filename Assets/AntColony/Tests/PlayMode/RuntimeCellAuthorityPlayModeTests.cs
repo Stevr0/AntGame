@@ -1,4 +1,5 @@
 using System.Collections;
+using AntColony.Commands;
 using AntColony.Development;
 using AntColony.World;
 using NUnit.Framework;
@@ -106,7 +107,7 @@ namespace AntColony.Tests.PlayMode
         }
 
         [UnityTest]
-        public IEnumerator GeneratedVariableNodeExtractionIsDeferredWithoutMutation()
+        public IEnumerator GeneratedVariableNodeExtractionPublishesCompletePhysicalOutput()
         {
             yield return SceneManager.LoadSceneAsync("AntGameDevelopment",
                 LoadSceneMode.Single);
@@ -126,24 +127,26 @@ namespace AntColony.Tests.PlayMode
             Assert.That(host.WorldData.GetSolidMaterialId(worldCell,
                 out string solidId), Is.EqualTo(WorldCellQueryResult.Available));
 
+            Vector2Int start = new(host.ProceduralWorld.QueenSpawn.X,
+                host.ProceduralWorld.QueenSpawn.Y);
+            Assert.That(SurvivalInteractionOrder.TryMeasureApproach(
+                host.GridNavigationMap, start, worldCell, out Vector2Int approach,
+                out _, out string error), Is.True, error);
             Assert.That(host.ExcavationTransaction.TryCommit(
-                "test.wv-b3c1.generated-extraction", worldCell, solidId,
-                out WorldMaterialDrop output, out string error), Is.False);
-            Assert.That(error, Is.EqualTo(
-                ColonyResourceNodeRegistry.VariableExtractionDeferredReason));
-            Assert.That(output.Quantity, Is.Zero);
-            Assert.That(output.Material, Is.EqualTo(ExcavatedMaterialType.None));
+                "test.wv-b3c3b.generated-extraction", worldCell, solidId,
+                approach, out WorldMaterialDrop output, out error), Is.True, error);
+            Assert.That(output.Material, Is.EqualTo(ExcavatedMaterialType.Stone));
             Assert.That(host.MaterialDrops.GetQuantity(ExcavatedMaterialType.Stone),
-                Is.Zero);
+                Is.EqualTo(before.RemainingQuantity));
             Assert.That(host.ColonyResourceNodes.TryGet(cellId, out var after),
                 Is.EqualTo(ColonyResourceNodeReadResult.Success));
             Assert.That(after.NodeId, Is.EqualTo(before.NodeId));
-            Assert.That(after.RemainingQuantity, Is.EqualTo(before.RemainingQuantity));
-            Assert.That(after.Revision, Is.EqualTo(before.Revision));
-            Assert.That(after.Lifecycle, Is.EqualTo(ColonyResourceNodeLifecycle.Active));
+            Assert.That(after.RemainingQuantity, Is.Zero);
+            Assert.That(after.Revision, Is.GreaterThan(before.Revision));
+            Assert.That(after.Lifecycle, Is.EqualTo(ColonyResourceNodeLifecycle.Depleted));
             Assert.That(host.WorldData.GetSolidMaterialId(worldCell, out string afterSolid),
                 Is.EqualTo(WorldCellQueryResult.Available));
-            Assert.That(afterSolid, Is.EqualTo(solidId));
+            Assert.That(string.IsNullOrEmpty(afterSolid), Is.True);
         }
 
         [UnityTest]

@@ -1678,7 +1678,8 @@ namespace AntColony.Commands
             }
 
             if (excavationDesignations != null &&
-                excavationDesignations.TryGet(job.Id, out _) &&
+                excavationDesignations.TryGet(job.Id,
+                    out ExcavationDesignation extraction) &&
                 !excavationDesignations.CanExecuteLegacyExtraction(job.Id,
                     out string extractionReason))
             {
@@ -1686,6 +1687,24 @@ namespace AntColony.Commands
                 if (string.IsNullOrEmpty(waitingDependency))
                     waitingDependency = $"{job.Id}: {extractionReason}";
                 return false;
+            }
+            if (excavationDesignations != null &&
+                excavationDesignations.TryGet(job.Id, out extraction))
+            {
+                if (!SurvivalInteractionOrder.TryMeasureApproach(
+                        navigationWorld.Map, start, extraction.Cell,
+                        out Vector2Int extractionApproach, out _,
+                        out string approachReason) ||
+                    !excavationTransaction.CanPrepare(job.Id.Value,
+                        extraction.Cell, extraction.SolidMaterialId,
+                        extractionApproach, out approachReason))
+                {
+                    colonyJobs.RecordPendingDependency(job.Id, approachReason);
+                    if (string.IsNullOrEmpty(waitingDependency))
+                        waitingDependency = $"{job.Id}: {approachReason}";
+                    return false;
+                }
+                return true;
             }
 
             if (constructionDesignations == null ||
