@@ -1,5 +1,20 @@
 # Unified Runtime Cell Architecture and Migration Specification
 
+## WV-B3D.3A delegated Material Storage state — 19 October 2026
+
+Promoted fixture cells publish an authoritative Placement identity together
+with `DelegatedMaterialStorage` function authority. Their runtime snapshot
+contains the one underlying slot's revision, filter, resource, stored quantity,
+available capacity and incoming/withdrawal reservations. These are projections
+of `MaterialStorageWorld`, not Placement-owned copies. Slot commits publish a
+Placement-category cell change; reads do not. Legacy/new Storage reports
+`LegacyBackground`, and non-Storage Placements report no delegated function.
+
+The retained functional Background on a promoted cell no longer grants Storage
+function, and its obscured natural provenance remains `DetailsUnavailable`.
+Scenario replacement invalidates old Placement handles and their bindings.
+`WV-B3B-LIM-001` remains active.
+
 ## WV-B3D.2 Placement registry integration — 19 October 2026
 
 **Complete.** Automated suites passed 11/11 focused Edit, 3/3 focused Play,

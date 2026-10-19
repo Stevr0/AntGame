@@ -1,5 +1,18 @@
 # Ant Colony Art Direction and Tileset Foundation
 
+## Shared visual-definition architecture — WV-B3D.3A addendum
+
+Visual metadata now has one common definition base for stable lookup, gameplay
+definition association, sorting, transform and fallback colour, with focused
+category assets so Inspectors expose only meaningful states. Backgrounds expose
+normal Colony/Surface sprites; Resource Nodes expose normal, worked and depleted
+states; Placements expose construction, completed, damaged and destroyed states;
+loose resources expose normal sprites. The Placement state resolver is
+presentation-only and treats unknown durability as completed. No visual assets,
+sprite assignment, renderer replacement, seasonal/biome variant or animation
+was introduced; those can extend this seam later without changing gameplay
+definitions.
+
 ## Status
 
 **Milestone 3.5A implemented — Pending Manual Acceptance (14 October 2026).** The repository preserves both originals and deterministic candidate libraries. A deliberately small Colony allow-list is now assigned to four existing visual Tile assets; no sprite owns collision, navigation or material rules.

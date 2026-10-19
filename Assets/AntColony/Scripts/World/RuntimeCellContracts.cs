@@ -81,6 +81,13 @@ namespace AntColony.World
             InitialQuantity.HasValue && RemainingQuantity.HasValue;
     }
 
+    public enum RuntimePlacementFunctionAuthority
+    {
+        None,
+        LegacyBackground,
+        DelegatedMaterialStorage
+    }
+
     /// <summary>Compatibility view of one built or authored function.</summary>
     public sealed class RuntimePlacementSnapshot
     {
@@ -96,7 +103,16 @@ namespace AntColony.World
             long placementRevision = 1L,
             int? currentHitPoints = null,
             int? maximumHitPoints = null,
-            int? functionalCapacity = null)
+            int? functionalCapacity = null,
+            RuntimePlacementFunctionAuthority functionAuthority =
+                RuntimePlacementFunctionAuthority.None,
+            long? functionRevision = null,
+            string resourceFilterId = "",
+            string storedResourceId = "",
+            int? storedQuantity = null,
+            int? availableCapacity = null,
+            int? reservedIncomingQuantity = null,
+            int? reservedWithdrawalQuantity = null)
         {
             ProjectionState = projectionState;
             StableId = stableId ?? string.Empty;
@@ -114,6 +130,14 @@ namespace AntColony.World
             CurrentHitPoints = currentHitPoints;
             MaximumHitPoints = maximumHitPoints;
             FunctionalCapacity = functionalCapacity;
+            FunctionAuthority = functionAuthority;
+            FunctionRevision = functionRevision;
+            ResourceFilterId = resourceFilterId ?? string.Empty;
+            StoredResourceId = storedResourceId ?? string.Empty;
+            StoredQuantity = storedQuantity;
+            AvailableCapacity = availableCapacity;
+            ReservedIncomingQuantity = reservedIncomingQuantity;
+            ReservedWithdrawalQuantity = reservedWithdrawalQuantity;
         }
 
         public RuntimeOccupantProjectionState ProjectionState { get; }
@@ -130,6 +154,14 @@ namespace AntColony.World
         public int? CurrentHitPoints { get; }
         public int? MaximumHitPoints { get; }
         public int? FunctionalCapacity { get; }
+        public RuntimePlacementFunctionAuthority FunctionAuthority { get; }
+        public long? FunctionRevision { get; }
+        public string ResourceFilterId { get; }
+        public string StoredResourceId { get; }
+        public int? StoredQuantity { get; }
+        public int? AvailableCapacity { get; }
+        public int? ReservedIncomingQuantity { get; }
+        public int? ReservedWithdrawalQuantity { get; }
         public float? ConditionPercentage => CurrentHitPoints.HasValue &&
             MaximumHitPoints.HasValue
                 ? 100f * CurrentHitPoints.Value / MaximumHitPoints.Value

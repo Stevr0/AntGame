@@ -15,7 +15,7 @@ namespace AntColony.Tests.PlayMode
     public sealed class PlacementRegistryPlayModeTests
     {
         [UnityTest]
-        public IEnumerator FixturePublishesDefinitionsAndReadOnlyLegacyProjections()
+        public IEnumerator FixturePublishesDefinitionsAndAuthoritativeMaterialStorage()
         {
             yield return LoadScene();
             AntGameDevelopmentWorldHost host = FindHost();
@@ -47,9 +47,14 @@ namespace AntColony.Tests.PlayMode
                 out RuntimeCellSnapshot cell), Is.EqualTo(RuntimeCellReadResult.Success));
             Assert.That(cell.Placement, Is.Not.Null);
             Assert.That(cell.Placement.AuthorityState,
-                Is.EqualTo(PlacementAuthorityState.LegacyBackgroundProjection));
+                Is.EqualTo(PlacementAuthorityState.AuthoritativePlacement));
             Assert.That(cell.Placement.ContentsArePlacementOwned, Is.False);
-            Assert.That(cell.Placement.FunctionalCapacity, Is.Null);
+            Assert.That(cell.Placement.FunctionalCapacity, Is.EqualTo(1));
+            Assert.That(cell.Placement.FunctionAuthority,
+                Is.EqualTo(RuntimePlacementFunctionAuthority.DelegatedMaterialStorage));
+            Assert.That(cell.Placement.StoredQuantity, Is.EqualTo(storedQuantity));
+            Assert.That(cell.Placement.AvailableCapacity,
+                Is.EqualTo(storage.FreeCapacity));
             Assert.That(cell.Placement.CurrentHitPoints, Is.Null);
             Assert.That(cell.Placement.MaximumHitPoints, Is.Null);
             Assert.That(cell.NaturalBackgroundProjectionState,

@@ -83,11 +83,13 @@ namespace AntColony.World
         private readonly GeneratedWorldSnapshot generated;
         private readonly ColonyResourceNodeRegistry resourceNodes;
         private readonly PlacementRegistry placements;
+        private readonly MaterialStorageWorld materialStorage;
 
         public ColonyRuntimeCellRegionAdapter(ChunkedWorldData world,
             WorldMaterialDropRegistry drops, GeneratedWorldSnapshot generated = null,
             ColonyResourceNodeRegistry resourceNodes = null,
-            PlacementRegistry placements = null)
+            PlacementRegistry placements = null,
+            MaterialStorageWorld materialStorage = null)
             : base(AntRegionIds.Colony, RegionLocationKind.Colony)
         {
             this.world = world ?? throw new ArgumentNullException(nameof(world));
@@ -95,10 +97,13 @@ namespace AntColony.World
             this.generated = generated;
             this.resourceNodes = resourceNodes;
             this.placements = placements;
+            this.materialStorage = materialStorage;
             world.CellChanged += OnTerrainChanged;
             drops.GroundCellChanged += OnGroundCellChanged;
             if (resourceNodes != null) resourceNodes.NodeChanged += OnNodeChanged;
             if (placements != null) placements.PlacementChanged += OnPlacementChanged;
+            if (materialStorage != null)
+                materialStorage.StorageChanged += OnMaterialStorageChanged;
         }
 
         public override RuntimeCellReadResult TryGetCell(RegionCellId cellId,
@@ -117,8 +122,10 @@ namespace AntColony.World
             RuntimeNodeSnapshot node = CreateNode(cell, data);
             RuntimePlacementSnapshot placement = CreatePlacement(cell, data);
             RuntimeLooseStackSnapshot loose = CreateLooseStack(cell);
-            bool obscuresNaturalBackground = placement?.AuthorityState ==
-                PlacementAuthorityState.LegacyBackgroundProjection;
+            bool obscuresNaturalBackground =
+                world.TryGetBackgroundMaterialDefinition(data.BackgroundMaterialId,
+                    out BackgroundTileMaterialDefinition visibleBackground) &&
+                visibleBackground.Function != BackgroundFunction.None;
             snapshot = new RuntimeCellSnapshot(cellId, data.BackgroundMaterialId,
                 GetPublishedCellRevision(cellId, Math.Max(world.GetCellRevision(cell),
                     node?.NodeRevision ?? 0L)),
@@ -154,6 +161,8 @@ namespace AntColony.World
                 placements.PlacementChanged -= OnPlacementChanged;
                 placements.InvalidateContext();
             }
+            if (materialStorage != null)
+                materialStorage.StorageChanged -= OnMaterialStorageChanged;
         }
 
         private RuntimeNodeSnapshot CreateNode(Vector2Int cell,
@@ -207,6 +216,18 @@ namespace AntColony.World
                     functionId = projectedBackground.Function == BackgroundFunction.None
                         ? PlacementCategory.MovementImprovement.ToString()
                         : projectedBackground.Function.ToString();
+                MaterialStorageSlot slot = null;
+                bool hasStorage = projectedBackground != null &&
+                    projectedBackground.Function ==
+                        BackgroundFunction.MaterialStorage &&
+                    materialStorage != null &&
+                    materialStorage.TryGet(cell, out slot);
+                bool delegated = hasStorage &&
+                    materialStorage.GetFunctionAuthority(cell) ==
+                        MaterialStorageFunctionAuthority.AuthoritativePlacement &&
+                    materialStorage.TryGetPlacementHandle(cell,
+                        out PlacementHandle handle) &&
+                    handle.PlacementId == projected.PlacementId;
                 return new RuntimePlacementSnapshot(
                     projected.AuthorityState ==
                         PlacementAuthorityState.LegacyBackgroundProjection
@@ -218,7 +239,23 @@ namespace AntColony.World
                     projected.Footprint, projected.Lifecycle,
                     projected.AuthorityState, projected.Revision,
                     projected.CurrentHitPoints, projected.MaximumHitPoints,
-                    functionalCapacity: null);
+                    functionalCapacity: hasStorage ? 1 : null,
+                    functionAuthority: delegated
+                        ? RuntimePlacementFunctionAuthority.DelegatedMaterialStorage
+                        : hasStorage
+                            ? RuntimePlacementFunctionAuthority.LegacyBackground
+                            : RuntimePlacementFunctionAuthority.None,
+                    functionRevision: hasStorage ? slot.Revision : null,
+                    resourceFilterId: hasStorage
+                        ? slot.Filter.ToString() : string.Empty,
+                    storedResourceId: hasStorage
+                        ? slot.ResourceTypeId : string.Empty,
+                    storedQuantity: hasStorage ? slot.Quantity : null,
+                    availableCapacity: hasStorage ? slot.FreeCapacity : null,
+                    reservedIncomingQuantity: hasStorage
+                        ? slot.ReservedIncomingQuantity : null,
+                    reservedWithdrawalQuantity: hasStorage
+                        ? slot.ReservedWithdrawalQuantity : null);
             }
             if (!world.TryGetBackgroundMaterialDefinition(data.BackgroundMaterialId,
                     out BackgroundTileMaterialDefinition definition) ||
@@ -227,7 +264,7 @@ namespace AntColony.World
             return new RuntimePlacementSnapshot(
                 RuntimeOccupantProjectionState.CompatibilityProjected,
                 $"legacy.placement.colony.{cell.x}.{cell.y}",
-                data.BackgroundMaterialId, definition.Function.ToString(), true);
+                data.BackgroundMaterialId, definition.Function.ToString(), false);
         }
 
         private RuntimeLooseStackSnapshot CreateLooseStack(Vector2Int cell)
@@ -284,6 +321,13 @@ namespace AntColony.World
         {
             foreach (RegionCellId cell in cells)
                 PublishCellChange(cell, RuntimeCellChangeCategory.Placement);
+        }
+
+        private void OnMaterialStorageChanged(Vector2Int cell, long revision)
+        {
+            PublishCellChange(RegionCellId.Colony(RegionId,
+                new ColonyCell(cell.x, cell.y)),
+                RuntimeCellChangeCategory.Placement, revision);
         }
     }
 

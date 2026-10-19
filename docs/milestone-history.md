@@ -1,5 +1,16 @@
 # Milestone History
 
+## 19 October 2026 — WV-B3D.3A Material Storage Authority Cutover
+
+**Implemented — Automated Tests Passed, Manual Acceptance Pending.** Five
+authored fixture Storage projections promote to authoritative Placements while
+their unchanged `MaterialStorageWorld` slots remain the single mutable resource
+authority. Runtime snapshots/diagnostics expose delegation and slot state;
+migrated HP remains unknown. Generated/new Storage is deliberately still legacy
+until WV-B3D.3B. A shared category-specific visual-definition foundation was
+added without artwork or renderer changes. Focused Edit passed 15/15 and 28/28,
+focused Play 3/3 and 6/6, full Edit 612/612, and full Play 84/84.
+
 ## 19 October 2026 — WV-B3D.2 Placement Registry Foundation
 
 **WV-B3D.2 — Complete.** Added six
@@ -17,8 +28,9 @@ functional capacity in legacy projections. Codex did not independently perform
 the manual checks or rerun Unity for this closure. Evidence under
 `Logs/WV-B3D2-*` came from the implementation working tree based on parent
 `75bc444118ac8f7edcf0aa7197a12de0a9e7a005`, not the final implementation
-commit `b04034fedd26877a103750d40e27d29b394f433c`. Damage, Repair, destruction and
-WV-B3D.3A were not started; `WV-B3B-LIM-001` remains active.
+commit `b04034fedd26877a103750d40e27d29b394f433c`. At that closure, damage,
+Repair, destruction and WV-B3D.3A had not started; `WV-B3B-LIM-001` remained
+active. WV-B3D.3A was subsequently implemented as recorded above.
 
 ## 19 October 2026 — WV-B3D.1 Placement Migration Specification
 

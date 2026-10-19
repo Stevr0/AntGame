@@ -1,5 +1,16 @@
 # Gameplay Architecture Audit
 
+## WV-B3D.3A Material Storage cutover — 19 October 2026
+
+The first functional cutover uses delegation, not a second ledger.
+`PlacementRegistry` owns the promoted fixture's identity/occupancy/lifecycle;
+`MaterialStorageWorld` exclusively owns its slot/filter/quantity/capacity and
+reservations. Background compatibility data remains for presentation but is
+ignored as a function grant on bound cells. Runtime snapshots expose both
+authorities and revisions. Generated completion, other functional Backgrounds,
+combat, Repair and destruction remain outside this slice. No compatibility
+storage class or serialized Background is removable yet.
+
 ## WV-B3D.2 placement registry follow-up — 19 October 2026
 
 The registry/read-model recommendation is implemented without transferring

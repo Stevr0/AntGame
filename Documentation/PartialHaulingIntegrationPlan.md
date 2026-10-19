@@ -1,5 +1,15 @@
 # WV-B3C.2B Partial Hauling and Canonical Stack Transaction Plan
 
+## WV-B3D.3A authority integration — 19 October 2026
+
+Hauling still reserves and commits through the same `MaterialStorageWorld`
+slots. For authored fixture Storage, each slot is now delegated to an
+authoritative Placement handle at quiescent initialization; no reservation or
+quantity is copied. Existing transfer IDs, partial loads, exact-once commits,
+cancellation recovery, path-cost choice and Construction staging are unchanged.
+Newly constructed Storage remains legacy until WV-B3D.3B. Storage destruction
+and reservation recovery are future work and were not added.
+
 **Status:** **WV-B3C.2B — Complete.** Acceptance recovery was implemented on
 16 October 2026 after partial manual acceptance exposed one-source collection,
 absent Storage-source hauling and a non-reusable developer fixture. The user

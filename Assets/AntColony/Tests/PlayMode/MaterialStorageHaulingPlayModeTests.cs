@@ -178,6 +178,16 @@ namespace AntColony.Tests.PlayMode
             Assert.That(host.MaterialStorage.TryGet(siteCell,
                 out MaterialStorageSlot storage), Is.True);
             Assert.That(storage.Quantity, Is.Zero);
+            Assert.That(host.MaterialStorage.GetFunctionAuthority(siteCell),
+                Is.EqualTo(MaterialStorageFunctionAuthority.LegacyBackground),
+                "New completion remains on the documented WV-B3D.3B bridge.");
+            RegionCellId runtimeCell = RegionCellId.Colony(AntRegionIds.Colony,
+                new ColonyCell(siteCell.x, siteCell.y));
+            Assert.That(host.Placements.TryGetByCell(runtimeCell,
+                out PlacementSnapshot projection),
+                Is.EqualTo(PlacementReadResult.Success));
+            Assert.That(projection.AuthorityState,
+                Is.EqualTo(PlacementAuthorityState.LegacyBackgroundProjection));
             Assert.That(queen.Record.Inventory.TotalQuantity, Is.Zero);
         }
 

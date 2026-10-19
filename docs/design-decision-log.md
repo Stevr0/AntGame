@@ -1,5 +1,18 @@
 # Design Decision Log
 
+## 2026-10-19 — Cut over fixture Material Storage by delegation
+
+- Promote the complete authored Storage batch only at quiescent scenario setup,
+  retaining stable Placement IDs and rejecting partial migration.
+- Keep `MaterialStorageWorld` as the sole mutable ledger and bind existing slot
+  objects to Placement handles; never copy quantities or reservations.
+- Treat the retained functional Background as presentation compatibility on
+  promoted cells, while new/generated Storage remains legacy until WV-B3D.3B.
+- Preserve unknown migrated HP and defer damage, Repair, destruction and
+  contents recovery gameplay.
+- Use one visual-definition base with category-specific assets so Backgrounds
+  do not expose irrelevant Placement state fields.
+
 ## 2026-10-19 — Close WV-B3D.2 after authoritative acceptance
 
 - Mark WV-B3D.2 **Complete** after 11/11 focused Edit, 3/3 focused Play,

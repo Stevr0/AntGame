@@ -376,7 +376,8 @@ namespace AntColony.Development
             out string error)
         {
             var colony = new ColonyRuntimeCellRegionAdapter(WorldData,
-                MaterialDrops, proceduralWorld, resourceNodes, placements);
+                MaterialDrops, proceduralWorld, resourceNodes, placements,
+                MaterialStorage);
             var surface = new SurfaceRuntimeCellRegionAdapter(surfaceWorld,
                 proceduralWorld);
             RuntimeCells ??= new RuntimeCellPublicationRegistry();
@@ -399,6 +400,7 @@ namespace AntColony.Development
 
             var definitions = new List<PlacementDefinition>();
             var mappings = new Dictionary<string, string>(StringComparer.Ordinal);
+            string materialStorageDefinitionId = string.Empty;
             foreach (ConstructionRecipe recipe in ConstructionRecipes.Recipes)
             {
                 BackgroundTileMaterialDefinition result = recipe.Result;
@@ -446,14 +448,17 @@ namespace AntColony.Development
                     repairable: false);
                 definitions.Add(definition);
                 mappings.Add(result.StableMaterialId, definition.StableId);
+                if (result.Function == BackgroundFunction.MaterialStorage)
+                    materialStorageDefinitionId = definition.StableId;
             }
 
             try
             {
                 registry = new PlacementRegistry(
                     resourceNodes.Scenario.StableKey, definitions, mappings);
-                if (registry.TryBuildLegacyProjections(WorldData, out error))
-                    return true;
+                if (registry.TryBuildLegacyProjections(WorldData, out error) &&
+                    MaterialStorage.TryMigrateExistingSlotsToPlacements(registry,
+                        materialStorageDefinitionId, out error)) return true;
                 registry.InvalidateContext();
                 registry = null;
                 return false;

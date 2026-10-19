@@ -446,8 +446,13 @@ namespace AntColony.Development
                 .Append("   revision ")
                 .Append(diagnostics.Revision)
                 .AppendLine();
-            builder.Append("Definitions / completed projections: ")
+            builder.Append("Definitions / completed Placements: ")
                 .Append(diagnostics.DefinitionCount).Append(" / ")
+                .Append(diagnostics.CompletedCount)
+                .AppendLine();
+            builder.Append("Authoritative / legacy projections: ")
+                .Append(diagnostics.CompletedCount -
+                    diagnostics.LegacyProjectionCount).Append(" / ")
                 .Append(diagnostics.LegacyProjectionCount)
                 .AppendLine();
             builder.Append("Movement / Rest / Storage / Nursery: ")
@@ -506,6 +511,37 @@ namespace AntColony.Development
                     ? $" / {placement.ConditionPercentage:0.#}%"
                     : string.Empty)
                 .AppendLine();
+            builder.Append("Function authority: ")
+                .Append(placement.FunctionAuthority)
+                .Append("   function revision ")
+                .Append(placement.FunctionRevision?.ToString() ?? "N/A")
+                .AppendLine();
+            if (placement.FunctionAuthority !=
+                RuntimePlacementFunctionAuthority.None)
+            {
+                builder.Append("Storage filter / contents / capacity: ")
+                    .Append(string.IsNullOrEmpty(placement.ResourceFilterId)
+                        ? "Unknown" : placement.ResourceFilterId)
+                    .Append(" / ")
+                    .Append(string.IsNullOrEmpty(placement.StoredResourceId)
+                        ? "Empty" : placement.StoredResourceId)
+                    .Append(' ')
+                    .Append(placement.StoredQuantity?.ToString() ?? "Unknown")
+                    .Append(" / available ")
+                    .Append(placement.AvailableCapacity?.ToString() ?? "Unknown")
+                    .AppendLine();
+                builder.Append("Incoming / withdrawal reservations: ")
+                    .Append(placement.ReservedIncomingQuantity?.ToString() ?? "Unknown")
+                    .Append(" / ")
+                    .Append(placement.ReservedWithdrawalQuantity?.ToString() ?? "Unknown")
+                    .AppendLine();
+                builder.Append("Natural Background provenance: ")
+                    .Append(cell.NaturalBackgroundProjectionState ==
+                        RuntimeOccupantProjectionState.DetailsUnavailable
+                            ? "Unknown (legacy functional Background retained visually)"
+                            : cell.NaturalBackgroundDefinitionId)
+                    .AppendLine();
+            }
         }
 
         private void ToggleForeground()

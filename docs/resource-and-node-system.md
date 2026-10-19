@@ -1,5 +1,14 @@
 # Resource and Node System
 
+## WV-B3D.3A Storage ownership
+
+Authored Material Storage now has authoritative Placement identity, but the
+existing `MaterialStorageWorld` slot remains the single physical ledger for its
+filter, contents, capacity and reservations. No resource is copied or changes
+owner during promotion. Nodes, loose stacks, ant inventory and Construction
+staging remain separate authorities. Generated/new Storage stays legacy until
+WV-B3D.3B.
+
 ## WV-B3C.3B — complete
 
 Colony Soil 8–12 and Stone 5–15 Nodes are interactive. Whole-node Extraction

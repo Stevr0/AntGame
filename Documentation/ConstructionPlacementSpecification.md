@@ -1,6 +1,26 @@
 # Construction and Placement Specification
 
-**Status:** Approved design contract; WV-B3D.2 registry foundation complete;
+## WV-B3D.3A implemented boundary — 19 October 2026
+
+Existing authored Material Storage is now an authoritative completed Placement
+whose mutable storage ledger is delegated to the pre-existing
+`MaterialStorageWorld`. One Placement handle maps to one unchanged slot; the
+Background compatibility projection cannot independently add capacity. This
+cutover is initialization-only and preserves filters, quantities, capacity,
+reservations, hauling and Construction staging. Newly completed Material
+Storage remains legacy until WV-B3D.3B.
+
+Structural HP remains unknown for migrated instances. Enemy attacks, damage and
+resistance, zero-HP destruction, occupancy removal, function invalidation,
+reservation cancellation, safe stored-resource recovery, dismantling/refunds,
+loot and navigation/rendering removal updates remain defined future work only.
+Destroyed Storage must not delete contents or duplicate ownership. Repair
+remains a future distinct Construction-skill job with validated targets,
+physical material hauling/staging, work, exact-once consumption, bounded HP
+restoration, interruption and cancellation; values and recipes remain unapproved.
+
+**Status:** Approved design contract; WV-B3D.2 registry foundation complete and
+WV-B3D.3A Material Storage fixture authority cutover implemented; broader
 functional authority migration remains deferred.
 
 **Approved:** 16 October 2026

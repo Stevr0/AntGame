@@ -1,5 +1,16 @@
 # Technical Architecture
 
+## WV-B3D.3A Material Storage delegation
+
+At quiescent initialization the development host batch-promotes the authored
+Storage projections, then binds each unchanged `MaterialStorageSlot` to its
+Placement handle. `PlacementRegistry` owns identity and occupancy;
+`MaterialStorageWorld` remains the only resource ledger. Runtime cells and
+diagnostics expose both authority and revision domains. The visual layer also
+has a shared definition base with category-specific Background, Resource Node,
+Placement and loose-resource assets; no renderer or gameplay authority depends
+on those assets yet. `WV-B3B-LIM-001` remains active.
+
 ## WV-B3D.2 Placement registry
 
 `PlacementRegistry` is now a scenario-scoped read-model/identity authority. The

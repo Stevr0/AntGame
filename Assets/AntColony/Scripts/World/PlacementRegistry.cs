@@ -100,6 +100,7 @@ namespace AntColony.World
         Occupied,
         DurabilityUnknown,
         LegacyProjectionReadOnly,
+        InvalidAuthorityState,
         RevisionMismatch,
         StaleScenario,
         ContextInvalidated
@@ -278,6 +279,11 @@ namespace AntColony.World
         public IReadOnlyList<string> RoomQualityModifierIds =>
             Array.AsReadOnly((string[])roomQualityModifierIds.Clone());
         public string PresentationId { get; }
+        /// <summary>
+        /// Stable lookup key for authorable presentation data. Presentation
+        /// assets never own mutable Placement state.
+        /// </summary>
+        public string VisualDefinitionId => PresentationId;
         public bool AllowsDismantling { get; }
         public int? MaximumHitPoints { get; }
         public bool Destructible { get; }
@@ -723,6 +729,61 @@ namespace AntColony.World
             Revision++;
             snapshot = new PlacementSnapshot(record, ScenarioContextId);
             PlacementChanged?.Invoke(snapshot.Footprint);
+            error = string.Empty;
+            return PlacementMutationResult.Success;
+        }
+
+        /// <summary>
+        /// Promotes an already-observed legacy projection during a quiescent
+        /// scenario-initialisation cutover. The identity and nullable durability
+        /// state are retained; this method does not create function contents.
+        /// Every target is validated before any record changes.
+        /// </summary>
+        public PlacementMutationResult TryPromoteLegacyProjections(
+            IReadOnlyList<RegionCellId> cells, string expectedDefinitionId,
+            out string error)
+        {
+            if (lifecycle == PlacementRegistryLifecycle.ContextInvalidated)
+                return Fail(PlacementMutationResult.ContextInvalidated,
+                    "The Placement scenario has been retired.", out error);
+            if (cells == null || cells.Count == 0)
+            {
+                error = string.Empty;
+                return PlacementMutationResult.NoChange;
+            }
+            if (!definitions.ContainsKey(expectedDefinitionId ?? string.Empty))
+                return Fail(PlacementMutationResult.InvalidDefinition,
+                    "The Placement Definition is not registered.", out error);
+
+            var recordsToPromote = new List<PlacementRecord>(cells.Count);
+            var changedCells = new List<RegionCellId>(cells.Count);
+            var seen = new HashSet<PlacementId>();
+            foreach (RegionCellId cell in cells)
+            {
+                if (!occupiedCells.TryGetValue(cell, out PlacementId id) ||
+                    !records.TryGetValue(id, out PlacementRecord record) ||
+                    record.Lifecycle != PlacementLifecycle.Completed ||
+                    record.AuthorityState !=
+                        PlacementAuthorityState.LegacyBackgroundProjection ||
+                    !string.Equals(record.DefinitionId, expectedDefinitionId,
+                        StringComparison.Ordinal) ||
+                    record.Footprint.Length != 1 || record.Anchor != cell ||
+                    !seen.Add(id))
+                    return Fail(PlacementMutationResult.InvalidAuthorityState,
+                        "Every cutover cell must identify one matching completed legacy projection.",
+                        out error);
+                recordsToPromote.Add(record);
+                changedCells.Add(cell);
+            }
+
+            foreach (PlacementRecord record in recordsToPromote)
+            {
+                record.AuthorityState =
+                    PlacementAuthorityState.AuthoritativePlacement;
+                record.Revision++;
+            }
+            Revision++;
+            PlacementChanged?.Invoke(changedCells.AsReadOnly());
             error = string.Empty;
             return PlacementMutationResult.Success;
         }

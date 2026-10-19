@@ -1,5 +1,15 @@
 # Development Roadmap
 
+## WV-B3D.3A — implemented; manual acceptance pending
+
+The five authored Material Storage fixtures now promote to authoritative
+Placements while their existing slots remain the sole delegated mutable storage
+state. Generated/new Storage stays legacy until WV-B3D.3B. Focused suites passed
+15/15 and 28/28 Edit plus 3/3 and 6/6 Play; full suites passed 612/612 Edit and
+84/84 Play. The 29-step manual checklist remains pending. The shared
+category-specific visual-definition foundation is implemented without new art
+or renderer behavior. Stop after this slice; WV-B3D.3B is not started.
+
 ## WV-B3D.2 — complete
 
 The Placement Registry Foundation implements immutable definitions, scenario
@@ -7,8 +17,8 @@ identity, one-cell/future-footprint occupancy, lifecycle/revisions, conservative
 compatibility, runtime-cell projection/change feeds, durability contracts and
 legacy scenario retirement. Existing functional owners remain unchanged.
 Focused Edit/Play passed **11/11** and **3/3**; full graphics-enabled Edit/Play
-passed **608/608** and **84/84**. The next candidate, not approved or started,
-is **WV-B3D.3A Material Storage Authority Cutover**. The user confirmed all
+passed **608/608** and **84/84**. WV-B3D.3A has since implemented the narrow
+fixture cutover recorded above. The user confirmed all
 **7/7 authoritative manual acceptance groups**; Codex did not independently
 perform them or rerun Unity during this documentation-only closure. The retained
 XML came from the implementation working tree based on parent `75bc4441`, not

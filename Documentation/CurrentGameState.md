@@ -1,5 +1,74 @@
 # Ant Colony Current Game State
 
+## WV-B3D.3A Material Storage Authority Cutover — Implemented (19 October 2026)
+
+**Status: Implemented — Automated Tests Passed, Manual Acceptance Pending.**
+At the quiescent development-scenario initialization boundary, each of the five
+authored Material Storage fixtures is promoted from its deterministic legacy
+projection to an authoritative completed Placement. The existing Placement ID
+is retained. `PlacementRegistry` owns identity, occupancy, lifecycle and
+Placement revision; `MaterialStorageWorld` remains the single mutable owner of
+filter, resource quantity, capacity and incoming/withdrawal reservations. The
+storage slot is delegated to the Placement handle rather than copied, so the
+cutover cannot create a second inventory or change hauling routes.
+
+The migration deliberately keeps current/max HP and condition unknown. The
+legacy functional Background remains a presentation/provenance bridge, but it
+no longer independently grants Material Storage function on promoted cells.
+Runtime-cell snapshots and diagnostics distinguish `AuthoritativePlacement`,
+`LegacyBackground`, and `DelegatedMaterialStorage`, expose the delegated slot
+revision and capacity state, and continue to report the obscured natural
+Background as unavailable. Existing Sleeping and other Background functions
+are unchanged. Generated seed `2203` still starts with zero Placements; its
+first newly constructed Material Storage remains a legacy Background projection
+until WV-B3D.3B.
+
+The shared visual-definition code now provides a common identity/layout base
+with category-specific assets: Backgrounds expose only normal sprites, Resource
+Nodes normal/worked/depleted sprites, Placements construction/completed/damaged/
+destroyed sprites, and loose resources normal sprites. Placement state
+resolution is pure presentation logic and unknown HP resolves conservatively to
+Completed. No artwork, rendering binding, animation, seasonal/biome variant,
+damage, Repair, destruction, refund, or removal gameplay was added.
+
+Automated evidence: Placement Registry Edit **15/15**, Storage/Hauling Edit
+**28/28**, Placement Registry Play **3/3**, Storage/Hauling Play **6/6**,
+complete graphics-enabled Edit **612/612**, and complete Play **84/84**, all
+with zero failures, skips or inconclusive results. The implementation working
+tree is based on `69ebbf85bbd9e90780b59316e4f1e771ebff9888`.
+
+### Authoritative 29-step manual acceptance checklist
+
+1. Open `Assets/AntColony/Scenes/AntGameDevelopment.unity` and enter Play Mode.
+2. Confirm the authored fixture loads without an exception or migration error.
+3. Select each of the five authored Material Storage cells in diagnostics.
+4. Confirm each reports `AuthoritativePlacement` authority.
+5. Confirm each reports `DelegatedMaterialStorage` function authority.
+6. Confirm every promoted cell has one stable, non-empty Placement ID.
+7. Re-read a promoted cell and confirm its Placement ID does not change.
+8. Confirm each promoted Placement lifecycle is Completed.
+9. Confirm each promoted Placement remains one-cell and occupies only its cell.
+10. Confirm current HP, maximum HP and condition are reported as unknown.
+11. Confirm the former functional Background remains visible as compatibility presentation.
+12. Confirm natural Background provenance is reported unavailable rather than invented.
+13. Confirm the HUD shows exactly one quantity badge per non-empty Storage cell.
+14. Confirm each slot retains its original resource filter.
+15. Confirm each slot retains its original stored resource and quantity.
+16. Confirm capacity and available capacity equal the pre-cutover behavior.
+17. Reserve an incoming delivery and confirm the reservation appears once.
+18. Cancel that delivery and confirm the reservation disappears once.
+19. Reserve a withdrawal and confirm available quantity changes once.
+20. Cancel that withdrawal and confirm available quantity is restored once.
+21. Complete one hauling delivery and confirm exactly-once quantity transfer.
+22. Complete one Storage withdrawal and confirm no duplicate resource ownership.
+23. Supply a Construction site from Storage and confirm staging still works.
+24. Confirm Storage slot revision changes only after a committed slot mutation.
+25. Confirm Placement identity and Placement revision do not change for slot-only mutations.
+26. Confirm Sleeping, Food Storage, Water Storage and Nursery behavior is unchanged.
+27. Replace/rebuild the scenario and confirm old Placement handles are rejected.
+28. Start generated seed `2203` and confirm it begins with zero completed Placements.
+29. Construct its first Material Storage and confirm it remains a legacy projection pending WV-B3D.3B.
+
 ## WV-B3D.2 Placement Registry Foundation — Complete (19 October 2026)
 
 **WV-B3D.2 — Authoritative manual acceptance complete (7/7 groups).** The user

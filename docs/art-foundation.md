@@ -1,5 +1,14 @@
 # Art Foundation
 
+## Shared visual definitions
+
+The runtime now provides one common visual-definition base with focused assets
+for Background, Resource Node, Placement and loose-resource categories.
+Backgrounds expose only normal view sprites; Placements can expose construction,
+completed, damaged and destroyed states. This keeps the Inspector relevant and
+leaves an extension seam for seasonal, biome and animated variants. No assets,
+sprite mappings or renderer behavior changed in WV-B3D.3A.
+
 The custom Colony and World tilesets are preserved and prepared as separate candidate libraries. Milestone 3.5A additionally binds two reviewed full-cell Colony candidates through four existing visual Tile assets without changing gameplay authority.
 
 ## Direction

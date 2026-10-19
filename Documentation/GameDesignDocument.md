@@ -1,5 +1,20 @@
 # ANT COLONY
 
+## WV-B3D.3A Material Storage authority cutover — implemented 19 October 2026
+
+The five authored Material Storage fixtures are completed Placements. Their
+stable Placement identity and occupancy are authoritative, while the existing
+storage service remains the single delegated owner of physical contents,
+filters, capacity and reservations. The migration changes no quantities,
+hauling, Construction costs, durations or other Background functions. Migrated
+durability is unknown; combat damage, Repair and destruction remain future
+contracts, and any eventual destruction must conserve stored resources.
+
+World visuals share a common definition architecture while each category
+exposes only its relevant states. Placement art may distinguish construction,
+completed, damaged and destroyed; ordinary Background art is not burdened with
+those fields. No new art or gameplay behavior is bound in this slice.
+
 ## WV-B3D.2 Placement Registry Foundation — complete 19 October 2026
 
 **Complete.** Automated validation passed and the user confirmed all **7/7

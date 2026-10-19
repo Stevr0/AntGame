@@ -1,5 +1,15 @@
 # Resource and Node System v1.0
 
+## WV-B3D.3A Material Storage ownership amendment — 19 October 2026
+
+Authored fixture Material Storage now has authoritative Placement identity and
+occupancy, but `MaterialStorageWorld` remains the only mutable slot and resource
+ledger. Existing slot objects are delegated to Placement handles without
+copying. Nodes, ground stacks, ant inventories and Construction staging retain
+their separate owners; no resource changes owner merely because of migration.
+Generated/new Storage remains legacy until WV-B3D.3B, and future destruction
+must explicitly recover contents without loss or duplication.
+
 ## WV-B3C.3B runtime amendment — 19 October 2026
 
 **Status: Complete.** Automated validation passed and the user confirmed all

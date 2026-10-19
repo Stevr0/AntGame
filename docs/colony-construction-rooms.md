@@ -1,5 +1,15 @@
 # Colony Construction and Rooms
 
+## WV-B3D.3A Material Storage boundary
+
+Authored Material Storage fixtures now use authoritative Placement identity and
+occupancy with their unchanged mutable slots delegated from
+`MaterialStorageWorld`. This preserves recipes, work duration, hauling,
+Construction staging, filters, quantities, capacity and reservations. A newly
+completed Material Storage remains on the legacy Background path until
+WV-B3D.3B. Structural HP is unknown, and damage, Repair and destruction remain
+future work.
+
 ## WV-B3D.2 registry boundary
 
 The implemented Placement registry observes completed legacy Construction as

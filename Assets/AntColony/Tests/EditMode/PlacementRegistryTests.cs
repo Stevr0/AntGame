@@ -369,6 +369,169 @@ namespace AntColony.Tests.EditMode
             adapter.Dispose();
         }
 
+        [Test]
+        public void MaterialStorageCutoverPromotesIdentityWithoutCopyingMutableState()
+        {
+            BackgroundTileMaterialDefinition earth = CreateBackground(
+                EarthId, BackgroundFunction.None);
+            BackgroundTileMaterialDefinition storageBackground = CreateBackground(
+                StorageId, BackgroundFunction.MaterialStorage);
+            ChunkedWorldData world = CreateWorld(earth, storageBackground);
+            var cell = new Vector2Int(0, 0);
+            world.SetBackgroundMaterial(cell, StorageId);
+            var storage = new MaterialStorageWorld(world);
+            Assert.That(storage.TryAdd(cell,
+                MaterialStorageFilter.AllBuildingMaterials, "material.soil", 4,
+                10, out string error), Is.True, error);
+            Assert.That(storage.TryReserveIncoming(cell, "material.soil", 10,
+                "incoming", 2, out _, out error), Is.True, error);
+            Assert.That(storage.TryReserveWithdrawal(cell, "material.soil",
+                "outgoing", 1, out _, out error), Is.True, error);
+            PlacementDefinition definition = CreateLegacyDefinition(
+                "conversion.material-storage", StorageId,
+                PlacementCategory.Storage, 1);
+            var registry = new PlacementRegistry("fixture.storage-cutover.v1",
+                new[] { definition }, new Dictionary<string, string>
+                {
+                    [StorageId] = definition.StableId
+                });
+            Assert.That(registry.TryBuildLegacyProjections(world, out error),
+                Is.True, error);
+            RegionCellId cellId = ColonyCell(0, 0);
+            registry.TryGetByCell(cellId, out PlacementSnapshot before);
+
+            Assert.That(storage.TryMigrateExistingSlotsToPlacements(registry,
+                definition.StableId, out error), Is.True, error);
+            Assert.That(registry.TryGetByCell(cellId, out PlacementSnapshot after),
+                Is.EqualTo(PlacementReadResult.Success));
+            Assert.That(after.PlacementId, Is.EqualTo(before.PlacementId));
+            Assert.That(after.AuthorityState,
+                Is.EqualTo(PlacementAuthorityState.AuthoritativePlacement));
+            Assert.That(after.CurrentHitPoints, Is.Null,
+                "Migration must not invent unapproved structural HP.");
+            Assert.That(storage.GetFunctionAuthority(cell),
+                Is.EqualTo(MaterialStorageFunctionAuthority.AuthoritativePlacement));
+            Assert.That(storage.TryGet(cell, out MaterialStorageSlot slot), Is.True);
+            Assert.That(slot.Quantity, Is.EqualTo(4));
+            Assert.That(slot.Filter,
+                Is.EqualTo(MaterialStorageFilter.AllBuildingMaterials));
+            Assert.That(slot.MaximumStack, Is.EqualTo(10));
+            Assert.That(slot.ReservationOwnerId, Is.EqualTo("incoming"));
+            Assert.That(slot.ReservedIncomingQuantity, Is.EqualTo(2));
+            Assert.That(slot.WithdrawalOwnerId, Is.EqualTo("outgoing"));
+            Assert.That(slot.ReservedWithdrawalQuantity, Is.EqualTo(1));
+            Assert.That(storage.AuthoritativePlacementCount, Is.EqualTo(1));
+            Assert.That(storage.TryMigrateExistingSlotsToPlacements(registry,
+                definition.StableId, out _), Is.False,
+                "A second authority cutover must not duplicate the function.");
+        }
+
+        [Test]
+        public void MaterialStorageCutoverFailureLeavesLegacySlotUntouched()
+        {
+            BackgroundTileMaterialDefinition earth = CreateBackground(
+                EarthId, BackgroundFunction.None);
+            BackgroundTileMaterialDefinition storageBackground = CreateBackground(
+                StorageId, BackgroundFunction.MaterialStorage);
+            ChunkedWorldData world = CreateWorld(earth, storageBackground);
+            var cell = new Vector2Int(0, 0);
+            world.SetBackgroundMaterial(cell, StorageId);
+            var storage = new MaterialStorageWorld(world);
+            Assert.That(storage.TryAdd(cell, MaterialStorageFilter.Soil,
+                "material.soil", 3, 10, out string error), Is.True, error);
+            PlacementDefinition definition = CreateLegacyDefinition(
+                "conversion.material-storage", StorageId,
+                PlacementCategory.Storage, 1);
+            var registry = new PlacementRegistry("fixture.failed-cutover.v1",
+                new[] { definition });
+
+            Assert.That(storage.TryMigrateExistingSlotsToPlacements(registry,
+                definition.StableId, out error), Is.False);
+            Assert.That(error, Does.Contain("no matching legacy Placement"));
+            Assert.That(storage.GetFunctionAuthority(cell),
+                Is.EqualTo(MaterialStorageFunctionAuthority.LegacyBackground));
+            Assert.That(storage.TryGet(cell, out MaterialStorageSlot slot), Is.True);
+            Assert.That(slot.Quantity, Is.EqualTo(3));
+            Assert.That(storage.AuthoritativePlacementCount, Is.Zero);
+        }
+
+        [Test]
+        public void RuntimeSnapshotReadsDelegatedStorageAndPublishesOneCommitChange()
+        {
+            BackgroundTileMaterialDefinition earth = CreateBackground(
+                EarthId, BackgroundFunction.None);
+            BackgroundTileMaterialDefinition storageBackground = CreateBackground(
+                StorageId, BackgroundFunction.MaterialStorage);
+            ChunkedWorldData world = CreateWorld(earth, storageBackground);
+            var cell = new Vector2Int(0, 0);
+            world.SetBackgroundMaterial(cell, StorageId);
+            var storage = new MaterialStorageWorld(world);
+            storage.TryAdd(cell, MaterialStorageFilter.Soil, "material.soil", 3,
+                10, out _);
+            PlacementDefinition definition = CreateLegacyDefinition(
+                "conversion.material-storage", StorageId,
+                PlacementCategory.Storage, 1);
+            var registry = new PlacementRegistry("fixture.runtime-storage.v1",
+                new[] { definition }, new Dictionary<string, string>
+                {
+                    [StorageId] = definition.StableId
+                });
+            registry.TryBuildLegacyProjections(world, out _);
+            Assert.That(storage.TryMigrateExistingSlotsToPlacements(registry,
+                definition.StableId, out string error), Is.True, error);
+            var adapter = new ColonyRuntimeCellRegionAdapter(world,
+                new WorldMaterialDropRegistry(world), placements: registry,
+                materialStorage: storage);
+            RegionCellId cellId = ColonyCell(0, 0);
+            adapter.TryGetCell(cellId, out RuntimeCellSnapshot before);
+            Assert.That(before.Placement.FunctionAuthority,
+                Is.EqualTo(RuntimePlacementFunctionAuthority.DelegatedMaterialStorage));
+            Assert.That(before.Placement.StoredQuantity, Is.EqualTo(3));
+            Assert.That(before.Placement.ContentsArePlacementOwned, Is.False);
+            Assert.That(before.NaturalBackgroundProjectionState,
+                Is.EqualTo(RuntimeOccupantProjectionState.DetailsUnavailable));
+            PlacementId identity = before.Placement.StableId.Length > 0
+                ? new PlacementId(before.Placement.StableId) : default;
+
+            Assert.That(storage.TryReserveIncoming(cell, "material.soil", 10,
+                "transfer", 2, out _, out error), Is.True, error);
+            long beforeCommitFeed = adapter.Changes.CurrentSequence;
+            Assert.That(storage.TryCommitReservedDeposit(cell, "material.soil", 10,
+                "transfer", 2, () => true, out error), Is.True, error);
+            Assert.That(adapter.Changes.CurrentSequence,
+                Is.EqualTo(beforeCommitFeed + 1));
+            adapter.TryGetCell(cellId, out RuntimeCellSnapshot after);
+            Assert.That(after.Placement.StableId, Is.EqualTo(identity.Value));
+            Assert.That(after.Placement.StoredQuantity, Is.EqualTo(5));
+            Assert.That(after.Placement.FunctionRevision,
+                Is.GreaterThan(before.Placement.FunctionRevision));
+            adapter.Dispose();
+        }
+
+        [Test]
+        public void VisualStateResolverKeepsUnknownHpNormalAndDoesNotMutatePlacement()
+        {
+            PlacementRegistry registry = CreateRegistryWithDurablePlacement(
+                out PlacementSnapshot placement);
+            long registryRevision = registry.Revision;
+            Assert.That(PlacementVisualStateResolver.Resolve(false,
+                PlacementLifecycle.Completed, null, null, 0.5f),
+                Is.EqualTo(PlacementVisualState.Completed));
+            Assert.That(PlacementVisualStateResolver.Resolve(true,
+                PlacementLifecycle.Completed, null, null, 0.5f),
+                Is.EqualTo(PlacementVisualState.Construction));
+            Assert.That(PlacementVisualStateResolver.Resolve(false,
+                PlacementLifecycle.Completed, 40, 100, 0.5f),
+                Is.EqualTo(PlacementVisualState.Damaged));
+            Assert.That(PlacementVisualStateResolver.Resolve(false,
+                PlacementLifecycle.Completed, 0, 100, 0.5f),
+                Is.EqualTo(PlacementVisualState.Destroyed));
+            Assert.That(registry.Revision, Is.EqualTo(registryRevision));
+            Assert.That(registry.TryGet(placement.Handle, out PlacementSnapshot after),
+                Is.EqualTo(PlacementReadResult.Success));
+            Assert.That(after.Revision, Is.EqualTo(placement.Revision));
+        }
+
         private PlacementRegistry CreateRegistryWithDurablePlacement(
             out PlacementSnapshot snapshot)
         {

@@ -1,5 +1,23 @@
 # Ant Colony Development Roadmap
 
+## WV-B3D.3A — Implemented; manual acceptance pending (19 October 2026)
+
+The five authored Material Storage fixtures now promote at quiescent scenario
+initialization to authoritative completed Placements while retaining their
+stable projected identities. `MaterialStorageWorld` remains the sole delegated
+slot/filter/quantity/capacity/reservation authority; no resource state is
+copied. Legacy HP remains unknown and all other functional Backgrounds remain
+unchanged. Generated seed `2203` and newly completed Material Storage remain on
+the legacy projection path until WV-B3D.3B. Focused Edit suites passed 15/15 and
+28/28, focused Play suites passed 3/3 and 6/6, and full suites passed 612/612
+Edit and 84/84 Play. The 29-step manual checklist in `CurrentGameState.md` is
+pending. Stop here: WV-B3D.3B, damage, Repair and destruction are not started.
+
+The approved visual addendum is represented by a common visual-definition base
+and category-specific Background, Resource Node, Placement and loose-resource
+definitions. This is an unbound data/presentation foundation only; it adds no
+art, function, capacity or gameplay state.
+
 ## WV-B3D.2 — Complete (19 October 2026)
 
 The scenario-scoped Placement Registry Foundation is implemented. It provides
@@ -18,9 +36,10 @@ Codex did not independently perform those checks or rerun Unity during closure.
 The XML evidence under `Logs/WV-B3D2-*` was independently inspected and came
 from the implementation working tree based on parent `75bc444118ac8f7edcf0aa7197a12de0a9e7a005`;
 that parent is provenance, not the final implementation commit
-`b04034fedd26877a103750d40e27d29b394f433c`. The next candidate is **WV-B3D.3A Material Storage
-Authority Cutover**, which is not approved or started. Damage, Repair,
-destruction and final HP values remain separate future design/implementation.
+`b04034fedd26877a103750d40e27d29b394f433c`. WV-B3D.3A has since implemented
+the authored Material Storage fixture cutover recorded above. WV-B3D.3B,
+damage, Repair, destruction and final HP values remain separately gated future
+design/implementation.
 
 ## WV-B3D.1 — Complete documentation gate (19 October 2026)
 

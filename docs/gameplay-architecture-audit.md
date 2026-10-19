@@ -1,5 +1,13 @@
 # Gameplay Architecture Audit
 
+## WV-B3D.3A follow-up
+
+The first functional Placement cutover preserves one ledger: Placement owns
+fixture Storage identity/occupancy, and `MaterialStorageWorld` owns delegated
+slot state. The compatibility Background cannot add a second function on bound
+cells. Other functional Backgrounds and generated completion are unchanged;
+WV-B3D.3B, combat, Repair and destruction remain deferred.
+
 ## WV-B3D.2 follow-up
 
 The Placement identity/read-model recommendation is implemented. Functional

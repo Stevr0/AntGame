@@ -1,5 +1,14 @@
 # Unified Runtime Cells
 
+## WV-B3D.3A delegated Storage snapshots
+
+Promoted fixture cells expose authoritative Placement identity plus
+`DelegatedMaterialStorage` function authority. The same snapshot projects the
+single slot's revision, filter, resource, quantity, available capacity and
+reservation totals without owning them. Slot commits emit one Placement-cell
+change; reads are inert. Legacy/new Storage reports `LegacyBackground`, and old
+handles are invalid after scenario replacement.
+
 ## WV-B3D.2 Placement snapshots
 
 Colony snapshots now resolve Placement identity through the scenario registry

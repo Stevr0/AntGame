@@ -1,5 +1,15 @@
 # Placement Migration
 
+## WV-B3D.3A status
+
+**Implemented — Automated Tests Passed, Manual Acceptance Pending.** The five
+authored Material Storage fixtures promote at quiescent scenario initialization
+to authoritative completed Placements while retaining stable IDs. Their
+existing `MaterialStorageWorld` slots are delegated, not copied, and remain the
+only filter/quantity/capacity/reservation authority. Migrated HP stays unknown.
+Generated/new Storage remains a legacy projection until WV-B3D.3B. Damage,
+Repair, destruction and Placement removal were not implemented.
+
 ## WV-B3D.2 status
 
 **Complete.** A

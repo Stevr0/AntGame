@@ -1,5 +1,27 @@
 # WV-B3D.1 Construction and Placement Foundation Technical Specification
 
+## WV-B3D.3A implementation record — 19 October 2026
+
+The authored Material Storage fixtures are promoted only during quiescent
+scenario construction. Promotion validates the complete batch before commit,
+retains each projected Placement ID, changes authority to
+`AuthoritativePlacement`, and advances the affected Placement revisions plus one
+registry revision. `MaterialStorageWorld` binds its existing slot objects to the
+resulting handles; it does not copy filters, quantities, capacity or reservation
+owners. A failed validation leaves the batch legacy and unchanged. Scenario
+context on each handle rejects stale operations after replacement.
+
+This is a mixed transition. Promoted cells receive function only through their
+delegated slot binding; their retained Background is compatibility presentation,
+not a second function provider. Unmigrated/newly constructed Material Storage
+continues through the legacy Background bridge until WV-B3D.3B. Migration does
+not fabricate HP and does not enable damage, Repair, destruction or removal.
+
+Runtime snapshots expose Placement authority/revision plus the delegated
+function authority, slot revision, filter, resource, quantity, available
+capacity and both reservation totals. Storage mutations publish Placement-cell
+changes, but never mutate Placement identity or structural revision.
+
 **Status:** WV-B3D.1 specification complete; **WV-B3D.2 Placement Registry
 Foundation complete** after automated validation and user-confirmed 7/7 manual
 acceptance groups.
@@ -615,6 +637,8 @@ in a separate reversible WV-B3D.7 change.
 - Refining bills, inputs, outputs, worker rules and blocked-output policy; and
 - death, unload and save/load reservation reconciliation.
 
-The smallest recommended successor is **WV-B3D.3A Material Storage Authority
-Cutover**, subject to separate approval. WV-B3D.2 stops with the registry and
-read model; no functional authority moves in this milestone.
+WV-B3D.3A has since implemented the narrow authored Material Storage fixture
+cutover recorded at the top of this document. The next separately gated step is
+WV-B3D.3B for newly completed Material Storage; broader functional migration is
+still deferred. The historical WV-B3D.2 boundary stopped with the registry and
+read model.
