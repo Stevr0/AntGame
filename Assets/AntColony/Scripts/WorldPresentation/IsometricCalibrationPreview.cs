@@ -12,6 +12,7 @@ namespace AntColony.WorldPresentation
     public sealed class IsometricCalibrationPreview : MonoBehaviour
     {
         public const int PreviewSize = 8;
+        public const int WaterPatternSize = 4;
         public static readonly SurfaceCell WaterCell = new(1, 5);
         public static readonly SurfaceCell VegetationCell = new(2, 2);
         public static readonly SurfaceCell CentreMarkerCell = new(3, 3);
@@ -25,9 +26,11 @@ namespace AntColony.WorldPresentation
         [SerializeField] private Sprite rockSprite;
         [SerializeField] private Sprite vegetationSprite;
         [SerializeField] private Transform previewRoot;
+        [SerializeField] private Transform waterPatternRoot;
 
         public SurfaceIsometricProjection Projection => projection;
         public Transform PreviewRoot => previewRoot;
+        public Transform WaterPatternRoot => waterPatternRoot;
 
         public void Configure(SurfaceIsometricProjection configuredProjection,
             Sprite flatGround, Sprite raisedGround, Sprite water,
@@ -86,6 +89,65 @@ namespace AntColony.WorldPresentation
             CreateSprite(root.transform, "Vegetation (2,2)", VegetationCell,
                 vegetationSprite, Color.white, 5);
             CreateCentreMarker(root.transform);
+            CreateWaterPatternGallery(root.transform);
+        }
+
+        private void CreateWaterPatternGallery(Transform parent)
+        {
+            var gallery = new GameObject("ISO-WV-1D Water Layouts");
+            gallery.transform.SetParent(parent, false);
+            waterPatternRoot = gallery.transform;
+
+            CreateWaterPattern(gallery.transform, "Continuous 4x4 Water",
+                new Vector2(-5f, -5.5f), WaterPattern.ContinuousWater);
+            CreateWaterPattern(gallery.transform, "Water Surrounded By Grass",
+                new Vector2(0f, -5.5f), WaterPattern.SurroundedByGrass);
+            CreateWaterPattern(gallery.transform, "Straight Shoreline",
+                new Vector2(5f, -5.5f), WaterPattern.StraightShoreline);
+            CreateWaterPattern(gallery.transform, "Irregular Shoreline",
+                new Vector2(-2.5f, -9f), WaterPattern.IrregularShoreline);
+            CreateWaterPattern(gallery.transform, "Alternating Grass And Water",
+                new Vector2(2.5f, -9f), WaterPattern.Alternating);
+        }
+
+        private void CreateWaterPattern(Transform parent, string patternName,
+            Vector2 worldOffset, WaterPattern pattern)
+        {
+            var patternObject = new GameObject(patternName);
+            patternObject.transform.SetParent(parent, false);
+
+            for (int y = 0; y < WaterPatternSize; y++)
+            for (int x = 0; x < WaterPatternSize; x++)
+            {
+                var cell = new SurfaceCell(x, y);
+                bool usesWater = IsWaterCell(pattern, x, y);
+                CreateSprite(patternObject.transform,
+                    $"Pattern Tile ({x},{y}) - {(usesWater ? "Water" : "Grass")}",
+                    cell,
+                    usesWater ? waterSprite : flatGroundSprite,
+                    Color.white,
+                    0,
+                    worldOffset);
+            }
+
+            CreateLabel(patternObject.transform, patternName,
+                worldOffset + new Vector2(0f, 0.55f));
+        }
+
+        private static bool IsWaterCell(WaterPattern pattern, int x, int y)
+        {
+            return pattern switch
+            {
+                WaterPattern.ContinuousWater => true,
+                WaterPattern.SurroundedByGrass =>
+                    x > 0 && x < WaterPatternSize - 1 &&
+                    y > 0 && y < WaterPatternSize - 1,
+                WaterPattern.StraightShoreline => x < WaterPatternSize / 2,
+                WaterPattern.IrregularShoreline =>
+                    y == 0 || x + y < WaterPatternSize,
+                WaterPattern.Alternating => (x + y) % 2 == 0,
+                _ => false
+            };
         }
 
         private void CreateCentreMarker(Transform parent)
@@ -95,12 +157,18 @@ namespace AntColony.WorldPresentation
                 new Color32(255, 70, 210, 255), 50);
             marker.transform.localScale = Vector3.one * 0.16f;
 
-            var labelObject = new GameObject("Logical Centre Label", typeof(TextMesh));
+            CreateLabel(parent, "Cell (3,3) centre",
+                projection.CellToWorld(CentreMarkerCell) + new Vector2(0f, 0.38f));
+        }
+
+        private static void CreateLabel(Transform parent, string text,
+            Vector2 worldPosition)
+        {
+            var labelObject = new GameObject($"Label - {text}", typeof(TextMesh));
             labelObject.transform.SetParent(parent, false);
-            labelObject.transform.position = projection.CellToWorld(CentreMarkerCell) +
-                new Vector2(0f, 0.38f);
+            labelObject.transform.position = worldPosition;
             TextMesh label = labelObject.GetComponent<TextMesh>();
-            label.text = "Cell (3,3) centre";
+            label.text = text;
             label.anchor = TextAnchor.LowerCenter;
             label.alignment = TextAlignment.Center;
             label.fontSize = 32;
@@ -110,11 +178,12 @@ namespace AntColony.WorldPresentation
         }
 
         private GameObject CreateSprite(Transform parent, string objectName,
-            SurfaceCell cell, Sprite sprite, Color colour, int orderOffset)
+            SurfaceCell cell, Sprite sprite, Color colour, int orderOffset,
+            Vector2 worldOffset = default)
         {
             var item = new GameObject(objectName, typeof(SpriteRenderer));
             item.transform.SetParent(parent, false);
-            item.transform.position = projection.CellToWorld(cell);
+            item.transform.position = projection.CellToWorld(cell) + worldOffset;
             SpriteRenderer renderer = item.GetComponent<SpriteRenderer>();
             renderer.sprite = sprite;
             renderer.color = colour;
@@ -154,6 +223,16 @@ namespace AntColony.WorldPresentation
             }
 
             previewRoot = null;
+            waterPatternRoot = null;
+        }
+
+        private enum WaterPattern
+        {
+            ContinuousWater,
+            SurroundedByGrass,
+            StraightShoreline,
+            IrregularShoreline,
+            Alternating
         }
     }
 }

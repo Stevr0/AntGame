@@ -117,7 +117,7 @@ namespace AntColony.Tests.EditMode
                 "Assets/AntColony/Art/WorldView/Isometric/Terrain/" +
                 "tile_040_GrassMain.png"));
             Assert.That(AssetDatabase.GetAssetPath(water.Sprite), Is.EqualTo(
-                "Assets/AntColony/Art/WorldView/Isometric/Terrain/tile_104.png"));
+                "Assets/AntColony/Art/WorldView/Isometric/Terrain/tile_095.png"));
             Assert.That(AssetDatabase.GetAssetPath(catalog.FallbackSprite), Is.EqualTo(
                 "Assets/AntColony/Art/WorldView/Isometric/Terrain/tile_009.png"));
             Assert.That(AssetDatabase.LoadAssetAtPath<Sprite>(
@@ -129,6 +129,51 @@ namespace AntColony.Tests.EditMode
             Assert.That(importer.spritePixelsPerUnit, Is.EqualTo(32f));
             Assert.That(importer.spritePivot, Is.EqualTo(new Vector2(0.5f, 0.25f)));
             Assert.That(grass.Sprite.rect.size, Is.EqualTo(new Vector2(32f, 32f)));
+
+            importer = (TextureImporter)AssetImporter.GetAtPath(
+                AssetDatabase.GetAssetPath(water.Sprite));
+            Assert.That(importer.spritePixelsPerUnit, Is.EqualTo(32f));
+            Assert.That(importer.spritePivot, Is.EqualTo(new Vector2(0.5f, 0.25f)));
+            Assert.That(water.Sprite.rect.size, Is.EqualTo(new Vector2(32f, 32f)));
+            Assert.That(water.Sprite.bounds.size.x, Is.EqualTo(1f));
+            Assert.That(water.Sprite.bounds.size.y, Is.EqualTo(1f));
+        }
+
+        [TestCase(WaterLayout.Continuous, 16)]
+        [TestCase(WaterLayout.SurroundedByGrass, 4)]
+        [TestCase(WaterLayout.StraightShoreline, 8)]
+        [TestCase(WaterLayout.IrregularShoreline, 10)]
+        [TestCase(WaterLayout.Alternating, 8)]
+        public void WaterLayoutsMapEveryLogicalCellToExactlyOneTile(
+            WaterLayout layout, int expectedWaterCount)
+        {
+            var patternRegion = new WaterPatternSurfaceRegion(layout);
+            SurfaceIsometricRenderer renderer = CreateRenderer(patternRegion);
+
+            SurfaceIsometricRenderResult result =
+                renderer.RenderWindow(new SurfaceCell(0, 0));
+
+            Assert.That(result.Succeeded, Is.True);
+            Assert.That(result.RenderedCellCount, Is.EqualTo(64));
+            Assert.That(renderer.BackgroundTilemapRenderer.sortingOrder,
+                Is.EqualTo(-20));
+
+            int waterCount = 0;
+            for (int y = 0; y < SurfaceIsometricRenderer.PreviewSize; y++)
+            for (int x = 0; x < SurfaceIsometricRenderer.PreviewSize; x++)
+            {
+                var logicalCell = new SurfaceCell(x, y);
+                TileBase tileBase = renderer.BackgroundTilemap.GetTile(
+                    SurfaceIsometricRenderer.LogicalToTilemapCell(logicalCell));
+                Assert.That(tileBase, Is.Not.Null,
+                    $"Logical cell {logicalCell} must have exactly one tile.");
+                var tile = tileBase as Tile;
+                Assert.That(tile, Is.Not.Null);
+                if (AssetDatabase.GetAssetPath(tile.sprite).EndsWith("tile_095.png"))
+                    waterCount++;
+            }
+
+            Assert.That(waterCount, Is.EqualTo(expectedWaterCount));
         }
 
         [Test]
@@ -265,6 +310,75 @@ namespace AntColony.Tests.EditMode
                 for (int x = 0; x < width; x++)
                     yield return RegionCellId.Surface(
                         AntRegionIds.Surface, new SurfaceCell(x, y));
+            }
+        }
+
+        public enum WaterLayout
+        {
+            Continuous,
+            SurroundedByGrass,
+            StraightShoreline,
+            IrregularShoreline,
+            Alternating
+        }
+
+        private sealed class WaterPatternSurfaceRegion : IReadOnlyRuntimeCellRegion
+        {
+            private readonly WaterLayout layout;
+
+            public WaterPatternSurfaceRegion(WaterLayout layout)
+            {
+                this.layout = layout;
+                Changes = new RuntimeCellChangeFeed(AntRegionIds.Surface);
+            }
+
+            public RegionId RegionId => AntRegionIds.Surface;
+            public RegionLocationKind CoordinateKind => RegionLocationKind.Surface;
+            public long PublicationRevision => 1;
+            public RuntimeCellChangeFeed Changes { get; }
+
+            public RuntimeCellReadResult TryGetCell(RegionCellId cellId,
+                out RuntimeCellSnapshot snapshot)
+            {
+                SurfaceCell cell = cellId.SurfaceCell;
+                if (cell.X < 0 || cell.Y < 0 ||
+                    cell.X >= SurfaceIsometricRenderer.PreviewSize ||
+                    cell.Y >= SurfaceIsometricRenderer.PreviewSize)
+                {
+                    snapshot = null;
+                    return RuntimeCellReadResult.CellUnavailable;
+                }
+
+                bool isWater = cell.X < 4 && cell.Y < 4 && IsWater(cell.X, cell.Y);
+                snapshot = new RuntimeCellSnapshot(
+                    cellId,
+                    isWater
+                        ? ProceduralWorldGenerator.WaterBackgroundId
+                        : ProceduralWorldGenerator.GrassBackgroundId,
+                    0,
+                    1);
+                return RuntimeCellReadResult.Success;
+            }
+
+            public IEnumerable<RegionCellId> EnumerateResidentCells()
+            {
+                for (int y = 0; y < SurfaceIsometricRenderer.PreviewSize; y++)
+                for (int x = 0; x < SurfaceIsometricRenderer.PreviewSize; x++)
+                    yield return RegionCellId.Surface(
+                        AntRegionIds.Surface, new SurfaceCell(x, y));
+            }
+
+            private bool IsWater(int x, int y)
+            {
+                return layout switch
+                {
+                    WaterLayout.Continuous => true,
+                    WaterLayout.SurroundedByGrass => x > 0 && x < 3 && y > 0 && y < 3,
+                    WaterLayout.StraightShoreline => x < 2,
+                    WaterLayout.IrregularShoreline => y == 0 || x + y < 4,
+                    WaterLayout.Alternating => (x + y) % 2 == 0,
+                    _ => false
+                };
             }
         }
     }

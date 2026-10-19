@@ -171,6 +171,18 @@ namespace AntColony.Tests.EditMode
                 }
 
                 Assert.That(terrainCount, Is.EqualTo(64));
+                Assert.That(preview.WaterPatternRoot, Is.Not.Null);
+                Assert.That(preview.WaterPatternRoot.childCount, Is.EqualTo(5));
+                foreach (Transform pattern in preview.WaterPatternRoot)
+                {
+                    int patternTileCount = 0;
+                    foreach (Transform child in pattern)
+                    {
+                        if (child.name.StartsWith("Pattern Tile ("))
+                            patternTileCount++;
+                    }
+                    Assert.That(patternTileCount, Is.EqualTo(16), pattern.name);
+                }
                 Assert.That(scene.GetRootGameObjects().Length, Is.EqualTo(2),
                     "The preview must contain only its calibration root and camera.");
             }

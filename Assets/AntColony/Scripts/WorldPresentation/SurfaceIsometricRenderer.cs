@@ -59,6 +59,7 @@ namespace AntColony.WorldPresentation
         public SurfaceIsometricProjection Projection => projection;
         public Grid Grid => grid;
         public Tilemap BackgroundTilemap => backgroundTilemap;
+        public TilemapRenderer BackgroundTilemapRenderer => tilemapRenderer;
         public SurfaceCell WindowMinimum => windowMinimum;
         public int RenderedCellCount => renderedCellCount;
         public int FallbackCellCount => fallbackCellCount;

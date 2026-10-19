@@ -94,10 +94,10 @@ namespace AntColony.EditorTools
             var cameraObject = new GameObject("Calibration Camera", typeof(Camera));
             SceneManager.MoveGameObjectToScene(cameraObject, scene);
             cameraObject.tag = "MainCamera";
-            cameraObject.transform.position = new Vector3(0f, -1.75f, -10f);
+            cameraObject.transform.position = new Vector3(0f, -4.5f, -10f);
             Camera camera = cameraObject.GetComponent<Camera>();
             camera.orthographic = true;
-            camera.orthographicSize = 3f;
+            camera.orthographicSize = 6.25f;
             camera.clearFlags = CameraClearFlags.SolidColor;
             camera.backgroundColor = new Color32(25, 31, 43, 255);
             camera.allowHDR = false;
