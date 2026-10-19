@@ -40,6 +40,47 @@ namespace AntColony.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator SurfaceMotorPreservesLogicalRouteWhileProjectingSmoothly()
+        {
+            var gameObject = new GameObject(
+                "Projected Surface motor test",
+                typeof(SurfaceIsometricProjection),
+                typeof(SurfaceNavigationMotor));
+            SurfaceIsometricProjection projection =
+                gameObject.GetComponent<SurfaceIsometricProjection>();
+            projection.Configure(new Vector2(10f, 20f), 32f, 16f, 32f);
+            SurfaceNavigationMotor motor =
+                gameObject.GetComponent<SurfaceNavigationMotor>();
+            Assert.That(motor.Initialize(new SurfaceWorldData(8, 8),
+                new SimulationClockState(), Vector2.zero,
+                new SurfaceCell(1, 1)), Is.True);
+            motor.ConfigurePresentation(projection.LogicalToWorld, point =>
+                projection.TryWorldToCell(point, new SurfaceCell(0, 0), 8, 8,
+                    out SurfaceCell cell) ? cell : null);
+
+            Assert.That(motor.MoveTo(new SurfaceCell(3, 1)), Is.True);
+            Assert.That(motor.Route[0], Is.EqualTo(new SurfaceCell(1, 1)));
+            Assert.That(motor.Route[^1], Is.EqualTo(new SurfaceCell(3, 1)));
+            motor.Tick(0.1d);
+
+            Assert.That(motor.LogicalPosition.x, Is.EqualTo(1.3f).Within(0.0001f));
+            Assert.That((Vector2)gameObject.transform.position,
+                Is.EqualTo(projection.LogicalToWorld(motor.LogicalPosition)));
+            // The existing motor consumes one route segment per simulation
+            // tick, so advance several deterministic ticks just as Play Mode
+            // frames do instead of changing that gameplay behaviour here.
+            for (int i = 0; i < 10 && !motor.HasArrived; i++)
+                motor.Tick(1d);
+            Assert.That(motor.HasArrived, Is.True);
+            Assert.That(motor.CurrentCell, Is.EqualTo(new SurfaceCell(3, 1)));
+            Assert.That((Vector2)gameObject.transform.position,
+                Is.EqualTo(projection.CellToWorld(new SurfaceCell(3, 1))));
+
+            Object.Destroy(gameObject);
+            yield return null;
+        }
+
+        [UnityTest]
         public IEnumerator AuthoredDevelopmentSceneLoadsBothViewsWithoutStateMutation()
         {
             yield return SceneManager.LoadSceneAsync("AntGameDevelopment",
@@ -147,6 +188,9 @@ namespace AntColony.Tests.PlayMode
             long publication = host.RuntimeCells.PublicationRevision;
             int residents = views.Residencies.Count;
             int surfaceMask = 1 << TwoViewWorldCoordinator.SurfacePresentationLayer;
+            SelectableGridAnt colonyAnt =
+                host.SelectionController.SelectableAnts[0];
+            Vector3 colonyAntPosition = colonyAnt.transform.position;
 
             Assert.That(views.SurfaceTerrainMode,
                 Is.EqualTo(SurfaceTerrainRenderMode.LegacySquare));
@@ -158,11 +202,33 @@ namespace AntColony.Tests.PlayMode
             Assert.That(views.LegacySurfacePresentation.activeSelf, Is.False);
             Assert.That(views.IsometricSurfacePresentation.activeSelf, Is.True);
             Assert.That(views.SurfaceIsometricRenderer.RenderedCellCount,
+                Is.EqualTo(64 * 64));
+            Assert.That(views.SurfaceIsometricRenderer.RenderedWidth,
+                Is.EqualTo(64));
+            Assert.That(views.SurfaceIsometricRenderer.RenderedHeight,
                 Is.EqualTo(64));
             Assert.That(views.SurfaceCamera.orthographic, Is.True);
-            Assert.That(views.SurfaceCamera.orthographicSize, Is.EqualTo(4.5f));
+            Assert.That(views.SurfaceCamera.orthographicSize,
+                Is.EqualTo(views.SurfaceCameraController.HomeOrthographicSize));
+            Assert.That(views.IsometricWorldBounds.width,
+                Is.EqualTo(64f).Within(0.0001f));
+            Assert.That(views.IsometricWorldBounds.height,
+                Is.EqualTo(32f).Within(0.0001f));
+            Assert.That(views.IsometricEntranceVisual, Is.Not.Null);
+            Assert.That(views.IsometricDestinationMarker, Is.Not.Null);
             Assert.That(views.SurfaceCamera.cullingMask, Is.EqualTo(surfaceMask));
             Assert.That(views.ColonyCamera.cullingMask & surfaceMask, Is.Zero);
+            Assert.That(colonyAnt.transform.position, Is.EqualTo(colonyAntPosition),
+                "Configuring disabled Surface presentation moved a Colony ant.");
+            Vector2 finalCellCentre = views.SurfaceIsometricProjection.CellToWorld(
+                new SurfaceCell(63, 63));
+            Assert.That(views.TrySurfaceWorldPointToCell(
+                finalCellCentre, out SurfaceCell selectedCorner), Is.True);
+            Assert.That(selectedCorner, Is.EqualTo(new SurfaceCell(63, 63)));
+            Assert.That(views.TrySurfaceWorldPointToCell(
+                views.SurfaceIsometricProjection.CellToWorld(
+                    new SurfaceCell(64, 63)), out _), Is.False,
+                "Pointer conversion must reject points beyond the logical diamond.");
 
             views.SwitchView(DevelopmentWorldView.Surface);
             yield return null;
@@ -223,9 +289,19 @@ namespace AntColony.Tests.PlayMode
             AntColony.Ants.AntId queenId = queen.Record.Id;
             host.SimulationClock.Resume();
             Assert.That(host.TwoViewWorld.TryUseEntrance(queen), Is.True);
-            yield return WaitFor(() => host.TwoViewWorld.Residencies.IsInRegion(
-                queenId, AntRegionIds.Surface), 12f,
-                "Generated queen did not reach the Surface.");
+            float surfaceDeadline = Time.realtimeSinceStartup + 12f;
+            while (!host.TwoViewWorld.Residencies.IsInRegion(
+                       queenId, AntRegionIds.Surface) &&
+                   Time.realtimeSinceStartup < surfaceDeadline)
+                yield return null;
+            Assert.That(host.TwoViewWorld.Residencies.IsInRegion(
+                queenId, AntRegionIds.Surface), Is.True,
+                $"Generated queen did not reach the Surface. " +
+                $"timeScale={Time.timeScale}, clockRunning=" +
+                $"{host.SimulationClock.IsRunning}, motor={queen.Motor.State}, " +
+                $"motorStatus={queen.Motor.StatusMessage}, " +
+                $"orderSource={queen.OrderSource}, position={queen.Motor.Position}, " +
+                $"entrance={host.TwoViewWorld.Entrance.CapacityStatus}");
             SurfaceNavigationMotor surfaceMotor =
                 queen.GetComponent<SurfaceNavigationMotor>();
             Assert.That(surfaceMotor.MoveTo(new SurfaceCell(28, 32)), Is.True);

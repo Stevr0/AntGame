@@ -105,5 +105,19 @@ namespace AntColony.Tests.EditMode
             Assert.That(testCamera.orthographicSize, Is.EqualTo(30f));
             Assert.That(controller.TargetOrthographicSize, Is.EqualTo(30f));
         }
+
+        [Test]
+        public void ViewportAwareBoundsConstrainPanAndRememberedState()
+        {
+            testCamera.aspect = 2f;
+            controller.ConfigureBounds(new Vector2(-20f, -10f),
+                new Vector2(20f, 10f), true);
+            controller.SetCameraState(new Vector3(100f, 100f, -10f), 4f);
+
+            Assert.That(cameraObject.transform.position.x, Is.EqualTo(12f));
+            Assert.That(cameraObject.transform.position.y, Is.EqualTo(6f));
+            Assert.That(testCamera.orthographicSize, Is.EqualTo(4f));
+            Assert.That(controller.TargetOrthographicSize, Is.EqualTo(4f));
+        }
     }
 }

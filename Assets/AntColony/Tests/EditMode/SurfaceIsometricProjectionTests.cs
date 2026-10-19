@@ -109,6 +109,34 @@ namespace AntColony.Tests.EditMode
         }
 
         [Test]
+        public void ContinuousLogicalPositionsUseTheSameProjectionAuthority()
+        {
+            Vector2 start = projection.CellToWorld(new SurfaceCell(2, 3));
+            Vector2 end = projection.CellToWorld(new SurfaceCell(3, 3));
+
+            Assert.That(projection.LogicalToWorld(new Vector2(2.5f, 3f)),
+                Is.EqualTo(Vector2.Lerp(start, end, 0.5f)));
+        }
+
+        [Test]
+        public void FullSurfaceBoundsAndPointerRejectionUseProjectedDiamond()
+        {
+            Rect bounds = projection.GetWorldBounds(new SurfaceCell(0, 0), 64, 64);
+
+            Assert.That(bounds.xMin, Is.EqualTo(-22f).Within(Tolerance));
+            Assert.That(bounds.xMax, Is.EqualTo(42f).Within(Tolerance));
+            Assert.That(bounds.yMin, Is.EqualTo(-11.75f).Within(Tolerance));
+            Assert.That(bounds.yMax, Is.EqualTo(20.25f).Within(Tolerance));
+            Assert.That(projection.TryWorldToCell(
+                projection.CellToWorld(new SurfaceCell(63, 63)),
+                new SurfaceCell(0, 0), 64, 64, out SurfaceCell last), Is.True);
+            Assert.That(last, Is.EqualTo(new SurfaceCell(63, 63)));
+            Assert.That(projection.TryWorldToCell(
+                projection.CellToWorld(new SurfaceCell(64, 63)),
+                new SurfaceCell(0, 0), 64, 64, out _), Is.False);
+        }
+
+        [Test]
         public void SelectedSpritesUseCalibratedPresentationImportSettings()
         {
             foreach (string spriteName in SelectedSpriteNames)

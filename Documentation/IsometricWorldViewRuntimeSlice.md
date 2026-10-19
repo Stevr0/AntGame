@@ -1,163 +1,137 @@
-# ISO-WV-1 Runtime Isometric Terrain Slice
+# Isometric World View Runtime Presentation
 
-**Status:** ISO-WV-1D implemented - pending manual acceptance
-**Date:** 19 October 2026  
-**Scope:** Presentation-only 8 x 8 Surface terrain preview. The authoritative
-Surface remains 64 x 64 and all Colony, navigation, ant, job, resource,
-construction and generation behavior is unchanged.
+**Status:** ISO-WV-2 — Implemented, Pending Manual Acceptance
+**Date:** 19 October 2026
 
-## Runtime architecture
+## Authority boundary
 
-`SurfaceIsometricRenderer` is a child presentation owned by
-`TwoViewWorldCoordinator`. It reads the coordinator's published
-`SurfaceRuntimeCellRegionAdapter`; it does not allocate a world model or mutate a
-cell. Before drawing, it reads all 64 snapshots for logical cells `(29,29)`
-through `(36,36)`. A failed read rejects the whole update, so a partial preview
-is never presented.
+The World View remains an unchanged top-down 64 x 64 logical Surface grid.
+`SurfaceWorldData`, `SurfaceRuntimeCellRegionAdapter`, Surface A*, resource
+state, ant records, jobs, world generation and entrance residency transactions
+remain authoritative. Isometric coordinates are presentation and input
+conversion only; there is no elevation, gravity, cliff or duplicate grid.
 
-One Unity `Grid` using the Isometric layout owns one `Tilemap`. Terrain cells are
-tiles, not GameObjects. Logical cells map to tilemap cells as
-`(-logicalY,-logicalX,0)`, which makes Unity's isometric Grid agree with the
-accepted `SurfaceIsometricProjection`: logical X goes down-right and logical Y
-goes down-left. The Grid uses the fixed accepted 1 x 0.5-unit cell footprint.
-Sprite pixels remain at 32 PPU and use the accepted `(0.5,0.25)` pivot.
+Legacy square rendering remains the default development mode and can be
+restored at any time without rebuilding or changing simulation state.
 
-## ISO-WV-1B outcome and ISO-WV-1C cleanup
+## Full-map renderer
 
-ISO-WV-1B established that compressing the whole Grid was not the appropriate
-production fix for a raised terrain block used as a repeating interior. In
-ISO-WV-1C all experimental horizontal/vertical spacing fields, methods and
-development buttons were removed. The renderer now has one fixed cell size:
-`(1,0.5,1)`, matching the accepted ISO-WV-0 projection.
+`SurfaceIsometricRenderer.RenderRegion` reads all cells `(0,0)` through
+`(63,63)` from the runtime adapter and writes exactly 4,096 tiles into one Unity
+Isometric Tilemap. It does not create one GameObject per cell. Its Grid retains
+the accepted `(1,0.5,1)` cell size and its Tilemap uses chunk rendering behind
+dynamic objects.
 
-The user-supplied flat grass interior replaces the raised grass block in the
-live catalog. The original raised `tile_040.png` asset remains available for a
-future, separately approved edge, corner or decorative role. No neighbour-aware
-autotiling is introduced by this milestone.
+The visual catalog retains these approved mappings:
 
-The full logical Surface, A*, motors, orders and ant transforms remain live in
-both renderer modes. Resource Nodes are deliberately not written to the
-background Tilemap.
-
-## Temporary renderer toggle
-
-The development World View panel exposes two buttons:
-
-- **Legacy Surface** restores the existing full square presentation.
-- **Isometric 8x8 Preview** displays the runtime window and adjusts only the
-  existing orthographic Surface camera framing.
-
-Legacy is the serialized and runtime default. The Colony camera and culling
-mask are not changed. The isometric root remains on layer 9 (`SurfaceWorld`), so
-the Colony camera excludes it. Surface-resident ant renderers are temporarily
-hidden in isometric mode because ISO-WV-1 does not project ant visuals; their
-authoritative roots and transforms are untouched and the original renderer
-state is restored on return to Legacy mode or a scenario rebuild.
-
-## Authored visual mapping
-
-`SurfaceIsometricVisualCatalog` is a presentation-only authored catalog. A
-dedicated catalog is used because ISO-WV-1 needs one stable runtime `Resources`
-asset containing the small mapping and fallback; it does not duplicate mutable
-world data or introduce another terrain definition authority.
-
-| Runtime Background ID | Sprite | Treatment |
+| Background | Sprite | Import contract |
 | --- | --- | --- |
-| `background.surface.grass` | `Terrain/tile_040_GrassMain.png` | User-edited flat grass interior |
-| `background.surface.water` | `Terrain/tile_104_flatWater.png` | User-supplied flat water interior |
-| Unsupported or missing mapping | `Terrain/tile_009.png` | Bright magenta tint |
+| Grass | `tile_040_GrassMain.png` | 32 x 32 canvas, 32 PPU, pivot `(0.5,0.25)` |
+| Water | `tile_104_flatWater.png` | 32 x 32 canvas, 32 PPU, pivot `(0.5,0.25)` |
+| Unsupported ID | `tile_009.png`, magenta tint | conspicuous fallback |
 
-No rock, vegetation or Resource Node is silently substituted for terrain. The
-original raised `Terrain/tile_040.png` is preserved but is not selected by the
-runtime catalog. Original raised water `Terrain/tile_104.png` is also preserved.
+Resource Nodes remain separate from Background terrain and are not given
+ISO-WV-2 visuals.
 
-## ISO-WV-1D water correction
+## Shared coordinate mapping
 
-The old `tile_104.png` has visible bounds x 0-31, y 12-31: a 32 x 20 raised
-block including side pixels. Its imported Sprite rect was cropped to 32 x 21
-and used a centre pivot. In a repeating Tilemap those side pixels and the
-different anchor created the apparent uneven size, overlap and missing cells
-seen in manual testing. Renderer tests confirm that the logical cells were
-present; the defect was artwork/import presentation rather than generation or
-cell-to-tile mapping.
+`SurfaceIsometricProjection` is the sole isometric mapping authority:
 
-The replacement `tile_104_flatWater.png` keeps the user's pixels unchanged and
-uses a full 32 x 32 Sprite rect, 32 PPU, Full Rect mesh and pivot `(0.5,0.25)`.
-Its visible shallow diamond has bounds x 0-31, y 12-29. The Grid, tile anchor,
-projection, renderer sorting order and cell mapping remain unchanged. The
-isolated calibration scene now includes five 4 x 4 layouts: continuous water,
-water surrounded by grass, straight shoreline, irregular shoreline and
-alternating grass/water.
+- `CellToWorld` maps a logical cell centre to its displayed ground contact.
+- `LogicalToWorld` maps continuous motor progress between cell centres.
+- `TryWorldToCell` performs bounded diamond-aware inverse selection.
+- `GetWorldBounds` derives the projected map bounds from logical corners and
+  the calibrated half-diamond footprint.
 
-## Known limitations
+`TwoViewWorldCoordinator` uses these methods for terrain origin, ants, mouse
+commands, destination marker, placeholder entrance and camera framing. No
+consumer carries a second projection formula.
 
-- Only the fixed logical window `(29,29)` to `(36,36)` is displayed.
-- Resource Nodes, loose resources, placements, construction, entrance art,
-  selection, orders, fog, pheromones and interaction overlays are not projected.
-- Surface ants are hidden in isometric mode; movement still simulates.
-- Isometric pointer-to-cell input is not implemented. Use the toggle for visual
-  review only and return to Legacy mode for Surface commands.
-- Camera Home settings still describe the legacy full-Surface framing.
-- Final grass repetition, corrected water alignment and visual suitability require direct
-  Unity inspection.
+## Camera and view switching
 
-These are ISO-WV-2 candidates and are not defects in the ISO-WV-1 authority
-boundary.
+The Surface camera remains orthographic and unrotated. Its isometric Home
+position is the projected world centre and its Home size fits the complete
+diamond at the current aspect ratio. Pan bounds are projection-derived and
+viewport-aware, so the view cannot be moved wholly outside the map. Zooming
+reclamps the camera.
 
-## Automated evidence
+Legacy and isometric Surface positions/zoom are remembered independently.
+Colony camera state is not read or changed by the Surface presentation toggle.
+Layer 9 (`SurfaceWorld`) remains the culling boundary, and only the active view
+camera/input context is enabled.
 
-- ISO projection, renderer and World View foundation Edit Mode regression:
-  **28/28 passed**.
-- World View foundation Play Mode regression: **6/6 passed**.
-- The renderer suite includes exact final catalog paths, retained raised art,
-  import calibration, fixed Grid size, fallback, determinism, boundaries and
-  authority-preservation coverage.
+## Ant presentation and interaction
+
+`SurfaceNavigationMotor` still receives and follows the same logical A* route.
+Its continuous progress is stored in logical Surface coordinates and then
+projected onto the existing authoritative ant root. This keeps identity,
+skills, needs, inventory, collider, selection indicator and command ownership
+on the original GameObject. Arrival, blocked state and `CurrentCell` change only
+under the existing movement rules.
+
+Left-click hit testing therefore follows the projected ant root. Right-click
+uses the projection inverse, rejects points outside the logical 64 x 64 bounds,
+then passes the resolved `SurfaceCell` through unchanged navigation and
+traversability validation. The isometric destination diamond and placeholder
+entrance share the same projection. Dynamic sorting uses projected
+ground-contact Y; no gameplay elevation exists.
+
+The existing `NestEntranceTransitionService` still owns capacity, approach,
+commit, residency and release. Region changes enable the appropriate existing
+motor and renderer layer; no duplicate or ghost ant visual is created.
+
+## Automated acceptance
+
+Focused coverage verifies:
+
+- continuous/discrete projection agreement and bounded diamond inverse mapping;
+- full 64 x 64 coverage, deterministic rebuild and unchanged source fingerprint;
+- projection-derived bounds, Home sizing and viewport-aware camera clamping;
+- logical A* route preservation with smooth projected movement;
+- view isolation, Legacy restoration and entrance reuse.
+
+Focused suites pass **41/41 Edit Mode** and **7/7 Play Mode**. The complete
+graphics-enabled Play Mode suite passes **86/86**. Complete Edit Mode passes
+**634/638**; four unrelated `ColonyPresentationTests` cases still request Tile
+assets from removed `Assets/AntColony/Art/WorldTiles` paths rather than their
+current `Assets/AntColony/Art/ColonyView` locations. The first headless full
+Edit attempt also crashed in its existing rendered-pixel camera test, so the
+reported full Edit result is from the required graphics-enabled rerun. These
+automated checks do not replace direct Unity visual acceptance.
 
 ## Manual Unity acceptance
 
-1. Open `Assets/AntColony/Scenes/AntGameDevelopment.unity` in Unity 6000.3.8f1.
-2. Enter Play Mode and confirm Colony View initially looks and behaves as before.
-3. Select **World View** and confirm **Legacy Surface** is active by default.
-4. Optionally select generated founding-queen scenario seed `2203`; confirm the
-   full 64 x 64 simulation remains available in Legacy mode.
-5. Select **Isometric 8x8 Preview**.
-6. Confirm exactly one centred 8 x 8 diamond terrain patch is visible, with
-   crisp point-filtered pixels and edge-aligned 32 x 16 footprints.
-7. Confirm grass uses the flat `tile_040_GrassMain`, repeats without exposed
-   dirt sides or gaps, and preserves crisp neighbour ordering.
-8. Confirm water uses `tile_104_flatWater`, remains edge-aligned, and does not overlap
-   adjacent water or grass tiles incorrectly.
-9. Confirm any unsupported Background is conspicuous magenta rather than a
-   silent art substitution.
-10. Confirm the World View panel and runtime renderer Inspector contain no
-    horizontal/vertical spacing controls or percentage presets.
-11. If an ant is Surface-resident, confirm its old square-positioned visual is
-   hidden; do not expect an isometric ant in this milestone.
-12. Switch to **Colony View** and confirm no isometric tile, Surface overlay or
-    Surface ant visual leaks into the Colony camera.
-13. Let the simulation advance and switch back to World View. Confirm the same
-    scenario remains loaded and the isometric mode is still selected.
-14. Select **Legacy Surface** and confirm the full square presentation and
-    original Surface ant renderer state return.
-15. Confirm view switching did not reset ant identity, needs, inventory,
-    residency, jobs, resources, construction or the simulation clock.
-16. Exit Play Mode and confirm the Unity Console has no new errors, warnings or
-    exceptions.
+1. Open `Assets/AntColony/Scenes/AntGameDevelopment.unity` and enter Play Mode.
+2. Confirm **Legacy Surface** remains selected initially.
+3. Enter seed `2203`, choose **Start Generated**, then select **World View**.
+4. Choose **Isometric 64x64 World**. Confirm the complete diamond appears with
+   continuous approved Grass/Water and no magenta fallback for generated IDs.
+5. Press **Home**. Confirm the complete diamond is framed. Pan to every extreme,
+   zoom in/out, and confirm the viewport stays bounded to the projected world.
+6. Change pan/zoom, toggle Legacy and back, and confirm each mode restores its
+   own Surface camera state. Confirm Colony camera framing did not change.
+7. Use the nest entrance to bring the queen to Surface. Confirm exactly one
+   placeholder ant appears at the projected entrance with its selection marker.
+8. Left-click that ant, then right-click open cells near the centre, each edge
+   and each corner. Confirm the destination diamond aligns to the chosen cell
+   and the ant moves smoothly along valid projected A* steps.
+9. Right-click Water, an invalid/blocked destination and outside all four world
+   edges. Confirm these do not create an invalid movement order.
+10. Toggle Legacy while the ant is present and confirm its logical cell/order is
+    preserved. Toggle back and confirm it reappears at the matching iso cell.
+11. Clear the Surface arrival cell, return through the entrance, then reuse it.
+    Confirm capacity/reuse behaviour and no duplicate or ghost ant visual.
+12. Switch repeatedly between Colony and World views. Confirm no Surface tile,
+    marker, entrance or ant leaks into Colony View and Colony input still works.
+13. Restore the authored fixture and repeat the presentation toggle. Confirm
+    deterministic reconstruction and that all three ant records remain intact.
+14. Check the Console for errors, exceptions or missing visual warnings.
 
-ISO-WV-1 has since passed this checklist.
-17. Open **Ant Colony > Isometric > Open Calibration Preview** and inspect the
-    five labelled ISO-WV-1D 4 x 4 layouts. Confirm every expected water cell is
-    present in continuous, surrounded, straight, irregular and alternating
-    patterns.
+## Deferred to ISO-WV-3
 
-ISO-WV-1D remains pending until the corrected-water and clean-Console checks
-above are completed in Unity.
+- Resource Node and loose-resource presentation.
+- Placement, Construction, Storage and staged-material presentation.
+- Final World ant animation sets and final entrance art.
+- Fog/pheromone overlays and terrain neighbour/shoreline autotiling.
 
-## ISO-WV-2 boundary
-
-The smallest next milestone is isometric dynamic presentation and interaction:
-project Resource Nodes and entrance/placement overlays separately from terrain,
-add correctly sorted ant visuals, and route pointer selection through the
-accepted inverse projection. Fog/pheromones and expansion beyond the fixed
-window should remain separately testable. Do not alter the underlying grid,
-navigation, generation, jobs or Colony View.
+These are known visual limitations, not permission to extend this milestone.

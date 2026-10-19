@@ -1,5 +1,31 @@
 # Technical Architecture
 
+## ISO-WV-2 Surface presentation pipeline
+
+`SurfaceWorldData` remains the 64 x 64 terrain/navigation authority.
+`SurfaceRuntimeCellRegionAdapter` exposes its generated Background IDs and
+`SurfaceIsometricRenderer` copies all 4,096 cells into one presentation-only
+chunk-mode Tilemap. Rebuilding a scenario recreates that presentation from the
+new authoritative adapter; no second grid or mutable terrain cache is created.
+
+`SurfaceIsometricProjection` owns discrete cell-centre mapping, continuous
+logical-position mapping, bounded inverse pointer mapping and projected map
+bounds. `TwoViewWorldCoordinator` supplies that mapping to the terrain,
+`SurfaceNavigationMotor`, destination and entrance placeholders, mouse input,
+and the Surface camera. The motor retains A* route cells and continuous logical
+progress, then writes only the projected Transform. Residency and entrance
+commit services remain unchanged.
+
+The Surface camera is still orthographic and unrotated. Its Home zoom and
+viewport-aware pan limits derive from projected bounds, while separate Legacy
+and isometric camera states prevent a presentation toggle from modifying Colony
+camera state. Layer 9 remains the culling boundary. Terrain sorts behind ants;
+ant and placeholder orders derive from projected ground-contact Y.
+
+ISO-WV-2 is **Implemented — Pending Manual Acceptance**. Resource Nodes, loose
+resources, Placements, Storage, Construction visuals, fog and final ant
+animations are outside this slice.
+
 ## WV-B3D.3B coordinated Storage completion
 
 `ConstructionWorldTransaction` now coordinates terminal Material Storage work

@@ -1,5 +1,24 @@
 # Ant Colony Development Roadmap
 
+## ISO-WV-2 — Implemented; manual acceptance pending (19 October 2026)
+
+The complete 64 x 64 Surface is now available through the existing optional
+isometric presentation: one Tilemap renders 4,096 authoritative cells, the
+shared projection positions Surface ants and interaction markers, pointer input
+resolves back to logical `SurfaceCell` values, and the Surface camera frames and
+constrains itself to projected bounds. A* neighbours/costs, movement orders,
+world generation, Colony View and capacity-one entrance transactions remain
+unchanged. Legacy square rendering remains the default fallback.
+
+Focused ISO-WV-2 suites pass **41/41 Edit** and **7/7 Play**; complete Play
+passes **86/86**. Complete Edit passes **634/638**, with four unrelated stale
+Colony art-path expectations documented in Current Game State.
+
+Complete the ISO-WV-2 manual Play Mode checklist before marking this milestone
+complete. ISO-WV-3 is separately gated: do not begin Resource Node, loose-stack,
+Placement, Storage, Construction or final ant animation presentation without
+approval.
+
 ## ISO-WV-1D — Implemented; manual acceptance pending (19 October 2026)
 
 Water presentation now uses the user-supplied flat

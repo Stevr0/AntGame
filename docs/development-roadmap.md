@@ -1,5 +1,17 @@
 # Development Roadmap
 
+## ISO-WV-2 — implemented, manual acceptance pending
+
+The optional isometric World View now covers all 4,096 cells in the unchanged
+64 x 64 Surface authority. One shared projection controls terrain, projected
+ant motion, pointer conversion, markers, entrance placement and camera bounds.
+Legacy rendering remains the default and Colony View remains isolated. Finish
+the documented Unity visual/input/Console checklist before acceptance. Focused
+Edit/Play passes **41/41** and **7/7**; complete Play passes **86/86**. Complete
+Edit passes **634/638**, with four unrelated stale Colony art-path failures.
+ISO-WV-3 dynamic resource, Placement, Storage and Construction art remains
+gated.
+
 ## ISO-WV-1D — implemented, manual acceptance pending
 
 The 8 x 8 runtime preview maps Water to user-supplied flat

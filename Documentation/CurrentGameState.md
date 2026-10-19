@@ -1,5 +1,32 @@
 # Ant Colony Current Game State
 
+## ISO-WV-2 — Implemented; manual acceptance pending (19 October 2026)
+
+The optional isometric World View now renders all **4,096** authoritative
+Surface Background cells in one Unity Isometric Tilemap. The established
+`SurfaceIsometricProjection` is the single presentation mapping for terrain,
+continuous ant positions, pointer-to-cell conversion, the destination marker,
+the placeholder nest entrance and projected camera bounds. The underlying
+64 x 64 `SurfaceWorldData`, A* routes, cells, movement orders, generated terrain
+and entrance transactions are unchanged.
+
+Surface ants remain their existing authoritative GameObjects and keep their
+identity, selection collider, indicator and simulation components. Their
+Surface motor advances along the same logical route and projects only the root
+Transform for display. Ground-contact Y supplies baseline isometric sorting.
+The orthographic Surface camera now has projection-derived Home and pan bounds;
+Legacy and isometric camera states are remembered independently. Legacy square
+rendering remains available and continues to be the default.
+
+Focused Edit Mode passes **41/41** and focused World View Play Mode passes
+**7/7**. The complete graphics-enabled Play Mode suite passes **86/86**. The
+complete Edit Mode suite passes **634/638**; its four failures are unrelated
+stale `ColonyPresentationTests` paths that still look under removed
+`Assets/AntColony/Art/WorldTiles` instead of current `Art/ColonyView` assets.
+Direct Unity visual, input, camera and Console acceptance remains pending.
+Resource Nodes, loose stacks, Placements, Storage and Construction visuals
+remain intentionally deferred to ISO-WV-3.
+
 ## ISO-WV-1D — Implemented; manual acceptance pending (19 October 2026)
 
 The live 8 x 8 isometric preview now maps Water to the user-supplied flat

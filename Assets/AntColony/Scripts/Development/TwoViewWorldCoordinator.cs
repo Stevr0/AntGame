@@ -43,11 +43,21 @@ namespace AntColony.Development
         private readonly Dictionary<SelectableGridAnt, Dictionary<GameObject, int>>
             originalAntPresentationLayers = new();
         private readonly Dictionary<Renderer, bool> originalAntRendererEnabled = new();
+        private readonly Dictionary<Renderer, int> originalAntSortingOrders = new();
         private EntranceTransition activeTransition;
         private Transform surfacePresentationRoot;
         private GameObject legacySurfacePresentation;
         private GameObject isometricSurfacePresentation;
         private SurfaceIsometricRenderer surfaceIsometricRenderer;
+        private SurfaceIsometricProjection surfaceIsometricProjection;
+        private Rect isometricWorldBounds;
+        private LineRenderer isometricDestinationMarker;
+        private SpriteRenderer isometricEntranceVisual;
+        private Material isometricMarkerMaterial;
+        private Vector3 legacyCameraPosition;
+        private float legacyCameraSize = 36f;
+        private Vector3 isometricCameraPosition;
+        private float isometricCameraSize = 20f;
         [SerializeField] private SurfaceTerrainRenderMode surfaceTerrainRenderMode =
             SurfaceTerrainRenderMode.LegacySquare;
         private Sprite temporarySprite;
@@ -75,6 +85,14 @@ namespace AntColony.Development
         public GameObject IsometricSurfacePresentation => isometricSurfacePresentation;
         public SurfaceIsometricRenderer SurfaceIsometricRenderer =>
             surfaceIsometricRenderer;
+        public SurfaceIsometricProjection SurfaceIsometricProjection =>
+            surfaceIsometricProjection;
+        public Rect IsometricWorldBounds => isometricWorldBounds;
+        public DevelopmentCameraController SurfaceCameraController =>
+            surfaceCameraController;
+        public LineRenderer IsometricDestinationMarker =>
+            isometricDestinationMarker;
+        public SpriteRenderer IsometricEntranceVisual => isometricEntranceVisual;
         public SurfaceTerrainRenderMode SurfaceTerrainMode =>
             surfaceTerrainRenderMode;
         public string Status => status;
@@ -102,6 +120,7 @@ namespace AntColony.Development
             surfaceMotors.Clear();
             originalAntPresentationLayers.Clear();
             originalAntRendererEnabled.Clear();
+            originalAntSortingOrders.Clear();
             if (surfacePresentationRoot != null) Destroy(surfacePresentationRoot.gameObject);
             if (surfaceCamera != null) Destroy(surfaceCamera.gameObject);
             BuildSurfaceWorld();
@@ -122,6 +141,7 @@ namespace AntColony.Development
                 Destroy(temporarySprite);
                 if (texture != null) Destroy(texture);
             }
+            if (isometricMarkerMaterial != null) Destroy(isometricMarkerMaterial);
         }
 
         private void Update()
@@ -129,6 +149,7 @@ namespace AntColony.Development
             if (host == null) return;
             SynchronizeCompletedLocalMovement();
             AdvanceTransition();
+            RefreshSurfaceDynamicPresentation();
             if (CurrentView == DevelopmentWorldView.Surface)
                 HandleSurfaceInput();
         }
@@ -157,11 +178,12 @@ namespace AntColony.Development
         {
             if (legacySurfacePresentation == null ||
                 isometricSurfacePresentation == null) return false;
+            RememberSurfaceCameraState(surfaceTerrainRenderMode);
             surfaceTerrainRenderMode = mode;
             ApplySurfaceTerrainRenderMode();
             status = mode == SurfaceTerrainRenderMode.LegacySquare
                 ? "Legacy square Surface terrain active."
-                : "ISO-WV-1 8x8 authoritative terrain preview active; ant visuals hidden.";
+                : "ISO-WV-2 full 64x64 isometric World View active.";
             return true;
         }
 
@@ -172,15 +194,26 @@ namespace AntColony.Development
             legacySurfacePresentation?.SetActive(!isometric);
             isometricSurfacePresentation?.SetActive(isometric);
 
-            if (surfaceCamera != null)
+            if (surfaceCamera != null && surfaceCameraController != null)
             {
-                surfaceCamera.transform.position = new Vector3(
-                    SurfaceWorldOrigin.x + 32f,
-                    SurfaceWorldOrigin.y + 32f, -10f);
-                surfaceCamera.orthographicSize = isometric ? 4.5f : 36f;
+                Vector3 position = isometric
+                    ? isometricCameraPosition : legacyCameraPosition;
+                float size = isometric ? isometricCameraSize : legacyCameraSize;
+                surfaceCameraController.ConfigureBounds(
+                    isometric
+                        ? isometricWorldBounds.min
+                        : SurfaceWorldOrigin,
+                    isometric
+                        ? isometricWorldBounds.max
+                        : SurfaceWorldOrigin + new Vector2(64f, 64f),
+                    isometric);
+                surfaceCameraController.ConfigureHome(position, size);
+                surfaceCameraController.SetCameraState(position, size);
             }
 
+            ConfigureSurfaceMotorPresentation();
             RefreshSurfaceAntVisibility();
+            RefreshSurfaceDynamicPresentation();
         }
 
         public bool TryUseEntrance(SelectableGridAnt ant)
@@ -308,7 +341,11 @@ namespace AntColony.Development
                 motor.enabled = true;
                 bool initialized = motor.Initialize(surfaceWorld, host.SimulationClock,
                     SurfaceWorldOrigin, destination.SurfaceCell);
-                if (initialized) SetAntPresentationRegion(ant, true);
+                if (initialized)
+                {
+                    ConfigureSurfaceMotorPresentation(motor);
+                    SetAntPresentationRegion(ant, true);
+                }
                 return initialized;
             }
 
@@ -339,6 +376,7 @@ namespace AntColony.Development
                 surfaceMotors[ant].enabled = true;
                 surfaceMotors[ant].Initialize(surfaceWorld, host.SimulationClock,
                     SurfaceWorldOrigin, source.Location.SurfaceCell);
+                ConfigureSurfaceMotorPresentation(surfaceMotors[ant]);
                 SetAntPresentationRegion(ant, true);
             }
         }
@@ -366,12 +404,34 @@ namespace AntColony.Development
                 host.SelectionController.SelectedAnt is SelectableGridAnt selected &&
                 selected.Record != null &&
                 residencies.IsInRegion(selected.Record.Id, AntRegionIds.Surface) &&
-                surfaceMotors[selected].TryWorldToCell(worldPoint, out SurfaceCell cell))
+                TrySurfaceWorldPointToCell(worldPoint, out SurfaceCell cell))
             {
                 status = surfaceMotors[selected].MoveTo(cell)
                     ? $"{selected.DisplayName} moving to Surface {cell}."
                     : surfaceMotors[selected].StatusMessage;
             }
+        }
+
+        /// <summary>
+        /// Converts the active Surface presentation point through its one mapping
+        /// authority. It never queries or changes traversability by itself.
+        /// </summary>
+        public bool TrySurfaceWorldPointToCell(Vector2 worldPoint,
+            out SurfaceCell cell)
+        {
+            if (surfaceTerrainRenderMode == SurfaceTerrainRenderMode.IsometricPreview &&
+                surfaceIsometricProjection != null)
+            {
+                return surfaceIsometricProjection.TryWorldToCell(
+                    worldPoint, new SurfaceCell(0, 0),
+                    surfaceWorld?.Width ?? 0, surfaceWorld?.Height ?? 0,
+                    out cell);
+            }
+
+            cell = new SurfaceCell(
+                Mathf.FloorToInt(worldPoint.x - SurfaceWorldOrigin.x),
+                Mathf.FloorToInt(worldPoint.y - SurfaceWorldOrigin.y));
+            return surfaceWorld != null && surfaceWorld.Contains(cell);
         }
 
         private void InitializeAntResidencies()
@@ -397,6 +457,7 @@ namespace AntColony.Development
                 if (motor == null) motor = ant.gameObject.AddComponent<SurfaceNavigationMotor>();
                 motor.enabled = false;
                 surfaceMotors.Add(ant, motor);
+                ConfigureSurfaceMotorPresentation(motor);
                 SetAntPresentationRegion(ant, false);
             }
         }
@@ -423,13 +484,17 @@ namespace AntColony.Development
                     originalLayers.Add(visual, visual.layer);
                 if (!originalAntRendererEnabled.ContainsKey(renderer))
                     originalAntRendererEnabled.Add(renderer, renderer.enabled);
+                if (!originalAntSortingOrders.ContainsKey(renderer))
+                    originalAntSortingOrders.Add(renderer, renderer.sortingOrder);
                 visual.layer = surface
                     ? SurfacePresentationLayer
                     : originalLayers[visual];
-                renderer.enabled = surface && surfaceTerrainRenderMode ==
+                renderer.enabled = originalAntRendererEnabled[renderer];
+                renderer.sortingOrder = surface && surfaceTerrainRenderMode ==
                     SurfaceTerrainRenderMode.IsometricPreview
-                        ? false
-                        : originalAntRendererEnabled[renderer];
+                        ? CalculateIsometricSortingOrder(ant.transform.position.y,
+                            originalAntSortingOrders[renderer])
+                        : originalAntSortingOrders[renderer];
             }
         }
 
@@ -449,6 +514,9 @@ namespace AntColony.Development
         {
             foreach (KeyValuePair<Renderer, bool> pair in originalAntRendererEnabled)
                 if (pair.Key != null) pair.Key.enabled = pair.Value;
+
+            foreach (KeyValuePair<Renderer, int> pair in originalAntSortingOrders)
+                if (pair.Key != null) pair.Key.sortingOrder = pair.Value;
 
             foreach (KeyValuePair<SelectableGridAnt, Dictionary<GameObject, int>> ant
                      in originalAntPresentationLayers)
@@ -491,9 +559,17 @@ namespace AntColony.Development
             surfaceCamera.orthographicSize = 36f;
             surfaceCamera.backgroundColor = new Color32(85, 128, 83, 255);
             surfaceCameraController = cameraObject.AddComponent<DevelopmentCameraController>();
+            legacyCameraPosition = cameraObject.transform.position;
+            legacyCameraSize = 36f;
+            Vector2 isometricCentre = isometricWorldBounds.center;
+            isometricCameraPosition = new Vector3(
+                isometricCentre.x, isometricCentre.y, -10f);
+            isometricCameraSize = CalculateIsometricHomeSize(
+                isometricWorldBounds, surfaceCamera.aspect, 1f);
             surfaceCameraController.ConfigureBounds(SurfaceWorldOrigin,
                 SurfaceWorldOrigin + new Vector2(64f, 64f));
-            surfaceCameraController.ConfigureHome(cameraObject.transform.position, 36f);
+            surfaceCameraController.ConfigureHome(legacyCameraPosition,
+                legacyCameraSize);
             surfaceCamera.enabled = false;
         }
 
@@ -520,26 +596,26 @@ namespace AntColony.Development
             BuildLegacySurfacePresentation(legacySurfacePresentation.transform);
 
             isometricSurfacePresentation = new GameObject(
-                "ISO-WV-1 Isometric 8x8 Presentation",
+                "ISO-WV-2 Isometric 64x64 Presentation",
                 typeof(SurfaceIsometricProjection),
                 typeof(SurfaceIsometricRenderer));
             isometricSurfacePresentation.layer = SurfacePresentationLayer;
             isometricSurfacePresentation.transform.SetParent(root.transform, false);
-            SurfaceIsometricProjection projection =
+            surfaceIsometricProjection =
                 isometricSurfacePresentation.GetComponent<SurfaceIsometricProjection>();
-            var windowMinimum = new SurfaceCell(29, 29);
-            float centreCoordinate = SurfaceIsometricRenderer.PreviewSize * 0.5f - 0.5f;
-            float centreX = windowMinimum.X + centreCoordinate;
-            float centreY = windowMinimum.Y + centreCoordinate;
+            float centreX = (surfaceWorld.Width - 1) * 0.5f;
+            float centreY = (surfaceWorld.Height - 1) * 0.5f;
             Vector2 centreOffset = new(
                 (centreX - centreY) * 0.5f,
                 -(centreX + centreY) * 0.25f);
-            Vector2 previewCentre = SurfaceWorldOrigin + new Vector2(32f, 32f);
-            projection.Configure(
-                previewCentre - centreOffset,
+            Vector2 presentationCentre = SurfaceWorldOrigin + new Vector2(32f, 32f);
+            surfaceIsometricProjection.Configure(
+                presentationCentre - centreOffset,
                 SurfaceIsometricProjection.DefaultTileWidthPixels,
                 SurfaceIsometricProjection.DefaultTileHeightPixels,
                 SurfaceIsometricProjection.DefaultPixelsPerUnit);
+            isometricWorldBounds = surfaceIsometricProjection.GetWorldBounds(
+                new SurfaceCell(0, 0), surfaceWorld.Width, surfaceWorld.Height);
 
             surfaceIsometricRenderer =
                 isometricSurfacePresentation.GetComponent<SurfaceIsometricRenderer>();
@@ -548,15 +624,18 @@ namespace AntColony.Development
                     "SurfaceIsometricVisualCatalog");
             surfaceIsometricRenderer.Configure(
                 host.RuntimeCells?.Current?.Surface,
-                projection,
+                surfaceIsometricProjection,
                 visualCatalog,
                 SurfacePresentationLayer);
             SurfaceIsometricRenderResult isometricResult =
-                surfaceIsometricRenderer.RenderWindow(windowMinimum);
+                surfaceIsometricRenderer.RenderRegion(new SurfaceCell(0, 0),
+                    surfaceWorld.Width, surfaceWorld.Height);
             if (!isometricResult.Succeeded)
                 Debug.LogError(
-                    $"ISO-WV-1 preview could not render: {isometricResult.Status} " +
+                    $"ISO-WV-2 world could not render: {isometricResult.Status} " +
                     $"at {isometricResult.ProblemCell}.", this);
+
+            BuildIsometricDynamicPresentation();
 
             legacySurfacePresentation.SetActive(surfaceTerrainRenderMode ==
                 SurfaceTerrainRenderMode.LegacySquare);
@@ -602,6 +681,144 @@ namespace AntColony.Development
                 SurfaceWorldOrigin + new Vector2(ActiveSurfaceArrival.X + 0.5f,
                     ActiveSurfaceArrival.Y + 0.5f), new Vector2(2f, 2f),
                 new Color32(38, 26, 20, 255), -5);
+        }
+
+        private void BuildIsometricDynamicPresentation()
+        {
+            var entranceObject = new GameObject("Isometric Nest Entrance");
+            entranceObject.layer = SurfacePresentationLayer;
+            entranceObject.transform.SetParent(isometricSurfacePresentation.transform,
+                false);
+            entranceObject.transform.position =
+                surfaceIsometricProjection.CellToWorld(ActiveSurfaceArrival);
+            entranceObject.transform.localScale = new Vector3(0.6f, 0.3f, 1f);
+            isometricEntranceVisual = entranceObject.AddComponent<SpriteRenderer>();
+            isometricEntranceVisual.sprite = temporarySprite;
+            isometricEntranceVisual.color = new Color32(38, 26, 20, 255);
+            isometricEntranceVisual.sortingOrder = CalculateIsometricSortingOrder(
+                entranceObject.transform.position.y, 0);
+
+            var markerObject = new GameObject("Isometric Destination Marker");
+            markerObject.layer = SurfacePresentationLayer;
+            markerObject.transform.SetParent(isometricSurfacePresentation.transform,
+                false);
+            isometricDestinationMarker = markerObject.AddComponent<LineRenderer>();
+            isometricDestinationMarker.useWorldSpace = false;
+            isometricDestinationMarker.loop = true;
+            isometricDestinationMarker.positionCount = 4;
+            isometricDestinationMarker.startWidth = 0.035f;
+            isometricDestinationMarker.endWidth = 0.035f;
+            isometricDestinationMarker.startColor = new Color32(255, 226, 90, 255);
+            isometricDestinationMarker.endColor = new Color32(255, 226, 90, 255);
+            isometricDestinationMarker.SetPosition(0, new Vector3(0f, 0.14f, 0f));
+            isometricDestinationMarker.SetPosition(1, new Vector3(0.28f, 0f, 0f));
+            isometricDestinationMarker.SetPosition(2, new Vector3(0f, -0.14f, 0f));
+            isometricDestinationMarker.SetPosition(3, new Vector3(-0.28f, 0f, 0f));
+            if (isometricMarkerMaterial == null)
+            {
+                Shader shader = Shader.Find("Sprites/Default");
+                if (shader != null) isometricMarkerMaterial = new Material(shader)
+                    { name = "ISO-WV-2 Destination Marker Material" };
+            }
+            if (isometricMarkerMaterial != null)
+                isometricDestinationMarker.sharedMaterial = isometricMarkerMaterial;
+            isometricDestinationMarker.enabled = false;
+        }
+
+        private void ConfigureSurfaceMotorPresentation()
+        {
+            foreach (SurfaceNavigationMotor motor in surfaceMotors.Values)
+                ConfigureSurfaceMotorPresentation(motor);
+        }
+
+        private void ConfigureSurfaceMotorPresentation(SurfaceNavigationMotor motor)
+        {
+            if (motor == null) return;
+            if (surfaceTerrainRenderMode == SurfaceTerrainRenderMode.IsometricPreview &&
+                surfaceIsometricProjection != null)
+            {
+                motor.ConfigurePresentation(
+                    surfaceIsometricProjection.LogicalToWorld,
+                    ResolveIsometricSurfaceCell);
+            }
+            else
+            {
+                motor.RestoreLegacyPresentation();
+            }
+        }
+
+        private SurfaceCell? ResolveIsometricSurfaceCell(Vector2 worldPosition)
+        {
+            return surfaceIsometricProjection != null && surfaceWorld != null &&
+                surfaceIsometricProjection.TryWorldToCell(worldPosition,
+                    new SurfaceCell(0, 0), surfaceWorld.Width, surfaceWorld.Height,
+                    out SurfaceCell cell)
+                ? cell
+                : null;
+        }
+
+        private void RefreshSurfaceDynamicPresentation()
+        {
+            if (surfaceTerrainRenderMode != SurfaceTerrainRenderMode.IsometricPreview ||
+                surfaceIsometricProjection == null) return;
+
+            if (residencies != null && host?.SelectionController != null)
+            {
+                foreach (SelectableGridAnt ant in host.SelectionController.SelectableAnts)
+                {
+                    if (ant?.Record == null || !residencies.IsInRegion(
+                            ant.Record.Id, AntRegionIds.Surface)) continue;
+                    SetAntPresentationRegion(ant, true);
+                }
+            }
+
+            SurfaceNavigationMotor selectedMotor = null;
+            bool showDestination = CurrentView == DevelopmentWorldView.Surface &&
+                host?.SelectionController?.SelectedAnt is SelectableGridAnt selected &&
+                selected.Record != null && residencies != null &&
+                residencies.IsInRegion(selected.Record.Id, AntRegionIds.Surface) &&
+                surfaceMotors.TryGetValue(selected, out selectedMotor) &&
+                selectedMotor.Route.Count > 0 &&
+                (selectedMotor.State == SurfaceNavigationState.Moving ||
+                 selectedMotor.State == SurfaceNavigationState.Arrived);
+            if (isometricDestinationMarker == null) return;
+            isometricDestinationMarker.enabled = showDestination;
+            if (!showDestination) return;
+            Vector2 position = surfaceIsometricProjection.CellToWorld(
+                selectedMotor.Destination);
+            isometricDestinationMarker.transform.position = position;
+            isometricDestinationMarker.sortingOrder =
+                CalculateIsometricSortingOrder(position.y, 50);
+        }
+
+        private int CalculateIsometricSortingOrder(float groundY, int offset)
+        {
+            float originY = surfaceIsometricProjection != null
+                ? surfaceIsometricProjection.Origin.y : 0f;
+            return 100 + Mathf.RoundToInt((originY - groundY) * 100f) + offset;
+        }
+
+        private void RememberSurfaceCameraState(SurfaceTerrainRenderMode mode)
+        {
+            if (surfaceCamera == null) return;
+            if (mode == SurfaceTerrainRenderMode.IsometricPreview)
+            {
+                isometricCameraPosition = surfaceCamera.transform.position;
+                isometricCameraSize = surfaceCamera.orthographicSize;
+            }
+            else
+            {
+                legacyCameraPosition = surfaceCamera.transform.position;
+                legacyCameraSize = surfaceCamera.orthographicSize;
+            }
+        }
+
+        public static float CalculateIsometricHomeSize(Rect bounds, float aspect,
+            float margin)
+        {
+            float safeAspect = Mathf.Max(0.01f, aspect);
+            return Mathf.Max(bounds.height * 0.5f + margin,
+                (bounds.width * 0.5f + margin) / safeAspect);
         }
 
         private void CreateVisual(Transform parent, string name, Vector2 position,
@@ -662,7 +879,7 @@ namespace AntColony.Development
                 SetSurfaceTerrainRenderMode(SurfaceTerrainRenderMode.LegacySquare);
             GUI.enabled = surfaceTerrainRenderMode !=
                 SurfaceTerrainRenderMode.IsometricPreview;
-            if (GUILayout.Button("Isometric 8x8 Preview", GUILayout.Height(24f)))
+            if (GUILayout.Button("Isometric 64x64 World", GUILayout.Height(24f)))
                 SetSurfaceTerrainRenderMode(
                     SurfaceTerrainRenderMode.IsometricPreview);
             GUI.enabled = true;

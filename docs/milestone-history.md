@@ -1,5 +1,18 @@
 # Milestone History
 
+## 19 October 2026 — ISO-WV-2 Full 64 x 64 Isometric World View
+
+**Implemented — Pending Manual Acceptance.** The existing isometric renderer
+now fills one Tilemap from all 4,096 authoritative Surface cells. The accepted
+projection also drives smooth presentation of existing Surface ant roots,
+logical pointer resolution, destination and entrance placeholders, depth
+sorting, and projection-derived camera Home/pan bounds. Legacy square rendering
+remains available and default. No Surface A*, generation, residency, entrance,
+Colony gameplay or resource/construction authority changed. Resource and final
+animation presentation remains deferred to ISO-WV-3. Focused Edit/Play passed
+**41/41** and **7/7**, and complete Play passed **86/86**. Complete Edit passed
+**634/638**; four unrelated stale Colony art-path tests failed.
+
 ## 19 October 2026 — ISO-WV-1D Water Terrain Alignment Correction
 
 **Implemented — Pending Manual Acceptance.** The raised 32 x 20 visual bounds,

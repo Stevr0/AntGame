@@ -22,6 +22,7 @@ namespace AntColony.Development
         [SerializeField] private bool constrainPosition;
         [SerializeField] private Vector2 minimumPosition = new(-64f, -64f);
         [SerializeField] private Vector2 maximumPosition = new(64f, 64f);
+        [SerializeField] private bool keepViewportInsideBounds;
 
         private Camera controlledCamera;
         private Vector2 previousMousePosition;
@@ -33,6 +34,10 @@ namespace AntColony.Development
         public float MinimumOrthographicSize => minimumOrthographicSize;
         public float MaximumOrthographicSize => maximumOrthographicSize;
         public bool InputEnabled => inputEnabled;
+        public Vector2 MinimumPosition => minimumPosition;
+        public Vector2 MaximumPosition => maximumPosition;
+        public Vector3 HomePosition => homePosition;
+        public float HomeOrthographicSize => homeOrthographicSize;
 
         private void Awake()
         {
@@ -179,6 +184,7 @@ namespace AntColony.Development
                 zoomSmoothTime,
                 Mathf.Infinity,
                 unscaledDeltaTime);
+            ClampPosition();
         }
 
         public void ReturnHome()
@@ -198,6 +204,21 @@ namespace AntColony.Development
                 minimumOrthographicSize, maximumOrthographicSize);
         }
 
+        /// <summary>
+        /// Applies a remembered view without changing its Home command. This is
+        /// used when switching between Legacy and Isometric Surface presentation.
+        /// </summary>
+        public void SetCameraState(Vector3 position, float orthographicSize)
+        {
+            EnsureCameraReference();
+            transform.position = position;
+            controlledCamera.orthographicSize = Mathf.Clamp(orthographicSize,
+                minimumOrthographicSize, maximumOrthographicSize);
+            targetOrthographicSize = controlledCamera.orthographicSize;
+            zoomVelocity = 0f;
+            ClampPosition();
+        }
+
         public void SetInputEnabled(bool enabled)
         {
             inputEnabled = enabled;
@@ -205,11 +226,14 @@ namespace AntColony.Development
                 ? Mouse.current.position.ReadValue() : Vector2.zero;
         }
 
-        public void ConfigureBounds(Vector2 minimum, Vector2 maximum)
+        public void ConfigureBounds(Vector2 minimum, Vector2 maximum,
+            bool keepWholeViewportInside = false)
         {
+            EnsureCameraReference();
             minimumPosition = Vector2.Min(minimum, maximum);
             maximumPosition = Vector2.Max(minimum, maximum);
             constrainPosition = true;
+            keepViewportInsideBounds = keepWholeViewportInside;
             ClampPosition();
         }
 
@@ -217,9 +241,27 @@ namespace AntColony.Development
         {
             if (!constrainPosition) return;
             Vector3 position = transform.position;
-            position.x = Mathf.Clamp(position.x, minimumPosition.x, maximumPosition.x);
-            position.y = Mathf.Clamp(position.y, minimumPosition.y, maximumPosition.y);
+            float horizontalInset = keepViewportInsideBounds
+                ? controlledCamera.orthographicSize * controlledCamera.aspect
+                : 0f;
+            float verticalInset = keepViewportInsideBounds
+                ? controlledCamera.orthographicSize
+                : 0f;
+            position.x = ClampAxis(position.x, minimumPosition.x,
+                maximumPosition.x, horizontalInset);
+            position.y = ClampAxis(position.y, minimumPosition.y,
+                maximumPosition.y, verticalInset);
             transform.position = position;
+        }
+
+        private static float ClampAxis(float value, float minimum, float maximum,
+            float inset)
+        {
+            float innerMinimum = minimum + inset;
+            float innerMaximum = maximum - inset;
+            return innerMinimum <= innerMaximum
+                ? Mathf.Clamp(value, innerMinimum, innerMaximum)
+                : (minimum + maximum) * 0.5f;
         }
 
         /// <summary>Returns a bounded, device-independent number of scroll steps.</summary>

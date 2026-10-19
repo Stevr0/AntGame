@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using AntColony.World;
 using UnityEngine;
@@ -19,6 +20,9 @@ namespace AntColony.Navigation
         private SurfaceWorldData world;
         private ISimulationClock clock;
         private Vector2 worldOrigin;
+        private Vector2 logicalPosition;
+        private Func<Vector2, Vector2> projectLogicalPosition;
+        private Func<Vector2, SurfaceCell?> resolvePresentationPosition;
         private int routeIndex;
 
         public SurfaceNavigationState State { get; private set; } =
@@ -30,11 +34,13 @@ namespace AntColony.Navigation
         public bool HasArrived => State == SurfaceNavigationState.Arrived;
         public bool IsMovementActive => State == SurfaceNavigationState.Moving;
         public float MovementSpeed => movementSpeed;
+        public Vector2 LogicalPosition => logicalPosition;
 
         public bool Initialize(SurfaceWorldData surfaceWorld,
             ISimulationClock simulationClock, Vector2 origin, SurfaceCell start)
         {
             world = surfaceWorld; clock = simulationClock; worldOrigin = origin;
+            RestoreLegacyPresentation();
             route.Clear(); routeIndex = 0;
             if (world == null || !world.IsTraversable(start))
             { State = SurfaceNavigationState.Blocked; StatusMessage =
@@ -73,18 +79,44 @@ namespace AntColony.Navigation
         public void WarpTo(SurfaceCell cell)
         {
             CurrentCell = cell;
-            transform.position = CellToWorld(cell);
+            logicalPosition = new Vector2(cell.X, cell.Y);
+            RefreshTransform();
             route.Clear(); routeIndex = 0;
         }
 
         public Vector2 CellToWorld(SurfaceCell cell) =>
-            worldOrigin + new Vector2(cell.X + 0.5f, cell.Y + 0.5f);
+            projectLogicalPosition != null
+                ? projectLogicalPosition(new Vector2(cell.X, cell.Y))
+                : LegacyCellToWorld(new Vector2(cell.X, cell.Y));
+
+        /// <summary>
+        /// Changes presentation conversion only. Route cells, progress, path
+        /// status and arrival authority remain owned by this motor.
+        /// </summary>
+        public void ConfigurePresentation(
+            Func<Vector2, Vector2> logicalToWorld,
+            Func<Vector2, SurfaceCell?> worldToLogicalCell)
+        {
+            projectLogicalPosition = logicalToWorld ?? LegacyCellToWorld;
+            resolvePresentationPosition = worldToLogicalCell ?? ResolveLegacyCell;
+            // Colony residents keep this component disabled on the same
+            // authoritative ant root. Updating its Surface presentation must
+            // not move that root out from under the active Colony motor.
+            if (isActiveAndEnabled) RefreshTransform();
+        }
+
+        public void RestoreLegacyPresentation()
+        {
+            projectLogicalPosition = LegacyCellToWorld;
+            resolvePresentationPosition = ResolveLegacyCell;
+            if (isActiveAndEnabled) RefreshTransform();
+        }
 
         public bool TryWorldToCell(Vector2 position, out SurfaceCell cell)
         {
-            cell = new SurfaceCell(Mathf.FloorToInt(position.x - worldOrigin.x),
-                Mathf.FloorToInt(position.y - worldOrigin.y));
-            return world != null && world.Contains(cell);
+            SurfaceCell? resolved = resolvePresentationPosition?.Invoke(position);
+            cell = resolved ?? default;
+            return resolved.HasValue && world != null && world.Contains(cell);
         }
 
         private void Update()
@@ -95,15 +127,35 @@ namespace AntColony.Navigation
         {
             if (State != SurfaceNavigationState.Moving ||
                 simulationDeltaSeconds <= 0d || routeIndex >= route.Count) return;
-            Vector2 target = CellToWorld(route[routeIndex]);
+            SurfaceCell targetCell = route[routeIndex];
+            Vector2 target = new(targetCell.X, targetCell.Y);
             float distance = movementSpeed * (float)simulationDeltaSeconds;
-            transform.position = Vector2.MoveTowards(transform.position, target, distance);
-            if (Vector2.Distance(transform.position, target) > arrivalTolerance) return;
-            transform.position = target;
+            logicalPosition = Vector2.MoveTowards(logicalPosition, target, distance);
+            RefreshTransform();
+            if (Vector2.Distance(logicalPosition, target) > arrivalTolerance) return;
+            logicalPosition = target;
+            RefreshTransform();
             CurrentCell = route[routeIndex++];
             if (routeIndex < route.Count) return;
             State = SurfaceNavigationState.Arrived;
             StatusMessage = $"Arrived at Surface destination {Destination}.";
+        }
+
+        private Vector2 LegacyCellToWorld(Vector2 logical) =>
+            worldOrigin + logical + new Vector2(0.5f, 0.5f);
+
+        private SurfaceCell? ResolveLegacyCell(Vector2 position)
+        {
+            var cell = new SurfaceCell(
+                Mathf.FloorToInt(position.x - worldOrigin.x),
+                Mathf.FloorToInt(position.y - worldOrigin.y));
+            return world != null && world.Contains(cell) ? cell : null;
+        }
+
+        private void RefreshTransform()
+        {
+            if (projectLogicalPosition == null) return;
+            transform.position = projectLogicalPosition(logicalPosition);
         }
     }
 }

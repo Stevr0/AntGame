@@ -68,6 +68,30 @@ namespace AntColony.Tests.EditMode
         }
 
         [Test]
+        public void FullAuthoritativeSurfaceMapsAllFourThousandNinetySixCells()
+        {
+            string fingerprint = generated.CreateFingerprint();
+            SurfaceIsometricRenderer renderer = CreateRenderer(region);
+
+            SurfaceIsometricRenderResult result = renderer.RenderRegion(
+                new SurfaceCell(0, 0), surface.Width, surface.Height);
+
+            Assert.That(result.Succeeded, Is.True);
+            Assert.That(result.RenderedCellCount, Is.EqualTo(64 * 64));
+            Assert.That(renderer.RenderedWidth, Is.EqualTo(64));
+            Assert.That(renderer.RenderedHeight, Is.EqualTo(64));
+            for (int y = 0; y < 64; y++)
+            for (int x = 0; x < 64; x++)
+            {
+                var cell = new SurfaceCell(x, y);
+                Assert.That(renderer.BackgroundTilemap.HasTile(
+                    SurfaceIsometricRenderer.LogicalToTilemapCell(cell)), Is.True,
+                    $"Missing projected Surface cell {cell}.");
+            }
+            Assert.That(generated.CreateFingerprint(), Is.EqualTo(fingerprint));
+        }
+
+        [Test]
         public void UnityGridMatchesAcceptedProjectionForSignedCells()
         {
             SurfaceIsometricRenderer renderer = CreateRenderer(region);

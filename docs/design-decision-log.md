@@ -1,5 +1,20 @@
 # Design Decision Log
 
+## 2026-10-19 — Project the existing Surface authority for ISO-WV-2
+
+- Keep the 64 x 64 top-down `SurfaceWorldData` and its A* path cells as the only
+  simulation authority; isometric coordinates remain presentation-only.
+- Extend `SurfaceIsometricProjection` with continuous forward mapping, bounded
+  inverse mapping and projected bounds so terrain, ants, input, markers,
+  entrance placement and camera framing cannot drift into separate formulas.
+- Keep each existing ant root authoritative. `SurfaceNavigationMotor` advances
+  logical route progress exactly as before and projects the Transform after
+  each step; it does not create duplicate visual or simulation entities.
+- Use one chunk-mode Tilemap for 4,096 Background cells and ground-contact Y for
+  dynamic sorting. Keep Legacy square rendering as the default fallback.
+- Defer Resource Node, loose-stack, Placement, Storage, Construction and final
+  ant art presentation to separately approved ISO-WV-3 work.
+
 ## 2026-10-19 — Use a flat Water interior without changing projection
 
 - Preserve the accepted 1 x 0.5 Grid, 32 PPU, `(0.5,0.25)` pivot and logical

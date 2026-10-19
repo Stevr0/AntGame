@@ -54,6 +54,8 @@ namespace AntColony.WorldPresentation
         private SurfaceCell windowMinimum;
         private int renderedCellCount;
         private int fallbackCellCount;
+        private int renderedWidth;
+        private int renderedHeight;
 
         public IReadOnlyRuntimeCellRegion SurfaceRegion => surfaceRegion;
         public SurfaceIsometricProjection Projection => projection;
@@ -63,6 +65,8 @@ namespace AntColony.WorldPresentation
         public SurfaceCell WindowMinimum => windowMinimum;
         public int RenderedCellCount => renderedCellCount;
         public int FallbackCellCount => fallbackCellCount;
+        public int RenderedWidth => renderedWidth;
+        public int RenderedHeight => renderedHeight;
 
         public void Configure(IReadOnlyRuntimeCellRegion authoritativeSurface,
             SurfaceIsometricProjection configuredProjection,
@@ -77,15 +81,27 @@ namespace AntColony.WorldPresentation
 
         public SurfaceIsometricRenderResult RenderWindow(SurfaceCell minimum)
         {
+            return RenderRegion(minimum, PreviewSize, PreviewSize);
+        }
+
+        /// <summary>
+        /// Rebuilds one authoritative logical rectangle. The current 64 x 64
+        /// world uses this directly; explicit bounds also keep the presentation
+        /// ready for a future chunk-sized caller without creating another grid.
+        /// </summary>
+        public SurfaceIsometricRenderResult RenderRegion(SurfaceCell minimum,
+            int width, int height)
+        {
             if (surfaceRegion == null || projection == null ||
-                backgroundTilemap == null || fallbackTile == null)
+                backgroundTilemap == null || fallbackTile == null ||
+                width <= 0 || height <= 0)
                 return new SurfaceIsometricRenderResult(
                     SurfaceIsometricRenderStatus.MissingConfiguration,
                     0, 0, minimum);
 
-            var snapshots = new RuntimeCellSnapshot[PreviewSize, PreviewSize];
-            for (int y = 0; y < PreviewSize; y++)
-            for (int x = 0; x < PreviewSize; x++)
+            var snapshots = new RuntimeCellSnapshot[width, height];
+            for (int y = 0; y < height; y++)
+            for (int x = 0; x < width; x++)
             {
                 var cell = new SurfaceCell(minimum.X + x, minimum.Y + y);
                 RuntimeCellReadResult read = surfaceRegion.TryGetCell(
@@ -105,11 +121,13 @@ namespace AntColony.WorldPresentation
             backgroundTilemap.ClearAllTiles();
             renderedBackgrounds.Clear();
             windowMinimum = minimum;
+            renderedWidth = width;
+            renderedHeight = height;
             renderedCellCount = 0;
             fallbackCellCount = 0;
 
-            for (int y = 0; y < PreviewSize; y++)
-            for (int x = 0; x < PreviewSize; x++)
+            for (int y = 0; y < height; y++)
+            for (int x = 0; x < width; x++)
             {
                 RuntimeCellSnapshot snapshot = snapshots[x, y];
                 SurfaceCell cell = snapshot.CellId.SurfaceCell;
@@ -170,6 +188,7 @@ namespace AntColony.WorldPresentation
             backgroundTilemap = tilemapObject.GetComponent<Tilemap>();
             backgroundTilemap.tileAnchor = Vector3.zero;
             tilemapRenderer = tilemapObject.GetComponent<TilemapRenderer>();
+            tilemapRenderer.mode = TilemapRenderer.Mode.Chunk;
             tilemapRenderer.sortingOrder = -20;
         }
 
