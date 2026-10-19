@@ -1,6 +1,6 @@
 # ISO-WV-1 Runtime Isometric Terrain Slice
 
-**Status:** ISO-WV-1 manually accepted; ISO-WV-1B spacing experiment pending manual acceptance
+**Status:** ISO-WV-1C implemented - pending manual acceptance
 **Date:** 19 October 2026  
 **Scope:** Presentation-only 8 x 8 Surface terrain preview. The authoritative
 Surface remains 64 x 64 and all Colony, navigation, ant, job, resource,
@@ -19,20 +19,21 @@ One Unity `Grid` using the Isometric layout owns one `Tilemap`. Terrain cells ar
 tiles, not GameObjects. Logical cells map to tilemap cells as
 `(-logicalY,-logicalX,0)`, which makes Unity's isometric Grid agree with the
 accepted `SurfaceIsometricProjection`: logical X goes down-right and logical Y
-goes down-left. At the default 100% spacing the Grid uses the accepted 1 x
-0.5-unit cell footprint. Sprite pixels, PPU and import pivots remain unchanged.
+goes down-left. The Grid uses the fixed accepted 1 x 0.5-unit cell footprint.
+Sprite pixels remain at 32 PPU and use the accepted `(0.5,0.25)` pivot.
 
-## ISO-WV-1B adjustable spacing experiment
+## ISO-WV-1B outcome and ISO-WV-1C cleanup
 
-`SurfaceIsometricRenderer` exposes **Horizontal Spacing Percent** and
-**Vertical Spacing Percent** under **ISO-WV-1B Tile Spacing Experiment** in the
-Inspector. Both are clamped from 90% through 100% and default to 100%. They
-scale only the preview Grid's `cellSize`; `SurfaceIsometricProjection`, logical
-cells and gameplay state are unchanged. The preview centre stays anchored.
+ISO-WV-1B established that compressing the whole Grid was not the appropriate
+production fix for a raised terrain block used as a repeating interior. In
+ISO-WV-1C all experimental horizontal/vertical spacing fields, methods and
+development buttons were removed. The renderer now has one fixed cell size:
+`(1,0.5,1)`, matching the accepted ISO-WV-0 projection.
 
-The development panel provides uniform **100%**, **97%**, **95%**, **93%** and
-**90%** buttons. Independent X/Y experiments use the Inspector controls. Legacy
-Surface remains available and does not reset the preview setting.
+The user-supplied flat grass interior replaces the raised grass block in the
+live catalog. The original raised `tile_040.png` asset remains available for a
+future, separately approved edge, corner or decorative role. No neighbour-aware
+autotiling is introduced by this milestone.
 
 The full logical Surface, A*, motors, orders and ant transforms remain live in
 both renderer modes. Resource Nodes are deliberately not written to the
@@ -62,11 +63,13 @@ world data or introduce another terrain definition authority.
 
 | Runtime Background ID | Sprite | Treatment |
 | --- | --- | --- |
-| `background.surface.grass` | `Terrain/tile_040.png` | Raised grass block under test |
-| `background.surface.water` | `Terrain/tile_104.png` | Water tile under test |
+| `background.surface.grass` | `Terrain/tile_040_GrassMain.png` | User-edited flat grass interior |
+| `background.surface.water` | `Terrain/tile_104.png` | Accepted flat water interior |
 | Unsupported or missing mapping | `Terrain/tile_009.png` | Bright magenta tint |
 
-No rock, vegetation or Resource Node is silently substituted for terrain.
+No rock, vegetation or Resource Node is silently substituted for terrain. The
+original raised `Terrain/tile_040.png` is preserved but is not selected by the
+runtime catalog.
 
 ## Known limitations
 
@@ -77,9 +80,8 @@ No rock, vegetation or Resource Node is silently substituted for terrain.
 - Isometric pointer-to-cell input is not implemented. Use the toggle for visual
   review only and return to Legacy mode for Surface commands.
 - Camera Home settings still describe the legacy full-Surface framing.
-- Seam quality and final visual suitability require direct Unity inspection.
-- Reduced spacing can overlap water or raised side pixels. It is an experiment,
-  not an approved terrain-connectivity solution.
+- Final grass repetition, water alignment and visual suitability require direct
+  Unity inspection.
 
 These are ISO-WV-2 candidates and are not defects in the ISO-WV-1 authority
 boundary.
@@ -87,13 +89,11 @@ boundary.
 ## Automated evidence
 
 - ISO projection, renderer and World View foundation Edit Mode regression:
-  **22/22 passed**.
+  **23/23 passed**.
 - World View foundation Play Mode regression: **6/6 passed**.
-- The focused new Play Mode toggle/isolation test is included in that result and
-  also passed independently **1/1**.
-- With ISO-WV-1B, the combined projection/renderer/World View Edit regression
-  passes **29/29** and the complete World View foundation Play class passes
-  **6/6**.
+- The renderer suite includes exact final catalog paths, retained raised art,
+  import calibration, fixed Grid size, fallback, determinism, boundaries and
+  authority-preservation coverage.
 
 ## Manual Unity acceptance
 
@@ -105,43 +105,30 @@ boundary.
 5. Select **Isometric 8x8 Preview**.
 6. Confirm exactly one centred 8 x 8 diamond terrain patch is visible, with
    crisp point-filtered pixels and edge-aligned 32 x 16 footprints.
-7. Confirm grass uses `tile_040`, water uses `tile_104`, and no rock,
-   vegetation or Resource Node is presented as background terrain.
-8. Confirm any unsupported Background is conspicuous magenta rather than a
+7. Confirm grass uses the flat `tile_040_GrassMain`, repeats without exposed
+   dirt sides or gaps, and preserves crisp neighbour ordering.
+8. Confirm water uses `tile_104`, remains edge-aligned, and does not overlap
+   adjacent water or grass tiles incorrectly.
+9. Confirm any unsupported Background is conspicuous magenta rather than a
    silent art substitution.
-9. If an ant is Surface-resident, confirm its old square-positioned visual is
+10. Confirm the World View panel and runtime renderer Inspector contain no
+    horizontal/vertical spacing controls or percentage presets.
+11. If an ant is Surface-resident, confirm its old square-positioned visual is
    hidden; do not expect an isometric ant in this milestone.
-10. Switch to **Colony View** and confirm no isometric tile, Surface overlay or
+12. Switch to **Colony View** and confirm no isometric tile, Surface overlay or
     Surface ant visual leaks into the Colony camera.
-11. Let the simulation advance and switch back to World View. Confirm the same
+13. Let the simulation advance and switch back to World View. Confirm the same
     scenario remains loaded and the isometric mode is still selected.
-12. Select **Legacy Surface** and confirm the full square presentation and
+14. Select **Legacy Surface** and confirm the full square presentation and
     original Surface ant renderer state return.
-13. Confirm view switching did not reset ant identity, needs, inventory,
+15. Confirm view switching did not reset ant identity, needs, inventory,
     residency, jobs, resources, construction or the simulation clock.
-14. Exit Play Mode and confirm the Unity Console has no new errors, warnings or
+16. Exit Play Mode and confirm the Unity Console has no new errors, warnings or
     exceptions.
 
 ISO-WV-1 has since passed this checklist.
-
-### ISO-WV-1B manual comparison
-
-1. Enter Play Mode, choose **World View**, then **Isometric 8x8 Preview**.
-2. Confirm **100%** matches the accepted ISO-WV-1 presentation.
-3. Compare **97%**, **95%**, **93%** and **90%** using the development buttons.
-4. At each preset, inspect raised `tile_040` grass seams, `tile_104` water
-   overlap, pixel sharpness and the apparent front/back order of neighbours.
-5. For independent tuning, select runtime object **ISO-WV-1 Isometric 8x8
-   Presentation**, find `SurfaceIsometricRenderer`, and adjust **Horizontal
-   Spacing Percent** and **Vertical Spacing Percent** in the Inspector.
-6. Return to **100%** and confirm the baseline is exactly restored.
-7. Toggle **Legacy Surface**, return to the preview, and confirm the selected
-   spacing was retained without changing Colony View or simulation state.
-8. Confirm the Console has no new errors or exceptions.
-
-Do not retain reduced spacing until the user confirms a specific X/Y result. If
-no setting closes grass gaps without water overlap or incorrect silhouette
-stacking, proceed to separately approved neighbour-aware terrain work.
+ISO-WV-1C remains pending until the flat-grass, fixed-spacing and clean-Console
+checks above are completed in Unity.
 
 ## ISO-WV-2 boundary
 

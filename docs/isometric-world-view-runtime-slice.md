@@ -1,6 +1,6 @@
 # ISO-WV-1 Runtime Isometric Terrain Slice
 
-**Status:** ISO-WV-1 manually accepted; ISO-WV-1B spacing experiment pending manual acceptance
+**Status:** ISO-WV-1C implemented - pending manual acceptance
 **Date:** 19 October 2026
 
 ISO-WV-1 adds a presentation-only 8 x 8 isometric Tilemap to the live World
@@ -15,16 +15,15 @@ orders, resources, jobs and generation remain authoritative and unchanged.
 as `(-logicalY,-logicalX,0)`. With the accepted 1 x 0.5-unit Grid cell, 32 PPU
 sprites and `(0.5,0.25)` pivot, Unity's cell positions match
 `SurfaceIsometricProjection`: logical X goes down-right and logical Y goes
-down-left. The default remains the accepted 100% spacing.
+down-left. The Grid is fixed at the accepted `(1,0.5,1)` cell size.
 
-## ISO-WV-1B spacing controls
+## ISO-WV-1B outcome and ISO-WV-1C cleanup
 
-The runtime `SurfaceIsometricRenderer` Inspector exposes **Horizontal Spacing
-Percent** and **Vertical Spacing Percent**, each ranged from 90% to 100% under
-**ISO-WV-1B Tile Spacing Experiment**. They adjust only the isometric Grid cell
-size and keep the preview centre anchored; the accepted projection and logical
-Surface do not change. The development panel provides uniform **100%**, **97%**,
-**95%**, **93%** and **90%** presets. Legacy Surface does not reset spacing.
+ISO-WV-1B tested whole-Grid compression. ISO-WV-1C removes all experimental
+spacing fields, methods and buttons and restores the single accepted Grid
+calibration. A user-edited flat grass interior now replaces the raised block in
+the runtime catalog. The original raised sprite is retained for possible future
+edge, corner or decorative use. No neighbour-aware autotiling is implemented.
 
 All 64 snapshots are read before the Tilemap changes. A missing/out-of-bounds
 cell rejects the complete update; rendering never writes runtime cell state.
@@ -46,7 +45,7 @@ state is restored in Legacy mode.
 
 | Runtime Background ID | Isometric sprite |
 | --- | --- |
-| `background.surface.grass` | `Terrain/tile_040.png` |
+| `background.surface.grass` | `Terrain/tile_040_GrassMain.png` |
 | `background.surface.water` | `Terrain/tile_104.png` |
 | Unsupported ID | `tile_009` tinted bright magenta |
 
@@ -56,7 +55,7 @@ an incompatible role.
 
 ## Validation and limitations
 
-The ISO-WV-1B combined Edit Mode regression passes **29/29**. The full
+The ISO-WV-1C combined Edit Mode regression passes **23/23**. The full
 World View foundation Play Mode class passes **6/6**, including the new
 authority/toggle/culling check.
 
@@ -71,20 +70,18 @@ normal World View commands.
 2. Confirm Colony View is unchanged, then open **World View**.
 3. Confirm **Legacy Surface** is the default full-Surface renderer.
 4. Select **Isometric 8x8 Preview** and inspect one centred, crisp, edge-aligned
-   8 x 8 patch using the grass and water mappings above.
-5. Confirm unsupported terrain is magenta and nodes/decorations are not
+   8 x 8 patch using the fixed 1 x 0.5-unit Grid.
+5. Confirm flat `tile_040_GrassMain` repeats without dirt sides or gaps, and
+   `tile_104` water remains correctly aligned without overlap.
+6. Confirm unsupported terrain is magenta and nodes/decorations are not
    substituted into the background.
-6. Confirm old Surface ant visuals are hidden in preview mode.
-7. Switch to Colony View and confirm no Surface presentation leakage.
-8. Advance time, switch back, and confirm simulation/identity/residency did not
+7. Confirm no spacing percentage controls remain in the panel or renderer.
+8. Confirm old Surface ant visuals are hidden in preview mode.
+9. Switch to Colony View and confirm no Surface presentation leakage.
+10. Advance time, switch back, and confirm simulation/identity/residency did not
    reset.
-9. Select **Legacy Surface** and confirm the original presentation and ant
+11. Select **Legacy Surface** and confirm the original presentation and ant
    renderer state return.
-10. Exit Play Mode and confirm a clean Console.
+12. Exit Play Mode and confirm a clean Console.
 
-ISO-WV-1 is accepted. For ISO-WV-1B, compare every preset against 100%, checking
-raised grass gaps, water overlap and neighbour ordering. Independent X/Y values
-can be changed during Play Mode by selecting **ISO-WV-1 Isometric 8x8
-Presentation** and editing the two renderer fields. Reduced spacing remains
-experimental pending a clean Console and user approval. If no value fixes grass
-without harming water, investigate neighbour-aware terrain separately.
+ISO-WV-1 is accepted. ISO-WV-1C remains pending the checks above.

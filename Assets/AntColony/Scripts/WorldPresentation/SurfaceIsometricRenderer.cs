@@ -40,15 +40,6 @@ namespace AntColony.WorldPresentation
     public sealed class SurfaceIsometricRenderer : MonoBehaviour
     {
         public const int PreviewSize = 8;
-        public const float MinimumSpacingPercent = 90f;
-        public const float MaximumSpacingPercent = 100f;
-
-        [Header("ISO-WV-1B Tile Spacing Experiment")]
-        [SerializeField, Range(MinimumSpacingPercent, MaximumSpacingPercent)]
-        private float horizontalSpacingPercent = MaximumSpacingPercent;
-        [SerializeField, Range(MinimumSpacingPercent, MaximumSpacingPercent)]
-        private float verticalSpacingPercent = MaximumSpacingPercent;
-
         private readonly Dictionary<string, Tile> backgroundTiles =
             new(StringComparer.Ordinal);
         private readonly Dictionary<SurfaceCell, string> renderedBackgrounds = new();
@@ -71,8 +62,6 @@ namespace AntColony.WorldPresentation
         public SurfaceCell WindowMinimum => windowMinimum;
         public int RenderedCellCount => renderedCellCount;
         public int FallbackCellCount => fallbackCellCount;
-        public float HorizontalSpacingPercent => horizontalSpacingPercent;
-        public float VerticalSpacingPercent => verticalSpacingPercent;
 
         public void Configure(IReadOnlyRuntimeCellRegion authoritativeSurface,
             SurfaceIsometricProjection configuredProjection,
@@ -82,22 +71,7 @@ namespace AntColony.WorldPresentation
             surfaceRegion = authoritativeSurface;
             projection = configuredProjection;
             EnsureTilemap(presentationLayer);
-            ApplyTileSpacing();
             BuildVisualLookup(visualCatalog);
-        }
-
-        /// <summary>
-        /// Adjusts only the preview Grid spacing. The accepted projection and
-        /// every logical/gameplay coordinate remain unchanged.
-        /// </summary>
-        public void SetTileSpacingPercent(float horizontalPercent,
-            float verticalPercent)
-        {
-            horizontalSpacingPercent = Mathf.Clamp(horizontalPercent,
-                MinimumSpacingPercent, MaximumSpacingPercent);
-            verticalSpacingPercent = Mathf.Clamp(verticalPercent,
-                MinimumSpacingPercent, MaximumSpacingPercent);
-            ApplyTileSpacing();
         }
 
         public SurfaceIsometricRenderResult RenderWindow(SurfaceCell minimum)
@@ -130,7 +104,6 @@ namespace AntColony.WorldPresentation
             backgroundTilemap.ClearAllTiles();
             renderedBackgrounds.Clear();
             windowMinimum = minimum;
-            ApplyTileSpacing();
             renderedCellCount = 0;
             fallbackCellCount = 0;
 
@@ -178,7 +151,16 @@ namespace AntColony.WorldPresentation
             gridObject.transform.SetParent(transform, false);
             grid = gridObject.GetComponent<Grid>();
             grid.cellLayout = GridLayout.CellLayout.Isometric;
+            grid.cellSize = new Vector3(
+                SurfaceIsometricProjection.DefaultTileWidthPixels /
+                    (float)SurfaceIsometricProjection.DefaultPixelsPerUnit,
+                SurfaceIsometricProjection.DefaultTileHeightPixels /
+                    (float)SurfaceIsometricProjection.DefaultPixelsPerUnit,
+                1f);
             grid.cellSwizzle = GridLayout.CellSwizzle.XYZ;
+            gridObject.transform.position = projection != null
+                ? (Vector3)projection.Origin
+                : Vector3.zero;
 
             var tilemapObject = new GameObject(
                 "Authoritative Backgrounds", typeof(Tilemap), typeof(TilemapRenderer));
@@ -188,38 +170,6 @@ namespace AntColony.WorldPresentation
             backgroundTilemap.tileAnchor = Vector3.zero;
             tilemapRenderer = tilemapObject.GetComponent<TilemapRenderer>();
             tilemapRenderer.sortingOrder = -20;
-        }
-
-        private void ApplyTileSpacing()
-        {
-            horizontalSpacingPercent = Mathf.Clamp(horizontalSpacingPercent,
-                MinimumSpacingPercent, MaximumSpacingPercent);
-            verticalSpacingPercent = Mathf.Clamp(verticalSpacingPercent,
-                MinimumSpacingPercent, MaximumSpacingPercent);
-            if (grid == null || projection == null) return;
-
-            float baselineWidth = SurfaceIsometricProjection.DefaultTileWidthPixels /
-                (float)SurfaceIsometricProjection.DefaultPixelsPerUnit;
-            float baselineHeight = SurfaceIsometricProjection.DefaultTileHeightPixels /
-                (float)SurfaceIsometricProjection.DefaultPixelsPerUnit;
-            grid.cellSize = new Vector3(
-                baselineWidth * horizontalSpacingPercent / 100f,
-                baselineHeight * verticalSpacingPercent / 100f,
-                1f);
-
-            // Scaling absolute cell coordinates would otherwise move this small
-            // preview away from its camera. Keep its centre cell on the accepted
-            // 100% projection while allowing neighbouring cells to move closer.
-            var anchor = new SurfaceCell(
-                windowMinimum.X + PreviewSize / 2,
-                windowMinimum.Y + PreviewSize / 2);
-            grid.transform.position = projection.Origin;
-            Vector3 actualAnchor = grid.CellToWorld(LogicalToTilemapCell(anchor));
-            Vector2 acceptedAnchor = projection.CellToWorld(anchor);
-            grid.transform.position += new Vector3(
-                acceptedAnchor.x - actualAnchor.x,
-                acceptedAnchor.y - actualAnchor.y,
-                0f);
         }
 
         private void BuildVisualLookup(SurfaceIsometricVisualCatalog visualCatalog)
@@ -266,11 +216,6 @@ namespace AntColony.WorldPresentation
         private void OnDestroy()
         {
             DestroyOwnedTiles();
-        }
-
-        private void OnValidate()
-        {
-            ApplyTileSpacing();
         }
     }
 }

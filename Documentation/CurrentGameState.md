@@ -1,15 +1,22 @@
 # Ant Colony Current Game State
 
-## ISO-WV-1B — Implemented; manual acceptance pending (19 October 2026)
+## ISO-WV-1C — Implemented; manual acceptance pending (19 October 2026)
 
-The accepted 8 x 8 isometric preview now has presentation-only horizontal and
-vertical Grid-spacing controls from 90% to 100%, plus uniform 100/97/95/93/90
-development presets. The 100% default reproduces ISO-WV-1. The preview remains
-centre-anchored; `SurfaceIsometricProjection`, logical cells, navigation,
-simulation and Colony View are unchanged. Grass resolves to raised `tile_040`,
-water to `tile_104`, and fallback to `tile_009` tinted magenta. Focused Edit
-passes **12/12** and focused Play passes **1/1**. No production spacing is
-selected until grass-gap, water-overlap, ordering and Console checks pass.
+The 8 x 8 isometric preview is restored to the accepted fixed `(1,0.5,1)` Grid
+cell size. All ISO-WV-1B spacing fields, runtime methods and percentage buttons
+have been removed. Grass now resolves to the user-edited flat
+`tile_040_GrassMain`, water remains `tile_104`, and fallback remains `tile_009`
+tinted magenta. The original raised `tile_040` is preserved for possible future
+edge or decorative use. Projection, world authority, navigation, simulation and
+Colony View are unchanged. Combined Edit regression passes **23/23** and World
+View Play regression passes **6/6**. Final Unity visual/Console acceptance is
+pending.
+
+## ISO-WV-1B — Historical experiment; closed (19 October 2026)
+
+ISO-WV-1B temporarily tested 100/97/95/93/90 percent Grid spacing. The
+experiment did not become production behavior and its controls have been
+removed by ISO-WV-1C. The accepted 100% calibration remains authoritative.
 
 ## ISO-WV-1 — Complete; manually accepted (19 October 2026)
 
@@ -18,7 +25,7 @@ backed by one Unity Isometric Grid/Tilemap and the existing authoritative
 `SurfaceRuntimeCellRegionAdapter`. It renders actual cells `(29,29)` through
 `(36,36)` while the full 64 x 64 Surface, generation, navigation, movement,
 resources, jobs and Colony View remain unchanged. Legacy square rendering is
-still the default. The later accepted visual choices map Grass to `tile_040`
+still the default. The final visual choices map Grass to `tile_040_GrassMain`
 and Water to `tile_104`; unsupported Backgrounds use `tile_009` with a
 bright-magenta tint. Resource Nodes remain separate. Until ISO-WV-2 projects
 ants, Surface ant renderers are hidden only

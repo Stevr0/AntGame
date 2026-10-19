@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using AntColony.World;
 using AntColony.WorldPresentation;
 using NUnit.Framework;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 using Object = UnityEngine.Object;
@@ -71,6 +72,8 @@ namespace AntColony.Tests.EditMode
         {
             SurfaceIsometricRenderer renderer = CreateRenderer(region);
             SurfaceIsometricProjection projection = renderer.Projection;
+            Assert.That(renderer.Grid.cellSize,
+                Is.EqualTo(new Vector3(1f, 0.5f, 1f)));
             var cells = new[]
             {
                 new SurfaceCell(0, 0),
@@ -90,61 +93,42 @@ namespace AntColony.Tests.EditMode
             }
         }
 
-        [TestCase(100f)]
-        [TestCase(97f)]
-        [TestCase(95f)]
-        [TestCase(93f)]
-        [TestCase(90f)]
-        public void UniformSpacingPresetsScaleOnlyThePreviewGrid(float percent)
-        {
-            string fingerprint = generated.CreateFingerprint();
-            SurfaceIsometricRenderer renderer = CreateRenderer(region);
-            Assert.That(renderer.RenderWindow(new SurfaceCell(29, 29)).Succeeded,
-                Is.True);
-
-            renderer.SetTileSpacingPercent(percent, percent);
-
-            Assert.That(renderer.Grid.cellSize.x,
-                Is.EqualTo(percent / 100f).Within(0.00001f));
-            Assert.That(renderer.Grid.cellSize.y,
-                Is.EqualTo(0.5f * percent / 100f).Within(0.00001f));
-            Assert.That(renderer.Projection.TileWidthPixels, Is.EqualTo(32f));
-            Assert.That(renderer.Projection.TileHeightPixels, Is.EqualTo(16f));
-            Assert.That(renderer.Projection.PixelsPerUnit, Is.EqualTo(32f));
-            Assert.That(generated.CreateFingerprint(), Is.EqualTo(fingerprint));
-        }
-
         [Test]
-        public void IndependentSpacingKeepsPreviewCentreOnAcceptedProjection()
+        public void VisualCatalogUsesFinalGrassWaterAndFallbackSprites()
         {
-            SurfaceIsometricRenderer renderer = CreateRenderer(region);
-            Assert.That(renderer.RenderWindow(new SurfaceCell(29, 29)).Succeeded,
-                Is.True);
-            var anchor = new SurfaceCell(33, 33);
-            Vector2 acceptedAnchor = renderer.Projection.CellToWorld(anchor);
+            SurfaceIsometricVisualCatalog catalog =
+                Resources.Load<SurfaceIsometricVisualCatalog>(
+                    "SurfaceIsometricVisualCatalog");
+            Assert.That(catalog, Is.Not.Null);
+            SurfaceIsometricVisualCatalog.BackgroundEntry grass = null;
+            SurfaceIsometricVisualCatalog.BackgroundEntry water = null;
+            foreach (SurfaceIsometricVisualCatalog.BackgroundEntry entry
+                     in catalog.Backgrounds)
+            {
+                if (entry.GameplayDefinitionId == "background.surface.grass")
+                    grass = entry;
+                if (entry.GameplayDefinitionId == "background.surface.water")
+                    water = entry;
+            }
 
-            renderer.SetTileSpacingPercent(95f, 90f);
+            Assert.That(grass, Is.Not.Null);
+            Assert.That(water, Is.Not.Null);
+            Assert.That(AssetDatabase.GetAssetPath(grass.Sprite), Is.EqualTo(
+                "Assets/AntColony/Art/WorldView/Isometric/Terrain/" +
+                "tile_040_GrassMain.png"));
+            Assert.That(AssetDatabase.GetAssetPath(water.Sprite), Is.EqualTo(
+                "Assets/AntColony/Art/WorldView/Isometric/Terrain/tile_104.png"));
+            Assert.That(AssetDatabase.GetAssetPath(catalog.FallbackSprite), Is.EqualTo(
+                "Assets/AntColony/Art/WorldView/Isometric/Terrain/tile_009.png"));
+            Assert.That(AssetDatabase.LoadAssetAtPath<Sprite>(
+                "Assets/AntColony/Art/WorldView/Isometric/Terrain/tile_040.png"),
+                Is.Not.Null, "The original raised grass sprite must remain available.");
 
-            Vector3 displayedAnchor = renderer.Grid.CellToWorld(
-                SurfaceIsometricRenderer.LogicalToTilemapCell(anchor));
-            Assert.That(displayedAnchor.x,
-                Is.EqualTo(acceptedAnchor.x).Within(0.00001f));
-            Assert.That(displayedAnchor.y,
-                Is.EqualTo(acceptedAnchor.y).Within(0.00001f));
-            Assert.That(renderer.HorizontalSpacingPercent, Is.EqualTo(95f));
-            Assert.That(renderer.VerticalSpacingPercent, Is.EqualTo(90f));
-            Assert.That(renderer.BackgroundTilemap.GetUsedTilesCount(), Is.EqualTo(2));
-        }
-
-        [Test]
-        public void SpacingControlsClampToExperimentRange()
-        {
-            SurfaceIsometricRenderer renderer = CreateRenderer(region);
-
-            renderer.SetTileSpacingPercent(120f, 50f);
-
-            Assert.That(renderer.HorizontalSpacingPercent, Is.EqualTo(100f));
-            Assert.That(renderer.VerticalSpacingPercent, Is.EqualTo(90f));
+            var importer = (TextureImporter)AssetImporter.GetAtPath(
+                AssetDatabase.GetAssetPath(grass.Sprite));
+            Assert.That(importer.spritePixelsPerUnit, Is.EqualTo(32f));
+            Assert.That(importer.spritePivot, Is.EqualTo(new Vector2(0.5f, 0.25f)));
+            Assert.That(grass.Sprite.rect.size, Is.EqualTo(new Vector2(32f, 32f)));
         }
 
         [Test]

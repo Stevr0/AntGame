@@ -1,15 +1,21 @@
 # Ant Colony Development Roadmap
 
-## ISO-WV-1B — Implemented; manual acceptance pending (19 October 2026)
+## ISO-WV-1C — Implemented; manual acceptance pending (19 October 2026)
 
-An isolated experiment now scales the existing Isometric Grid spacing without
-changing the accepted projection or any gameplay coordinate. Runtime Inspector
-controls allow independent 90-100% X/Y values; the development panel provides
-100/97/95/93/90 uniform presets. Default remains 100%. Focused Edit passes
-**12/12** and focused Play passes **1/1**. Retain a reduced value only if manual
-checks show raised `tile_040` gaps close without unacceptable `tile_104` water
-overlap, broken visual ordering or Console errors. Otherwise retain 100% and
-scope neighbour-aware terrain separately. Do not begin autotiling or ISO-WV-2.
+The runtime preview now uses only the accepted fixed `(1,0.5,1)` Isometric Grid
+cell size. ISO-WV-1B's experimental spacing controls are removed. The authored
+catalog maps Grass to the user-edited flat `tile_040_GrassMain`, Water to
+`tile_104`, and unsupported terrain to magenta `tile_009`; original raised
+`tile_040` remains available but is not the repeating interior. Combined Edit
+regression passes **23/23** and World View Play regression passes **6/6**.
+Complete the ISO-WV-1C visual and Console checklist before marking it complete.
+Do not begin autotiling or ISO-WV-2.
+
+## ISO-WV-1B — Historical experiment; closed (19 October 2026)
+
+The temporary 100/97/95/93/90 percent Grid-spacing experiment was rejected as
+a production terrain-connectivity solution. Its code and controls have been
+removed; the accepted 100% ISO-WV-0 calibration remains authoritative.
 
 ## ISO-WV-1 — Complete; manually accepted (19 October 2026)
 

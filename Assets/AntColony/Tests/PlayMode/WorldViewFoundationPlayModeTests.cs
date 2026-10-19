@@ -164,12 +164,6 @@ namespace AntColony.Tests.PlayMode
             Assert.That(views.SurfaceCamera.cullingMask, Is.EqualTo(surfaceMask));
             Assert.That(views.ColonyCamera.cullingMask & surfaceMask, Is.Zero);
 
-            Assert.That(views.SetIsometricTileSpacingPercent(95f), Is.True);
-            Assert.That(views.SurfaceIsometricRenderer.HorizontalSpacingPercent,
-                Is.EqualTo(95f));
-            Assert.That(views.SurfaceIsometricRenderer.VerticalSpacingPercent,
-                Is.EqualTo(95f));
-
             views.SwitchView(DevelopmentWorldView.Surface);
             yield return null;
             views.SwitchView(DevelopmentWorldView.Colony);
@@ -186,8 +180,6 @@ namespace AntColony.Tests.PlayMode
             Assert.That(views.LegacySurfacePresentation.activeSelf, Is.True);
             Assert.That(views.IsometricSurfacePresentation.activeSelf, Is.False);
             Assert.That(views.SurfaceCamera.orthographicSize, Is.EqualTo(36f));
-            Assert.That(views.SurfaceIsometricRenderer.HorizontalSpacingPercent,
-                Is.EqualTo(95f), "Legacy mode must not reset preview-only spacing.");
         }
 
         [UnityTest]
