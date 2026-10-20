@@ -40,8 +40,10 @@ identity, capacity, consumption or XP.
 The registry remains the structural authority and Storage remains the only
 resource ledger. This is coordinated in-memory commit/rollback, not a claim of
 whole-world atomic persistence; `WV-B3B-LIM-001` remains open. The slice is
-**Implemented — Automated Tests Passed, Manual Acceptance Pending** after
-**615/615 Edit** and **84/84 Play**.
+**Complete** after **615/615 Edit**, **84/84 Play**, three automated fault/replay
+checks and user-confirmed **43/43** Unity Play Mode acceptance. Codex did not
+independently perform the manual checks or rerun Unity for this
+documentation-only closure.
 
 ## WV-B3D.3A Material Storage delegation
 

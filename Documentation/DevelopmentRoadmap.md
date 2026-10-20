@@ -77,7 +77,7 @@ foundation. The user subsequently confirmed the Unity visual/Console checklist
 in `Documentation/IsometricWorldViewCalibration.md`.
 ISO-WV-1 was subsequently approved and implemented as recorded above.
 
-## WV-B3D.3B — Implemented; manual acceptance pending (19 October 2026)
+## WV-B3D.3B — Complete (20 October 2026)
 
 Newly completed Material Storage now commits directly as one authoritative
 Placement plus one delegated empty Storage slot while preserving the natural
@@ -86,12 +86,17 @@ failure rolls back prepared Placement identity/occupancy; terminal replay is
 idempotent. Existing costs, work, XP and Hauling behavior are unchanged. Focused
 Edit passed 11/11 Construction, 17/17 Placement and 28/28 Storage/Hauling;
 focused Play passed 3/3 Placement and 6/6 Storage/Hauling; full suites passed
-615/615 Edit and 84/84 Play. The 43 player-facing checks in
-`CurrentGameState.md` remain pending; three fault/replay checks are automated.
+615/615 Edit and 84/84 Play, with zero failures, skips or inconclusive results.
+The user confirmed all **43/43** authoritative Unity Play Mode checks in two
+stages; Codex did not independently perform them. The three separate automated
+fault/replay checks passed. Tests were not rerun during this documentation-only
+closure. The test working tree was based on parent
+`73788fdefbe62f04bb0e16f65e72f4a5e6c0c27d`; the resulting implementation
+commit is `2c0b89a4`.
 
-The next separately gated candidate is **WV-B3D.4A Food Storage migration**.
-Do not begin it without approval. `WV-B3B-LIM-001` and every non-Material-
-Storage migration remain open.
+WV-B3D.4A Food Storage migration now has its WV-B3D.3B prerequisite satisfied,
+but remains a separately gated milestone and was not started by this closure.
+`WV-B3B-LIM-001` and every non-Material-Storage migration remain open.
 
 ## WV-B3D.3A — Complete (19 October 2026)
 
@@ -109,20 +114,21 @@ not independently perform or rerun those manual checks during this
 documentation-only closure. The retained XML was inspected and came from the
 implementation working tree based on parent
 `69ebbf85bbd9e90780b59316e4f1e771ebff9888`, which is provenance rather than
-the final implementation commit. Stop here: WV-B3D.3B, damage, Repair and
-destruction are not started.
+the final implementation commit. At that closure point WV-B3D.3B, damage,
+Repair and destruction had not started; WV-B3D.3B subsequently completed as
+recorded above.
 
 The approved visual addendum is represented by a common visual-definition base
 and category-specific Background, Resource Node, Placement and loose-resource
 definitions. This is an unbound data/presentation foundation only; it adds no
 art, function, capacity or gameplay state.
 
-`WV-B3B-LIM-001` remains accepted and open. Deferred work includes WV-B3D.3B
-Construction completion, Food/Water Storage, Sleeping, Nursery and Prepared
-Surface migration; HP balance, damage, Repair, destruction, dismantling and
-physical refunds; Doors, Refining Stations, rooms/quality and multi-cell
-gameplay; Surface resource interactions, Foraging, Fog of War, persistence and
-unloaded-region simulation.
+`WV-B3B-LIM-001` remains accepted and open. WV-B3D.3B Construction completion
+subsequently completed. Deferred work includes Food/Water Storage, Sleeping,
+Nursery and Prepared Surface migration; HP balance, damage, Repair, destruction,
+dismantling and physical refunds; Doors, Refining Stations, rooms/quality and
+multi-cell gameplay; Surface resource interactions, Foraging, Fog of War,
+persistence and unloaded-region simulation.
 
 ## WV-B3D.2 — Complete (19 October 2026)
 

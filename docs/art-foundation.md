@@ -7,7 +7,10 @@ visual-definition ID and resolve the existing category-specific visual state.
 The current completion path resolves to `Completed`; unknown HP does not imply a
 damaged state. This is a runtime/presentation contract only: WV-B3D.3B adds no
 sprites, renderer binding, animation, biome/season variants or gameplay
-authority. Automated tests passed; visual/manual acceptance remains pending.
+authority. Automated tests passed, and the user subsequently confirmed the
+WV-B3D.3B **43/43** Unity Play Mode checklist, including the Construction-to-
+Completed diagnostic/placeholder transition. Production sprite assignment and
+renderer integration remain deferred.
 
 ## Shared visual definitions
 

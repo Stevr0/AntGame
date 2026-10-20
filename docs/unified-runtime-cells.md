@@ -11,8 +11,10 @@ not invent durability, capacity or gameplay authority. One committed completion
 publishes after the Placement, slot and closed Site state exist. Blocked or
 rolled-back attempts publish no partial Placement-cell mutation.
 
-Automated coverage passed **615/615 Edit** and **84/84 Play**. Manual
-acceptance remains pending.
+Automated coverage passed **615/615 Edit** and **84/84 Play**, including three
+fault/replay checks. WV-B3D.3B is complete after the user confirmed **43/43**
+authoritative Unity Play Mode checks; Codex did not independently perform them
+or rerun Unity during this documentation-only closure.
 
 ## WV-B3D.3A delegated Storage snapshots
 

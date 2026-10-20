@@ -90,9 +90,12 @@ Focused projection/import/scene tests pass 8/8 and the existing World View
 foundation regression passes 9/9. Its own visual inspection remains pending. See
 `Documentation/IsometricWorldViewCalibration.md`.
 
-## WV-B3D.3B Material Storage Construction Completion Cutover — Implemented (19 October 2026)
+## WV-B3D.3B Material Storage Construction Completion Cutover — Complete (20 October 2026)
 
-**Status: Implemented — Automated Tests Passed, Manual Acceptance Pending.**
+**Status: Complete.** The user confirmed all **43/43 authoritative Unity Play
+Mode checks** in two stages. Codex did not independently perform those manual
+checks. The separately recorded automated fault-injection and replay checks
+44–46 also passed; they are automated evidence, not additional manual checks.
 Material Storage is now the first Construction result created directly as an
 authoritative completed Placement. Completion preserves the known natural
 Background, registers one scenario-scoped Placement identity/footprint, and
@@ -128,6 +131,8 @@ Storage/Hauling Play **6/6**, complete graphics-enabled Edit **615/615**, and
 complete Play **84/84**, all with zero failures, skips or inconclusive results.
 The implementation working tree is based on
 `73788fdefbe62f04bb0e16f65e72f4a5e6c0c27d`.
+The resulting implementation commit is `2c0b89a4`. Unity tests were not rerun
+during this documentation-only closure.
 
 ### WV-B3D.3B authoritative manual acceptance checklist
 
@@ -178,8 +183,17 @@ The implementation working tree is based on
 45. Automated fault injection: clearing the conflict allows one successful retry.
 46. Automated replay: no duplicate Storage, Soil consumption or XP occurs.
 
-Checks 44–46 are automated because no player-facing fault-injection control was
-added. Do not record manual acceptance until the user confirms checks 1–43.
+Checks 1–43 were user-confirmed in Unity Play Mode. Checks 44–46 are automated
+because no player-facing fault-injection control was added: compatibility
+failure preserves the Site and staging, clearing the conflict permits one
+successful retry, and terminal replay cannot duplicate Storage, staged-Soil
+consumption or Construction XP.
+
+The retained Edit Mode XML records these checks in
+`ConstructionJobTests.BlockedMaterialStorageCompletionPreservesSiteAndCanRetry`,
+`ConstructionJobTests.CompletedMaterialStorageRegistersAuthoritativePlacementAndEmptyCapacityOnce`
+and
+`PlacementRegistryTests.RejectedDependentStorageCommitRollsBackIdentityAndOccupancy`.
 
 ## WV-B3D.3A Material Storage Authority Cutover — Complete (19 October 2026)
 
@@ -266,7 +280,7 @@ implementation-working-tree provenance; the resulting implementation commit is
 26. Confirm Sleeping, Food Storage, Water Storage and Nursery behavior is unchanged.
 27. Replace/rebuild the scenario and confirm old Placement handles are rejected.
 28. Start generated seed `2203` and confirm it begins with zero completed Placements.
-29. Construct its first Material Storage and confirm it remains a legacy projection pending WV-B3D.3B.
+29. At the WV-B3D.3A acceptance boundary, construct its first Material Storage and confirm it remains a legacy projection pending WV-B3D.3B (subsequently completed above).
 
 ## WV-B3D.2 Placement Registry Foundation — Complete (19 October 2026)
 

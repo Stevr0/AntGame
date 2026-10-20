@@ -2,7 +2,9 @@
 
 ## WV-B3D.3B newly completed Storage
 
-**Implemented — Automated Tests Passed, Manual Acceptance Pending.** Terminal
+**Complete after user-confirmed 43/43 Unity Play Mode checks.** Codex did not
+independently perform those manual checks or rerun Unity for this
+documentation-only closure. Terminal
 Construction now creates the authoritative Storage Placement and exactly one
 empty delegated slot together. The slot remains the sole owner of filter,
 quantity, capacity and reservations; Placement snapshots do not copy resource

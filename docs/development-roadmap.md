@@ -22,7 +22,7 @@ generated Surface data. Projection, fixed spacing, Tilemap sorting and gameplay
 authority remain unchanged. Focused combined Edit passes **28/28** and World
 View Play passes **6/6**. Do not begin ISO-WV-2.
 
-## WV-B3D.3B — implemented, manual acceptance pending
+## WV-B3D.3B — complete
 
 Material Storage Construction completion now cuts over directly to an
 authoritative completed Placement with one delegated empty slot. The 1 Soil,
@@ -33,10 +33,14 @@ commits do not leak identity, occupancy, capacity or consumed material.
 Focused suites passed **11/11 Construction Edit**, **17/17 Placement Edit**,
 **28/28 Storage/Hauling Edit**, **3/3 Placement Play** and **6/6
 Storage/Hauling Play**. Complete suites passed **615/615 Edit** and **84/84
-Play**, with no failures, skips or inconclusive results. Manual checklist items
-1–43 remain pending; fault/replay items 44–46 are covered by automated tests
-because no player-facing fault-injection UI was added. Stop here: WV-B3D.4A is
-separately gated and has not started.
+Play**, with no failures, skips or inconclusive results. The user confirmed
+manual checklist items **1–43/43** in Unity Play Mode; Codex did not
+independently perform them. Fault/replay items 44–46 passed through automated
+tests because no player-facing fault-injection UI was added. Tests were not
+rerun for this documentation-only closure. The test parent was
+`73788fdefbe62f04bb0e16f65e72f4a5e6c0c27d`, and implementation commit
+`2c0b89a4` contains the runtime work. WV-B3D.4A's prerequisite is satisfied,
+but that separately gated milestone has not started.
 
 ## WV-B3D.3A — complete
 
@@ -49,8 +53,8 @@ WV-B3D.3B. Focused suites passed
 the authoritative Unity checklist **29/29** in two stages; Codex did not
 independently perform it or rerun Unity for this documentation-only closure.
 The shared category-specific visual-definition foundation is implemented
-without new art or renderer behavior. Stop after this slice; WV-B3D.3B is not
-started. `WV-B3B-LIM-001` remains accepted and open.
+without new art or renderer behavior. WV-B3D.3B subsequently completed as
+recorded above. `WV-B3B-LIM-001` remains accepted and open.
 
 ## WV-B3D.2 — complete
 

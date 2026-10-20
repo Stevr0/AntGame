@@ -12,6 +12,11 @@ after both structural identity and the empty delegated slot exist. Reads and
 camera switches remain inert; slot mutations never replace identity or advance
 the structural revision. `WV-B3B-LIM-001` remains open.
 
+WV-B3D.3B is **Complete** after the recorded **615/615 Edit** and **84/84
+Play** suites, three automated fault/replay checks and user-confirmed **43/43**
+Unity Play Mode acceptance. Codex did not independently perform the manual
+checks or rerun Unity during this documentation-only closure.
+
 ## WV-B3D.3A delegated Material Storage state — 19 October 2026
 
 **Complete.** Retained automated evidence passed 15/15 and 28/28 focused Edit,

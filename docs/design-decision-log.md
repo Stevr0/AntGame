@@ -1,5 +1,19 @@
 # Design Decision Log
 
+## 2026-10-20 — Close WV-B3D.3B after authoritative acceptance
+
+- Mark WV-B3D.3B **Complete** after the recorded focused and complete automated
+  suites passed, the three fault/replay checks passed, and the user confirmed
+  all **43/43** authoritative Unity Play Mode checks in two stages.
+- Record manual acceptance as user-reported; Codex did not independently
+  perform those checks or rerun Unity for this documentation-only closure.
+- Distinguish test-working-tree parent
+  `73788fdefbe62f04bb0e16f65e72f4a5e6c0c27d` from implementation commit
+  `2c0b89a4`.
+- Keep `WV-B3B-LIM-001`, unknown Material Storage durability, production sprite
+  assignment, damage, Repair, destruction and every non-Material-Storage
+  migration open. WV-B3D.4A is now unblocked but remains separately gated.
+
 ## 2026-10-19 — Project the existing Surface authority for ISO-WV-2
 
 - Keep the 64 x 64 top-down `SurfaceWorldData` and its A* path cells as the only
@@ -42,7 +56,8 @@
   snapshots and diagnostics without adding renderer behavior or art assets.
 - Record **615/615 Edit** and **84/84 Play** passed; retain status as
   **Implemented — Automated Tests Passed, Manual Acceptance Pending** and do
-  not begin WV-B3D.4A.
+  not begin WV-B3D.4A. This 19 October status was superseded by the 20 October
+  closure recorded above.
 
 ## 2026-10-19 — Close WV-B3D.3A after authoritative acceptance
 

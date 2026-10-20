@@ -9,7 +9,8 @@ that same slot to stage another Construction Site. Construction still performs
 work only after all materials are staged; it does not transport resources.
 Terminal completion replay does not award XP or consume staging twice, and a
 blocked completion retains the Site for retry. Automated suites passed; the
-manual acceptance checklist remains pending.
+user subsequently confirmed the complete **43/43** Unity Play Mode checklist.
+Codex did not independently perform those manual checks.
 
 ## WV-B3D.3A Storage authority closure
 
@@ -19,7 +20,8 @@ Storage delegates its one physical slot to an authoritative Placement handle,
 while `MaterialStorageWorld` continues to own quantities and reservations.
 Partial/multi-source hauling and Storage-to-Construction withdrawals retain
 their exact-once behavior. Construction remains work-only after Hauling stages
-all requirements. Newly completed Storage remains legacy until WV-B3D.3B.
+all requirements. At WV-B3D.3A closure newly completed Storage remained legacy;
+WV-B3D.3B subsequently replaced that completion path.
 
 ## WV-B3C.2B transfer lifecycle — complete
 

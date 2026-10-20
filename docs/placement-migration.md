@@ -2,7 +2,7 @@
 
 ## WV-B3D.3B status
 
-**Implemented — Automated Tests Passed, Manual Acceptance Pending.** A newly
+**Complete.** A newly
 completed Material Storage now commits directly as one authoritative completed
 Placement. The coordinated completion publishes Placement identity/occupancy,
 one delegated empty `MaterialStorageWorld` slot, consumed staging and the
@@ -16,7 +16,10 @@ compatibility policy until approved durability values exist; no damage, Repair,
 destruction, removal or broader function migration was added. Focused Edit
 suites passed **11/11**, **17/17** and **28/28**, focused Play passed **3/3**
 and **6/6**, and complete suites passed **615/615 Edit** and **84/84 Play**.
-Manual checks remain pending, so WV-B3D.4A has not started.
+The user confirmed **43/43** authoritative Unity Play Mode checks; Codex did
+not independently perform them. Three automated fault/replay checks also
+passed. Tests were not rerun for this documentation-only closure. WV-B3D.4A's
+prerequisite is satisfied, but that separately gated milestone has not started.
 
 ## WV-B3D.3A status
 

@@ -12,8 +12,11 @@ Compatibility, occupancy and slot readiness are prepared before mutation.
 Failure preserves Site, staging and progress; dependency rejection rolls back
 unpublished identity/occupancy. Cancellation remains pre-completion only and
 cannot dismantle a completed Placement. Unknown Material Storage HP is a narrow
-compatibility policy until balance is approved. Status is **Implemented —
-Automated Tests Passed, Manual Acceptance Pending**.
+compatibility policy until balance is approved. Status is **Complete** after
+the recorded automated suites, three automated fault/replay checks and
+user-confirmed **43/43** Unity Play Mode checks. Codex did not independently
+perform those manual checks or rerun Unity during this documentation-only
+closure.
 
 ## WV-B3D.3A implemented boundary — 19 October 2026
 

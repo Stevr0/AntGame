@@ -2,7 +2,8 @@
 
 ## WV-B3D.3B Material Storage completion
 
-**Implemented — Automated Tests Passed, Manual Acceptance Pending.** The
+**Complete after user-confirmed 43/43 Unity Play Mode checks.** Codex did not
+independently perform those manual checks or rerun Unity for closure. The
 existing 1 Soil, 4-hour Material Storage recipe now finishes directly into an
 authoritative completed Placement and its single delegated capacity-10 slot.
 The natural Background is preserved, and no legacy functional Storage
@@ -22,10 +23,10 @@ independently perform or rerun those manual checks during documentation closure.
 Authored Material Storage fixtures now use authoritative Placement identity and
 occupancy with their unchanged mutable slots delegated from
 `MaterialStorageWorld`. This preserves recipes, work duration, hauling,
-Construction staging, filters, quantities, capacity and reservations. A newly
-completed Material Storage remains on the legacy Background path until
-WV-B3D.3B. Structural HP is unknown, and damage, Repair and destruction remain
-future work.
+Construction staging, filters, quantities, capacity and reservations. At that
+closure point a newly completed Material Storage remained on the legacy
+Background path; WV-B3D.3B subsequently replaced that completion path.
+Structural HP is unknown, and damage, Repair and destruction remain future work.
 
 ## WV-B3D.2 registry boundary
 

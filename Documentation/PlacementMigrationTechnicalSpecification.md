@@ -19,8 +19,12 @@ completion, not whole-world atomicity; `WV-B3B-LIM-001` remains open.
 The API permits unknown durability only for this direct Storage compatibility
 path. Ordinary future authoritative registration still requires approved Max
 HP. Replays are terminal no-ops, and new completion never writes the legacy
-functional Background. WV-B3D.3B is **Implemented — Automated Tests Passed,
-Manual Acceptance Pending**.
+functional Background. WV-B3D.3B is **Complete** after the recorded automated
+suites, three automated fault/replay checks and user-confirmed **43/43** Unity
+Play Mode checks. Codex did not independently perform the manual checks or rerun
+Unity during this documentation-only closure. The test working tree was based
+on parent `73788fdefbe62f04bb0e16f65e72f4a5e6c0c27d`; implementation commit
+`2c0b89a4` contains the completed runtime work.
 
 ## WV-B3D.3A implementation record — 19 October 2026
 

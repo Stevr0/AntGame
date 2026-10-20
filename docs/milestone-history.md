@@ -24,9 +24,9 @@ Five isolated 4 x 4 patterns exercise water interiors and boundaries. Combined
 Edit passed **28/28** and World View Play passed **6/6**. No sorting,
 projection, gameplay, Colony View or ISO-WV-2 change was made.
 
-## 19 October 2026 — WV-B3D.3B Material Storage Construction Completion Cutover
+## 20 October 2026 — WV-B3D.3B Material Storage Construction Completion Cutover
 
-**Implemented — Automated Tests Passed, Manual Acceptance Pending.** Newly
+**Complete.** Newly
 completed Material Storage now becomes an authoritative completed Placement
 with one delegated empty capacity-10 slot, while the natural Background,
 recipe, work requirement and Storage resource ledger remain unchanged. The
@@ -37,9 +37,13 @@ unknown HP remains an explicit narrow compatibility policy.
 
 Focused Edit passed **11/11**, **17/17** and **28/28**; focused Play passed
 **3/3** and **6/6**; complete suites passed **615/615 Edit** and **84/84 Play**
-with zero failures, skips or inconclusive results. Manual checklist items 1–43
-remain pending; automated fault/replay coverage satisfies items 44–46. No
-damage, Repair, destruction, renderer implementation or WV-B3D.4A work began.
+with zero failures, skips or inconclusive results. The user confirmed all
+**43/43** authoritative Unity Play Mode checks in two stages; Codex did not
+independently perform them. Automated fault/replay coverage passed checks
+44–46. Tests were not rerun for this documentation-only closure. The test
+working tree was based on parent `73788fdefbe62f04bb0e16f65e72f4a5e6c0c27d`;
+the implementation commit is `2c0b89a4`. No damage, Repair, destruction,
+renderer implementation or WV-B3D.4A work began.
 
 ## 19 October 2026 — WV-B3D.3A Material Storage Authority Cutover
 
@@ -58,8 +62,8 @@ Play Mode acceptance; Codex inspected the retained XML but did not independently
 perform the manual checks or rerun Unity during this documentation-only closure.
 The test working tree was based on parent
 `69ebbf85bbd9e90780b59316e4f1e771ebff9888`; the resulting implementation
-commit is `1d7067f4d464c443ad650ef358c228aed50dbe1d`. WV-B3D.3B and
-`WV-B3B-LIM-001` remain open.
+commit is `1d7067f4d464c443ad650ef358c228aed50dbe1d`. WV-B3D.3B
+subsequently completed; `WV-B3B-LIM-001` remains open.
 
 ## 19 October 2026 — WV-B3D.2 Placement Registry Foundation
 
